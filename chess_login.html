@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Master - Digital Arena Gateway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --tv-frame: #1a1a1a;
+            --tv-border: #333;
+            --accent-glow: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        /* Background Canvas */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Digital TV Frame */
+        .tv-container {
+            position: relative;
+            z-index: 10;
+            width: 80vw;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
+            background: var(--tv-frame);
+            border-radius: 40px;
+            padding: 15px;
+            box-shadow: 
+                0 0 0 2px var(--tv-border),
+                0 30px 100px rgba(0,0,0,0.8),
+                inset 0 0 20px rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .tv-screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 30px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,1);
+        }
+
+        /* Screen Reflection & Scanlines */
+        .tv-screen::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+
+        .tv-screen::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.02) 50%, transparent);
+            animation: scanline 8s linear infinite;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Content Areas */
+        .content-container {
+            position: relative;
+            z-index: 5;
+            text-align: center;
+            width: 100%;
+        }
+
+        .welcome-screen {
+            opacity: 0;
+            transition: opacity 1s ease;
+            display: none;
+        }
+
+        .welcome-screen.active {
+            display: block;
+            opacity: 1;
+            animation: textPulse 2s ease-in-out infinite;
+        }
+
+        .welcome-text {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+        }
+
+        .loading-bar-container {
+            width: 300px;
+            height: 2px;
+            background: rgba(255,255,255,0.05);
+            margin: 0 auto;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+            transition: width linear;
+        }
+
+        .google-login-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .touch-hint {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .login-screen {
+            opacity: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 1s ease;
+        }
+
+        .login-screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .login-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin-bottom: 30px;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        #google-login-container {
+            padding: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        #google-login-container:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        /* TV Controls (Touch Indicators) */
+        .tv-controls {
+            position: absolute;
+            bottom: -35px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .tv-btn {
+            width: 8px;
+            height: 8px;
+            background: #222;
+            border-radius: 50%;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .power-btn {
+            background: #ff444455;
+            box-shadow: 0 0 5px #ff444488;
+        }
+
+        .power-btn.active {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.02); opacity: 1; }
+        }
+
+        /* Success Animation */
+        .tv-container.shutdown {
+            animation: shutdown 0.5s ease-in forwards;
+        }
+
+        @keyframes shutdown {
+            0% { transform: scale(1); opacity: 1; }
+            40% { transform: scaleX(1.2) scaleY(0.01); filter: brightness(5); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .tv-container { width: 95vw; border-radius: 20px; }
+            .welcome-text { font-size: 24px; letter-spacing: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="tv-container" id="tv">
+        <div class="tv-screen">
+            <div class="content-container">
+                <!-- Welcome Stage -->
+                <div class="welcome-screen active" id="welcome-stage">
+                    <div class="welcome-text">WELCOME TO CHESS</div>
+                    <div class="loading-bar-container">
+                        <div class="loading-bar" id="load-progress"></div>
+                    </div>
+                </div>
+
+                <!-- Login Stage -->
+                <div class="login-screen" id="login-stage">
+                    <div class="login-title">SECURE ACCESS GRANTED</div>
+                    <div class="google-login-wrapper">
+                        <div id="google-login-container">
+                            <div id="g_id_onload"
+                                 data-client_id="731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com"
+                                 data-context="signin"
+                                 data-ux_mode="popup"
+                                 data-callback="handleGoogleLogin"
+                                 data-auto_prompt="false">
+                            </div>
+
+                            <div class="g_id_signin"
+                                 data-type="icon"
+                                 data-shape="circle"
+                                 data-theme="filled_black"
+                                 data-size="large">
+                            </div>
+                        </div>
+                        <p class="touch-hint">TOUCH TO SIGN IN</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorative TV Elements -->
+        <div class="tv-controls">
+            <div class="tv-btn power-btn active"></div>
+            <div class="tv-btn"></div>
+            <div class="tv-btn"></div>
+        </div>
+    </div>
+
+    <script>
+        // Stage Management
+        const welcomeStage = document.getElementById('welcome-stage');
+        const loginStage = document.getElementById('login-stage');
+
+        // Initial 10-second wait with progress animation
+        const loadProgress = document.getElementById('load-progress');
+        
+        // Start animation after a tiny delay for CSS transition to pick up
+        setTimeout(() => {
+            loadProgress.style.transitionDuration = '10s';
+            loadProgress.style.width = '100%';
+        }, 100);
+
+        setTimeout(() => {
+            welcomeStage.classList.remove('active');
+            setTimeout(() => {
+                loginStage.classList.add('active');
+            }, 600);
+        }, 10000);
+
+        // Google Login Handler
+        window.handleGoogleLogin = function(response) {
+            try {
+                const responsePayload = decodeJwtResponse(response.credential);
+                const name = responsePayload.name;
+                const avatar = responsePayload.picture;
+
+                localStorage.setItem('playerName', name);
+                localStorage.setItem('playerAvatar', avatar);
+                
+                // Automatically enable arena music upon first secure sign-in 
+                localStorage.setItem('arenaMusicEnabled', 'true');
+                
+                // Reset audio bookmark for a fresh cinematic session
+                localStorage.removeItem('arenaMusicTime');
+
+                // Shutdown TV animation then enter
+                setTimeout(() => {
+                    document.getElementById('tv').classList.add('shutdown');
+                    setTimeout(() => enterArena(), 500);
+                }, 1000);
+            } catch (e) {
+                console.error("Error handling Google Login:", e);
+            }
+        };
+
+        function decodeJwtResponse(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function enterArena() {
+            window.location.href = 'chess.html';
+        }
+
+        // Falling Chess Pieces Background
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let pieces = [];
+        const symbols = ['♔', '♕', '♖', '♗', '♘', '♙', '♚', '♛', '♜', '♝', '♞', '♟'];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            pieces = [];
+            createPieces();
+        }
+
+        class Piece {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = -50 - (Math.random() * 200);
+                this.size = 20 + Math.random() * 40;
+                this.speedY = 0.5 + Math.random() * 1.5;
+                this.symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                this.opacity = 0.1 + Math.random() * 0.2;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.rotation += this.rotationSpeed;
+                if (this.y > canvas.height + 50) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.symbol, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function createPieces() {
+            for (let i = 0; i < 30; i++) {
+                pieces.push(new Piece());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        initCanvas();
+        animate();
+        window.addEventListener('resize', initCanvas);
+    </script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Master - Entering Arena...</title>
+    <style>
+        :root {
+            --bg-color: #030303;
+            --accent-color: #FFFFFF;
+            --chess-white: #ffffff;
+            --chess-black: #111111;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            color: #fff;
+            font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        .container {
+            z-index: 10;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            padding: 0;
+        }
+
+        .board-container {
+            perspective: 2000px;
+            width: 560px;
+            height: 560px;
+        }
+
+        .board-animation {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            transform-style: preserve-3d;
+            transform: rotateX(55deg) rotateZ(-35deg);
+            box-shadow: 0 0 80px rgba(0, 255, 204, 0.15);
+            border: 4px solid #111;
+            animation: boardInitialReveal 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .square {
+            width: 70px;
+            height: 70px;
+            opacity: 0;
+            transform: translateZ(-200px);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .square.white { background-color: #2a2a2a; }
+        .square.black { background-color: #0c0c0c; }
+
+        .square::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(0, 255, 204, 0.05);
+        }
+
+        .piece {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 44px;
+            opacity: 0;
+            transform: translateZ(100px);
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+            color: #fff;
+        }
+
+        .title-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .title {
+            font-size: 84px;
+            font-weight: 950;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(30px);
+            background: linear-gradient(to bottom, #fff, #888);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .status-text {
+            font-size: 11px;
+            color: var(--accent-color);
+            letter-spacing: 6px;
+            font-weight: 900;
+            text-transform: uppercase;
+            opacity: 0;
+        }
+
+        .loader-bar {
+            width: 600px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .loader-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00FFCC, #0099FF);
+            box-shadow: 0 0 20px var(--accent-color);
+            transition: width 0.1s linear;
+        }
+
+        /* Animations */
+        @keyframes boardInitialReveal {
+            from { opacity: 0; transform: rotateX(70deg) rotateZ(-60deg) translateZ(-300px); }
+            to { opacity: 1; transform: rotateX(55deg) rotateZ(-35deg) translateZ(0); }
+        }
+
+        @keyframes squareReveal {
+            to { opacity: 1; transform: translateZ(0); }
+        }
+
+        @keyframes pieceDrop {
+            0% { opacity: 0; transform: translateZ(150px) scale(1.5); }
+            100% { opacity: 1; transform: translateZ(5px) scale(1); }
+        }
+
+        @keyframes textReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 255, 204, 0.03) 0%,
+                rgba(0, 0, 0, 0) 10%,
+                rgba(0, 255, 204, 0.03) 100%
+            );
+            background-size: 100% 4px;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <div class="board-container">
+            <div class="board-animation" id="board"></div>
+        </div>
+
+        <div class="title-wrapper">
+            <h1 class="title" id="main-title">CHESS MASTER</h1>
+            <p class="status-text" id="status">SYSTÉM INITIALIZATÍON...</p>
+        </div>
+
+        <div class="loader-bar">
+            <div class="loader-fill" id="loader"></div>
+        </div>
+    </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const loader = document.getElementById('loader');
+        const statusText = document.getElementById('status');
+        const mainTitle = document.getElementById('main-title');
+
+        // Initial Delay
+        setTimeout(() => {
+            // Create board squares
+            for (let i = 0; i < 64; i++) {
+                const square = document.createElement('div');
+                const row = Math.floor(i / 8);
+                const col = i % 8;
+                const isBlack = (row + col) % 2 === 1;
+                
+                square.className = `square ${isBlack ? 'black' : 'white'}`;
+                square.style.animation = `squareReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards ${Math.random() * 0.8}s`;
+                
+                // Add pieces to starting rows
+                let pieceChar = '';
+                if (row === 0 || row === 7 || row === 1 || row === 6) {
+                    if (Math.random() > 0.4) {
+                        const piece = document.createElement('div');
+                        piece.className = 'piece';
+                        const pieces = ['♟', '♞', '♝', '♜', '♛', '♚'];
+                        piece.textContent = pieces[Math.floor(Math.random() * pieces.length)];
+                        piece.style.animation = `pieceDrop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards ${1.5 + Math.random() * 1}s`;
+                        square.appendChild(piece);
+                    }
+                }
+                
+                board.appendChild(square);
+            }
+        }, 300);
+
+        // Background particles
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = Math.random() * 0.4 - 0.2;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(0, 255, 204, 0.4)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            for (let i = 0; i < 60; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initCanvas();
+        createParticles();
+        animateParticles();
+        window.addEventListener('resize', initCanvas);
+
+        // Sequence
+        setTimeout(() => {
+            mainTitle.style.animation = 'textReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        }, 800);
+
+        setTimeout(() => {
+            statusText.style.animation = 'textReveal 0.8s ease-out forwards, blink 1.5s infinite 1.2s';
+        }, 1500);
+
+        const phases = [
+            "BOOTING NEURAL GRANDMASTER...",
+            "CALIBRATING PIECE DYNAMICS...",
+            "GENERATING MATCH LOBBY...",
+            "OPTIMIZING RAY-TRACED BOARD...",
+            "SÝNC COMPLÉTED"
+        ];
+
+        let phaseIndex = 0;
+        const phaseInterval = setInterval(() => {
+            if (phaseIndex < phases.length) {
+                statusText.textContent = phases[phaseIndex];
+                phaseIndex++;
+            } else {
+                clearInterval(phaseInterval);
+            }
+        }, 1200);
+
+        // Loader progression
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 1.5;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(progressInterval);
+                setTimeout(finishTransition, 500);
+            }
+            loader.style.width = progress + '%';
+        }, 60);
+
+        function finishTransition() {
+            statusText.textContent = "ENTERING ARENA...";
+            statusText.style.color = "#ffffff";
+            statusText.style.animation = "blink 0.2s infinite";
+            
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#FFF;z-index:200;opacity:0;transition:opacity 0.6s ease-out;';
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                setTimeout(() => {
+                    window.location.href = 'chess_login.html';
+                }, 700);
+            }, 300);
+        }
+    </script>
+</body>
+</html>

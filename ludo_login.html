@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Realm - Member Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;950&display=swap" rel="stylesheet">
+    <!-- Clerk Auth SDK -->
+    <script async crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA"
+        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" type="text/javascript"></script>
+    <script src="https://accounts.google.com/gsi/client" async></script>
+    <style>
+        :root {
+            --red: #FF3B30;
+            --blue: #007AFF;
+            --yellow: #FFCC00;
+            --green: #4CD964;
+            --dark-bg: #0A0A0A;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--dark-bg);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Gradients */
+        .bg-gradient {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(255, 59, 48, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, rgba(0, 122, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 10% 90%, rgba(76, 217, 100, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(255, 204, 0, 0.1) 0%, transparent 40%);
+            animation: pulse-bg 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse-bg {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Glass Login Card */
+        .login-card {
+            width: 440px;
+            padding: 50px;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border-radius: 32px;
+            border: 1px solid var(--border);
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            z-index: 10;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: card-entry 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            min-height: 500px;
+        }
+
+        @keyframes card-entry {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .logo-wrap {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--red), var(--blue), var(--green), var(--yellow));
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            margin: 0 auto 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            animation: rotate-logo 10s infinite linear;
+        }
+
+        @keyframes rotate-logo {
+            0% { transform: rotate(0); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 950;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        p.subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 900;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            margin-left: 5px;
+        }
+
+        input {
+            width: 100%;
+            height: 60px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0 20px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 60px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 950;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .auth-divider {
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #333;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .footer-links {
+            margin-top: 40px;
+            color: #555;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .footer-links a { color: #888; text-decoration: none; transition: 0.2s; }
+        .footer-links a:hover { color: #fff; text-decoration: underline; }
+
+        /* Clerk UI Customization */
+        #clerk-signin-ui {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .cl-headerSubtitle { display: none !important; }
+        .cl-rootBox { margin: 0 auto; }
+
+        #google-login-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Floating Dice */
+        .dice {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.1;
+            filter: grayscale(1);
+            user-select: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <!-- Random Floating Dice -->
+    <div class="dice" style="top: 10%; left: 10%; animation: orbit 20s infinite linear;">🎲</div>
+    <div class="dice" style="top: 80%; left: 15%; animation: orbit 25s infinite linear reverse;">🎲</div>
+    <div class="dice" style="top: 20%; left: 85%; animation: orbit 18s infinite linear;">🎲</div>
+    <div class="dice" style="top: 75%; left: 80%; animation: orbit 22s infinite linear reverse;">🎲</div>
+
+    <div class="login-card">
+        <div id="clerk-signin-ui"></div>
+        
+        <div id="legacy-login-ui">
+            <div class="logo-wrap">🎲</div>
+            <h1>MEMBER LOGIN</h1>
+            <p class="subtitle">Access your Ludo Realm dashboard</p>
+
+            <form onsubmit="event.preventDefault(); window.location.href='ludo_intro.html';">
+                <div class="input-group">
+                    <label>Player Username</label>
+                    <input type="text" id="player-name-input" placeholder="Enter your ID..." required>
+                </div>
+                <div class="input-group">
+                    <label>Voucher Code</label>
+                    <input type="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-login">LOGIN PLAYER</button>
+            </form>
+
+            <div class="auth-divider">OR CONTINUE WITH</div>
+
+            <div id="google-login-container">
+                <div id="g_id_onload"
+                    data-client_id="731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com"
+                    data-context="signin" data-ux_mode="popup" data-callback="handleGoogleLogin"
+                    data-auto_prompt="false">
+                </div>
+
+                <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue"
+                    data-text="signin_with" data-size="large" data-logo_alignment="left">
+                </div>
+            </div>
+
+            <div class="footer-links">
+                Don't have an account? <a href="#">Create Player ID</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Login Handler
+        window.handleGoogleLogin = function (response) {
+            try {
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const user = JSON.parse(jsonPayload);
+                localStorage.setItem('playerName', user.name || user.given_name);
+                if (user.picture) localStorage.setItem('playerAvatar', user.picture);
+
+                enterGame();
+            } catch (e) {
+                console.error("Error handling Google Login:", e);
+            }
+        };
+
+        // Clerk Auth Integration
+        async function initClerk() {
+            const publishableKey = "pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA";
+            try {
+                const clerk = new Clerk(publishableKey);
+                await clerk.load();
+                
+                if (clerk.user) {
+                    handleClerkSession(clerk.user);
+                } else {
+                    clerk.mountSignIn(document.getElementById('clerk-signin-ui'), {
+                        appearance: {
+                            theme: 'dark',
+                            variables: { colorPrimary: '#FFFFFF' },
+                            layout: {
+                                headerTitle: 'Sign in to Ludo Realm',
+                                headerSubtitle: ' ',
+                                logoPlacement: 'none'
+                            }
+                        }
+                    });
+                }
+
+                clerk.addListener(({ user }) => {
+                    if (user) handleClerkSession(user);
+                });
+            } catch (err) {
+                console.error("Clerk initialization failed:", err);
+            }
+        }
+
+        function handleClerkSession(user) {
+            localStorage.setItem('playerName', user.fullName || user.firstName);
+            localStorage.setItem('playerAvatar', user.imageUrl);
+            enterGame();
+        }
+
+        function enterGame() {
+            window.location.href = 'ludo_intro.html';
+        }
+
+        window.addEventListener('load', () => {
+            const checkClerk = setInterval(() => {
+                if (typeof Clerk !== 'undefined') {
+                    clearInterval(checkClerk);
+                    initClerk();
+                }
+            }, 100);
+        });
+
+        // Simple ambient animation for dice
+        const orbitStyle = document.createElement('style');
+        orbitStyle.innerHTML = `
+            @keyframes orbit {
+                0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+                100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+            }
+        `;
+        document.head.appendChild(orbitStyle);
+    </script>
+</body>
+</html>

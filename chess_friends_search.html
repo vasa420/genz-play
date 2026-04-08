@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Master - Find Operatives</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030303;
+            --accent: #fff;
+            --tv-frame: #1a1a1a;
+            --tv-border: #333;
+            --glow: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent);
+        }
+
+        /* Premium Arena Modal System */
+        #custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.96);
+            backdrop-filter: blur(25px) saturate(180%);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+            animation: modalFadeIn 0.4s ease;
+        }
+
+        .custom-modal {
+            background: linear-gradient(145deg, #0f0f0f, #050505);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px 60px;
+            border-radius: 35px;
+            text-align: center;
+            width: 450px;
+            box-shadow: 0 50px 100px rgba(0,0,0,1);
+            animation: modalPopUp 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+        }
+
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalPopUp {
+            from { transform: scale(0.9) translateY(40px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .modal-title {
+            color: #444; font-size: 10px; font-weight: 900; letter-spacing: 5px;
+            margin-bottom: 20px; text-transform: uppercase;
+        }
+
+        .modal-text {
+            color: #fff; font-size: 15px; font-weight: 800; line-height: 1.8;
+            margin-bottom: 45px; letter-spacing: 2px; text-transform: uppercase;
+        }
+
+        .modal-btn {
+            background: #fff; color: #000; border: none; padding: 16px 45px;
+            border-radius: 50px; font-weight: 900; letter-spacing: 3px;
+            cursor: pointer; transition: 0.4s; font-size: 11px; text-transform: uppercase;
+        }
+
+        .modal-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(255,255,255,0.4); }
+
+        /* Digital TV UI (Pro-Grade Hardware Look) */
+        .tv-container {
+            position: relative;
+            width: 720px;
+            aspect-ratio: 16 / 10;
+            background: #0d0d0d;
+            border-radius: 12px;
+            padding: 4px;
+            padding-bottom: 55px; /* Wide bottom bezel for branding */
+            box-shadow: 
+                0 0 0 1px #222,
+                0 40px 100px rgba(0,0,0,1);
+            animation: tvStartup 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tv-screen {
+            position: relative;
+            width: 100%;
+            flex-grow: 1;
+            background: #000;
+            border-radius: 4px; /* Shaper inner corners */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+        }
+
+        /* Screen Reflection & Depth */
+        .tv-glass {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 3px, 2px 100%;
+            z-index: 11;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+
+        /* TV Controls & Bezel Details */
+        .tv-bezel-bottom {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%;
+            height: 55px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 35px;
+            background: #0d0d0d;
+            color: #333;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .bezel-left { display: flex; align-items: center; gap: 10px; }
+        .bezel-right { display: flex; align-items: center; }
+
+        .hardware-switch {
+            width: 18px;
+            height: 10px;
+            background: #1a1a1a;
+            border: 1px solid #222;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .hardware-switch::after {
+            content: "";
+            position: absolute;
+            left: 2px; top: 1px;
+            width: 6px; height: 6px;
+            background: #333;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .hardware-switch.active::after {
+            left: 10px;
+            background: #fff;
+            box-shadow: 0 0 5px #fff;
+        }
+
+        .tv-led {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            transition: 0.3s;
+        }
+
+        .tv-led.active {
+            background: #555;
+            box-shadow: 0 0 5px rgba(255,255,255,0.2);
+        }
+
+        .exit-btn:hover { color: #fff; }
+
+        /* Header */
+        .tv-header {
+            padding: 25px 30px 15px;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tv-title {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* Search Area */
+        .search-area {
+            padding: 0 30px 20px;
+            z-index: 5;
+        }
+
+        .search-bar-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 10px 20px;
+        }
+
+        .search-input {
+            background: none;
+            border: none;
+            color: #fff;
+            width: 100%;
+            font-family: inherit;
+            font-weight: 700;
+            letter-spacing: 1px;
+            outline: none;
+            font-size: 13px;
+        }
+
+        .back-btn { display: none; }
+
+        .close-arena-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 30px;
+            height: 30px;
+            background: none;
+            border: none;
+            color: #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.3s;
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .close-arena-btn:hover {
+            color: #fff;
+            transform: scale(1.2) rotate(90deg);
+        }
+
+        .search-btn {
+            background: #fff;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .search-btn:hover { transform: scale(1.1); box-shadow: 0 0 15px #fff; }
+
+        /* Friends List */
+        .friends-list {
+            padding: 0 30px 25px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 5;
+        }
+
+        .friend-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 14px;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .friend-item:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(5px);
+            border-color: rgba(255,255,255,0.2);
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .friend-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .friend-avatar { font-size: 20px; opacity: 0.8; }
+        .friend-name { font-weight: 950; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+        .friend-id { font-size: 8px; font-weight: 900; letter-spacing: 3px; color: #fff; margin-top: 2px; opacity: 0.6; }
+
+        .add-btn {
+            background: none;
+            border: 1px solid #444;
+            color: #888;
+            padding: 6px 15px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .add-btn:hover { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 10px #fff; }
+        .add-btn.added { background: rgba(0, 255, 204, 0.1); border-color: #00ffcc55; color: #00ffcc; pointer-events: none; }
+
+        /* Custom Scrollbar */
+        .friends-list::-webkit-scrollbar { width: 3px; }
+        .friends-list::-webkit-scrollbar-track { background: transparent; }
+        .friends-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        @keyframes tvStartup {
+            0% { transform: scaleX(0) scaleY(0.002); opacity: 0; filter: brightness(10); }
+            40% { transform: scaleX(1) scaleY(0.002); opacity: 1; filter: brightness(4); }
+            100% { transform: scaleX(1) scaleY(1); opacity: 1; filter: brightness(1); }
+        }
+
+        .tv-screen.power-off {
+            animation: tvShutdown 0.5s ease-in forwards !important;
+        }
+
+        @keyframes tvShutdown {
+            0% { transform: scaleX(1) scaleY(1); opacity: 1; filter: brightness(1); }
+            40% { transform: scaleX(1) scaleY(0.002); opacity: 1; filter: brightness(4); }
+            100% { transform: scaleX(0) scaleY(0.002); opacity: 0; }
+        }
+
+        .tv-glass.static-on {
+            opacity: 0.8;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                        url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            animation: staticFlicker 0.1s infinite;
+        }
+
+        @keyframes staticFlicker {
+            0% { transform: translate(0,0); }
+            50% { transform: translate(-1px, 1px); }
+            100% { transform: translate(1px, -1px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tv-container">
+        <div class="tv-screen">
+            <button class="close-arena-btn" onclick="exitToArena()" title="CLOSE ARENA">×</button>
+            <div class="tv-glass"></div>
+            <div class="tv-header">
+                <div class="tv-title">SEARCH OPERATIVES</div>
+                <div style="font-size: 9px; color: #444; letter-spacing: 1px;">CHESS MASTER v2.4</div>
+            </div>
+
+            <div class="search-area">
+                <div class="search-bar-wrapper">
+                    <input type="text" class="search-input" id="search-input-field" placeholder="ENTER ID TO SEARCH" onkeydown="if(event.key==='Enter') performSearch()">
+                    <button class="search-btn" onclick="performSearch()">🔍</button>
+                </div>
+            </div>
+
+            <div class="friends-list" id="friends-list">
+                <!-- Random Friend 1 -->
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <span class="friend-avatar">👑</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="friend-name">FEN_STRIKER</span>
+                            <span class="friend-id">ID: 849201</span>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addFriend(this)">ADD</button>
+                </div>
+                <!-- Random Friend 2 -->
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <span class="friend-avatar">🛡️</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="friend-name">VOID_GAMBIT</span>
+                            <span class="friend-id">ID: 153920</span>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addFriend(this)">ADD</button>
+                </div>
+                <!-- Random Friend 3 -->
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <span class="friend-avatar">♟️</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="friend-name">PAWN_REBEL</span>
+                            <span class="friend-id">ID: 749021</span>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addFriend(this)">ADD</button>
+                </div>
+                <!-- Random Friend 4 -->
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <span class="friend-avatar">⚡</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="friend-name">BLITZ_KNIGHT</span>
+                            <span class="friend-id">ID: 920153</span>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addFriend(this)">ADD</button>
+                </div>
+                <!-- Random Friend 5 -->
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <span class="friend-avatar">🔥</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="friend-name">FIRE_ROOK</span>
+                            <span class="friend-id">ID: 284719</span>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addFriend(this)">ADD</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TV Bezel Logic -->
+        <div class="tv-bezel-bottom">
+            <div class="bezel-left">
+                <span>ELITE TRAINING MODULE</span>
+                <div class="hardware-switch active" id="btn-power"></div>
+            </div>
+            
+            <div class="tv-led active" id="tv-status-led"></div>
+            
+            <div class="bezel-right">
+                <span id="btn-static" style="cursor:pointer">TUTORIAL SYSTEM</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Premium Arena Modal -->
+    <div id="custom-modal-overlay">
+        <div class="custom-modal">
+            <div class="modal-title" id="modal-title-tag">SYSTEM NOTICE</div>
+            <div class="modal-text" id="modal-content">NAME NOT AVAILABLE</div>
+            <button class="modal-btn" onclick="closeModal()">PROCEED</button>
+        </div>
+    </div>
+
+    <script>
+        const tvScreen = document.querySelector('.tv-screen');
+        const tvGlass = document.querySelector('.tv-glass');
+        const tvLed = document.getElementById('tv-status-led');
+        let isPowerOn = true;
+
+        // Static Toggle (Left Button)
+        document.getElementById('btn-static').onclick = () => {
+            if (!isPowerOn) return;
+            tvGlass.classList.toggle('static-on');
+        };
+
+        // Power Toggle
+        document.getElementById('btn-power').onclick = function() {
+            const btn = this;
+            if (isPowerOn) {
+                // Shut down
+                tvScreen.classList.add('power-off');
+                tvLed.classList.remove('active');
+                btn.classList.remove('active');
+                isPowerOn = false;
+            } else {
+                // Power on
+                tvScreen.classList.remove('power-off');
+                tvScreen.style.animation = 'none';
+                tvScreen.offsetHeight; 
+                tvScreen.style.animation = 'tvStartup 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+                tvLed.classList.add('active');
+                btn.classList.add('active');
+                isPowerOn = true;
+            }
+        };
+
+        function performSearch() {
+            const query = document.getElementById('search-input-field').value.trim().toUpperCase();
+            if (!query) return;
+
+            const friends = document.querySelectorAll('.friend-item');
+            let found = false;
+
+            friends.forEach(friend => {
+                const name = friend.querySelector('.friend-name').innerText.toUpperCase();
+                const id = friend.querySelector('.friend-id').innerText.toUpperCase();
+                if (name.includes(query) || id.includes(query)) {
+                    friend.style.display = 'flex';
+                    found = true;
+                } else {
+                    friend.style.display = 'none';
+                }
+            });
+
+            if (!found) {
+                showModal("NAME NOT AVAILABLE", "SEARCH ERROR");
+            }
+        }
+
+        function showModal(msg, title = "SYSTEM NOTICE") {
+            document.getElementById('modal-title-tag').innerText = title;
+            document.getElementById('modal-content').innerText = msg;
+            document.getElementById('custom-modal-overlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal-overlay').style.display = 'none';
+        }
+
+        function addFriend(btn) {
+            btn.innerHTML = "ADDED ✓";
+            btn.classList.add('added');
+        }
+        function exitToArena() {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage('closePortal', '*');
+            } else {
+                window.location.href = 'chess.html';
+            }
+        }
+    </script>
+</body>
+</html>

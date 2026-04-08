@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHESS ARENA | TUTORIAL CLASS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --accent-color: #00ffcc;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .bg-decor {
+            position: fixed;
+            top: -10%; left: -10%;
+            width: 50%; height: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 204, 0.03) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 60px 20px; text-align: center; }
+
+        .category-tag {
+            font-size: 10px; letter-spacing: 4px; color: var(--accent-color);
+            text-transform: uppercase; font-weight: 700; display: inline-block;
+            margin-bottom: 40px; padding: 5px 15px;
+            background: rgba(0, 255, 204, 0.1); border-radius: 20px;
+        }
+
+        .hw-switch {
+            position: relative; display: inline-block;
+            width: 20px; height: 10px; margin-left: 10px;
+        }
+        .hw-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #111; transition: .4s;
+            border-radius: 10px; border: 1px solid #333;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 6px; width: 6px; left: 1px; bottom: 1px;
+            background-color: #444; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #222; border-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(10px); background-color: var(--accent-color); box-shadow: 0 0 5px var(--accent-color); }
+
+        @keyframes tvStartup {
+            0% { transform: scaleX(0) scaleY(0.01); opacity: 0; background: #fff; }
+            40% { transform: scaleX(1) scaleY(0.01); opacity: 1; background: #fff; }
+            60% { transform: scaleX(1) scaleY(1); opacity: 1; background: #fff; }
+            100% { transform: scaleX(1) scaleY(1); opacity: 1; background: #000; }
+        }
+
+        @keyframes tvShutdownAnim {
+            0% { transform: scaleX(1) scaleY(1); opacity: 1; background: #000; }
+            40% { transform: scaleX(1) scaleY(0.01); opacity: 1; background: #fff; }
+            80% { transform: scaleX(0) scaleY(0.01); opacity: 1; background: #fff; }
+            100% { transform: scaleX(0) scaleY(0); opacity: 0; background: #fff; }
+        }
+
+        .tv-powering-on { animation: tvStartup 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; z-index: 50; }
+        .tv-powering-off { animation: tvShutdownAnim 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; z-index: 50; }
+
+        .back-btn {
+            margin-top: 80px; background: #fff; color: #000;
+            padding: 20px 50px; border-radius: 100px;
+            font-weight: 900; font-size: 14px; letter-spacing: 2px;
+            text-decoration: none; display: inline-block; transition: 0.4s;
+        }
+        .back-btn:hover { transform: scale(1.05); box-shadow: 0 10px 40px rgba(255,255,255,0.2); }
+
+    </style>
+    <script>
+        // Dynamic Script Injection for robust API Handshake
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        let player;
+        let isPlayerReady = false;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('tutorial-player', {
+                height: '100%',
+                width: '100%',
+                videoId: 'fKxG8KjH1Qg',
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 1,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'iv_load_policy': 3,
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            const signal = document.getElementById('tv-signal-text');
+            signal.innerHTML = "SIGNAL ACQUIRED";
+            setTimeout(() => {
+                if (document.querySelector('.hw-switch input').checked) {
+                     signal.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function onPlayerError(e) {
+            console.error("Tutorial Protocol Error:", e);
+            document.getElementById('tv-signal-text').innerHTML = "SIGNAL INTERRUPTED - RETRY";
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === 0) { // ENDED
+                const switchEl = document.querySelector('.hw-switch input');
+                switchEl.checked = false;
+                toggleTVPower(switchEl);
+            }
+        }
+
+        function toggleTVPower(el) {
+            const tv = document.getElementById('digital-tv');
+            const led = document.getElementById('tv-led');
+            const signal = document.getElementById('tv-signal-text');
+
+            if (el.checked) {
+                tv.classList.remove('tv-powering-off');
+                tv.classList.add('tv-powering-on');
+                tv.style.opacity = '1';
+                led.style.background = '#00ffcc';
+                led.style.boxShadow = '0 0 10px #00ffcc';
+                
+                setTimeout(() => {
+                    tv.classList.remove('tv-powering-on');
+                    if (isPlayerReady && player && player.playVideo) {
+                        player.playVideo();
+                        signal.style.display = 'none';
+                    } else {
+                        signal.innerHTML = "ACQUIRING INTEL STREAM...";
+                        signal.style.display = 'block';
+                    }
+                }, 800);
+            } else {
+                tv.classList.remove('tv-powering-on');
+                tv.classList.add('tv-powering-off');
+                led.style.background = '#222';
+                led.style.boxShadow = 'none';
+                if (isPlayerReady && player && player.pauseVideo) player.pauseVideo();
+                setTimeout(() => {
+                    tv.style.opacity = '0';
+                    tv.classList.remove('tv-powering-off');
+                    signal.style.display = 'block';
+                    signal.innerHTML = "SIGNAL STANDBY";
+                }, 600);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="bg-decor"></div>
+    <div class="container">
+        <div class="category-tag">ARENA TRAINING</div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh;">
+            <div class="tv-wrapper" style="position: relative; width: 800px; max-width: 95vw;">
+                <!-- Cables -->
+                <div class="tv-cables-container" style="position: absolute;top: 100%; width: 100%; height: 60px; pointer-events: none;">
+                    <div style="position: absolute; right: 20%; transform: rotate(10deg); height: 100%; border-left: 2px solid #111;"></div>
+                    <div style="position: absolute; left: 25%; transform: rotate(-15deg); height: 100%; border-right: 3px solid #080808;"></div>
+                </div>
+
+                <!-- TV FRAME -->
+                <div class="tv-frame" style="height: 480px; background: #000; border: 15px solid #111; border-bottom-width: 45px; border-radius: 12px; box-shadow: 0 50px 100px rgba(0,0,0,0.8); position: relative; overflow: visible;">
+                    <div id="digital-tv" style="width: 100%; height: 100%; background: #000; opacity: 0; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.1s;">
+                        <!-- Diagnostic Signal Overlay -->
+                        <div id="tv-signal-text" style="z-index: 50; color: var(--accent-color); font-size: 10px; letter-spacing: 5px; font-weight: 700; text-transform: uppercase; text-shadow: 0 0 10px rgba(0,255,204,0.5);">SIGNAL STANDBY</div>
+                        
+                        <div style="position: absolute; top: 20px; right: 20px; z-index: 60; font-size: 7px; color: #333; letter-spacing: 3px; font-weight: 900;">GRANDMASTER LOGIC v1.0</div>
+
+                        <!-- Pure CSS Tactical Static -->
+                        <div style="opacity: 0.08; position: absolute; top:0; left:0; width:100%; height:100%; filter: url(#noiseFilter); pointer-events: none; z-index: 40;"></div>
+                        <svg style="position: absolute; width: 0; height: 0;">
+                            <filter id="noiseFilter">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                            </filter>
+                        </svg>
+
+                        <!-- Embedded Player Container -->
+                        <div id="tutorial-player" style="width:100%; height:100%; border:none; z-index: 10; transform: scale(1.02);"></div>
+                    </div>
+
+                    <!-- Bottom Bezel -->
+                    <div style="position: absolute; bottom: -35px; left: 20px; font-size: 9px; color: #333; letter-spacing: 2px; display: flex; align-items: center;">
+                        ELITE TRAINING MODULE
+                        <label class="hw-switch" title="POWER ON">
+                            <input type="checkbox" onchange="toggleTVPower(this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="position: absolute; bottom: -35px; right: 20px; font-size: 9px; color: #333; letter-spacing: 2px;">TUTORIAL SYSTEM</div>
+                    
+                    <!-- LED -->
+                    <div id="tv-led" style="position: absolute; bottom: -38px; left: 50%; width: 5px; height: 5px; border-radius: 50%; background: #222; transform: translateX(-50%); transition: 0.4s;"></div>
+                </div>
+
+                <!-- Stands -->
+                <div style="display: flex; justify-content: space-between; padding: 0 15%; margin-top: -5px;">
+                    <div style="width: 25px; height: 100px; background: linear-gradient(to bottom, #111, #050505); transform: perspective(30px) rotateX(15deg); border-radius: 4px;"></div>
+                    <div style="width: 25px; height: 100px; background: linear-gradient(to bottom, #111, #050505); transform: perspective(30px) rotateX(15deg); border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="chess.html" class="back-btn">RETURN TO ARENA</a>
+        </div>
+    </div>
+</body>
+</html>

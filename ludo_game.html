@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Realm - Live Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;950&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #FF3B30;
+            --blue: #007AFF;
+            --yellow: #FFCC00;
+            --green: #4CD964;
+            --bg: #0A0A0A;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar UI */
+        .sidebar {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+        }
+
+        .profile-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .avatar {
+            width: 50px; height: 50px;
+            background: #222;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .stat-box {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-val { font-weight: 950; font-size: 18px; display: block; }
+        .stat-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Main Game Area */
+        .main-game {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: radial-gradient(circle at center, #151515 0%, #000 100%);
+        }
+
+        .game-board {
+            width: 650px;
+            height: 650px;
+            background: #111;
+            border: 15px solid #222;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            position: relative;
+        }
+
+        /* Ambient Glows */
+        .glow {
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        /* Game Controls */
+        .dice-control {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 100px;
+            height: 100px;
+            background: #fff;
+            color: #000;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+
+        .dice-control:hover { transform: scale(1.1); }
+        .dice-control:active { transform: scale(0.95); }
+
+        .game-status-banner {
+            position: absolute;
+            top: 40px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            padding: 12px 30px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            font-weight: 950;
+            letter-spacing: 2px;
+            font-size: 14px;
+            color: var(--yellow);
+        }
+
+        #return-btn {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+        #return-btn:hover { background: #fff; color: #000; }
+
+        /* Token Styling */
+        .token {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+        
+        .token::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+        }
+
+        .token.red { background: var(--red); border: 2px solid #801a1a; }
+        .token.blue { background: var(--blue); border: 2px solid #003366; }
+        .token.green { background: var(--green); border: 2px solid #145214; }
+        .token.yellow { background: var(--yellow); border: 2px solid #997a00; }
+
+        .token:hover { transform: scale(1.2) translateY(-5px); z-index: 110; }
+
+        /* Dice Animation */
+        @keyframes diceShake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg) scale(1.1); }
+            50% { transform: rotate(-15deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.05); }
+            100% { transform: rotate(0deg); }
+        }
+        .dice-rolling { animation: diceShake 0.4s infinite; pointer-events: none; opacity: 0.7; }
+        
+        .game-log {
+            font-size: 13px;
+            color: #888;
+            flex: 1;
+            border-left: 2px solid #222;
+            padding-left: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .log-entry { opacity: 0; animation: logAppear 0.3s forwards; }
+        @keyframes logAppear { to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile-card">
+            <img class="avatar" id="user-avatar" src="" alt="">
+            <div>
+                <div style="font-weight: 950; font-size: 16px;" id="user-name">PLAYER NAME</div>
+                <div style="font-size: 10px; color: var(--yellow); letter-spacing: 1px;">LEVEL 12 🏆</div>
+            </div>
+        </div>
+
+        <h2 style="font-weight: 950; font-size: 11px; color: #444; letter-spacing: 3px; margin-bottom: 20px;">GAME LOG</h2>
+        <div class="game-log" id="game-log-container">
+            <div class="log-entry">Welcome to the Arena.</div>
+            <div class="log-entry" style="color: #fff; font-weight: bold;">[ SYSTEM ] Match Start.</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-val">0</span>
+                <span class="stat-label">Wins</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-val">$240</span>
+                <span class="stat-label">Bank</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-game">
+        <div class="glow" style="background: var(--red); top: 0; left: 0;"></div>
+        <div class="glow" style="background: var(--blue); top: 0; right: 0;"></div>
+        <div class="glow" style="background: var(--green); bottom: 0; left: 0;"></div>
+        <div class="glow" style="background: var(--yellow); bottom: 0; right: 0;"></div>
+
+        <div class="game-status-banner" id="status-banner">WAITING FOR YOUR TURN...</div>
+        
+        <button id="return-btn" onclick="window.location.href='index.html'">EXIT GAME</button>
+
+        <div class="game-board" id="board">
+            <!-- Board cells generated via JS -->
+        </div>
+
+        <div class="dice-control" id="dice-btn">🎲</div>
+    </div>
+
+    <script>
+        /** 
+         * LUDO REALM - CORE GAME ENGINE
+         * State-driven modular logic for piece movement, captures, and win conditions.
+         */
+
+        // 1. Path Mapping System (15x15 Grid)
+        // Main circuit around the board (52 cells)
+        const MAIN_CIRCUIT = [
+            91, 92, 93, 94, 95, 81, 66, 51, 36, 21, 6, 7, 8, 
+            23, 38, 53, 68, 83, 99, 100, 101, 102, 103, 104, 119, 134,
+            133, 132, 131, 130, 129, 143, 158, 173, 188, 203, 218, 217, 216,
+            201, 186, 171, 156, 141, 125, 124, 123, 122, 121, 120, 105, 90
+        ];
+
+        const PATH_START = { RED: 0, BLUE: 13, YELLOW: 26, GREEN: 39 };
+        const HOME_STRETCH = {
+            RED: [106, 107, 108, 109, 110, 111],
+            BLUE: [22, 37, 52, 67, 82, 97],
+            YELLOW: [118, 117, 116, 115, 114, 113],
+            GREEN: [202, 187, 172, 157, 142, 127]
+        };
+        const SAFE_ZONES = [91, 23, 133, 201, 8, 104, 216, 120]; 
+        const CENTER_ZONE = 112;
+
+        // 2. State Object
+        const gameState = {
+            currentPlayer: 'RED',
+            diceValue: 0,
+            isRolling: false,
+            sixCount: 0, // Track consecutive 6s
+            bonusTurn: false,
+            hasMoved: false,
+            winner: null,
+            players: ['RED', 'BLUE', 'YELLOW', 'GREEN'],
+            playerNames: { RED: 'MASTER', BLUE: 'ORION', YELLOW: 'LUX', GREEN: 'VEGA' },
+            coins: [] // Array of 16 coin objects
+        };
+
+        // 3. Initialize Coins
+        function initGame() {
+            const basePos = {
+                RED: [16, 19, 61, 64], BLUE: [25, 28, 70, 73],
+                YELLOW: [160, 163, 205, 208], GREEN: [151, 154, 196, 199]
+            };
+
+            gameState.coins = [];
+            gameState.players.forEach(color => {
+                for (let i = 0; i < 4; i++) {
+                    gameState.coins.push({
+                        color, id: `${color}-${i}`,
+                        basePos: basePos[color][i],
+                        pos: -1, // -1 = Base, 0-51 = Circuit, 52-57 = Home Stretch, 58 = Finished
+                        isFinished: false
+                    });
+                }
+            });
+
+            // Sync user name
+            const storedName = localStorage.getItem('playerName');
+            if (storedName) gameState.playerNames.RED = storedName;
+            document.getElementById('user-name').textContent = gameState.playerNames.RED;
+            
+            const avatarUrl = localStorage.getItem('playerAvatar');
+            if (avatarUrl) document.getElementById('user-avatar').src = avatarUrl;
+            else document.getElementById('user-avatar').style.display = 'none';
+
+            renderBoard();
+            renderCoins();
+            updateStatus(`GAME READY. ${gameState.playerNames.RED}'S TURN.`);
+        }
+
+        // 4. Core Dice Rolling Logic
+        function rollDice() {
+            if (gameState.isRolling || gameState.hasMoved) return;
+            
+            gameState.isRolling = true;
+            gameState.hasMoved = false;
+            const diceBtn = document.getElementById('dice-btn');
+            diceBtn.classList.add('dice-rolling');
+
+            setTimeout(() => {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                gameState.diceValue = roll;
+                diceBtn.textContent = getDiceEmoji(roll);
+                diceBtn.classList.remove('dice-rolling');
+                gameState.isRolling = false;
+                
+                addLog(`[ ${gameState.currentPlayer} ] Rolled a ${roll}`, '#fff', true);
+
+                // Check three 6s sequence
+                if (roll === 6) {
+                    gameState.sixCount++;
+                    if (gameState.sixCount === 3) {
+                        addLog("THREE 6s! TURN LOST.", "#FF3B30");
+                        gameState.sixCount = 0;
+                        endTurn();
+                        return;
+                    }
+                    gameState.bonusTurn = true;
+                } else {
+                    gameState.sixCount = 0;
+                    gameState.bonusTurn = false;
+                }
+
+                highlightValidMoves();
+            }, 800);
+        }
+
+        // 5. Movement Logic
+        function highlightValidMoves() {
+            const validCoins = gameState.coins.filter(c => 
+                c.color === gameState.currentPlayer && !c.isFinished && canMove(c, gameState.diceValue)
+            );
+
+            if (validCoins.length === 0) {
+                setTimeout(() => {
+                    addLog("NO VALID MOVES.", "#555");
+                    endTurn();
+                }, 800);
+            } else {
+                validCoins.forEach(c => {
+                    const el = document.getElementById(c.id);
+                    el.style.border = '3px solid #fff';
+                    el.style.boxShadow = '0 0 20px #fff';
+                    el.onclick = () => moveCoin(c);
+                });
+            }
+        }
+
+        function canMove(coin, roll) {
+            if (coin.pos === -1) return roll === 6;
+            if (coin.pos + roll > 57) return false; // Exact roll needed for home? Standard ludo rules vary, let's allow total 57.
+            return true;
+        }
+
+        function moveCoin(coin) {
+            if (gameState.hasMoved) return;
+            gameState.hasMoved = true;
+            clearHighlights();
+
+            let targetPos = coin.pos;
+            if (coin.pos === -1) targetPos = 0; // Move to start
+            else targetPos += gameState.diceValue;
+
+            coin.pos = targetPos;
+            
+            if (coin.pos === 57) {
+                coin.isFinished = true;
+                addLog(`COIN FINISHED FOR ${coin.color}!`, "#FFD700");
+                gameState.bonusTurn = true; // Bonus for finishing
+            }
+
+            renderCoins();
+            checkCaptures(coin);
+            
+            if (checkWin()) {
+                announceWin();
+            } else {
+                if (gameState.bonusTurn) {
+                    addLog("BONUS ROLL!", "#39FF14");
+                    gameState.hasMoved = false;
+                    updateStatus(`ROLL AGAIN, ${gameState.currentPlayer}!`);
+                } else {
+                    endTurn();
+                }
+            }
+        }
+
+        function checkCaptures(movedCoin) {
+            if (movedCoin.pos < 0 || movedCoin.pos >= 52) return; // Only capture on main circuit
+
+            const movedRealCell = getRealCellIndex(movedCoin);
+            if (SAFE_ZONES.includes(movedRealCell)) return;
+
+            gameState.coins.forEach(other => {
+                if (other.color !== movedCoin.color && !other.isFinished && other.pos >= 0 && other.pos < 52) {
+                    if (getRealCellIndex(other) === movedRealCell) {
+                        addLog(`CAPTURED ${other.color} COIN!`, "#FF3B30");
+                        other.pos = -1; // Send to base
+                        gameState.bonusTurn = true; // Capturer gets bonus roll
+                    }
+                }
+            });
+            renderCoins();
+        }
+
+        // 6. Helpers & Renderers
+        function getRealCellIndex(coin) {
+            if (coin.pos === -1) return coin.basePos;
+            if (coin.pos < 52) {
+                const startIndex = PATH_START[coin.color];
+                return MAIN_CIRCUIT[(startIndex + coin.pos) % 52];
+            }
+            if (coin.pos >= 52) {
+                return HOME_STRETCH[coin.color][coin.pos - 52];
+            }
+            return -1;
+        }
+
+        function endTurn() {
+            gameState.currentPlayer = gameState.players[(gameState.players.indexOf(gameState.currentPlayer) + 1) % 4];
+            gameState.hasMoved = false;
+            gameState.sixCount = 0;
+            gameState.bonusTurn = false;
+            updateStatus(`${gameState.playerNames[gameState.currentPlayer].toUpperCase()}'S TURN.`);
+            clearHighlights();
+        }
+
+        function updateStatus(txt) {
+            const el = document.getElementById('status-banner');
+            el.textContent = txt;
+            el.style.color = getPlayerHex(gameState.currentPlayer);
+        }
+
+        function getPlayerHex(c) {
+            const hex = { RED: '#FF3B30', BLUE: '#007AFF', YELLOW: '#FFCC00', GREEN: '#4CD964' };
+            return hex[c];
+        }
+
+        function renderBoard() {
+            const b = document.getElementById('board');
+            b.innerHTML = '';
+            for (let i = 0; i < 225; i++) {
+                const cell = document.createElement('div');
+                cell.id = `cell-${i}`;
+                cell.dataset.cellId = i;
+                cell.style.border = '1px solid #1a1a1a';
+                cell.style.position = 'relative';
+                
+                const row = Math.floor(i / 15);
+                const col = i % 15;
+                if (row < 6 && col < 6) cell.style.background = '#301010';
+                else if (row < 6 && col > 8) cell.style.background = '#101030';
+                else if (row > 8 && col < 6) cell.style.background = '#103010';
+                else if (row > 8 && col > 8) cell.style.background = '#303010';
+                else if (SAFE_ZONES.includes(i)) cell.style.background = 'rgba(255,255,255,0.05)';
+                else if (i === CENTER_ZONE) cell.style.background = '#000';
+                else cell.style.background = '#111';
+
+                b.appendChild(cell);
+            }
+        }
+
+        function renderCoins() {
+            // Remove all existing coin elements
+            document.querySelectorAll('.token').forEach(t => t.remove());
+
+            gameState.coins.forEach(c => {
+                const targetCellId = getRealCellIndex(c);
+                const cell = document.getElementById(`cell-${targetCellId}`);
+                if (cell) {
+                    const el = document.createElement('div');
+                    el.id = c.id;
+                    el.className = `token ${c.color.toLowerCase()}`;
+                    if (c.isFinished) el.style.display = 'none';
+                    cell.appendChild(el);
+                }
+            });
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.token').forEach(t => {
+                t.style.border = '';
+                t.style.boxShadow = '';
+                t.onclick = null;
+            });
+        }
+
+        function checkWin() {
+            const finished = gameState.coins.filter(c => c.color === gameState.currentPlayer && c.isFinished);
+            return finished.length === 4;
+        }
+
+        function announceWin() {
+            gameState.winner = gameState.currentPlayer;
+            document.getElementById('status-banner').textContent = `🏆 ${gameState.currentPlayer} WINS! 🏆`;
+            addLog(`MATCH OVER. ${gameState.currentPlayer} IS THE CHAMPION!`, '#FFD700', true);
+            document.getElementById('dice-btn').style.display = 'none';
+        }
+
+        function getDiceEmoji(n) { return ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][n - 1] || '🎲'; }
+        function addLog(t, c = '#888', b = false) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.color = c;
+            if (b) entry.style.fontWeight = 'bold';
+            entry.textContent = t;
+            const logC = document.getElementById('game-log-container');
+            logC.appendChild(entry);
+            logC.scrollTop = logC.scrollHeight;
+        }
+
+        document.getElementById('dice-btn').addEventListener('click', rollDice);
+        initGame();
+    </script>
+</body>
+</html>

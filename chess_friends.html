@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Master - Recruitment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000;
+            --accent: #fff;
+            --border: #222;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--accent);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #bg-effect {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+            z-index: 0;
+        }
+
+        .search-container {
+            z-index: 10;
+            width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .search-header {
+            text-align: center;
+        }
+
+        .search-title {
+            font-size: 14px;
+            font-weight: 950;
+            letter-spacing: 5px;
+            color: #fff;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-bar {
+            width: 100%;
+            background: #080808;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 15px 25px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #555;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .friends-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .friends-list::-webkit-scrollbar { width: 4px; }
+        .friends-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+        .friend-row {
+            background: #050505;
+            border: 1px solid #1a1a1a;
+            padding: 15px 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .friend-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            background: #222;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .friend-name {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .invite-btn {
+            background: #000;
+            border: 1px solid #222;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 950;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        .invite-btn:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .invite-btn.sent {
+            background: #111;
+            color: #555;
+            border-color: #1a1a1a;
+            cursor: default;
+        }
+
+        .back-btn { display: none; }
+
+        .close-arena-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 30px;
+            height: 30px;
+            background: none;
+            border: none;
+            color: #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .close-arena-btn:hover {
+            color: #fff;
+            transform: scale(1.2) rotate(90deg);
+            text-shadow: 0 0 10px #fff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-effect"></div>
+
+    <div class="search-container">
+        <button class="close-arena-btn" onclick="window.location.href='chess_online.html'" title="CLOSE">×</button>
+        <div class="search-header">
+            <div class="search-title">CHALLENGE A FRIEND</div>
+            <div class="search-input-wrapper">
+                <input type="text" class="search-bar" placeholder="SEARCH OPERATIVES...">
+            </div>
+        </div>
+
+        <div class="friends-list">
+            <!-- Friend 1 -->
+            <div class="friend-row">
+                <div class="friend-info">
+                    <div class="friend-avatar">👑</div>
+                    <div class="friend-name">MAGNUS_V</div>
+                </div>
+                <button class="invite-btn" onclick="sendInvite(this)">INVITE</button>
+            </div>
+            <!-- Friend 2 -->
+            <div class="friend-row">
+                <div class="friend-info">
+                    <div class="friend-avatar">🛡️</div>
+                    <div class="friend-name">X_CHESS_MASTER</div>
+                </div>
+                <button class="invite-btn" onclick="sendInvite(this)">INVITE</button>
+            </div>
+            <!-- Friend 3 -->
+            <div class="friend-row">
+                <div class="friend-info">
+                    <div class="friend-avatar">♟️</div>
+                    <div class="friend-name">PAWN_STORM</div>
+                </div>
+                <button class="invite-btn" onclick="sendInvite(this)">INVITE</button>
+            </div>
+            <!-- Friend 4 -->
+            <div class="friend-row">
+                <div class="friend-info">
+                    <div class="friend-avatar">⚡</div>
+                    <div class="friend-name">BLITZ_GENERAL</div>
+                </div>
+                <button class="invite-btn" onclick="sendInvite(this)">INVITE</button>
+            </div>
+            <!-- Friend 5 -->
+            <div class="friend-row">
+                <div class="friend-info">
+                    <div class="friend-avatar">🪶</div>
+                    <div class="friend-name">SILENT_ROOK</div>
+                </div>
+                <button class="invite-btn" onclick="sendInvite(this)">INVITE</button>
+            </div>
+        </div>
+
+        <button class="back-btn" onclick="window.history.back()">ABORT RECRUITMENT</button>
+    </div>
+
+    <script>
+        function sendInvite(btn) {
+            btn.innerText = "SENT";
+            btn.classList.add("sent");
+            btn.disabled = true;
+
+            // Mark invite as sent for simulation
+            localStorage.setItem('chess_invite_sent', 'true');
+
+            // Automatically transition back to lobby to see them join
+            setTimeout(() => {
+                window.location.href = 'chess_create_room.html';
+            }, 1200);
+        }
+    </script>
+    <!-- Background Music -->
+    <audio id="arena-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const bgMusic = document.getElementById('arena-music');
+        let isMusicPlaying = false;
+
+        function tryPlayMusic() {
+            if (localStorage.getItem('arenaMusicEnabled') === 'true' && !isMusicPlaying) {
+                const savedTime = localStorage.getItem('arenaMusicTime');
+                if (savedTime) bgMusic.currentTime = parseFloat(savedTime);
+                
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                }).catch(() => {});
+            }
+        }
+
+        // Continuous time-tracking
+        setInterval(() => {
+            if (isMusicPlaying) {
+                localStorage.setItem('arenaMusicTime', bgMusic.currentTime);
+            }
+        }, 1000);
+
+        // Trigger on any interaction
+        document.body.addEventListener('click', () => {
+            tryPlayMusic();
+        }, { once: true });
+        
+        // Initial attempt (might be blocked)
+        window.addEventListener('load', tryPlayMusic);
+    </script>
+</body>
+</html>

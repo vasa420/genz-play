@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHESS ARENA | UPCOMING EVENTS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --accent-color: #00ffcc;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .bg-decor {
+            position: fixed;
+            top: -10%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 204, 0.05) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .category-tag {
+            font-size: 10px;
+            letter-spacing: 4px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 5px 15px;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 20px;
+        }
+
+        h1 {
+            font-size: 56px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .event-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 40px;
+            transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .event-date {
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .month {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .event-info {
+            flex: 1;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 14px;
+            border-radius: 50px;
+            margin-bottom: 15px;
+        }
+
+        .status-pill.live {
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--accent-color);
+        }
+
+        .live-dot {
+            width: 6px; height: 6px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            animation: livePulse 2s infinite;
+        }
+
+        @keyframes livePulse {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.4); }
+            70% { transform: scale(1.5); opacity: 0; box-shadow: 0 0 0 10px rgba(0, 255, 204, 0); }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        h2 { font-size: 28px; margin-bottom: 10px; letter-spacing: -0.5px; }
+        p { color: var(--text-secondary); line-height: 1.7; font-size: 16px; }
+
+        .footer {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        .back-btn {
+            background: #fff;
+            color: #000;
+            padding: 20px 50px;
+            border-radius: 100px;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.4s;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 40px rgba(255,255,255,0.2);
+        }
+
+        .hw-switch {
+            position: relative;
+            display: inline-block;
+            width: 20px;
+            height: 10px;
+            margin: 0 10px;
+        }
+
+        .hw-switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #111;
+            transition: .4s;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 6px; width: 6px;
+            left: 1px; bottom: 1px;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #222; border-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(10px); background-color: var(--accent-color); box-shadow: 0 0 5px var(--accent-color); }
+
+        @keyframes tvStartup {
+            0% { transform: scaleX(0) scaleY(0.01); opacity: 0; background: #fff; }
+            40% { transform: scaleX(1) scaleY(0.01); opacity: 1; background: #fff; }
+            60% { transform: scaleX(1) scaleY(1); opacity: 1; background: #fff; }
+            100% { transform: scaleX(1) scaleY(1); opacity: 1; background: #000; }
+        }
+
+        @keyframes tvShutdownAnim {
+            0% { transform: scaleX(1) scaleY(1); opacity: 1; background: #000; }
+            40% { transform: scaleX(1) scaleY(0.01); opacity: 1; background: #fff; }
+            80% { transform: scaleX(0) scaleY(0.01); opacity: 1; background: #fff; }
+            100% { transform: scaleX(0) scaleY(0); opacity: 0; background: #fff; }
+        }
+
+        .tv-powering-on { animation: tvStartup 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; z-index: 50; }
+        .tv-powering-off { animation: tvShutdownAnim 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; z-index: 50; }
+
+        @keyframes ledFlicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+    </style>
+    <script>
+        let currentChannel = 0;
+        const channels = [
+            {
+                title: "ARENA SEASON 4",
+                subtitle: "GRAND OPENING GALA",
+                logs: ["> STATS: DOUBLE XP ACTIVE", "> DURATION: APR 14-25", "> REWARD: LIGHTNING STRIKE TITLE", "> REGISTRATION: OPEN"]
+            },
+            {
+                title: "PATCH v2.5.4",
+                subtitle: "NEURAL OPTIMIZATION",
+                logs: ["> BUGFIX: KING SAFETY SYNC", "> SPEED: +150% CALCULATION", "> PROTOCOL: TOTAL CONNECTIVITY", "> DISCOVERY: MID-GAME FORKING"]
+            },
+            {
+                title: "GLOBAL FINALS",
+                subtitle: "WORLD TOUR 2026",
+                logs: ["> VENUE: TOKYO DISTRICT", "> PRIZE: $500,000 ARENA POOL", "> BROADCAST: 24h LIVE FEED", "> STATUS: PENDING QUALIFICATION"]
+            }
+        ];
+
+        function toggleTVPower(el) {
+            const tv = document.getElementById('digital-tv');
+            const led = document.getElementById('tv-led');
+            const tvContent = document.getElementById('tv-content');
+            if (el.checked) {
+                tv.classList.remove('tv-powering-off');
+                tv.classList.add('tv-powering-on');
+                tv.style.opacity = '1';
+                led.style.background = '#00ffcc';
+                led.style.boxShadow = '0 0 10px #00ffcc';
+                updateChannelDisplay();
+                setTimeout(() => tv.classList.remove('tv-powering-on'), 800);
+            } else {
+                tv.classList.remove('tv-powering-on');
+                tv.classList.add('tv-powering-off');
+                led.style.background = '#222';
+                led.style.boxShadow = 'none';
+                setTimeout(() => {
+                    tv.style.opacity = '0.05';
+                    tv.classList.remove('tv-powering-off');
+                    tvContent.innerHTML = "";
+                }, 600);
+            }
+        }
+
+        function changeChannel(dir) {
+            if (!document.querySelector('.hw-switch input').checked) return;
+            const tv = document.getElementById('digital-tv');
+            
+            // Channel Change Glitch
+            tv.style.opacity = '0.5';
+            setTimeout(() => {
+                currentChannel = (currentChannel + dir + channels.length) % channels.length;
+                updateChannelDisplay();
+                tv.style.opacity = '1';
+            }, 100);
+        }
+
+        function updateChannelDisplay() {
+            const tvContent = document.getElementById('tv-content');
+            const chan = channels[currentChannel];
+            tvContent.innerHTML = `
+                <div style="font-size: 10px; letter-spacing: 4px; color: var(--accent-color); margin-bottom: 20px; animation: ledFlicker 0.1s infinite;">CHANNEL 0${currentChannel + 1}</div>
+                <h2 style="font-size: 28px; margin-bottom: 10px; color: #fff;">${chan.title}</h2>
+                <div style="font-size: 11px; color: #444; margin-bottom: 20px; letter-spacing: 3px; font-weight: 900;">${chan.subtitle}</div>
+                <div style="font-size: 12px; color: #777; line-height: 1.6; text-align: left; display: inline-block; font-family: monospace;">
+                    ${chan.logs.join('<br>')}
+                </div>
+            `;
+        }
+    </script>
+</head>
+<body>
+    <div class="bg-decor"></div>
+    <div class="container">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh;">
+            <!-- Medium Intelligence Hub Monitor -->
+            <div class="tv-wrapper" style="position: relative; width: 600px; max-width: 90vw;">
+                <!-- Cables -->
+                <div class="tv-cables-container" style="top: 100%; height: 60px; pointer-events: none;">
+                    <div class="tv-cable" style="right: 20%; transform: rotate(10deg); height: 100%; border-left: 2px solid #111;"></div>
+                    <div class="tv-cable" style="left: 25%; transform: rotate(-15deg); height: 100%; border-right: 3px solid #080808;"></div>
+                </div>
+
+                <!-- TV FRAME -->
+                <div class="tv-frame" style="height: 420px; background: #0a0a0a; border: 12px solid #111; border-bottom-width: 35px; border-radius: 12px; box-shadow: 0 50px 100px rgba(0,0,0,0.8); position: relative; overflow: visible;">
+                    <div id="digital-tv" style="width: 100%; height: 100%; background: #000; opacity: 0.05; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: scale(1); transition: 0.1s;">
+                        <!-- Pure CSS Tactical Static -->
+                        <div class="tv-static" style="opacity: 0.15; position: absolute; top:0; left:0; width:100%; height:100%; background: transparent; filter: url(#noiseFilter);"></div>
+                        <svg style="position: absolute; width: 0; height: 0;">
+                            <filter id="noiseFilter">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                            </filter>
+                        </svg>
+                        <div class="tv-glare" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%); pointer-events: none;"></div>
+                        
+                        <!-- Content -->
+                        <div id="tv-content" style="z-index: 10; text-align: center; width: 80%;">
+                            <!-- INITIAL CONTENT SYNCED WITH SCRIPT -->
+                        </div>
+                    </div>
+
+                    <!-- Bottom Bezel Details -->
+                    <div style="position: absolute; bottom: -28px; left: 15px; font-size: 8px; color: #333; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;">
+                        MODEL: AREA-HUB
+                        <label class="hw-switch" title="POWER HUB">
+                            <input type="checkbox" onchange="toggleTVPower(this)">
+                            <span class="slider"></span>
+                        </label>
+                        <div style="display: flex; gap: 4px; margin-left: 10px;">
+                            <button onclick="changeChannel(-1)" style="background: #111; border: 1px solid #222; color: #444; width: 22px; height: 16px; font-size: 8px; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&lsaquo;</button>
+                            <button onclick="changeChannel(1)" style="background: #111; border: 1px solid #222; color: #444; width: 22px; height: 16px; font-size: 8px; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&rsaquo;</button>
+                        </div>
+                        <span style="font-size: 6px; opacity: 0.3;">CH SELECT</span>
+                    </div>
+                    <div style="position: absolute; bottom: -28px; right: 20px; font-size: 8px; color: #333; letter-spacing: 2px;">INTEL SMART</div>
+                    
+                    <!-- LED -->
+                    <div id="tv-led" style="position: absolute; bottom: -30px; left: 50%; width: 4px; height: 4px; border-radius: 50%; background: #222; transform: translateX(-50%); transition: 0.4s;"></div>
+                </div>
+                <!-- Stands -->
+                <div style="display: flex; justify-content: space-between; padding: 0 15%; margin-top: -5px;">
+                    <div style="width: 20px; height: 80px; background: linear-gradient(to bottom, #111, #050505); transform: perspective(20px) rotateX(20deg); border-radius: 4px;"></div>
+                    <div style="width: 20px; height: 80px; background: linear-gradient(to bottom, #111, #050505); transform: perspective(20px) rotateX(20deg); border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="chess.html" class="back-btn">RETURN TO ARENA</a>
+        </div>
+    </div>
+</body>
+</html>
