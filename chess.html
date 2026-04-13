@@ -584,6 +584,100 @@
             box-shadow: 0 15px 50px rgba(255, 255, 255, 0.5);
         }
 
+        /* Multiplayer Mode Layout overrides */
+        .multiplayer-arena .sidebar {
+            display: none !important;
+        }
+
+        .multiplayer-arena .main-layout {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .arena-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            max-width: 800px;
+            z-index: 100;
+        }
+
+        .player-timer-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 30px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 120px;
+            transition: 0.3s;
+        }
+
+        .player-timer-box.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .timer-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            font-weight: 800;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .timer-value {
+            font-size: 28px;
+            font-weight: 950;
+            color: #fff;
+        }
+
+        .exit-btn {
+            background: rgba(255, 51, 51, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .exit-btn:hover {
+            background: var(--danger);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.4);
+        }
+    </style>
+</head>
+
+<body id="arena-body">
+    <div id="arena-bg"></div>
+
+    <!-- Multiplayer Header (Hidden by default) -->
+    <div class="arena-header" id="multiplayer-header" style="display: none;">
+        <div class="player-timer-box" id="timer-box-white">
+            <div class="timer-label">WHITE</div>
+            <div class="timer-value" id="timer-white">10:00</div>
+        </div>
+        
+        <div style="text-align: center;">
+            <div id="multiplayer-match-id" style="font-size: 10px; font-weight: 900; color: #555; letter-spacing: 3px;">MATCH: ID-0000</div>
+            <button class="exit-btn" style="margin-top: 10px;" onclick="confirmExitArena()">EXIT ARENA</button>
+        </div>
+
+        <div class="player-timer-box" id="timer-box-black">
+            <div class="timer-label">BLACK</div>
+            <div class="timer-value" id="timer-black">10:00</div>
+        </div>
+    </div>
+
         /* Custom Arena Modal Overlay */
         #custom-modal-overlay-arena {
             position: fixed;
@@ -1514,9 +1608,10 @@
             white: { short: true, long: true },
             black: { short: true, long: true }
         };
-        let timer = 600;
-        let currentDifficulty = 'INTERMEDIATE';
         let timerInterval;
+        let timerWhite = 600;
+        let timerBlack = 600;
+        let currentDifficulty = 'INTERMEDIATE';
 
         function startMatch() {
             gameStarted = true;
@@ -1524,7 +1619,15 @@
             setTimeout(() => {
                 document.getElementById('start-match-overlay').style.display = 'none';
             }, 500);
-            lockSidebar(true);
+
+            if (isMultiplayer) {
+                document.getElementById('arena-body').classList.add('multiplayer-arena');
+                document.getElementById('multiplayer-header').style.display = 'flex';
+                document.getElementById('multiplayer-match-id').textContent = `MATCH: ID-${roomId}`;
+            } else {
+                lockSidebar(true);
+            }
+            
             startTimer();
             showToast("MATCH STARTED! GOOD LUCK.");
 
@@ -2264,14 +2367,29 @@
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                timer--;
-                if (timer <= 0) {
-                    clearInterval(timerInterval);
-                    gameActive = false;
-                    showToast("TIME UP! MATCH ENDED.");
+                if (currentPlayer === 'white') {
+                    timerWhite--;
+                    if (timerWhite <= 0) {
+                        clearInterval(timerInterval);
+                        gameActive = false;
+                        showToast("TIME UP! BLACK WINS.");
+                    }
+                } else {
+                    timerBlack--;
+                    if (timerBlack <= 0) {
+                        clearInterval(timerInterval);
+                        gameActive = false;
+                        showToast("TIME UP! WHITE WINS.");
+                    }
                 }
                 updateTimerDisplay();
             }, 1000);
+        }
+
+        function confirmExitArena() {
+            if (confirm("ARE YOU SURE YOU WANT TO DISCONNECT FROM THE ARENA?")) {
+                window.location.href = 'chess_online.html';
+            }
         }
 
         function toggleAI(el) {
@@ -2286,9 +2404,34 @@
         }
 
         function updateTimerDisplay() {
-            const min = Math.floor(timer / 60);
-            const sec = timer % 60;
-            document.getElementById('timer').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+            const minW = Math.floor(timerWhite / 60);
+            const secW = timerWhite % 60;
+            const minB = Math.floor(timerBlack / 60);
+            const secB = timerBlack % 60;
+
+            const tWhite = document.getElementById('timer-white');
+            const tBlack = document.getElementById('timer-black');
+            const tMain = document.getElementById('timer');
+
+            const whiteStr = `${minW}:${secW.toString().padStart(2, '0')}`;
+            const blackStr = `${minB}:${secB.toString().padStart(2, '0')}`;
+
+            if (tWhite) tWhite.textContent = whiteStr;
+            if (tBlack) tBlack.textContent = blackStr;
+            if (tMain) tMain.textContent = currentPlayer === 'white' ? whiteStr : blackStr;
+
+            // Highlight active timer box
+            const boxW = document.getElementById('timer-box-white');
+            const boxB = document.getElementById('timer-box-black');
+            if (boxW && boxB) {
+                if (currentPlayer === 'white') {
+                    boxW.classList.add('active');
+                    boxB.classList.remove('active');
+                } else {
+                    boxB.classList.add('active');
+                    boxW.classList.remove('active');
+                }
+            }
         }
 
         const PST = {
