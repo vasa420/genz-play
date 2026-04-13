@@ -319,6 +319,22 @@ io.on('connection', (socket) => {
         socket.to(roomId).emit('record_declined_by_friend');
     });
 
+    // Real-Time Chess Betting Sync
+    socket.on('bet_request', (data) => {
+        const { roomId, amount } = data;
+        socket.to(roomId).emit('bet_requested_by_friend', { amount });
+    });
+
+    socket.on('bet_response', (data) => {
+        const { roomId, accepted, amount } = data;
+        socket.to(roomId).emit('bet_response_received', { accepted, amount });
+    });
+
+    socket.on('bet_split_executed', (data) => {
+        const { roomId, amount } = data;
+        socket.to(roomId).emit('bet_split_sync', { amount });
+    });
+
     // High-Fidelity Voice Link Signaling (WebRTC)
     socket.on('webrtc_signal', (data) => {
         const { roomId, signal } = data;
