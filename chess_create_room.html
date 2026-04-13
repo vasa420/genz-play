@@ -1001,7 +1001,10 @@
             </div>
             <div class="arena-id-display">ROOM ID: 7842</div>
             <div class="header-controls">
-                <div class="header-btn" id="bet-btn" onclick="openBetMenu()" title="BET MATCH">💰</div>
+                <div class="header-btn" id="bet-btn" onclick="openBetMenu()" title="BET MATCH" style="position: relative;">
+                    💰
+                    <div id="bet-notification-dot" class="notification-dot" style="background: #39FF14; display: none; position: absolute; top: 0; right: 0;"></div>
+                </div>
                 <div class="header-btn" id="share-btn" onclick="shareArenaLink()" title="COPY LINK">🔗</div>
                 <div class="header-btn" id="record-btn" onclick="toggleRecording()" title="RECORD MATCH">⏺️</div>
                 <div class="header-btn mic" id="mic-btn" onclick="toggleMic()" title="TOGGLE VOICE LINK"><span
@@ -1447,18 +1450,27 @@
         // Listeners for Betting
         socket.on('bet_requested_by_friend', (data) => {
             const { amount } = data;
+            
+            // Show notification dot
+            const dot = document.getElementById('bet-notification-dot');
+            if (dot) dot.style.display = 'block';
+
+            showArenaModal(`INCOMING CHALLENGE: ${opponentName || 'FRIEND'} wants to play a BET MATCH for $${amount}!`);
+
             openModal(
                 `INCOMING WAGER: ${opponentName || 'FRIEND'} WANTS TO BET $${amount}.\n\nDO YOU ACCEPT THE CHALLENGE?`,
                 "1. ACCEPT YES",
                 () => {
                     socket.emit('bet_response', { roomId, accepted: true, amount });
                     askForSplit(amount);
+                    if (dot) dot.style.display = 'none';
                 },
                 true,
                 "2. DECLINE NO",
                 () => {
                     socket.emit('bet_response', { roomId, accepted: false, amount });
                     closeModal();
+                    if (dot) dot.style.display = 'none';
                 },
                 "STAKE PROPOSAL"
             );
@@ -1488,6 +1500,10 @@
         });
 
         function openBetMenu() {
+            // Hide notification dot when menu is opened
+            const dot = document.getElementById('bet-notification-dot');
+            if (dot) dot.style.display = 'none';
+
             if (!document.querySelector('.kickstart-btn').classList.contains('active')) {
                 openModal("ERROR: NO REAL PLAYER DETECTED.\n\nWAGER MODULE IS ONLY ACTIVE FOR ONLINE COMPETITORS.");
                 return;
