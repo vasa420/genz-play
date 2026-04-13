@@ -71,19 +71,34 @@ io.on('connection', (socket) => {
             }
         }
 
-        const player = {
-            id: socket.id,
-            name: playerName,
-            team: nextIndex % 2 === 0 ? 2 : 1, // Odd = Team 1, Even = Team 2
-            index: nextIndex
-        };
+        // Handle re-connection or update existing player
+        const existingPlayerIndex = room.players.findIndex(p => p.name === playerName);
+        if (existingPlayerIndex !== -1) {
+            room.players[existingPlayerIndex].id = socket.id;
+            console.log(`Updated socket ID for player ${playerName} in room ${roomId}`);
+        } else {
+            const player = {
+                id: socket.id,
+                name: playerName,
+                team: nextIndex % 2 === 0 ? 2 : 1, // Odd = Team 1, Even = Team 2
+                index: nextIndex
+            };
+            room.players.push(player);
+            // Keep players sorted by index for UI consistency
+            room.players.sort((a, b) => a.index - b.index);
+            console.log(`Player ${playerName} joined room ${roomId}`);
+        }
 
-        room.players.push(player);
-        // Keep players sorted by index for UI consistency
-        room.players.sort((a, b) => a.index - b.index);
+        // If isCreating is true, ensure this player is first in the list (Host)
+        if (isCreating) {
+            const idx = room.players.findIndex(p => p.name === playerName);
+            if (idx > 0) {
+                const [p] = room.players.splice(idx, 1);
+                room.players.unshift(p);
+            }
+        }
+
         socket.join(roomId);
-
-        console.log(`${playerName} joined room ${roomId} (Pass: ${room.password ? 'YES' : 'NO'})`);
 
         // Notify all players in the room
         io.to(roomId).emit('player_joined', {
