@@ -62,6 +62,12 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Handle Reconnections: Remove any existing player with the same name
+        const existingPlayerIndex = room.players.findIndex(p => p.name === playerName);
+        if (existingPlayerIndex !== -1) {
+            room.players.splice(existingPlayerIndex, 1);
+        }
+
         // Find DO NOT use .length+1! Find the first available index hole (1-4)
         let indices = room.players.map(p => p.index);
         let nextIndex = 1;
