@@ -24,12 +24,13 @@ io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on('join_room', (data) => {
-        const { roomId, playerName, password, isCreating } = data;
+        let { roomId, playerName, password, isCreating } = data;
+        roomId = String(roomId).trim();
 
         let room = rooms.get(roomId);
         if (!room) {
             if (!isCreating) {
-                socket.emit('room_error', { message: `THE NUMBER ${roomId} TYPE OF ROOM WAS NOT CREATED CURRENTLY!` });
+                socket.emit('room_error', { message: 'ROOM NOT FOUND.\n\nPLEASE MAKE SURE THE HOST HAS CREATED THE ROOM FIRST.' });
                 return;
             }
             room = {
