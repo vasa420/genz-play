@@ -29,123 +29,98 @@ io.on('connection', (socket) => {
         let room = rooms.get(roomId);
         if (!room) {
             if (!isCreating) {
-                socket.emit('room_error', { message: `THE NUMBER ${roomId} TYPE OF ROOM WAS NOT CREATED CURRENTLY!` });
+                socket.emit('room_error', { message: `THE ROOM ${roomId} WAS NOT FOUND CURRENTLY!` });
                 return;
             }
             room = {
                 id: roomId,
                 players: [],
                 gameState: 'WAITING',
-                password: password || '', // Store password for the room
+                password: password || '',
                 selectedMode: 'CLASSIC',
                 targetScore: 160,
                 petsAllowed: true,
-                turn: 1, // Player 1 starts
-                coins: [] // To sync board state
+                turn: 1,
+                coins: []
             };
             rooms.set(roomId, room);
-        } else {
-            // Check password if room has one
-            if (room.password && room.password !== password) {
-                if (!password) {
-                    socket.emit('wrong_password', { message: 'PASSWORD_REQUIRED', roomId: roomId });
-                } else {
-                    socket.emit('wrong_password', { message: 'Incorrect room password!' });
-                }
-                return;
-            }
-        }
-
-        if (room.players.length >= 4) {
-            socket.emit('room_full', { message: 'Room is full! (Max 4 players)' });
+            console.log(`Room ${roomId} created by ${playerName}`);
+        } else if (room.password && room.password !== password) {
+            socket.emit('wrong_password', { message: 'Incorrect room password!' });
             return;
         }
 
-        // Find DO NOT use .length+1! Find the first available index hole (1-4)
-        let indices = room.players.map(p => p.index);
-        let nextIndex = 1;
-        for (let i = 1; i <= 4; i++) {
-            if (!indices.includes(i)) {
-                nextIndex = i;
-                break;
-            }
+        // --- ROOM MANAGEMENT ---
+        // If a player with the same name exists on a DIFFERENT socket, create a unique name
+        let finalName = playerName;
+        const nameCollision = room.players.some(p => p.name === finalName && p.id !== socket.id);
+        if (nameCollision) {
+            finalName = `${playerName}_${Math.floor(100 + Math.random() * 899)}`;
         }
 
-        // Handle re-connection or update existing player
-        const existingPlayerIndex = room.players.findIndex(p => p.name === playerName);
-        if (existingPlayerIndex !== -1) {
-            room.players[existingPlayerIndex].id = socket.id;
-            console.log(`Updated socket ID for player ${playerName} in room ${roomId}`);
-        } else {
-            const player = {
-                id: socket.id,
-                name: playerName,
-                team: nextIndex % 2 === 0 ? 2 : 1, // Odd = Team 1, Even = Team 2
-                index: nextIndex
-            };
-            room.players.push(player);
-            // Keep players sorted by index for UI consistency
-            room.players.sort((a, b) => a.index - b.index);
-            console.log(`Player ${playerName} joined room ${roomId}`);
+        // Cleanup: Remove any existing player with the SAME name to prevent ghost duplicates
+        const oldIndex = room.players.findIndex(p => p.name === playerName);
+        if (oldIndex !== -1) {
+            console.log(`Cleaning up old session for ${playerName}`);
+            room.players.splice(oldIndex, 1);
         }
 
-        // If isCreating is true, ensure this player is first in the list (Host)
+        const player = {
+            id: socket.id,
+            name: finalName,
+            team: room.players.length % 2 === 0 ? 1 : 2,
+            index: room.players.length + 1
+        };
+
         if (isCreating) {
-            const idx = room.players.findIndex(p => p.name === playerName);
-            if (idx > 0) {
-                const [p] = room.players.splice(idx, 1);
-                room.players.unshift(p);
-            }
+            room.players.unshift(player);
+            console.log(`Host ${finalName} JOINED as index 0. Socket ID: ${socket.id}`);
+        } else {
+            room.players.push(player);
+            console.log(`Participant ${finalName} JOINED. Socket ID: ${socket.id}`);
         }
 
         socket.join(roomId);
-
-        // Notify all players in the room
         io.to(roomId).emit('player_joined', {
             players: room.players,
             roomState: room.gameState,
             roomId: roomId,
-            password: room.password || '',
-            hasPassword: !!room.password,
-            selectedMode: room.selectedMode || 'CLASSIC',
-            petsAllowed: room.petsAllowed !== false,
-            targetScore: room.targetScore || 160,
-            currentTurn: room.turn,
-            coins: room.coins || []
+            hasPassword: !!room.password
         });
     });
 
     socket.on('player_ready', (data) => {
         const { roomId } = data;
         const room = rooms.get(roomId);
-        if (!room) return;
+        
+        if (!room) {
+            socket.emit('room_error', { message: 'ARENA TIMED OUT. PLEASE RECREATE.' });
+            return;
+        }
 
-        // Security: Only the host (Player 0) can start the game
+        // Security: Only the host (index 0) can start
         if (room.players.length > 0 && room.players[0].id !== socket.id) {
-            socket.emit('room_error', { message: 'ONLY THE HOST CAN START THE GAME!' });
+            socket.emit('room_error', { message: 'WAIT FOR OPERATIVE-ONE TO INITIATE.' });
             return;
         }
 
         if (room.players.length < 2) {
-            socket.emit('room_error', { message: 'WAIT FOR AT LEAST ONE OPPONENT TO JOIN!' });
+            socket.emit('room_error', { message: 'MINIMUM 2 OPERATIVES REQUIRED TO START.' });
             return;
         }
 
-        console.log(`Starting game in room: ${roomId}`);
+        console.log(`Match starting in room ${roomId}`);
         room.gameState = 'PLAYING';
-        room.turn = 1;
         io.to(roomId).emit('game_start', { room });
     });
 
     socket.on('send_shot', (data) => {
         const { roomId, strikerData } = data;
-        // Broadcast the shot to other players in the room
         socket.to(roomId).emit('receive_shot', strikerData);
     });
 
     socket.on('chess_move', (data) => {
         const { roomId, move } = data;
-        // Broadcast chess move to the opponent
         socket.to(roomId).emit('chess_move_received', move);
     });
 

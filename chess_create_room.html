@@ -1162,13 +1162,19 @@
         document.querySelector('.arena-id-display').textContent = "ROOM ID: " + roomId;
 
         // Socket Multiplayer Initialization
+        console.log("Initializing Socket Arena...");
         const socket = io();
         const myName = localStorage.getItem('playerName') || "OPERATIVE_X";
 
+        console.log(`Joining Room: ${roomId} as ${role}`);
         socket.emit('join_room', {
             roomId: roomId,
             playerName: myName,
             isCreating: role === 'host'
+        });
+
+        socket.on('connect', () => {
+            console.log("CONNECTED TO ARENA SERVER. ID:", socket.id);
         });
 
         function updateRoleSystem() {
@@ -1697,16 +1703,28 @@
             }, false, "CANCEL", null, "ROOM FULL");
         });
 
-        socket.on('game_start', () => {
-            if (isMusicPlaying) bgMusic.pause();
-            window.location.href = `chess.html?id=${roomId}&role=${role}`;
+        socket.on('game_start', (data) => {
+            console.log("GAME START SIGNAL RECEIVED", data);
+            openModal("THE ARENA IS SECURE. COMMENCING MATCH...", "PROCEED", () => {
+                if (isMusicPlaying) bgMusic.pause();
+                window.location.href = `chess.html?id=${roomId}&role=${role}`;
+            }, false, "WAIT", null, "ARENA NOTIFICATION");
+            
+            // Auto redirect after 1.5s
+            setTimeout(() => {
+                if (isMusicPlaying) bgMusic.pause();
+                window.location.href = `chess.html?id=${roomId}&role=${role}`;
+            }, 1500);
         });
 
         function confirmStartMatch() {
+            console.log("Initiating Start Match Confirmation...");
             openModal(
                 "CONFIRM: DO YOU WANT TO START THE MATCH?",
                 "1. START",
                 () => {
+                    console.log("START MATCH CONFIRMED. EMITTING player_ready...");
+                    openModal("INITIATING ARENA START...<br>REQUESTING TACTICAL ENTRANCE.", "WAITING...", null, false, "CANCEL", null, "COMMENCING");
                     socket.emit('player_ready', { roomId: roomId });
                 },
                 true,
