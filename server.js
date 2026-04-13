@@ -24,13 +24,12 @@ io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on('join_room', (data) => {
-        let { roomId, playerName, password, isCreating } = data;
-        roomId = String(roomId).trim();
+        const { roomId, playerName, password, isCreating } = data;
 
         let room = rooms.get(roomId);
         if (!room) {
             if (!isCreating) {
-                socket.emit('room_error', { message: 'ROOM NOT FOUND.\n\nPLEASE MAKE SURE THE HOST HAS CREATED THE ROOM FIRST.' });
+                socket.emit('room_error', { message: `THE NUMBER ${roomId} TYPE OF ROOM WAS NOT CREATED CURRENTLY!` });
                 return;
             }
             room = {
@@ -60,12 +59,6 @@ io.on('connection', (socket) => {
         if (room.players.length >= 4) {
             socket.emit('room_full', { message: 'Room is full! (Max 4 players)' });
             return;
-        }
-
-        // Handle Reconnections: Remove any existing player with the same name
-        const existingPlayerIndex = room.players.findIndex(p => p.name === playerName);
-        if (existingPlayerIndex !== -1) {
-            room.players.splice(existingPlayerIndex, 1);
         }
 
         // Find DO NOT use .length+1! Find the first available index hole (1-4)
@@ -324,22 +317,6 @@ io.on('connection', (socket) => {
     socket.on('decline_record', (data) => {
         const { roomId } = data;
         socket.to(roomId).emit('record_declined_by_friend');
-    });
-
-    // Real-Time Chess Betting Sync
-    socket.on('bet_request', (data) => {
-        const { roomId, amount } = data;
-        socket.to(roomId).emit('bet_requested_by_friend', { amount });
-    });
-
-    socket.on('bet_response', (data) => {
-        const { roomId, accepted, amount } = data;
-        socket.to(roomId).emit('bet_response_received', { accepted, amount });
-    });
-
-    socket.on('bet_split_executed', (data) => {
-        const { roomId, amount } = data;
-        socket.to(roomId).emit('bet_split_sync', { amount });
     });
 
     // High-Fidelity Voice Link Signaling (WebRTC)

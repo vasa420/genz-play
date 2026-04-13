@@ -1001,15 +1001,8 @@
             </div>
             <div class="arena-id-display">ROOM ID: 7842</div>
             <div class="header-controls">
-                <div class="header-btn" id="bet-btn" onclick="openBetMenu()" title="BET MATCH" style="position: relative;">
-                    💰
-                    <div id="bet-notification-dot" class="notification-dot" style="background: #39FF14; display: none; position: absolute; top: 0; right: 0;"></div>
-                </div>
+                <div class="header-btn" id="bet-btn" onclick="openBetMenu()" title="BET MATCH">💰</div>
                 <div class="header-btn" id="share-btn" onclick="shareArenaLink()" title="COPY LINK">🔗</div>
-                <div class="header-btn" id="bet-inbox-btn" onclick="openBetMenu()" title="BET REQUESTS" style="position: relative; display: none;">
-                    📩
-                    <div id="inbox-notification-dot" class="notification-dot" style="background: #ff0066; display: none; position: absolute; top: 0; right: 0;"></div>
-                </div>
                 <div class="header-btn" id="record-btn" onclick="toggleRecording()" title="RECORD MATCH">⏺️</div>
                 <div class="header-btn mic" id="mic-btn" onclick="toggleMic()" title="TOGGLE VOICE LINK"><span
                         class="mic-icon">🎙️</span><span class="mic-toggle">×</span></div>
@@ -1183,18 +1176,10 @@
         const socket = io();
         const myName = localStorage.getItem('playerName') || "OPERATIVE_X";
 
-        socket.on('connect_error', (err) => {
-            console.error("Connection error:", err);
-            openModal("SERVER CONNECTION FAILED.<br><br>1. Check if the server is running.<br>2. Use the Host's IP (e.g., http://192.168.x.x:3001).<br>3. Turn off your Firewall.", "RETRY", () => window.location.reload(), false, "EXIT", () => window.location.href='chess_online.html', "NETWORK ERROR");
-        });
-
-        socket.on('connect', () => {
-            console.log("Connected to server");
-            socket.emit('join_room', {
-                roomId: roomId,
-                playerName: myName,
-                isCreating: role === 'host'
-            });
+        socket.emit('join_room', {
+            roomId: roomId,
+            playerName: myName,
+            isCreating: role === 'host'
         });
 
         function updateRoleSystem() {
@@ -1456,78 +1441,12 @@
                 openModal("VOICE LINK TERMINATED.\n\nMICROPHONE AND CAPTIONING SYSTEM DEACTIVATED.");
             }
         }
-        // Real-Time Betting & Wallet Sync
+        // Betting & Wallet Simulation
         let userWallet = parseInt(localStorage.getItem('playerMoney') || '900');
-        
-        // Listeners for Betting
-        let pendingBetAmount = 0;
-        socket.on('bet_requested_by_friend', (data) => {
-            const { amount } = data;
-            pendingBetAmount = amount;
-            
-            // Show notification dot on inbox
-            const inboxDot = document.getElementById('inbox-notification-dot');
-            if (inboxDot) inboxDot.style.display = 'block';
-
-            showArenaModal(`YOUR FRIEND WANTS TO PLAY A BET MATCH! CLICK THE 📩 ICON TO RESPOND.`);
-        });
-
-        function showBetAcceptanceModal(amount) {
-            openModal(
-                `BET REQUEST: ${opponentName || 'FRIEND'} WANTS TO PLAY FOR $${amount}.\n\nDO YOU ACCEPT?`,
-                "ACCEPT",
-                () => {
-                    socket.emit('bet_response', { roomId, accepted: true, amount });
-                    askForSplit(amount);
-                    document.getElementById('inbox-notification-dot').style.display = 'none';
-                    pendingBetAmount = 0;
-                },
-                true,
-                "DECLINE",
-                () => {
-                    socket.emit('bet_response', { roomId, accepted: false, amount });
-                    closeModal();
-                    document.getElementById('inbox-notification-dot').style.display = 'none';
-                    pendingBetAmount = 0;
-                },
-                "INCOMING BET"
-            );
-        }
-
-        socket.on('bet_response_received', (data) => {
-            const { accepted, amount } = data;
-            if (accepted) {
-                openModal(`YOUR FRIEND ACCEPT YOUR BET MATCH $${amount}`, "PROCEED", () => askForSplit(amount));
-            } else {
-                openModal(`YOUR FRIEND DECLINED THE BET MATCH.`);
-            }
-        });
-
-        socket.on('bet_split_sync', (data) => {
-            const { amount } = data;
-            const splitVal = amount / 2;
-            userWallet -= splitVal;
-            localStorage.setItem('playerMoney', userWallet);
-            
-            const status = document.getElementById('bet-status-display');
-            if (status) {
-                status.textContent = `BET MATCH ACTIVATED: $${amount}`;
-                status.classList.add('activated');
-            }
-            openModal(`TRANSACTION COMPLETE.\n\n$${splitVal} DEBITED FROM YOUR WALLET.\nREMAINING BALANCE: $${userWallet}`, "PROCEED", closeModal, false, "CANCEL", null, "FUNDS SECURED");
-        });
+        let p2Wallet = 900; // Simulated wallet for challenger
 
         function openBetMenu() {
-            // If participant and has pending bet, show acceptance
-            if (role !== 'host' && pendingBetAmount > 0) {
-                showBetAcceptanceModal(pendingBetAmount);
-                return;
-            }
-
-            // Normal menu logic
-            const betDot = document.getElementById('bet-notification-dot');
-            if (betDot) betDot.style.display = 'none';
-
+            // Check if player 2 (Magnus_V) has joined yet
             if (!document.querySelector('.kickstart-btn').classList.contains('active')) {
                 openModal("ERROR: NO REAL PLAYER DETECTED.\n\nWAGER MODULE IS ONLY ACTIVE FOR ONLINE COMPETITORS.");
                 return;
@@ -1551,54 +1470,80 @@
         }
 
         function confirmBetRequest(amt) {
-            if (userWallet < amt / 2) {
-                openModal(`INSUFFICIENT FUNDS.\n\nYOU NEED AT LEAST $${amt/2} FOR EQUAL SPLIT BUT HAVE $${userWallet}.`, "PROCEED", closeModal, false, "CANCEL", null, "BALANCE ERROR");
+            // Financial Integrity Check: Host
+            if (userWallet < amt) {
+                openModal(`PLEASE CHECK YOUR WALLET AMOUNT FIRST.\n\nYOU NEED $${amt} BUT ONLY HAVE $${userWallet}.`, "PROCEED", closeModal, false, "CANCEL", null, "INSUFFICIENT FUNDS");
+                return;
+            }
+
+            // Financial Integrity Check: Friend
+            if (p2Wallet < amt) {
+                openModal(`YOUR FRIEND HAS LOW AMOUNT.\n\nSTAKE: $${amt}\nFRIEND WALLET: $${p2Wallet}`, "PROCEED", closeModal, false, "CANCEL", null, "BALANCE ERROR");
                 return;
             }
 
             openModal(
-                `SENT BET REQUEST "$${amt}" TO YOUR FRIEND?`,
+                `CAN I SEND BET REQUEST "$${amt}" TO YOUR FRIEND?`,
                 "YES, SEND",
-                () => {
-                    openModal(`SENDING REQUEST TO FRIEND...\nWAITING FOR APPROVAL...`, "WAITING", null, false, "", null, "TRANSMITTING", false);
-                    socket.emit('bet_request', { roomId, amount: amt });
-                },
+                () => simulateFriendResponse(amt),
                 true,
                 "NO, CANCEL"
             );
+        }
+
+        function simulateFriendResponse(amt) {
+            openModal(`SENDING REQUEST TO FRIEND...\nWAITING FOR APPROVAL...`);
+            setTimeout(() => {
+                openModal(
+                    `CAN YOU ACCEPT THE BET MATCH $${amt}?`,
+                    "1. ACCEPT YES",
+                    () => {
+                        openModal(`YOUR FRIEND ACCEPT YOUR BET MATCH $${amt}`, "PROCEED", () => askForSplit(amt));
+                    },
+                    true,
+                    "2. DECLINE NO",
+                    () => {
+                        openModal(`YOUR FRIEND CANCEL THE BET MATCH`);
+                    }
+                );
+            }, 2000);
         }
 
         function askForSplit(amt) {
             openModal(
-                `STAKE ACCEPTED. INITIALIZE EQUAL FUND SPLIT?\n\n($${amt/2} FROM EACH OPERATIVE)`,
+                `CAN I SPLIT AMOUNT?`,
                 "YES, SPLIT",
                 () => executeSplit(amt),
                 true,
-                "NO, CANCEL"
+                "NO, FULL STAKE"
             );
         }
 
         function executeSplit(amt) {
-            let countdown = 3;
+            let countdown = 5;
             const splitVal = amt / 2;
 
             function updateTimer() {
                 if (countdown > 0) {
-                    openModal(`RECALCULATING BALANCES... PLEASE WAIT\n\nUNCRYPTING LEDGER: ${countdown}s`, "PROCESSING...", () => { }, false);
+                    openModal(`SPLITTING AMOUNT... PLEASE WAIT\n\nSYSTEM RECALCULATING: ${countdown}s`, "PROCESSING...", () => { }, false);
                     countdown--;
                     setTimeout(updateTimer, 1000);
                 } else {
-                    userWallet -= splitVal;
-                    localStorage.setItem('playerMoney', userWallet);
-                    
-                    socket.emit('bet_split_executed', { roomId, amount: amt });
+                    // Logic for real players only
+                    if (userWallet >= splitVal && p2Wallet >= splitVal) {
+                        userWallet -= splitVal;
+                        p2Wallet -= splitVal;
+                        localStorage.setItem('playerMoney', userWallet); // Persist balance
+                        openModal(`AMOUNT SPLITED SUCCESSFULLY.\n\n$${splitVal} TAKEN FROM YOUR WALLET.\n$${splitVal} TAKEN FROM FRIEND WALLET.\nREMAINING WALLET: $${userWallet}`);
 
-                    const status = document.getElementById('bet-status-display');
-                    if (status) {
+                        // Show "BET MATCH ACTIVATED" in Footer
+                        const status = document.getElementById('bet-status-display');
                         status.textContent = `BET MATCH ACTIVATED: $${amt}`;
                         status.classList.add('activated');
+                    } else {
+                        const lowUser = userWallet < splitVal ? "YOURSELF" : "YOUR FRIEND";
+                        openModal(`TRANSACTION FAILED:\n\n${lowUser} HAS LOW AMOUNT FOR $${splitVal} SPLIT.`);
                     }
-                    openModal(`AMOUNT SPLIT SUCCESSFULLY.\n\n$${splitVal} TAKEN FROM YOUR WALLET.\nREMAINING WALLET: $${userWallet}`);
                 }
             }
             updateTimer();
@@ -1608,16 +1553,6 @@
             // Requirement was specifically for any number selection, 
             // but clicking the main Split Amount button will trigger a baseline 100 split
             askForSplit(200);
-        }
-
-        // Initialize UI based on role
-        if (role === 'host') {
-            document.getElementById('display-room-id').textContent = `ROOM ID: ${roomId}`;
-            document.getElementById('arena-id-title').textContent = `ARENA ID: ${roomId}`;
-        } else {
-            document.getElementById('display-room-id').textContent = `ROOM ID: ${roomId}`;
-            document.getElementById('arena-id-title').textContent = `ARENA ID: ${roomId}`;
-            document.getElementById('bet-inbox-btn').style.display = 'flex';
         }
 
         function exitToArena() {
