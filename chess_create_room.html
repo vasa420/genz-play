@@ -1705,16 +1705,8 @@
 
         socket.on('game_start', (data) => {
             console.log("GAME START SIGNAL RECEIVED", data);
-            openModal("THE ARENA IS SECURE. COMMENCING MATCH...", "PROCEED", () => {
-                if (isMusicPlaying) bgMusic.pause();
-                window.location.href = `chess.html?id=${roomId}&role=${role}`;
-            }, false, "WAIT", null, "ARENA NOTIFICATION");
-            
-            // Auto redirect after 1.5s
-            setTimeout(() => {
-                if (isMusicPlaying) bgMusic.pause();
-                window.location.href = `chess.html?id=${roomId}&role=${role}`;
-            }, 1500);
+            if (isMusicPlaying) bgMusic.pause();
+            window.location.href = `chess.html?id=${roomId}&role=${role}`;
         });
 
         function confirmStartMatch() {
@@ -1724,8 +1716,8 @@
                 "1. START",
                 () => {
                     console.log("START MATCH CONFIRMED. EMITTING player_ready...");
-                    openModal("INITIATING ARENA START...<br>REQUESTING TACTICAL ENTRANCE.", "WAITING...", null, false, "CANCEL", null, "COMMENCING");
                     socket.emit('player_ready', { roomId: roomId });
+                    closeModal();
                 },
                 true,
                 "2. CANCEL"
