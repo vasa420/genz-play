@@ -128,6 +128,12 @@ io.on('connection', (socket) => {
         socket.to(roomId).emit('receive_shot', strikerData);
     });
 
+    socket.on('chess_move', (data) => {
+        const { roomId, move } = data;
+        // Broadcast chess move to the opponent
+        socket.to(roomId).emit('chess_move_received', move);
+    });
+
     socket.on('sync_striker_set', (data) => {
         const { roomId, pos } = data;
         socket.to(roomId).emit('update_striker_set', pos);

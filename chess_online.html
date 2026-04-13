@@ -320,12 +320,6 @@
 
         function createRoom() {
             const roomId = Math.floor(1000 + Math.random() * 9000);
-            
-            // Register room as ACTIVE for simulation
-            let rooms = JSON.parse(localStorage.getItem('active_chess_rooms') || "[]");
-            rooms.push(roomId.toString());
-            localStorage.setItem('active_chess_rooms', JSON.stringify(rooms));
-            
             window.location.href = `chess_create_room.html?id=${roomId}&role=host`;
         }
 
@@ -335,17 +329,10 @@
                 message: "ENTER 4-DIGIT ARENA ID",
                 type: 'prompt',
                 onConfirm: (id) => {
-                    const rooms = JSON.parse(localStorage.getItem('active_chess_rooms') || "[]");
-                    
                     if (!id || id.length < 4) {
                         showArenaModal({
                             title: "ID ERROR",
                             message: "ROOM ID WILL BE 4 DIGIT NUMBER ONLY"
-                        });
-                    } else if (!rooms.includes(id)) {
-                        showArenaModal({
-                            title: "JOIN FAILED",
-                            message: "ROOM WAS NOT CREATED CURRENTLY NOW!"
                         });
                     } else {
                         window.location.href = `chess_create_room.html?id=${id}&role=participant`;

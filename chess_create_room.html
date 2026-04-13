@@ -1696,9 +1696,38 @@
             chatStatus.style.color = "#00ffcc";
         }
 
+        socket.on('room_error', (data) => {
+            openModal(data.message, "BACK TO LOBBY", () => {
+                window.location.href = 'chess_online.html';
+            }, false, "CANCEL", null, "JOIN FAILED");
+        });
+
+        socket.on('room_full', (data) => {
+            openModal(data.message, "BACK TO LOBBY", () => {
+                window.location.href = 'chess_online.html';
+            }, false, "CANCEL", null, "ROOM FULL");
+        });
+
+        socket.on('game_start', () => {
+            if (isMusicPlaying) bgMusic.pause();
+            window.location.href = `chess.html?id=${roomId}&role=${role}`;
+        });
+
+        function confirmStartMatch() {
+            openModal(
+                "CONFIRM: DO YOU WANT TO START THE MATCH?",
+                "1. START",
+                () => {
+                    socket.emit('player_ready', { roomId: roomId });
+                },
+                true,
+                "2. CANCEL"
+            );
+        }
+
         socket.on('player_joined', (data) => {
             if (data.players && data.players.length > 1) {
-                const opponent = data.players.find(p => p.name !== myName);
+                const opponent = data.players.find(p => p.id !== socket.id);
                 if (opponent) renderOpponentJoined(opponent.name);
             }
         });

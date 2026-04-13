@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600;800&display=swap"
         rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
             --bg-color: #030303;
@@ -1592,10 +1593,21 @@
 
         function handleSquareClick(r, c) {
             if (!gameActive || !gameStarted) return;
+
+            // Multiplayer Check: Prevent moving if it's not your turn
+            if (typeof isMultiplayer !== 'undefined' && isMultiplayer && currentPlayer !== myColor) {
+                showToast("WAIT FOR YOUR OPPONENT'S MOVE!");
+                return;
+            }
+
             const targetPiece = board[r][c];
             const move = validMoves.find(m => m.r === r && m.c === c);
             if (move) { executeMove(selectedSquare.r, selectedSquare.c, r, c, move); return; }
+            
             if (targetPiece && targetPiece.color === currentPlayer) {
+                // Multiplayer Check: Prevent moving opponent's pieces
+                if (typeof isMultiplayer !== 'undefined' && isMultiplayer && targetPiece.color !== myColor) return;
+
                 selectedSquare = { r, c };
                 validMoves = getLegalMoves(r, c, targetPiece);
             } else { selectedSquare = null; validMoves = []; }
@@ -1632,6 +1644,14 @@
         }
 
         function executeMove(fromR, fromC, toR, toC, moveData) {
+            // Send move to server if in multiplayer
+            if (typeof isMultiplayer !== 'undefined' && isMultiplayer && currentPlayer === myColor) {
+                socket.emit('chess_move', {
+                    roomId: roomId,
+                    move: { fromR, fromC, toR, toC, moveData }
+                });
+            }
+
             if (moveHistory.length === 0) lockAIControls(true);
             const piece = board[fromR][fromC];
             const target = board[toR][toC];
@@ -2515,8 +2535,97 @@
             }
         }
 
+        // --- MULTIPLAYER CORE ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('id');
+        const role = urlParams.get('role');
+        const isMultiplayer = !!roomId;
+        let myColor = 'white'; // Default for local play
+        let socket;
+
+        if (isMultiplayer) {
+            socket = io();
+            myColor = role === 'host' ? 'white' : 'black';
+            const myName = localStorage.getItem('playerName') || "OPERATIVE_X";
+
+            socket.emit('join_room', {
+                roomId: roomId,
+                playerName: myName,
+                isCreating: role === 'host'
+            });
+
+            socket.on('chess_move_received', (move) => {
+                // Apply move received from opponent
+                applyRemoteMove(move);
+            });
+
+            socket.on('player_left', () => {
+                showArenaModal("OPPONENT HAS DISCONNECTED FROM THE ARENA.");
+                gameActive = false;
+            });
+        }
+
+        function applyRemoteMove(move) {
+            const { fromR, fromC, toR, toC, moveData } = move;
+            const piece = board[fromR][fromC];
+            const target = board[toR][toC];
+
+            // En Passant capture
+            if (moveData.enPassant) {
+                const capturedPawnRow = fromR;
+                const capturedPawnCol = toC;
+                const capTarget = board[capturedPawnRow][capturedPawnCol];
+                const capContainer = piece.color === 'white' ? 'captured-by-white' : 'captured-by-black';
+                logCapture(capTarget, capContainer);
+                board[capturedPawnRow][capturedPawnCol] = null;
+            } else if (target) {
+                const capContainer = piece.color === 'white' ? 'captured-by-white' : 'captured-by-black';
+                logCapture(target, capContainer);
+            }
+
+            // Castling Move execution
+            if (moveData.castling) {
+                const rookCol = moveData.c === 6 ? 7 : 0;
+                const newRookCol = moveData.c === 6 ? 5 : 3;
+                board[toR][newRookCol] = board[toR][rookCol];
+                board[toR][rookCol] = null;
+            }
+
+            // Update Castling Rights
+            if (piece.type === 'k') { castlingRights[piece.color].short = false; castlingRights[piece.color].long = false; }
+            if (piece.type === 'r') {
+                if (fromC === 0) castlingRights[piece.color].long = false;
+                if (fromC === 7) castlingRights[piece.color].short = false;
+            }
+
+            board[toR][toC] = piece;
+            board[fromR][fromC] = null;
+
+            if (piece.type === 'p' && (toR === 0 || toR === 7)) {
+                board[toR][toC] = { type: 'q', color: piece.color };
+            }
+
+            currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+            boardHistory.push(JSON.stringify(board));
+            updateTurnDisplay();
+            renderBoard();
+            checkGameState();
+        }
+
         // Initialize board
         initBoard();
+
+        // Auto-start for multiplayer
+        if (isMultiplayer) {
+            setTimeout(() => {
+                startMatch();
+                if (myColor === 'black') {
+                    showToast("YOU ARE PLAYING AS BLACK.");
+                } else {
+                    showToast("YOU ARE PLAYING AS WHITE.");
+                }
+            }, 1000);
+        }
     </script>
 
     <!-- Background Music Holder -->
