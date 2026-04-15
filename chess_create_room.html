@@ -1060,7 +1060,7 @@
             <span id="bet-status-display" class="bet-status-display" style="margin-left:auto;"></span>
 
 
-            <button class="kickstart-btn" id="kickstart-btn" onclick="openBettingPanel()"
+            <button class="kickstart-btn" id="kickstart-btn" onclick="openBetMenu()"
                 title="SECURE WAGER MANAGEMENT">
                 💰
                 <span class="btn-lbl">BET MATCH<br>FUNDS</span>
@@ -1071,9 +1071,9 @@
                 <span class="rem-txt">REMIND HOST</span>
             </button>
 
-            <button class="kickstart-btn disabled" id="start-match-btn">
-                <span class="pawn-icon">⚔️</span>
-                <span class="kick-txt">START MATCH</span>
+            <button id="start-match-btn" style="position:fixed; bottom:30px; right:50px; width:200px; height:55px; background:#252525; border:none; border-radius:15px; color:#444; display:flex; justify-content:center; align-items:center; gap:12px; font-size:11px; font-weight:900; letter-spacing:2px; cursor:not-allowed; z-index:100; box-shadow:0 15px 40px rgba(0,0,0,0.6); transition:0.3s; text-transform:uppercase; opacity:0.3; font-family:'Outfit',sans-serif;">
+                <span>⚔️</span>
+                <span>START MATCH</span>
             </button>
         </div>
     </div>
@@ -1646,14 +1646,18 @@
             // Enable Kickstart for Host
             if (role === 'host') {
                 const kickstartBtn = document.getElementById('start-match-btn');
-                kickstartBtn.classList.remove('disabled');
-                kickstartBtn.classList.add('active');
-                kickstartBtn.innerHTML = `<span class="kick-icon">⚔️</span><span class="kick-txt">START MATCH</span>`;
-                kickstartBtn.style.cursor = 'pointer';
-                kickstartBtn.onclick = (e) => {
-                    e.preventDefault();
-                    confirmStartMatch();
-                };
+                if (kickstartBtn) {
+                    kickstartBtn.style.background = '#fff';
+                    kickstartBtn.style.color = '#000';
+                    kickstartBtn.style.cursor = 'pointer';
+                    kickstartBtn.style.opacity = '1';
+                    kickstartBtn.style.pointerEvents = 'auto';
+                    kickstartBtn.classList.add('active');
+                    kickstartBtn.onclick = (e) => {
+                        e.preventDefault();
+                        confirmStartMatch();
+                    };
+                }
             }
 
             enableChatHub(opponentName);
@@ -1677,11 +1681,15 @@
 
             // Disable Kickstart for Host
             const ksBtn = document.getElementById('start-match-btn');
-            ksBtn.classList.add('disabled');
-            ksBtn.classList.remove('active');
-            ksBtn.style.cursor = 'not-allowed';
-            ksBtn.innerHTML = `<span class="pawn-icon">⚔️</span><span class="kick-txt">START MATCH</span>`;
-            ksBtn.onclick = null;
+            if (ksBtn) {
+                ksBtn.style.background = '#252525';
+                ksBtn.style.color = '#444';
+                ksBtn.style.cursor = 'not-allowed';
+                ksBtn.style.opacity = '0.3';
+                ksBtn.style.pointerEvents = 'none';
+                ksBtn.classList.remove('active');
+                ksBtn.onclick = null;
+            }
 
             // Disable Chat Icon
             const lobbyMsgBtn = document.getElementById('lobby-msg-btn');
@@ -1707,7 +1715,7 @@
 
         socket.on('game_start', (data) => {
             console.log("GAME START SIGNAL RECEIVED", data);
-            if (isMusicPlaying) bgMusic.pause();
+            // Navigate to chess board with room id and player role
             window.location.href = `chess.html?id=${roomId}&role=${role}`;
         });
 
