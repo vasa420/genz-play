@@ -654,29 +654,20 @@
             color: #fff;
             box-shadow: 0 0 20px rgba(255, 51, 51, 0.4);
         }
-    </style>
-</head>
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
 
-<body id="arena-body">
-    <div id="arena-bg"></div>
-
-    <!-- Multiplayer Header (Hidden by default) -->
-    <div class="arena-header" id="multiplayer-header" style="display: none;">
-        <div class="player-timer-box" id="timer-box-white">
-            <div class="timer-label">WHITE</div>
-            <div class="timer-value" id="timer-white">10:00</div>
-        </div>
-        
-        <div style="text-align: center;">
-            <div id="multiplayer-match-id" style="font-size: 10px; font-weight: 900; color: #555; letter-spacing: 3px;">MATCH: ID-0000</div>
-            <button class="exit-btn" style="margin-top: 10px;" onclick="confirmExitArena()">EXIT ARENA</button>
-        </div>
-
-        <div class="player-timer-box" id="timer-box-black">
-            <div class="timer-label">BLACK</div>
-            <div class="timer-value" id="timer-black">10:00</div>
-        </div>
-    </div>
+        .multiplayer-arena #page-container {
+            justify-content: flex-start;
+            padding-top: 40px;
+        }
 
         /* Custom Arena Modal Overlay */
         #custom-modal-overlay-arena {
@@ -1301,10 +1292,30 @@
     </style>
 </head>
 
-<body>
+<body id="arena-body">
     <div id="arena-bg"></div>
 
-    <div class="main-layout">
+    <div id="page-container">
+        <!-- Multiplayer Header (Hidden by default) -->
+        <div class="arena-header" id="multiplayer-header" style="display: none;">
+            <div class="player-timer-box" id="timer-box-white">
+                <div class="timer-label">WHITE</div>
+                <div class="timer-value" id="timer-white">10:00</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div id="multiplayer-match-id" style="font-size: 10px; font-weight: 900; color: #555; letter-spacing: 3px;">MATCH: ID-0000</div>
+                <button class="exit-btn" style="margin-top: 10px;" onclick="confirmExitArena()">EXIT ARENA</button>
+            </div>
+
+            <div class="player-timer-box" id="timer-box-black">
+                <div class="timer-label">BLACK</div>
+                <div class="timer-value" id="timer-black">10:00</div>
+            </div>
+        </div>
+
+
+        <div class="main-layout">
         <div class="sidebar" id="left-sidebar" style="justify-content: flex-start; gap: 15px; transition: 0.4s;">
             <div class="status-box turn-indicator turn-white" id="turn-display"
                 style="width: 100%; box-sizing: border-box; justify-content: center; height: 50px;">
@@ -1447,6 +1458,7 @@
             </div>
             <div class="captured-pieces" id="captured-by-black"></div>
         </div>
+    </div>
     </div>
 
     <!-- Difficulty Selection Modal -->
@@ -1624,64 +1636,21 @@
                 document.getElementById('arena-body').classList.add('multiplayer-arena');
                 document.getElementById('multiplayer-header').style.display = 'flex';
                 document.getElementById('multiplayer-match-id').textContent = `MATCH: ID-${roomId}`;
-
-                // Set player name banners with correct color labels
-                const myName = localStorage.getItem('playerName') || 'YOU';
-                const opponentColor = myColor === 'white' ? 'black' : 'white';
-                const opponentColorLabel = opponentColor.toUpperCase();
-                const myColorLabel = myColor.toUpperCase();
-
-                // Timer labels show color
-                document.querySelector('#timer-box-white .timer-label').textContent =
-                    myColor === 'white' ? `WHITE — ${myName.toUpperCase()}` : 'WHITE — OPPONENT';
-                document.querySelector('#timer-box-black .timer-label').textContent =
-                    myColor === 'black' ? `BLACK — ${myName.toUpperCase()}` : 'BLACK — OPPONENT';
-
-                // Add player banner above and below the board
-                const boardArea = document.querySelector('.board-wrapper').parentElement;
-
-                // Remove existing banners
-                ['mp-top-banner','mp-bottom-banner'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.remove();
-                });
-
-                // TOP = opponent perspective label
-                const topBanner = document.createElement('div');
-                topBanner.id = 'mp-top-banner';
-                topBanner.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:flex-start;margin-bottom:10px;';
-                topBanner.innerHTML = `
-                    <div style="width:14px;height:14px;border-radius:50%;background:${opponentColor === 'white' ? '#fff' : '#000'};border:2px solid #555;flex-shrink:0;"></div>
-                    <span style="font-size:11px;font-weight:900;color:#888;letter-spacing:2px;">${opponentColorLabel} — OPPONENT</span>
-                `;
-
-                // BOTTOM = my label
-                const bottomBanner = document.createElement('div');
-                bottomBanner.id = 'mp-bottom-banner';
-                bottomBanner.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:flex-start;margin-top:10px;';
-                bottomBanner.innerHTML = `
-                    <div style="width:14px;height:14px;border-radius:50%;background:${myColor === 'white' ? '#fff' : '#111'};border:2px solid ${myColor === 'white' ? '#ccc' : '#666'};flex-shrink:0;"></div>
-                    <span style="font-size:11px;font-weight:900;color:#fff;letter-spacing:2px;">${myColorLabel} — ${myName.toUpperCase()} (YOU)</span>
-                `;
-
-                boardArea.insertBefore(topBanner, boardArea.firstChild);
-                boardArea.appendChild(bottomBanner);
-
-                // Re-render board with correct orientation
-                renderBoard();
-
-                showToast(myColor === 'white' ? '⬜ YOU PLAY AS WHITE — YOU GO FIRST!' : '⬛ YOU PLAY AS BLACK — WAIT FOR WHITE!');
             } else {
                 lockSidebar(true);
-                showToast("MATCH STARTED! GOOD LUCK.");
             }
-
+            
             startTimer();
+            showToast("MATCH STARTED! GOOD LUCK.");
+
+            // Force orientation check and extra render
+            console.log("GAME INITIALIZED - ROLE:", role, "COLOR:", myColor, "MULTIPLAYER:", isMultiplayer);
+            renderBoard();
 
             // Cinematic Audio Fade-out
             if (isMusicPlaying) {
                 fadeOutMusic(() => {
-                    toggleArenaMusic();
+                    toggleArenaMusic(); // Update UI/State after fade
                 });
             }
         }
@@ -1719,53 +1688,64 @@
 
         function renderBoard() {
             boardElement.innerHTML = '';
-            const theme = localStorage.getItem('chess-theme') || 'classic';
-
-            // Flip board for black player so their pieces are at the bottom
-            const flipped = (typeof myColor !== 'undefined' && myColor === 'black');
-
-            for (let ri = 0; ri < 8; ri++) {
-                for (let ci = 0; ci < 8; ci++) {
-                    // Actual board row/col based on orientation
-                    const r = flipped ? (7 - ri) : ri;
-                    const c = flipped ? (7 - ci) : ci;
-
+            
+            // Determine orientation. If I am Black in multiplayer, flip the board.
+            const isFlipped = (typeof isMultiplayer !== 'undefined' && isMultiplayer && myColor === 'black');
+            
+            for (let r = 0; r < 8; r++) {
+                const displayR = isFlipped ? 7 - r : r;
+                for (let c = 0; c < 8; c++) {
+                    const displayC = isFlipped ? 7 - c : c;
+                    
                     const square = document.createElement('div');
-                    const isWhite = (r + c) % 2 === 0;
+                    const isWhite = (displayR + displayC) % 2 === 0;
+                    const theme = localStorage.getItem('chess-theme') || 'classic';
                     square.className = `square ${isWhite ? 'white' : 'black'} ${theme === 'neon' ? 'neon' : ''}`;
-                    square.dataset.r = r;
-                    square.dataset.c = c;
-
-                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) square.classList.add('selected');
-                    const move = validMoves.find(m => m.r === r && m.c === c);
+                    
+                    if (selectedSquare && selectedSquare.r === displayR && selectedSquare.c === displayC) {
+                        square.classList.add('selected');
+                    }
+                    
+                    const move = validMoves.find(m => m.r === displayR && m.c === displayC);
                     if (move) square.classList.add(move.capture ? 'highlight-capture' : 'highlight-move');
-
-                    const piece = board[r][c];
+                    
+                    const piece = board[displayR][displayC];
                     if (piece) {
                         const pieceEl = document.createElement('div');
                         pieceEl.className = `piece ${piece.color}-piece`;
                         pieceEl.textContent = PIECES[piece.color][piece.type];
                         square.appendChild(pieceEl);
                     }
-
-                    // Rank labels (1-8) on leftmost column
-                    if (ci === 0) {
-                        const rankLabel = document.createElement('div');
-                        rankLabel.style.cssText = 'position:absolute;bottom:3px;left:3px;font-size:9px;font-weight:900;opacity:0.5;color:inherit;pointer-events:none;line-height:1;';
-                        rankLabel.textContent = flipped ? (ri + 1) : (8 - ri);
-                        square.style.position = 'relative';
+                    
+                    // Coordinates (Rank numbers 1-8)
+                    if (c === 0) {
+                        const rankLabel = document.createElement('span');
+                        rankLabel.style.position = 'absolute';
+                        rankLabel.style.top = '2px';
+                        rankLabel.style.left = '2px';
+                        rankLabel.style.fontSize = '9px';
+                        rankLabel.style.fontWeight = '800';
+                        rankLabel.style.opacity = '0.4';
+                        rankLabel.style.color = isWhite ? '#b58863' : '#f0d9b5';
+                        rankLabel.textContent = 8 - displayR;
                         square.appendChild(rankLabel);
                     }
-                    // File labels (a-h) on bottom row
-                    if (ri === 7) {
-                        const fileLabel = document.createElement('div');
-                        fileLabel.style.cssText = 'position:absolute;bottom:3px;right:3px;font-size:9px;font-weight:900;opacity:0.5;color:inherit;pointer-events:none;line-height:1;';
-                        fileLabel.textContent = String.fromCharCode(97 + (flipped ? 7 - ci : ci));
-                        square.style.position = 'relative';
+                    
+                    // Coordinates (File letters A-H)
+                    if (r === 7) {
+                        const fileLabel = document.createElement('span');
+                        fileLabel.style.position = 'absolute';
+                        fileLabel.style.bottom = '2px';
+                        fileLabel.style.right = '2px';
+                        fileLabel.style.fontSize = '9px';
+                        fileLabel.style.fontWeight = '800';
+                        fileLabel.style.opacity = '0.4';
+                        fileLabel.style.color = isWhite ? '#b58863' : '#f0d9b5';
+                        fileLabel.textContent = String.fromCharCode(65 + displayC);
                         square.appendChild(fileLabel);
                     }
 
-                    square.onclick = () => handleSquareClick(r, c);
+                    square.onclick = () => handleSquareClick(displayR, displayC);
                     boardElement.appendChild(square);
                 }
             }

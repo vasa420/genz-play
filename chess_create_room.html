@@ -1436,13 +1436,24 @@
                 openModal("VOICE LINK TERMINATED.\n\nMICROPHONE AND CAPTIONING SYSTEM DEACTIVATED.");
             }
         }
+        function shareArenaLink() {
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?id=${roomId}&role=participant`;
+            navigator.clipboard.writeText(inviteUrl).then(() => {
+                openModal(`INVITE LINK COPIED!<br><br><div style="font-size:10px; color:#555; word-break:break-all;">${inviteUrl}</div><br>SHARE IT WITH YOUR OPPONENT.`);
+            }).catch(err => {
+                // Fallback for non-https or errors
+                openModal(`COPY THIS LINK:<br><br><div style="font-size:10px; color:#555; word-break:break-all;">${inviteUrl}</div>`);
+            });
+        }
+
         // Betting & Wallet Simulation
         let userWallet = parseInt(localStorage.getItem('playerMoney') || '900');
         let p2Wallet = 900; // Simulated wallet for challenger
 
         function openBetMenu() {
             // Check if player 2 has joined yet
-            if (!document.getElementById('start-match-btn').classList.contains('active')) {
+            const startBtn = document.getElementById('start-match-btn');
+            if (role === 'host' && (!startBtn || !startBtn.classList.contains('active'))) {
                 openModal("ERROR: NO REAL PLAYER DETECTED.\n\nWAGER MODULE IS ONLY ACTIVE FOR ONLINE COMPETITORS.");
                 return;
             }
