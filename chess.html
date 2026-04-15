@@ -1624,17 +1624,64 @@
                 document.getElementById('arena-body').classList.add('multiplayer-arena');
                 document.getElementById('multiplayer-header').style.display = 'flex';
                 document.getElementById('multiplayer-match-id').textContent = `MATCH: ID-${roomId}`;
+
+                // Set player name banners with correct color labels
+                const myName = localStorage.getItem('playerName') || 'YOU';
+                const opponentColor = myColor === 'white' ? 'black' : 'white';
+                const opponentColorLabel = opponentColor.toUpperCase();
+                const myColorLabel = myColor.toUpperCase();
+
+                // Timer labels show color
+                document.querySelector('#timer-box-white .timer-label').textContent =
+                    myColor === 'white' ? `WHITE — ${myName.toUpperCase()}` : 'WHITE — OPPONENT';
+                document.querySelector('#timer-box-black .timer-label').textContent =
+                    myColor === 'black' ? `BLACK — ${myName.toUpperCase()}` : 'BLACK — OPPONENT';
+
+                // Add player banner above and below the board
+                const boardArea = document.querySelector('.board-wrapper').parentElement;
+
+                // Remove existing banners
+                ['mp-top-banner','mp-bottom-banner'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.remove();
+                });
+
+                // TOP = opponent perspective label
+                const topBanner = document.createElement('div');
+                topBanner.id = 'mp-top-banner';
+                topBanner.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:flex-start;margin-bottom:10px;';
+                topBanner.innerHTML = `
+                    <div style="width:14px;height:14px;border-radius:50%;background:${opponentColor === 'white' ? '#fff' : '#000'};border:2px solid #555;flex-shrink:0;"></div>
+                    <span style="font-size:11px;font-weight:900;color:#888;letter-spacing:2px;">${opponentColorLabel} — OPPONENT</span>
+                `;
+
+                // BOTTOM = my label
+                const bottomBanner = document.createElement('div');
+                bottomBanner.id = 'mp-bottom-banner';
+                bottomBanner.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:flex-start;margin-top:10px;';
+                bottomBanner.innerHTML = `
+                    <div style="width:14px;height:14px;border-radius:50%;background:${myColor === 'white' ? '#fff' : '#111'};border:2px solid ${myColor === 'white' ? '#ccc' : '#666'};flex-shrink:0;"></div>
+                    <span style="font-size:11px;font-weight:900;color:#fff;letter-spacing:2px;">${myColorLabel} — ${myName.toUpperCase()} (YOU)</span>
+                `;
+
+                boardArea.insertBefore(topBanner, boardArea.firstChild);
+                boardArea.appendChild(bottomBanner);
+
+                // Re-render board with correct orientation
+                renderBoard();
+
+                showToast(myColor === 'white' ? '⬜ YOU PLAY AS WHITE — YOU GO FIRST!' : '⬛ YOU PLAY AS BLACK — WAIT FOR WHITE!');
             } else {
                 lockSidebar(true);
+                showToast("MATCH STARTED! GOOD LUCK.");
             }
-            
+
             startTimer();
-            showToast("MATCH STARTED! GOOD LUCK.");
 
             // Cinematic Audio Fade-out
             if (isMusicPlaying) {
                 fadeOutMusic(() => {
-                    toggleArenaMusic(); // Update UI/State after fade
+                    toggleArenaMusic();
                 });
             }
         }
@@ -1672,15 +1719,27 @@
 
         function renderBoard() {
             boardElement.innerHTML = '';
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
+            const theme = localStorage.getItem('chess-theme') || 'classic';
+
+            // Flip board for black player so their pieces are at the bottom
+            const flipped = (typeof myColor !== 'undefined' && myColor === 'black');
+
+            for (let ri = 0; ri < 8; ri++) {
+                for (let ci = 0; ci < 8; ci++) {
+                    // Actual board row/col based on orientation
+                    const r = flipped ? (7 - ri) : ri;
+                    const c = flipped ? (7 - ci) : ci;
+
                     const square = document.createElement('div');
                     const isWhite = (r + c) % 2 === 0;
-                    const theme = localStorage.getItem('chess-theme') || 'classic';
                     square.className = `square ${isWhite ? 'white' : 'black'} ${theme === 'neon' ? 'neon' : ''}`;
+                    square.dataset.r = r;
+                    square.dataset.c = c;
+
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) square.classList.add('selected');
                     const move = validMoves.find(m => m.r === r && m.c === c);
                     if (move) square.classList.add(move.capture ? 'highlight-capture' : 'highlight-move');
+
                     const piece = board[r][c];
                     if (piece) {
                         const pieceEl = document.createElement('div');
@@ -1688,6 +1747,24 @@
                         pieceEl.textContent = PIECES[piece.color][piece.type];
                         square.appendChild(pieceEl);
                     }
+
+                    // Rank labels (1-8) on leftmost column
+                    if (ci === 0) {
+                        const rankLabel = document.createElement('div');
+                        rankLabel.style.cssText = 'position:absolute;bottom:3px;left:3px;font-size:9px;font-weight:900;opacity:0.5;color:inherit;pointer-events:none;line-height:1;';
+                        rankLabel.textContent = flipped ? (ri + 1) : (8 - ri);
+                        square.style.position = 'relative';
+                        square.appendChild(rankLabel);
+                    }
+                    // File labels (a-h) on bottom row
+                    if (ri === 7) {
+                        const fileLabel = document.createElement('div');
+                        fileLabel.style.cssText = 'position:absolute;bottom:3px;right:3px;font-size:9px;font-weight:900;opacity:0.5;color:inherit;pointer-events:none;line-height:1;';
+                        fileLabel.textContent = String.fromCharCode(97 + (flipped ? 7 - ci : ci));
+                        square.style.position = 'relative';
+                        square.appendChild(fileLabel);
+                    }
+
                     square.onclick = () => handleSquareClick(r, c);
                     boardElement.appendChild(square);
                 }
