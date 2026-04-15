@@ -331,7 +331,19 @@ io.on('connection', (socket) => {
                 io.to(roomId).emit('player_left', { leaver, players: room.players });
 
                 if (room.players.length === 0) {
-                    rooms.delete(roomId);
+                    if (room.gameState === 'PLAYING') {
+                        // Keep PLAYING rooms alive for 10 minutes to allow reconnection
+                        // (players navigate from create_room -> chess.html, causing a brief disconnect)
+                        console.log(`Room ${roomId} is PLAYING with 0 players - keeping alive for reconnection.`);
+                        setTimeout(() => {
+                            if (rooms.has(roomId) && rooms.get(roomId).players.length === 0) {
+                                rooms.delete(roomId);
+                                console.log(`Room ${roomId} cleaned up after timeout.`);
+                            }
+                        }, 10 * 60 * 1000); // 10 minutes
+                    } else {
+                        rooms.delete(roomId);
+                    }
                 }
             }
         });

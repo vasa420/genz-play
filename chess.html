@@ -2691,6 +2691,7 @@
             myColor = role === 'host' ? 'white' : 'black';
             const myName = localStorage.getItem('playerName') || "OPERATIVE_X";
 
+            // Re-join the room for move syncing (game starts from URL params regardless)
             socket.emit('join_room', {
                 roomId: roomId,
                 playerName: myName,
@@ -2702,10 +2703,19 @@
                 applyRemoteMove(move);
             });
 
-            socket.on('player_left', () => {
-                showArenaModal("OPPONENT HAS DISCONNECTED FROM THE ARENA.");
-                gameActive = false;
+            // Suppress any room_error on chess.html (game already started via URL)
+            socket.on('room_error', (data) => {
+                console.warn('Room sync error (non-critical):', data.message);
+                // Don't redirect — game is already running from URL params
             });
+
+            // Delay player_left listener to avoid false triggers during navigation
+            setTimeout(() => {
+                socket.on('player_left', () => {
+                    showArenaModal("OPPONENT HAS DISCONNECTED FROM THE ARENA.");
+                    gameActive = false;
+                });
+            }, 3000);
         }
 
         function applyRemoteMove(move) {

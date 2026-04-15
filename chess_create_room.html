@@ -1071,8 +1071,8 @@
                 <span class="rem-txt">REMIND HOST</span>
             </button>
 
-            <button class="kickstart-btn disabled" id="kickstart-btn">
-                <span class="pawn-icon">🏰</span>
+            <button class="kickstart-btn disabled" id="start-match-btn">
+                <span class="pawn-icon">⚔️</span>
                 <span class="kick-txt">START MATCH</span>
             </button>
         </div>
@@ -1179,12 +1179,12 @@
 
         function updateRoleSystem() {
             const ksBtn = document.getElementById('kickstart-btn');
+            const startBtn = document.getElementById('start-match-btn');
             const rBtn = document.getElementById('reminder-btn');
 
             if (role === 'participant') {
-                ksBtn.classList.add('disabled');
-                ksBtn.style.cursor = 'not-allowed';
-                ksBtn.title = "ONLY HOST CAN START";
+                if (ksBtn) { ksBtn.classList.add('disabled'); ksBtn.style.cursor = 'not-allowed'; }
+                if (startBtn) { startBtn.classList.add('disabled'); startBtn.style.cursor = 'not-allowed'; startBtn.title = "ONLY HOST CAN START"; }
                 rBtn.style.display = 'flex';
 
                 // Hide Host-Only Controls
@@ -1247,7 +1247,7 @@
         // Automatic Join Simulation for Recruited Friends
         window.addEventListener('load', () => {
             if (localStorage.getItem('chess_invite_sent') === 'true') {
-                const kickstartBtn = document.querySelector('.kickstart-btn');
+                const kickstartBtn = document.getElementById('start-match-btn');
                 const opponentCard = document.querySelector('.waiting-slot');
 
                 setTimeout(() => {
@@ -1289,7 +1289,7 @@
             if (role === 'host' && !isRecording) {
                 // Host wants to start recording
                 // Check if p2 exists
-                if (!document.querySelector('.kickstart-btn').classList.contains('active')) {
+                if (!document.getElementById('start-match-btn').classList.contains('active')) {
                     openModal("ERROR: NO REAL PLAYER DETECTED.\n\nRECORDING MODULE IS ONLY ACTIVE FOR ONLINE COMPETITORS.");
                     return;
                 }
@@ -1441,8 +1441,8 @@
         let p2Wallet = 900; // Simulated wallet for challenger
 
         function openBetMenu() {
-            // Check if player 2 (Magnus_V) has joined yet
-            if (!document.querySelector('.kickstart-btn').classList.contains('active')) {
+            // Check if player 2 has joined yet
+            if (!document.getElementById('start-match-btn').classList.contains('active')) {
                 openModal("ERROR: NO REAL PLAYER DETECTED.\n\nWAGER MODULE IS ONLY ACTIVE FOR ONLINE COMPETITORS.");
                 return;
             }
@@ -1645,10 +1645,11 @@
 
             // Enable Kickstart for Host
             if (role === 'host') {
-                const kickstartBtn = document.getElementById('kickstart-btn');
+                const kickstartBtn = document.getElementById('start-match-btn');
                 kickstartBtn.classList.remove('disabled');
                 kickstartBtn.classList.add('active');
                 kickstartBtn.innerHTML = `<span class="kick-icon">⚔️</span><span class="kick-txt">START MATCH</span>`;
+                kickstartBtn.style.cursor = 'pointer';
                 kickstartBtn.onclick = (e) => {
                     e.preventDefault();
                     confirmStartMatch();
@@ -1675,10 +1676,11 @@
             `;
 
             // Disable Kickstart for Host
-            const ksBtn = document.getElementById('kickstart-btn');
+            const ksBtn = document.getElementById('start-match-btn');
             ksBtn.classList.add('disabled');
             ksBtn.classList.remove('active');
-            ksBtn.innerHTML = `💰 <span class="btn-lbl">BET MATCH<br>FUNDS</span>`;
+            ksBtn.style.cursor = 'not-allowed';
+            ksBtn.innerHTML = `<span class="pawn-icon">⚔️</span><span class="kick-txt">START MATCH</span>`;
             ksBtn.onclick = null;
 
             // Disable Chat Icon
