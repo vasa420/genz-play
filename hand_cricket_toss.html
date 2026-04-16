@@ -101,23 +101,73 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        let socket;
+        let isHost = localStorage.getItem('hc_isHost') === 'true'; 
+        const roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
+
+        window.onload = () => {
+            const subLabel = document.querySelector('.toss-sub');
+            if (!isHost) {
+                document.getElementById('btn-group').style.display = 'none';
+                subLabel.innerText = "WAITING FOR HOST TO CALL...";
+            }
+
+            try {
+                socket = io();
+                socket.on('connect', () => {
+                    socket.emit('join_room', { 
+                        roomId, 
+                        playerName: localStorage.getItem('playerName') || 'Player', 
+                        isCreating: isHost 
+                    });
+                });
+
+                socket.on('hc_toss_spun', (data) => {
+                    // Success! Opponent now sees the host's call and the exact same coin flip live
+                    executeSyncedToss(data.choice, data.outcome, data.hostName);
+                });
+            } catch(e) {
+                console.error("Socket Link Error:", e);
+            }
+        };
+
         function executeToss(choice) {
+            if (!isHost) return; // Protection
+
+            document.getElementById('btn-group').style.display = 'none';
+            const outcome = Math.random() > 0.5 ? 'Heads' : 'Tails';
+            
+            // Broadcast the exact choice and outcome so both screens match perfectly
+            if (socket) {
+                socket.emit('hc_toss_spin', { 
+                    roomId, 
+                    choice, 
+                    outcome, 
+                    hostName: localStorage.getItem('playerName') || 'HOST' 
+                });
+            }
+
+            executeSyncedToss(choice, outcome, "YOU");
+        }
+
+        function executeSyncedToss(choice, outcome, callerName) {
             document.getElementById('btn-group').style.display = 'none';
             const coin = document.getElementById('coin');
+            const tObj = document.querySelector('.toss-title');
+            const sObj = document.querySelector('.toss-sub');
+
+            sObj.innerText = `${callerName} CALLED ${choice.toUpperCase()}!`;
             
             // Trigger 3D Spin
             coin.classList.add('flip');
 
             setTimeout(() => {
                 // Determine Winner
-                const outcome = Math.random() > 0.5 ? 'Heads' : 'Tails';
                 const won = choice === outcome;
 
-                const tObj = document.querySelector('.toss-title');
-                const sObj = document.querySelector('.toss-sub');
-
-                tObj.innerText = won ? "YOU WON THE TOSS!" : "OPPONENT WON TOSS!";
+                tObj.innerText = won ? `${callerName} WON THE TOSS!` : `OPPONENT WON TOSS!`;
                 tObj.style.color = won ? "var(--neon-green)" : "#ff4d4d";
                 tObj.style.textShadow = won ? "0 0 20px rgba(0,255,170,0.5)" : "0 0 20px rgba(255,77,77,0.5)";
                 sObj.innerText = `COIN LANDED ON ${outcome.toUpperCase()}`;

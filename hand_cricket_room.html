@@ -384,6 +384,10 @@
             let id = '';
             for(let i=0; i<6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
             document.getElementById('room-id').innerText = `${id}`;
+
+            // Critical Role Assignment
+            localStorage.setItem('hc_isHost', 'true');
+            localStorage.setItem('hc_roomId', document.getElementById('room-id').innerText);
         };
 
         // Chat Scripting
@@ -458,7 +462,8 @@
                     </div>
                 `;
 
-                // Activate Kickstart
+                // Note: In a real socket environment, the guest would have hc_isHost=false
+                // Setting up the start button
                 const startBtn = document.getElementById('start-btn');
                 startBtn.classList.add('active-ready');
             }, 2500);

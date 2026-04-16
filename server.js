@@ -212,6 +212,11 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('update_player_ping', { playerId: socket.id, ping: ping });
     });
 
+    socket.on('hc_toss_spin', (data) => {
+        const { roomId, choice, outcome, hostName } = data;
+        socket.broadcast.to(roomId).emit('hc_toss_spun', { choice, outcome, hostName });
+    });
+
     socket.on('send_emote', (data) => {
         const { roomId, emote, playerName } = data;
         io.to(roomId).emit('receive_emote', { emote, playerName });
