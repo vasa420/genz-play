@@ -158,7 +158,12 @@
             const tObj = document.querySelector('.toss-title');
             const sObj = document.querySelector('.toss-sub');
 
-            sObj.innerText = `${callerName} CALLED ${choice.toUpperCase()}!`;
+            if (!isHost) {
+                const mySide = (choice === 'Heads') ? 'TAILS' : 'HEADS';
+                sObj.innerText = `OPPONENT SELECTED ${choice.toUpperCase()} THEN YOU ARE ${mySide}!`;
+            } else {
+                sObj.innerText = `${callerName} CALLED ${choice.toUpperCase()}!`;
+            }
             
             // Trigger 3D Spin
             coin.classList.add('flip');
