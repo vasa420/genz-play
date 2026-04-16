@@ -370,6 +370,12 @@
         function invitePlayer(playerName) {
             closeFriendsList();
             
+            // Disable the find opponent button so they can't invite multiple people
+            const inviteBtn = document.querySelector('.invite-friends-btn');
+            inviteBtn.style.pointerEvents = 'none';
+            inviteBtn.style.opacity = '0.3';
+            inviteBtn.innerHTML = `<span class="btn-lbl">WAITING FOR ${playerName.toUpperCase()}...</span>`;
+
             // Show auto system chat message
             const box = document.getElementById('chat-messages');
             const el1 = document.createElement('div');
@@ -384,6 +390,8 @@
 
             // Simulate opponent accepting and joining
             setTimeout(() => {
+                inviteBtn.style.display = 'none';
+                
                 const el2 = document.createElement('div');
                 el2.className = 'chat-msg system';
                 el2.style.color = 'var(--neon-green)';
