@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Cricket - Waiting Room</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000;
+            --accent: #fff;
+            --neon-green: #00ffaa;
+            --border: #113322;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            color: var(--accent);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        #bg-effect {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.95)), #050a08;
+            z-index: 0;
+        }
+
+        .grand-lobby-shell {
+            z-index: 10;
+            width: 100vw; height: 100vh;
+            padding: 30px 50px; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 30px;
+            animation: fadeIn 1s ease-out;
+            position: relative;
+        }
+
+        .grand-header {
+            background: rgba(10,20,15,0.8); border: 1px solid var(--border);
+            border-radius: 20px; padding: 12px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            height: 70px;
+        }
+
+        .header-left {
+            display: flex; align-items: center; gap: 15px; width: 33%;
+        }
+
+        .cricket-icon { font-size: 24px; filter: drop-shadow(0 0 5px var(--neon-green)); }
+        
+        .header-text-group { display: flex; flex-direction: column; }
+        .room-label { font-size: 11px; font-weight: 900; color: #aaa; letter-spacing: 1px; }
+
+        .arena-id-display {
+            background: #0f1a15; border: 1px solid var(--neon-green);
+            padding: 8px 25px; border-radius: 12px;
+            font-size: 14px; font-weight: 950; color: var(--neon-green);
+            letter-spacing: 4px; text-shadow: 0 0 10px rgba(0,255,170,0.3);
+            text-align: center;
+        }
+
+        .header-controls { display: flex; gap: 10px; align-items: center; justify-content: flex-end; width: 33%; }
+
+        .exit-btn {
+            background: #111; border: 1px solid #333; border-radius: 10px;
+            padding: 8px 15px; display: flex; align-items: center; gap: 8px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .exit-btn:hover { background: #500; border-color: #f00; }
+        .exit-txt { font-size: 10px; font-weight: 900; color: #fff; text-transform: uppercase; }
+
+        /* Matchup Area */
+        .arena-matchup {
+            display: flex; justify-content: space-around; align-items: center;
+            flex-grow: 1; padding: 20px 0;
+        }
+
+        .premium-card {
+            width: 350px; height: 180px;
+            background: #080d0a; border: 1px solid var(--border);
+            border-radius: 25px; padding: 25px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 40px 100px rgba(0,255,170,0.05);
+            position: relative; transition: 0.4s; gap: 15px;
+        }
+
+        .premium-card.dashed {
+            border: 2px dashed #1a3322; background: none; box-shadow: none;
+        }
+
+        .player-main .name { font-size: 24px; font-weight: 950; color: #fff; letter-spacing: 2px; }
+        .player-main .tag { font-size: 11px; color: var(--neon-green); font-weight: 900; text-transform: uppercase;}
+
+        .trophy-vs { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .trophy-top { font-size: 40px; font-weight: 950; color: #fff; text-shadow: 0 0 20px #fff; }
+
+        .waiting-slot { display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 15px;}
+        .waiting-label { font-size: 22px; font-weight: 950; letter-spacing: 5px; color: #555; }
+
+        .invite-friends-btn {
+            position: fixed; bottom: 40px; left: 50px;
+            width: fit-content; height: 50px;
+            background: #000; border: 1px solid var(--neon-green); border-radius: 15px;
+            color: var(--neon-green); display: flex; align-items: center; gap: 15px;
+            padding: 0 25px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(0,255,170,0.1);
+        }
+        .invite-friends-btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 10px 30px rgba(0,255,170,0.4); }
+
+        .btn-lbl { text-align: left; font-size: 11px; font-weight: 950; letter-spacing: 1px; text-transform: uppercase; }
+
+        .kickstart-btn {
+            position: fixed; bottom: 40px; right: 50px;
+            width: fit-content; height: 50px; padding: 0 30px;
+            background: #252525; border: none; border-radius: 15px;
+            color: #555; display: flex; justify-content: center; align-items: center; gap: 12px;
+            font-size: 12px; font-weight: 900; letter-spacing: 2px;
+            cursor: not-allowed; z-index: 100; text-transform: uppercase;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
+</head>
+<body>
+    <div id="bg-effect"></div>
+
+    <div class="grand-lobby-shell">
+        <!-- Top Bar -->
+        <div class="grand-header">
+            <div class="header-left">
+                <span class="cricket-icon">🏏</span>
+                <div class="header-text-group">
+                    <span class="room-label">ROOM: PRIVATE MATCH</span>
+                </div>
+            </div>
+            
+            <div class="arena-id-display" id="room-id">HC-****</div>
+
+            <div class="header-controls">
+                <button class="exit-btn" onclick="window.location.href='hand_cricket.html'">
+                    <span class="exit-txt">LEAVE ROOM</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Room Matchup -->
+        <div class="arena-matchup">
+            <!-- Player -->
+            <div class="premium-card">
+                <div class="player-main">
+                    <div class="name" id="my-name">PLAYER</div>
+                    <div class="tag">HOST</div>
+                </div>
+            </div>
+
+            <div class="trophy-vs">
+                <div class="trophy-top">VS</div>
+            </div>
+
+            <!-- Waiting -->
+            <div class="premium-card dashed" id="opponent-card">
+                <div class="waiting-slot">
+                    <div class="waiting-label">WAITING...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <button class="invite-friends-btn" onclick="window.location.href='hand_cricket_friends.html'">
+        <span class="btn-lbl">FIND OPPONENT</span>
+    </button>
+    
+    <button class="kickstart-btn">
+        <span>START MATCH</span>
+    </button>
+
+    <script>
+        window.onload = () => {
+            const name = localStorage.getItem('playerName') || "PLAYER";
+            document.getElementById('my-name').innerText = name.toUpperCase();
+            
+            // Generate random room ID
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let id = '';
+            for(let i=0; i<4; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('room-id').innerText = `HC-${id}`;
+        };
+    </script>
+</body>
+</html>
