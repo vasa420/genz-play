@@ -4,20 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Cricket | Premiere Arena</title>
+    <title>Hand Cricket | Preparing Match</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
-
-        :root {
-            --primary: #adff2f;
-            --bg: #030305;
-        }
 
         body {
             margin: 0;
             padding: 0;
-            background: var(--bg);
-            color: #fff;
+            background: #87CEEB; /* Sky blue base */
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
             display: flex;
@@ -26,118 +20,199 @@
             height: 100vh;
         }
 
-        #static-container {
-            text-align: center;
-            z-index: 10;
+        #sky-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, #fff 0%, #87CEEB 70%);
+            z-index: 1;
         }
 
-        .title {
-            font-size: 60px;
-            font-weight: 950;
-            letter-spacing: 12px;
-            text-transform: uppercase;
-            color: var(--primary);
-            margin-bottom: 20px;
-            text-shadow: 0 0 30px rgba(173, 255, 47, 0.4);
+        .sun-rays {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: repeating-conic-gradient(from 0deg, rgba(255,255,255,0.2) 0deg 10deg, transparent 10deg 20deg);
+            animation: rotateRays 30s linear infinite;
+            z-index: 2;
         }
 
-        .status {
-            font-size: 14px;
-            color: #888;
-            letter-spacing: 5px;
-            font-weight: 400;
-            text-transform: uppercase;
+        @keyframes rotateRays {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .visual-assets {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 50px 0;
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/clouds.png');
+            opacity: 0.5;
+            z-index: 3;
+            animation: moveClouds 60s linear infinite;
         }
 
-        .asset {
-            opacity: 0.6;
-            filter: grayscale(0.5);
+        @keyframes moveClouds {
+            from { background-position: 0 0; }
+            to { background-position: 1000px 0; }
         }
 
-        .stump-set {
-            display: flex;
-            gap: 12px;
-        }
-
-        .stump {
-            width: 10px;
-            height: 120px;
-            background: #444;
-            border-radius: 5px;
-        }
-
-        .bat-static {
-            width: 30px;
-            height: 140px;
-            background: #444;
-            border-radius: 4px 4px 10px 10px;
+        /* ---- The Hand and Ball ---- */
+        .hand-wrapper {
             position: relative;
+            z-index: 10;
+            transform: translateY(100px);
+            animation: handRise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .bat-static::before {
-            content: '';
+        @keyframes handRise {
+            to { transform: translateY(0); }
+        }
+
+        .arm {
+            width: 40px;
+            height: 300px;
+            background: linear-gradient(to right, #e0ac69, #ffdbac, #e0ac69);
+            margin: 0 auto;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .cricket-ball {
             position: absolute;
             top: -40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 10px;
-            height: 40px;
-            background: #222;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #ff4d4d, #b30000);
+            border-radius: 50%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset -10px -10px 20px rgba(0,0,0,0.4);
+            z-index: 11;
+            animation: ballSpin 3s linear infinite;
         }
 
-        .back-btn {
-            margin-top: 40px;
-            background: transparent;
-            border: 1px solid #333;
-            color: #666;
-            padding: 10px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            letter-spacing: 2px;
-            transition: 0.3s;
+        .ball-seam {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-top: 1px solid rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(0,0,0,0.2);
         }
 
-        .back-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+        @keyframes ballSpin {
+            from { transform: translateX(-50%) rotate(0deg); }
+            to { transform: translateX(-50%) rotate(360deg); }
         }
+
+        .fingers {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 100px;
+            z-index: 12;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 5px;
+        }
+
+        .finger {
+            width: 18px;
+            height: 60px;
+            background: #ffdbac;
+            border-radius: 10px;
+            border-bottom: 2px solid #e0ac69;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Intro Text */
+        .overlay-text {
+            position: absolute;
+            bottom: 60px;
+            text-align: center;
+            width: 100%;
+            z-index: 20;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: 950;
+            color: #fff;
+            letter-spacing: 10px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+
+        .sub-text {
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 4px;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+
+        /* Transition Effect */
+        .white-flash {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .animate-flash {
+            animation: flashOut 1.5s forwards;
+        }
+
+        @keyframes flashOut {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
     </style>
 </head>
 
 <body>
-    <div id="static-container">
-        <div class="title">HAND CRICKET</div>
-        <div class="status">DEVELOPMENT IN PROGRESS</div>
-
-        <div class="visual-assets">
-            <div class="asset">
-                <div class="stump-set">
-                    <div class="stump"></div>
-                    <div class="stump"></div>
-                    <div class="stump"></div>
-                </div>
-            </div>
-            <div class="asset">
-                <div class="bat-static"></div>
-            </div>
-        </div>
-
-        <button class="back-btn" onclick="window.location.href='index.html'">RETURN TO HUB</button>
+    <div id="sky-bg">
+        <div class="sun-rays"></div>
+        <div class="clouds"></div>
     </div>
 
+    <div class="hand-wrapper">
+        <div class="arm">
+            <div class="cricket-ball">
+                <div class="ball-seam"></div>
+            </div>
+            <div class="fingers">
+                <div class="finger" style="height: 70px; transform: rotate(-5deg);"></div>
+                <div class="finger" style="height: 80px; transform: rotate(0deg);"></div>
+                <div class="finger" style="height: 75px; transform: rotate(5deg);"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-text">
+        <div class="title">HAND CRICKET</div>
+        <div class="sub-text">PREPARING DIGITAL PITCH...</div>
+    </div>
+
+    <div class="white-flash" id="flash"></div>
+
     <script>
-        // Optional quick redirect after 10s if they don't click anything
+        // Redirect logic
         setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 10000);
+            document.getElementById('flash').classList.add('animate-flash');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 750);
+        }, 3000); // 3 seconds intro as requested
     </script>
 </body>
 
