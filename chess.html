@@ -1647,12 +1647,35 @@
             console.log("GAME INITIALIZED - ROLE:", role, "COLOR:", myColor, "MULTIPLAYER:", isMultiplayer);
             renderBoard();
 
-            // Cinematic Audio Fade-out
-            if (isMusicPlaying) {
-                fadeOutMusic(() => {
-                    toggleArenaMusic(); // Update UI/State after fade
-                });
+            // Cinematic Audio Fade-in for Match Time
+            const musicEnabled = localStorage.getItem('arenaMusicEnabled') === 'true';
+            if (musicEnabled && !isMusicPlaying) {
+                fadeInMusic();
             }
+        }
+
+        function fadeInMusic() {
+            bgMusic.volume = 0;
+            const savedTime = localStorage.getItem('arenaMusicTime');
+            if (savedTime) bgMusic.currentTime = parseFloat(savedTime);
+            
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                musicToggle.classList.add('on');
+                musicStatus.innerText = "ATMOSPHERIC AUDIO: ON";
+                musicStatus.style.color = "#fff";
+                
+                let vol = 0;
+                const interval = setInterval(() => {
+                    if (vol < 0.95) {
+                        vol += 0.05;
+                        bgMusic.volume = vol;
+                    } else {
+                        bgMusic.volume = 1;
+                        clearInterval(interval);
+                    }
+                }, 50);
+            }).catch(err => console.log("Interaction required or blocked"));
         }
 
         function fadeOutMusic(callback) {
@@ -2257,8 +2280,17 @@
                 }
                 gameActive = false;
 
-                // Auto music management: Resume on match completion
-                if (!isMusicPlaying) toggleArenaMusic();
+                // Auto music management: Stop on match completion
+                if (isMusicPlaying) {
+                    fadeOutMusic(() => {
+                        // Just stop, don't toggle preference
+                        bgMusic.pause();
+                        isMusicPlaying = false;
+                        musicToggle.classList.remove('on');
+                        musicStatus.innerText = "ATMOSPHERIC AUDIO: OFF";
+                        musicStatus.style.color = "#888";
+                    });
+                }
             } else {
                 if (inCheck) {
                     showToast("CHECK!");
@@ -2345,8 +2377,16 @@
             updateTurnDisplay();
             initBoard();
 
-            // Auto music management: Resume on manual reset
-            if (!isMusicPlaying) toggleArenaMusic();
+            // Auto music management: Stop on manual reset
+            if (isMusicPlaying) {
+                fadeOutMusic(() => {
+                    bgMusic.pause();
+                    isMusicPlaying = false;
+                    musicToggle.classList.remove('on');
+                    musicStatus.innerText = "ATMOSPHERIC AUDIO: OFF";
+                    musicStatus.style.color = "#888";
+                });
+            }
         }
 
         function showPlayerDetails() {
@@ -2895,13 +2935,10 @@
 
         // Optional: Auto-start on first click OR immediately on entry if interaction happened elsewhere
         function tryAutoPlayOnEnter() {
-            if (localStorage.getItem('arenaMusicEnabled') === 'true' && !isMusicPlaying) {
-                const savedTime = localStorage.getItem('arenaMusicTime');
-                if (savedTime) bgMusic.currentTime = parseFloat(savedTime);
-
-                bgMusic.play().then(() => {
-                    isMusicPlaying = true;
-                }).catch(() => { });
+            // No longer auto-playing in lobby, music starts at Match Start
+            // But we can check if they are ALREADY in a match (unlikely on fresh load, but for safety)
+            if (gameStarted && localStorage.getItem('arenaMusicEnabled') === 'true' && !isMusicPlaying) {
+                fadeInMusic();
             }
         }
 
@@ -2944,9 +2981,14 @@
                 portal.style.display = 'none';
                 document.getElementById('view-portal-iframe').src = "about:blank";
 
-                // Auto-resume music on exit if it was enabled
-                if (localStorage.getItem('arenaMusicEnabled') === 'true' && !isMusicPlaying) {
-                    toggleArenaMusic();
+                // Ensure music is stopped when returning to hub (it should already be stopped)
+                if (isMusicPlaying) {
+                    fadeOutMusic(() => {
+                        bgMusic.pause();
+                        isMusicPlaying = false;
+                        musicToggle.classList.remove('on');
+                        musicStatus.innerText = "ATMOSPHERIC AUDIO: OFF";
+                    });
                 }
             }, 500);
         }
