@@ -208,39 +208,50 @@
     </div>
 
     <script>
-        function startGoogleSignIn() {
-            google.accounts.id.prompt();
+        async function startGoogleSignIn() {
+            if (typeof Clerk === 'undefined') {
+                alert("Authentication system is still loading. Please wait a moment.");
+                return;
+            }
+            
+            try {
+                // Use Clerk for Google Authentication
+                await Clerk.authenticateWithRedirect({
+                    strategy: "oauth_google",
+                    redirectUrl: window.location.origin + window.location.pathname,
+                    redirectUrlComplete: window.location.origin + "/index.html"
+                });
+            } catch (err) {
+                console.error("Auth Error:", err);
+                alert("Failed to start Google Sign-In.");
+            }
         }
 
-        window.handleGoogleLogin = function(response) {
-            try {
-                // Decode JWT
-                const base64Url = response.credential.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+        // Initialize Clerk and check for existing session
+        window.addEventListener('load', async () => {
+            const checkClerk = setInterval(async () => {
+                if (typeof Clerk !== 'undefined' && Clerk.isReady()) {
+                    clearInterval(checkClerk);
+                    
+                    // If user is already signed in, handle it
+                    if (Clerk.user) {
+                        const user = Clerk.user;
+                        const playerName = user.fullName || user.firstName || "CRICKET PLAYER";
+                        localStorage.setItem('playerName', playerName);
+                        if (user.imageUrl) localStorage.setItem('playerAvatar', user.imageUrl);
 
-                const user = JSON.parse(jsonPayload);
-                const playerName = user.name || "CRICKET PLAYER";
-                
-                localStorage.setItem('playerName', playerName);
-                if (user.picture) localStorage.setItem('playerAvatar', user.picture);
-
-                // Feedback and Redirect
-                document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
-                document.getElementById('google-login-btn').style.opacity = '0.5';
-                document.getElementById('google-login-btn').innerText = "AUTHENTICATED!";
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html'; // Or wherever Hand Cricket continues
-                }, 1500);
-
-            } catch (e) {
-                console.error("Login Error:", e);
-                alert("Login failed. Please try again.");
-            }
-        };
+                        document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
+                        document.getElementById('google-login-btn').style.opacity = '0.5';
+                        document.getElementById('google-login-btn').innerText = "AUTHENTICATED!";
+                        
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1000);
+                    }
+                }
+            }, 100);
+            setTimeout(() => clearInterval(checkClerk), 5000);
+        });
     </script>
 
 </body>
