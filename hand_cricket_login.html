@@ -201,20 +201,13 @@
     </div>
 
     <script>
-        const CLERK_PUBLISHABLE_KEY = "pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA";
-
         // Initialize Clerk and check for existing session
-        window.addEventListener('load', async () => {
-            const checkClerk = setInterval(async () => {
-                if (typeof Clerk !== 'undefined') {
+        window.addEventListener('load', () => {
+            const checkClerk = setInterval(() => {
+                if (typeof Clerk !== 'undefined' && Clerk.isReady()) {
                     clearInterval(checkClerk);
                     
                     try {
-                        // Explicitly load Clerk
-                        if (!Clerk.isReady()) {
-                            await Clerk.load({ publishableKey: CLERK_PUBLISHABLE_KEY });
-                        }
-                        
                         // If user is already signed in, handle it
                         if (Clerk.user) {
                             const user = Clerk.user;
@@ -234,17 +227,30 @@
                             Clerk.mountSignIn(container, {
                                 appearance: {
                                     theme: 'dark',
-                                    variables: { colorPrimary: '#39FF14' }
+                                    variables: { 
+                                        colorPrimary: '#39FF14',
+                                        colorBackground: '#000',
+                                        colorText: '#fff'
+                                    }
                                 }
                             });
                         }
                     } catch (err) {
-                        console.error("Clerk Error:", err);
-                        document.getElementById('clerk-signin-ui').innerText = "ERROR LOADING AUTH.";
+                        console.error("Clerk Mounting Error:", err);
+                        document.getElementById('clerk-signin-ui').style.color = "#fff";
+                        document.getElementById('clerk-signin-ui').innerText = "ERROR MOUNTING AUTH UI.";
                     }
                 }
             }, 100);
-            setTimeout(() => clearInterval(checkClerk), 5000);
+            
+            // Timeout after 8 seconds
+            setTimeout(() => {
+                if (typeof Clerk === 'undefined' || !Clerk.isReady()) {
+                    clearInterval(checkClerk);
+                    document.getElementById('clerk-signin-ui').style.color = "#fff";
+                    document.getElementById('clerk-signin-ui').innerText = "AUTH SYSTEM TIMEOUT. PLEASE REFRESH.";
+                }
+            }, 8000);
         });
     </script>
 
