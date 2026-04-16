@@ -159,6 +159,61 @@
         }
         .send-btn:hover { box-shadow: 0 0 15px rgba(0,255,170,0.5); }
 
+        /* Friends Overlay Modal */
+        .friends-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+            z-index: 300; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .friends-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .friends-box {
+            background: #050a08; border: 1px solid var(--neon-green); border-radius: 20px;
+            width: 400px; max-height: 80vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,255,170,0.15); overflow: hidden;
+            transform: scale(0.9); transition: 0.3s;
+        }
+        .friends-overlay.active .friends-box { transform: scale(1); }
+
+        .friends-header {
+            padding: 20px 25px; border-bottom: 1px solid #1a3322;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; font-weight: 950; color: var(--neon-green); letter-spacing: 2px;
+        }
+
+        .friends-list { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        
+        .friend-card {
+            background: #08120d; border: 1px solid #1a3322; border-radius: 12px;
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s;
+        }
+        .friend-card:hover { border-color: rgba(0,255,170,0.5); background: #0a1a12; }
+        
+        .f-info { display: flex; align-items: center; gap: 15px; }
+        .span-dot { color: #0f0; font-size: 18px; text-shadow: 0 0 10px #0f0; }
+        .f-name { font-size: 14px; font-weight: 900; color: #fff; }
+        .f-status { font-size: 10px; color: #aaa; font-weight: 700; text-transform: uppercase; }
+        
+        .invite-act-btn {
+            background: none; border: 1px solid var(--neon-green); color: var(--neon-green);
+            padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: 900;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .invite-act-btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 15px rgba(0,255,170,0.4); }
+
+        .kickstart-btn.active-ready {
+            background: var(--neon-green); color: #000; cursor: pointer;
+            border: 1px solid var(--neon-green); box-shadow: 0 0 25px rgba(0,255,170,0.4);
+            animation: pulseBtn 1.5s infinite alternate;
+        }
+        
+        @keyframes pulseBtn {
+            0% { box-shadow: 0 0 15px rgba(0,255,170,0.2); }
+            100% { box-shadow: 0 0 35px rgba(0,255,170,0.8); }
+        }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     </style>
@@ -212,13 +267,47 @@
     </div>
 
     <!-- Actions -->
-    <button class="invite-friends-btn" onclick="window.location.href='hand_cricket_friends.html'">
+    <button class="invite-friends-btn" onclick="openFriendsList()">
         <span class="btn-lbl">FIND OPPONENT</span>
     </button>
     
-    <button class="kickstart-btn">
+    <button class="kickstart-btn" id="start-btn" onclick="startMatch()">
         <span>START MATCH</span>
     </button>
+
+    <!-- Friends Overlay UI -->
+    <div class="friends-overlay" id="friends-modal">
+        <div class="friends-box">
+            <div class="friends-header">
+                <span>ONLINE FRIENDS</span>
+                <button class="close-chat" onclick="closeFriendsList()">✖</button>
+            </div>
+            <div class="friends-list">
+                <!-- Friend 1 -->
+                <div class="friend-card">
+                    <div class="f-info">
+                        <span class="span-dot">•</span>
+                        <div>
+                            <div class="f-name">RAHUL_PRO</div>
+                            <div class="f-status">IDLE - LOBBY</div>
+                        </div>
+                    </div>
+                    <button class="invite-act-btn" onclick="invitePlayer('Rahul_Pro')">INVITE</button>
+                </div>
+                <!-- Friend 2 -->
+                <div class="friend-card">
+                    <div class="f-info">
+                        <span class="span-dot" style="color: #0f0;">•</span>
+                        <div>
+                            <div class="f-name">PRIYA_GAMER</div>
+                            <div class="f-status">ONLINE</div>
+                        </div>
+                    </div>
+                    <button class="invite-act-btn" onclick="invitePlayer('Priya_Gamer')">INVITE</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Chat Modal UI -->
     <div id="chat-modal" class="chat-modal">
@@ -266,6 +355,61 @@
             
             box.scrollTop = box.scrollHeight;
             input.value = '';
+        }
+
+        // Friends Overlay Scripting
+        function openFriendsList() {
+            document.getElementById('friends-modal').classList.add('active');
+        }
+
+        function closeFriendsList() {
+            document.getElementById('friends-modal').classList.remove('active');
+        }
+
+        function invitePlayer(playerName) {
+            closeFriendsList();
+            
+            // Show auto system chat message
+            const box = document.getElementById('chat-messages');
+            const el1 = document.createElement('div');
+            el1.className = 'chat-msg system';
+            el1.innerText = `Invite sent to ${playerName.toUpperCase()}...`;
+            box.appendChild(el1);
+            box.scrollTop = box.scrollHeight;
+
+            if(!document.getElementById('chat-modal').classList.contains('open')){
+                toggleChat();
+            }
+
+            // Simulate opponent accepting and joining
+            setTimeout(() => {
+                const el2 = document.createElement('div');
+                el2.className = 'chat-msg system';
+                el2.style.color = 'var(--neon-green)';
+                el2.innerText = `${playerName.toUpperCase()} HAS JOINED THE LOBBY!`;
+                box.appendChild(el2);
+                box.scrollTop = box.scrollHeight;
+
+                // Update opponent card UI
+                const oppCard = document.getElementById('opponent-card');
+                oppCard.classList.remove('dashed');
+                oppCard.innerHTML = `
+                    <div class="player-main" style="display:flex; flex-direction:column; align-items:center;">
+                        <div class="name" style="font-size:24px; font-weight:950; color:#fff; letter-spacing:2px;">${playerName.toUpperCase()}</div>
+                        <div class="tag" style="font-size:11px; color:#ffaa00; font-weight:900; text-transform:uppercase;">GUEST</div>
+                    </div>
+                `;
+
+                // Activate Kickstart
+                const startBtn = document.getElementById('start-btn');
+                startBtn.classList.add('active-ready');
+            }, 2500);
+        }
+
+        function startMatch() {
+            if(document.getElementById('start-btn').classList.contains('active-ready')) {
+                window.location.href = 'hand_cricket.html';
+            }
         }
     </script>
 </body>
