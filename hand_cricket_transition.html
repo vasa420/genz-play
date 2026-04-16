@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hand Cricket | Entering Arena</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        #splash-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #splash-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.5s ease-out;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .zoom-out {
+            transform: scale(3.5);
+            opacity: 0;
+        }
+
+        /* Progress Bar */
+        #loader-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            z-index: 20;
+            backdrop-filter: blur(5px);
+        }
+
+        #loader-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #39FF14, #00FFFF);
+            border-radius: 10px;
+            box-shadow: 0 0 15px #39FF14;
+            transition: width 10s linear;
+        }
+
+        #status-text {
+            position: absolute;
+            bottom: 65px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            z-index: 20;
+        }
+
+        .fade-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .active-fade {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-container">
+        <img id="splash-image" src="hand_cricket_splash.png" alt="Hand Cricket Splash">
+    </div>
+
+    <div id="status-text">PREPARING ARENA...</div>
+    <div id="loader-container">
+        <div id="loader-fill"></div>
+    </div>
+
+    <div class="fade-overlay" id="fade"></div>
+
+    <script>
+        window.onload = () => {
+            const fill = document.getElementById('loader-fill');
+            const img = document.getElementById('splash-image');
+            const fade = document.getElementById('fade');
+            
+            // Start progress bar
+            setTimeout(() => {
+                fill.style.width = '100%';
+            }, 100);
+
+            // Trigger animation and redirect after 10 seconds
+            setTimeout(() => {
+                // Zoom animation
+                img.classList.add('zoom-out');
+                
+                setTimeout(() => {
+                    // Redirect to login page
+                    window.location.href = 'hand_cricket_login.html';
+                }, 1500); // Wait for zoom effect to almost finish
+            }, 10000); // 10 seconds wait as requested
+        };
+    </script>
+</body>
+</html>
