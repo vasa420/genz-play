@@ -178,10 +178,7 @@
 
     <div class="spotlight"></div>
     
-    <!-- Clerk Auth SDK -->
-    <script async crossorigin="anonymous"
-        data-clerk-publishable-key="pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA"
-        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" type="text/javascript"></script>
+    <!-- Google Identity Services for Fast Popups -->
     <script src="https://accounts.google.com/gsi/client" async></script>
 
     <button id="back-btn" onclick="window.location.href='index.html'">&larr; BACK TO HUB</button>
@@ -190,6 +187,14 @@
         <div style="font-size: 50px; margin-bottom: 25px;">🏏</div>
         <h2 style="margin-bottom: 35px;">HAND CRICKET</h2>
         
+        <div id="g_id_onload"
+            data-client_id="731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleGoogleLogin"
+            data-auto_prompt="false">
+        </div>
+
         <button id="google-login-btn" onclick="startGoogleSignIn();">
             <svg id="google-logo" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -206,61 +211,59 @@
     </div>
 
     <script>
-        const CLERK_PUBLISHABLE_KEY = "pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA";
-
-        async function startGoogleSignIn() {
-            if (typeof Clerk === 'undefined' || !Clerk.isReady()) {
-                alert("Authentication system is still loading. Please wait a moment.");
-                return;
-            }
-            
-            try {
-                // Use Clerk for Google Authentication
-                await Clerk.authenticateWithRedirect({
-                    strategy: "oauth_google",
-                    redirectUrl: window.location.origin + window.location.pathname,
-                    redirectUrlComplete: window.location.origin + "/index.html"
-                });
-            } catch (err) {
-                console.error("Auth Error:", err);
-                alert("Failed to start Google Sign-In. Check console for details.");
+        function startGoogleSignIn() {
+            // Instantly open the native Google accounts popup
+            if (google && google.accounts && google.accounts.id) {
+                google.accounts.id.prompt();
+            } else {
+                alert("Google Authentication is still loading. Please try again in a second.");
             }
         }
 
-        // Initialize Clerk and check for existing session
-        window.addEventListener('load', () => {
-            const checkClerk = setInterval(() => {
-                if (typeof Clerk !== 'undefined' && Clerk.isReady()) {
-                    clearInterval(checkClerk);
-                    
-                    try {
-                        // If user is already signed in, handle it
-                        if (Clerk.user) {
-                            const user = Clerk.user;
-                            const playerName = user.fullName || user.firstName || "CRICKET PLAYER";
-                            localStorage.setItem('playerName', playerName);
-                            if (user.imageUrl) localStorage.setItem('playerAvatar', user.imageUrl);
+        window.handleGoogleLogin = function(response) {
+            try {
+                // Decode Google JWT
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
 
-                            document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
-                            document.getElementById('google-login-btn').style.opacity = '0.5';
-                            document.getElementById('google-login-btn').innerHTML = "<span class='btn-text'>AUTHENTICATED!</span>";
-                            
-                            setTimeout(() => {
-                                window.location.href = 'index.html';
-                            }, 1000);
-                        }
-                    } catch (err) {
-                        console.error("Clerk Session Error:", err);
-                    }
-                }
-            }, 100);
-            
-            // Timeout after 8 seconds
-            setTimeout(() => {
-                if (typeof Clerk === 'undefined' || !Clerk.isReady()) {
-                    clearInterval(checkClerk);
-                }
-            }, 8000);
+                const user = JSON.parse(jsonPayload);
+                const playerName = user.name || "CRICKET PLAYER";
+                
+                // Save locally
+                localStorage.setItem('playerName', playerName);
+                if (user.picture) localStorage.setItem('playerAvatar', user.picture);
+
+                // UI Feedback
+                document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
+                document.getElementById('google-login-btn').style.opacity = '0.5';
+                document.getElementById('google-login-btn').innerHTML = "<span class='btn-text'>AUTHENTICATED!</span>";
+                
+                // Fast redirect
+                setTimeout(() => {
+                    window.location.href = 'index.html'; 
+                }, 1000);
+
+            } catch (e) {
+                console.error("Login Error:", e);
+                alert("Login failed. Please try again.");
+            }
+        };
+
+        // Auto-detect existing player
+        window.addEventListener('load', () => {
+            const existingName = localStorage.getItem('playerName');
+            if (existingName) {
+                document.querySelector('h2').innerText = "WELCOME, " + existingName.toUpperCase();
+                document.getElementById('google-login-btn').style.opacity = '0.5';
+                document.getElementById('google-login-btn').innerHTML = "<span class='btn-text'>AUTHENTICATED!</span>";
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1200);
+            }
         });
     </script>
 
