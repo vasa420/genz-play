@@ -267,6 +267,12 @@
             text-transform: uppercase;
         }
 
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.15) !important;
+            transform: translateX(5px);
+            border-color: rgba(255,255,255,0.3) !important;
+        }
+
         .btn-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -362,7 +368,31 @@
         </div>
     </header>
 
-    <div class="arena">
+    <div class="main-layout" style="display: flex; flex: 1; width: 100%; overflow: hidden;">
+        <!-- Side Navigation -->
+        <aside class="sidebar" style="width: 260px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); border-right: 1px solid var(--border-glass); padding: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 50;">
+            <div style="font-size: 11px; letter-spacing: 3px; color: #888; font-weight: 900; margin-bottom: 20px;">LOBBY MAIN</div>
+            
+            <button class="nav-btn" onclick="alert('Waiting for players is coming soon!')" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 20px;">👥</span> Play with Friends
+            </button>
+            <button class="nav-btn" onclick="alert('Avatar collection is locked!')" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 20px;">🎒</span> Collection
+            </button>
+            
+            <div style="flex:1;"></div>
+            
+            <!-- Music Toggle Button -->
+            <button id="music-toggle" onclick="toggleMusic()" class="nav-btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 12px; font-weight: 900; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <span style="font-size: 18px;">🔊</span> MUSIC: ON
+            </button>
+            
+            <button onclick="window.location.href='hand_cricket_login.html'" style="background: rgba(255, 59, 48, 0.2); color: var(--neon-red); border: 1px solid var(--neon-red); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.3s;">
+                EXIT TO LOBBY
+            </button>
+        </aside>
+
+        <div class="arena">
         
         <div class="score-board">
             <div class="score-card active" id="player-card">
@@ -406,6 +436,10 @@
         </div>
 
     </div>
+    </div> <!-- Close main-layout -->
+
+    <!-- Looping Background Music -->
+    <audio id="bg-music" src="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3" loop preload="auto"></audio>
 
     <script>
         // User Setup
@@ -416,7 +450,36 @@
             if (avatar) document.getElementById('display-avatar').src = avatar;
             
             initGame();
+
+            // Attempt to autoplay music (browsers might block it until interaction)
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = 0.4;
+            bgMusic.play().catch(e => {
+                console.log("Autoplay blocked, waiting for user click.");
+                // Add one-time click listener to start music if autoplay fails
+                document.body.addEventListener('click', forcePlayMusic, { once: true });
+            });
         };
+
+        function forcePlayMusic() {
+            if(!isMusicMuted) {
+                document.getElementById('bg-music').play().catch(e=>console.log(e));
+            }
+        }
+
+        let isMusicMuted = false;
+        function toggleMusic() {
+            const bgMusic = document.getElementById('bg-music');
+            const btn = document.getElementById('music-toggle');
+            isMusicMuted = !isMusicMuted;
+            if (isMusicMuted) {
+                bgMusic.pause();
+                btn.innerHTML = '<span style="font-size: 18px;">🔈</span> MUSIC: OFF';
+            } else {
+                bgMusic.play().catch(e=>console.log());
+                btn.innerHTML = '<span style="font-size: 18px;">🔊</span> MUSIC: ON';
+            }
+        }
 
         // Game State
         let state = {
