@@ -8,10 +8,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
 
+        :root {
+            --primary: #adff2f;
+            --primary-glow: rgba(173, 255, 47, 0.4);
+            --bg: #030305;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background: #050505;
+            background: var(--bg);
             color: #fff;
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
@@ -25,223 +31,280 @@
             position: relative;
             width: 100%;
             height: 100%;
+            background: radial-gradient(circle at center, #0a0a10 0%, #000 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            perspective: 1200px;
         }
 
-        /* Scanlines and Noise */
+        /* ---- Ambient Effects ---- */
         .overlay {
             position: absolute;
             inset: 0;
-            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0px, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 2px);
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 2px, 3px 100%;
             pointer-events: none;
-            z-index: 10;
+            z-index: 20;
         }
 
-        .glow {
+        .stadium-lights {
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(173, 255, 47, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(50px);
-            animation: pulseGlow 4s infinite alternate;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 10%, rgba(255,255,255,0.05) 0%, transparent 20%),
+                radial-gradient(circle at 80% 10%, rgba(255,255,255,0.05) 0%, transparent 20%);
+            z-index: 1;
         }
 
-        @keyframes pulseGlow {
-            from { transform: scale(1); opacity: 0.5; }
-            to { transform: scale(1.2); opacity: 0.8; }
-        }
-
-        /* ---- Cricket Animation Components ---- */
-        .arena {
+        /* ---- 3D Pitch Arena ---- */
+        .pitch-wrapper {
             position: relative;
-            width: 400px;
-            height: 300px;
+            width: 600px;
+            height: 400px;
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            perspective: 1000px;
+            transform-style: preserve-3d;
+            transform: rotateX(15deg);
         }
 
-        /* Stumps */
-        .stumps {
+        .pitch-floor {
+            position: absolute;
+            width: 1000px;
+            height: 2000px;
+            background: 
+                linear-gradient(to bottom, #0a0a12, #000),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 40px);
+            transform: rotateX(85deg) translateZ(-150px);
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        /* Stumps with Bails */
+        .wicket-set {
+            position: relative;
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 18px;
             transform-style: preserve-3d;
-            animation: stumpsAppear 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            margin-bottom: 50px;
+            animation: wicketEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         .stump {
-            width: 12px;
-            height: 150px;
-            background: linear-gradient(to right, #8b4513, #a0522d, #8b4513);
-            border-radius: 6px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            width: 14px;
+            height: 160px;
+            background: linear-gradient(90deg, #6b4423, #a67b5b, #4a2d14);
+            border-radius: 7px;
+            position: relative;
+            transform-style: preserve-3d;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+
+        .bails {
+            position: absolute;
+            top: -6px;
+            left: -5px;
+            width: 58px;
+            height: 8px;
+            display: flex;
+            gap: 4px;
+            z-index: 2;
+        }
+
+        .bail {
+            flex: 1;
+            height: 100%;
+            background: #5d3a1a;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        @keyframes wicketEntrance {
+            from { transform: translateY(200px) rotateX(-90deg); opacity: 0; }
+            to { transform: translateY(0) rotateX(0); opacity: 1; }
+        }
+
+        /* Cinematic Bat */
+        .bat-container {
+            position: absolute;
+            left: 120px;
+            bottom: 80px;
+            z-index: 10;
+            transform-style: preserve-3d;
+            animation: batPreShot 2s ease-in-out infinite alternate;
+        }
+
+        .mighty-bat {
+            position: relative;
+            width: 36px;
+            height: 190px;
+            background: linear-gradient(90deg, #d2b48c, #f5deb3, #8b4513);
+            border-radius: 4px 4px 18px 18px;
+            transform-origin: top center;
+            transform: rotate(-35deg);
+            box-shadow: 5px 15px 40px rgba(0,0,0,0.7);
+            animation: masterStroke 2.5s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+
+        .handle {
+            position: absolute;
+            top: -65px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 65px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+
+        @keyframes masterStroke {
+            0% { transform: rotate(-35deg) translateZ(0); }
+            45% { transform: rotate(80deg) translateZ(50px); } /* Power shot */
+            50% { transform: rotate(85deg) translateZ(60px); } 
+            100% { transform: rotate(-35deg) translateZ(0); }
+        }
+
+        /* Realistic Ball Bounce */
+        .cricket-ball {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: radial-gradient(circle at 35% 35%, #ff3333, #800000);
+            border-radius: 50%;
+            right: -150px;
+            bottom: 80px;
+            z-index: 15;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4), inset -5px -5px 10px rgba(0,0,0,0.5);
+            animation: bowlBounce 2.5s infinite linear;
+        }
+
+        @keyframes bowlBounce {
+            0% { transform: translateX(0) translateY(-300px) scale(0.6); opacity: 0; }
+            10% { opacity: 1; }
+            30% { transform: translateX(-150px) translateY(20px) scale(0.85); } /* Bounce 1 on floor */
+            50% { transform: translateX(-310px) translateY(-20px) scale(1.1); } /* Impact with Bat */
+            51% { filter: brightness(2) saturate(1.5); } /* Flash on impact */
+            75% { transform: translateX(-600px) translateY(-350px) scale(0.7); opacity: 0; }
+            100% { transform: translateX(-600px) translateY(-350px) scale(0.7); opacity: 0; }
+        }
+
+        /* Particles on Impact */
+        .impact-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 16;
+        }
+
+        .animate-impact {
+            animation: explode 0.6s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+
+        /* ---- UI & Loading Progress ---- */
+        .interface {
+            position: absolute;
+            bottom: 10%;
+            text-align: center;
+            z-index: 30;
+        }
+
+        .title-reveal {
+            font-size: 52px;
+            font-weight: 900;
+            letter-spacing: 15px;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 5px;
+            text-shadow: 0 0 30px var(--primary-glow);
+            animation: titleGlitch 5s infinite;
+        }
+
+        @keyframes titleGlitch {
+            0%, 90%, 100% { transform: none; opacity: 1; }
+            92% { transform: skewX(10deg); opacity: 0.8; }
+            94% { transform: skewX(-15deg); color: #0fff; }
+            96% { transform: skewX(5deg); color: #f0f; }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(173, 255, 47, 0.2);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--primary);
+            margin-top: 15px;
+        }
+
+        .score-pop {
+            position: absolute;
+            font-size: 120px;
+            font-weight: 950;
+            color: var(--primary);
+            opacity: 0;
+            z-index: 40;
+            text-shadow: 0 0 50px rgba(173, 255, 47, 0.8);
+            pointer-events: none;
+            animation: scoreShow 2.5s infinite;
+        }
+
+        @keyframes scoreShow {
+            0%, 45% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            70% { transform: scale(1); opacity: 0; transform: translateY(-100px); }
+            100% { opacity: 0; }
+        }
+
+        /* Advanced Circular Loader */
+        .loader-ring {
+            width: 80px;
+            height: 80px;
+            margin: 20px auto;
             position: relative;
         }
 
-        .stump::after {
-            content: '';
-            position: absolute;
-            top: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 8px;
-            background: #5d2e0c;
-            border-radius: 4px;
-        }
-
-        /* Bat */
-        .bat {
-            position: absolute;
-            width: 30px;
-            height: 180px;
-            background: linear-gradient(to right, #deb887, #f5deb3, #deb887);
-            border-radius: 4px 4px 15px 15px;
-            left: 100px;
-            bottom: 40px;
-            transform-origin: top center;
-            transform: rotate(-45deg);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            animation: swingBat 2s infinite ease-in-out;
-            z-index: 5;
-        }
-
-        .bat-handle {
-            position: absolute;
-            top: -60px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 12px;
-            height: 60px;
-            background: #222;
-            border-radius: 4px;
-        }
-
-        /* Ball */
-        .ball {
-            position: absolute;
-            width: 25px;
-            height: 25px;
-            background: radial-gradient(circle at 30% 30%, #ff1a1a, #8b0000);
-            border-radius: 50%;
-            bottom: 60px;
-            right: -100px;
-            box-shadow: 0 0 15px rgba(255,0,0,0.5);
-            animation: bowlBall 2s infinite linear;
-        }
-
-        @keyframes swingBat {
-            0% { transform: rotate(-45deg); }
-            40% { transform: rotate(60deg); }
-            50% { transform: rotate(65deg); }
-            100% { transform: rotate(-45deg); }
-        }
-
-        @keyframes bowlBall {
-            0% { transform: translateX(0) scale(0.5); opacity: 0; }
-            20% { opacity: 1; }
-            40% { transform: translateX(-260px) translateY(-50px) scale(1); }
-            41% { transform: translateX(-270px) translateY(-40px) scale(1.1); } /* Impact */
-            70% { transform: translateX(-500px) translateY(-200px) scale(0.8); opacity: 0; }
-            100% { transform: translateX(-500px) translateY(-200px) scale(0.8); opacity: 0; }
-        }
-
-        @keyframes stumpsAppear {
-            from { transform: translateY(100px) scaleY(0); opacity: 0; }
-            to { transform: translateY(0) scaleY(1); opacity: 1; }
-        }
-
-        /* Text Effects */
-        .loading-text {
-            margin-top: 50px;
-            text-align: center;
-        }
-
-        .main-title {
-            font-size: 42px;
-            font-weight: 900;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            background: linear-gradient(90deg, #adff2f, #fff, #adff2f);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: textFlow 3s linear infinite;
-        }
-
-        .sub-title {
-            font-size: 14px;
-            color: #888;
-            letter-spacing: 4px;
-            margin-top: 10px;
-            font-weight: 400;
-        }
-
-        @keyframes textFlow {
-            to { background-position: 200% center; }
-        }
-
-        .timer-bar {
-            width: 300px;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            margin-top: 30px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .timer-fill {
+        .loader-ring svg {
+            width: 100%;
             height: 100%;
-            background: #adff2f;
-            width: 0%;
-            animation: fillTimer 10s linear forwards;
-            box-shadow: 0 0 10px #adff2f;
         }
 
-        @keyframes fillTimer {
-            to { width: 100%; }
+        .loader-ring circle {
+            fill: none;
+            stroke-width: 4;
+            stroke: rgba(255,255,255,0.1);
         }
 
-        /* Redirect UI */
-        #status-overlay {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(0,0,0,0.6);
-            padding: 12px 25px;
-            border-radius: 30px;
-            border: 1px solid rgba(173, 255, 47, 0.3);
-            backdrop-filter: blur(10px);
-            opacity: 0;
-            animation: fadeIn 1s ease-out 0.5s forwards;
+        .loader-ring circle.progress {
+            stroke: var(--primary);
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            animation: progressAnim 10s linear forwards;
+            filter: drop-shadow(0 0 5px var(--primary));
         }
 
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #adff2f;
-            border-radius: 50%;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.3; transform: scale(0.8); }
+        @keyframes progressAnim {
+            to { stroke-dashoffset: 0; }
         }
 
     </style>
@@ -249,41 +312,94 @@
 
 <body>
     <div class="overlay"></div>
-    <div class="glow"></div>
+    <div class="stadium-lights"></div>
 
     <div id="animation-container">
-        <div class="arena">
-            <div class="stumps">
+        <div class="score-pop">6</div>
+
+        <div class="pitch-wrapper">
+            <div class="pitch-floor"></div>
+            
+            <!-- Target Wickets -->
+            <div class="wicket-set">
                 <div class="stump"></div>
                 <div class="stump"></div>
                 <div class="stump"></div>
+                <div class="bails">
+                    <div class="bail"></div>
+                    <div class="bail"></div>
+                </div>
             </div>
-            <div class="bat">
-                <div class="bat-handle"></div>
+
+            <!-- Dynamic Bat -->
+            <div class="bat-container">
+                <div class="mighty-bat">
+                    <div class="handle"></div>
+                </div>
             </div>
-            <div class="ball"></div>
+
+            <!-- The Ball -->
+            <div class="cricket-ball" id="match-ball"></div>
+
+            <!-- Impact area for particles -->
+            <div id="impact-zone" style="position:absolute; left:210px; bottom:120px; width:50px; height:50px;"></div>
         </div>
 
-        <div class="loading-text">
-            <div class="main-title">HAND CRICKET</div>
-            <div class="sub-title">PREPARING DIGITAL PITCH...</div>
+        <div class="interface">
+            <div class="title-reveal">HAND CRICKET</div>
+            <div class="status-badge">
+                <span id="loader-label">SYNCING MULTIPLAYER ARENA...</span>
+            </div>
+            
+            <div class="loader-ring">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" />
+                    <circle cx="50" cy="50" r="40" class="progress" />
+                </svg>
+            </div>
         </div>
-
-        <div class="timer-bar">
-            <div class="timer-fill"></div>
-        </div>
-    </div>
-
-    <div id="status-overlay">
-        <div class="status-dot"></div>
-        <div style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #adff2f;">LOADING ARENA RESOURCES</div>
     </div>
 
     <script>
-        // Start 10 second sequences and return
+        // Particle Burst Effect
+        function triggerImpact() {
+            const zone = document.getElementById('impact-zone');
+            for (let i = 0; i < 15; i++) {
+                const p = document.createElement('div');
+                p.className = 'impact-particle animate-impact';
+                const tx = (Math.random() - 0.5) * 200 + 'px';
+                const ty = (Math.random() - 0.5) * 200 + 'px';
+                p.style.setProperty('--tx', tx);
+                p.style.setProperty('--ty', ty);
+                p.style.left = '50%';
+                p.style.top = '50%';
+                zone.appendChild(p);
+                setTimeout(() => p.remove(), 600);
+            }
+        }
+
+        // Sync particle timing with animation (50% of 2.5s loop = 1.25s)
+        setInterval(triggerImpact, 2500);
+        setTimeout(triggerImpact, 1250);
+
+        // Stage progressions
+        const labels = [
+            "INITIALIZING PITCH...",
+            "WARMING UP BOWLERS...",
+            "SYNCING MULTIPLAYER ARENA...",
+            "PITCH IS READY! PLAY!"
+        ];
+        let currentLabel = 0;
+        const labelEl = document.getElementById('loader-label');
+        
+        const labelInterval = setInterval(() => {
+            currentLabel = (currentLabel + 1) % labels.length;
+            labelEl.innerText = labels[currentLabel];
+        }, 2500);
+
+        // Finalize and Return
         setTimeout(() => {
-            // Optional: You can redirect to a game or back to lobby
-            // For now, let's go back to high-level lobby after the animation "Wow" moment
+            clearInterval(labelInterval);
             window.location.href = 'index.html'; 
         }, 10000);
     </script>
