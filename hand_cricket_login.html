@@ -188,46 +188,20 @@
 
     <div id="login-card">
         <div style="font-size: 50px; margin-bottom: 25px;">🏏</div>
-        <h2 style="margin-bottom: 35px;">HAND CRICKET</h2>
+        <h2 style="margin-bottom: 20px;">HAND CRICKET</h2>
         
-        <div id="g_id_onload"
-            data-client_id="731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com"
-            data-context="signin"
-            data-ux_mode="popup"
-            data-callback="handleGoogleLogin"
-            data-auto_prompt="false">
+        <!-- Clerk Sign-In UI Container -->
+        <div id="clerk-signin-ui" style="min-height: 200px; display: flex; justify-content: center; align-items: center;">
+            <div style="color: #fff; opacity: 0.5; font-size: 12px; letter-spacing: 2px;">INITIALIZING AUTH...</div>
         </div>
 
-        <button id="google-login-btn" onclick="startGoogleSignIn();">
-            <span class="btn-text">SIGN IN WITH GOOGLE</span>
-        </button>
-
-        <div style="margin-top: 45px; opacity: 0.4; font-size: 10px; letter-spacing: 3px; color: #fff; font-weight: 900; text-transform: uppercase;">
+        <div style="margin-top: 30px; opacity: 0.4; font-size: 10px; letter-spacing: 3px; color: #fff; font-weight: 900; text-transform: uppercase;">
             POWERED BY ATC STUDIO ENGINE
         </div>
     </div>
 
     <script>
         const CLERK_PUBLISHABLE_KEY = "pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA";
-
-        async function startGoogleSignIn() {
-            if (typeof Clerk === 'undefined' || !Clerk.isReady()) {
-                alert("Authentication system is still loading. Please wait a moment.");
-                return;
-            }
-            
-            try {
-                // Use Clerk for Google Authentication
-                await Clerk.authenticateWithRedirect({
-                    strategy: "oauth_google",
-                    redirectUrl: window.location.origin + window.location.pathname,
-                    redirectUrlComplete: window.location.origin + "/index.html"
-                });
-            } catch (err) {
-                console.error("Auth Error:", err);
-                alert("Failed to start Google Sign-In. Check console for details.");
-            }
-        }
 
         // Initialize Clerk and check for existing session
         window.addEventListener('load', async () => {
@@ -236,7 +210,7 @@
                     clearInterval(checkClerk);
                     
                     try {
-                        // Explicitly load Clerk if not already ready
+                        // Explicitly load Clerk
                         if (!Clerk.isReady()) {
                             await Clerk.load({ publishableKey: CLERK_PUBLISHABLE_KEY });
                         }
@@ -249,15 +223,24 @@
                             if (user.imageUrl) localStorage.setItem('playerAvatar', user.imageUrl);
 
                             document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
-                            document.getElementById('google-login-btn').style.opacity = '0.5';
-                            document.getElementById('google-login-btn').innerText = "AUTHENTICATED!";
+                            document.getElementById('clerk-signin-ui').innerHTML = "<div style='color: #39FF14; font-weight: 900; letter-spacing: 2px;'>AUTHENTICATED!</div>";
                             
                             setTimeout(() => {
                                 window.location.href = 'index.html';
                             }, 1000);
+                        } else {
+                            // Mount the Sign-In UI exactly like in the main game
+                            const container = document.getElementById('clerk-signin-ui');
+                            Clerk.mountSignIn(container, {
+                                appearance: {
+                                    theme: 'dark',
+                                    variables: { colorPrimary: '#39FF14' }
+                                }
+                            });
                         }
                     } catch (err) {
-                        console.error("Clerk Load Error:", err);
+                        console.error("Clerk Error:", err);
+                        document.getElementById('clerk-signin-ui').innerText = "ERROR LOADING AUTH.";
                     }
                 }
             }, 100);
