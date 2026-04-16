@@ -10,7 +10,6 @@
 
         :root {
             --primary: #adff2f;
-            --primary-glow: rgba(173, 255, 47, 0.4);
             --bg: #030305;
         }
 
@@ -27,380 +26,117 @@
             height: 100vh;
         }
 
-        #animation-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, #0a0a10 0%, #000 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            perspective: 1200px;
+        #static-container {
+            text-align: center;
+            z-index: 10;
         }
 
-        /* ---- Ambient Effects ---- */
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 20;
+        .title {
+            font-size: 60px;
+            font-weight: 950;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(173, 255, 47, 0.4);
         }
 
-        .stadium-lights {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 10%, rgba(255,255,255,0.05) 0%, transparent 20%),
-                radial-gradient(circle at 80% 10%, rgba(255,255,255,0.05) 0%, transparent 20%);
-            z-index: 1;
+        .status {
+            font-size: 14px;
+            color: #888;
+            letter-spacing: 5px;
+            font-weight: 400;
+            text-transform: uppercase;
         }
 
-        /* ---- 3D Pitch Arena ---- */
-        .pitch-wrapper {
-            position: relative;
-            width: 600px;
-            height: 400px;
+        .visual-assets {
             display: flex;
             justify-content: center;
-            align-items: flex-end;
-            transform-style: preserve-3d;
-            transform: rotateX(15deg);
+            gap: 40px;
+            margin: 50px 0;
         }
 
-        .pitch-floor {
-            position: absolute;
-            width: 1000px;
-            height: 2000px;
-            background: 
-                linear-gradient(to bottom, #0a0a12, #000),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 40px);
-            transform: rotateX(85deg) translateZ(-150px);
+        .asset {
             opacity: 0.6;
-            z-index: 0;
+            filter: grayscale(0.5);
         }
 
-        /* Stumps with Bails */
-        .wicket-set {
-            position: relative;
+        .stump-set {
             display: flex;
-            gap: 18px;
-            transform-style: preserve-3d;
-            margin-bottom: 50px;
-            animation: wicketEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+            gap: 12px;
         }
 
         .stump {
-            width: 14px;
-            height: 160px;
-            background: linear-gradient(90deg, #6b4423, #a67b5b, #4a2d14);
-            border-radius: 7px;
-            position: relative;
-            transform-style: preserve-3d;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-        }
-
-        .bails {
-            position: absolute;
-            top: -6px;
-            left: -5px;
-            width: 58px;
-            height: 8px;
-            display: flex;
-            gap: 4px;
-            z-index: 2;
-        }
-
-        .bail {
-            flex: 1;
-            height: 100%;
-            background: #5d3a1a;
-            border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        }
-
-        @keyframes wicketEntrance {
-            from { transform: translateY(200px) rotateX(-90deg); opacity: 0; }
-            to { transform: translateY(0) rotateX(0); opacity: 1; }
-        }
-
-        /* Cinematic Bat */
-        .bat-container {
-            position: absolute;
-            left: 120px;
-            bottom: 80px;
-            z-index: 10;
-            transform-style: preserve-3d;
-            animation: batPreShot 2s ease-in-out infinite alternate;
-        }
-
-        .mighty-bat {
-            position: relative;
-            width: 36px;
-            height: 190px;
-            background: linear-gradient(90deg, #d2b48c, #f5deb3, #8b4513);
-            border-radius: 4px 4px 18px 18px;
-            transform-origin: top center;
-            transform: rotate(-35deg);
-            box-shadow: 5px 15px 40px rgba(0,0,0,0.7);
-            animation: masterStroke 2.5s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-
-        .handle {
-            position: absolute;
-            top: -65px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 14px;
-            height: 65px;
-            background: #111;
-            border: 1px solid #333;
+            width: 10px;
+            height: 120px;
+            background: #444;
             border-radius: 5px;
         }
 
-        @keyframes masterStroke {
-            0% { transform: rotate(-35deg) translateZ(0); }
-            45% { transform: rotate(80deg) translateZ(50px); } /* Power shot */
-            50% { transform: rotate(85deg) translateZ(60px); } 
-            100% { transform: rotate(-35deg) translateZ(0); }
-        }
-
-        /* Realistic Ball Bounce */
-        .cricket-ball {
-            position: absolute;
-            width: 28px;
-            height: 28px;
-            background: radial-gradient(circle at 35% 35%, #ff3333, #800000);
-            border-radius: 50%;
-            right: -150px;
-            bottom: 80px;
-            z-index: 15;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4), inset -5px -5px 10px rgba(0,0,0,0.5);
-            animation: bowlBounce 2.5s infinite linear;
-        }
-
-        @keyframes bowlBounce {
-            0% { transform: translateX(0) translateY(-300px) scale(0.6); opacity: 0; }
-            10% { opacity: 1; }
-            30% { transform: translateX(-150px) translateY(20px) scale(0.85); } /* Bounce 1 on floor */
-            50% { transform: translateX(-310px) translateY(-20px) scale(1.1); } /* Impact with Bat */
-            51% { filter: brightness(2) saturate(1.5); } /* Flash on impact */
-            75% { transform: translateX(-600px) translateY(-350px) scale(0.7); opacity: 0; }
-            100% { transform: translateX(-600px) translateY(-350px) scale(0.7); opacity: 0; }
-        }
-
-        /* Particles on Impact */
-        .impact-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--primary);
-            border-radius: 50%;
-            opacity: 0;
-            z-index: 16;
-        }
-
-        .animate-impact {
-            animation: explode 0.6s ease-out forwards;
-        }
-
-        @keyframes explode {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
-        }
-
-        /* ---- UI & Loading Progress ---- */
-        .interface {
-            position: absolute;
-            bottom: 10%;
-            text-align: center;
-            z-index: 30;
-        }
-
-        .title-reveal {
-            font-size: 52px;
-            font-weight: 900;
-            letter-spacing: 15px;
-            text-transform: uppercase;
-            color: #fff;
-            margin-bottom: 5px;
-            text-shadow: 0 0 30px var(--primary-glow);
-            animation: titleGlitch 5s infinite;
-        }
-
-        @keyframes titleGlitch {
-            0%, 90%, 100% { transform: none; opacity: 1; }
-            92% { transform: skewX(10deg); opacity: 0.8; }
-            94% { transform: skewX(-15deg); color: #0fff; }
-            96% { transform: skewX(5deg); color: #f0f; }
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 18px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(173, 255, 47, 0.2);
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            color: var(--primary);
-            margin-top: 15px;
-        }
-
-        .score-pop {
-            position: absolute;
-            font-size: 120px;
-            font-weight: 950;
-            color: var(--primary);
-            opacity: 0;
-            z-index: 40;
-            text-shadow: 0 0 50px rgba(173, 255, 47, 0.8);
-            pointer-events: none;
-            animation: scoreShow 2.5s infinite;
-        }
-
-        @keyframes scoreShow {
-            0%, 45% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            70% { transform: scale(1); opacity: 0; transform: translateY(-100px); }
-            100% { opacity: 0; }
-        }
-
-        /* Advanced Circular Loader */
-        .loader-ring {
-            width: 80px;
-            height: 80px;
-            margin: 20px auto;
+        .bat-static {
+            width: 30px;
+            height: 140px;
+            background: #444;
+            border-radius: 4px 4px 10px 10px;
             position: relative;
         }
 
-        .loader-ring svg {
-            width: 100%;
-            height: 100%;
+        .bat-static::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 40px;
+            background: #222;
         }
 
-        .loader-ring circle {
-            fill: none;
-            stroke-width: 4;
-            stroke: rgba(255,255,255,0.1);
+        .back-btn {
+            margin-top: 40px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: 0.3s;
         }
 
-        .loader-ring circle.progress {
-            stroke: var(--primary);
-            stroke-dasharray: 251.2;
-            stroke-dashoffset: 251.2;
-            animation: progressAnim 10s linear forwards;
-            filter: drop-shadow(0 0 5px var(--primary));
+        .back-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
         }
-
-        @keyframes progressAnim {
-            to { stroke-dashoffset: 0; }
-        }
-
     </style>
 </head>
 
 <body>
-    <div class="overlay"></div>
-    <div class="stadium-lights"></div>
+    <div id="static-container">
+        <div class="title">HAND CRICKET</div>
+        <div class="status">DEVELOPMENT IN PROGRESS</div>
 
-    <div id="animation-container">
-        <div class="score-pop">6</div>
-
-        <div class="pitch-wrapper">
-            <div class="pitch-floor"></div>
-            
-            <!-- Target Wickets -->
-            <div class="wicket-set">
-                <div class="stump"></div>
-                <div class="stump"></div>
-                <div class="stump"></div>
-                <div class="bails">
-                    <div class="bail"></div>
-                    <div class="bail"></div>
+        <div class="visual-assets">
+            <div class="asset">
+                <div class="stump-set">
+                    <div class="stump"></div>
+                    <div class="stump"></div>
+                    <div class="stump"></div>
                 </div>
             </div>
-
-            <!-- Dynamic Bat -->
-            <div class="bat-container">
-                <div class="mighty-bat">
-                    <div class="handle"></div>
-                </div>
-            </div>
-
-            <!-- The Ball -->
-            <div class="cricket-ball" id="match-ball"></div>
-
-            <!-- Impact area for particles -->
-            <div id="impact-zone" style="position:absolute; left:210px; bottom:120px; width:50px; height:50px;"></div>
-        </div>
-
-        <div class="interface">
-            <div class="title-reveal">HAND CRICKET</div>
-            <div class="status-badge">
-                <span id="loader-label">SYNCING MULTIPLAYER ARENA...</span>
-            </div>
-            
-            <div class="loader-ring">
-                <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" />
-                    <circle cx="50" cy="50" r="40" class="progress" />
-                </svg>
+            <div class="asset">
+                <div class="bat-static"></div>
             </div>
         </div>
+
+        <button class="back-btn" onclick="window.location.href='index.html'">RETURN TO HUB</button>
     </div>
 
     <script>
-        // Particle Burst Effect
-        function triggerImpact() {
-            const zone = document.getElementById('impact-zone');
-            for (let i = 0; i < 15; i++) {
-                const p = document.createElement('div');
-                p.className = 'impact-particle animate-impact';
-                const tx = (Math.random() - 0.5) * 200 + 'px';
-                const ty = (Math.random() - 0.5) * 200 + 'px';
-                p.style.setProperty('--tx', tx);
-                p.style.setProperty('--ty', ty);
-                p.style.left = '50%';
-                p.style.top = '50%';
-                zone.appendChild(p);
-                setTimeout(() => p.remove(), 600);
-            }
-        }
-
-        // Sync particle timing with animation (50% of 2.5s loop = 1.25s)
-        setInterval(triggerImpact, 2500);
-        setTimeout(triggerImpact, 1250);
-
-        // Stage progressions
-        const labels = [
-            "INITIALIZING PITCH...",
-            "WARMING UP BOWLERS...",
-            "SYNCING MULTIPLAYER ARENA...",
-            "PITCH IS READY! PLAY!"
-        ];
-        let currentLabel = 0;
-        const labelEl = document.getElementById('loader-label');
-        
-        const labelInterval = setInterval(() => {
-            currentLabel = (currentLabel + 1) % labels.length;
-            labelEl.innerText = labels[currentLabel];
-        }, 2500);
-
-        // Finalize and Return
+        // Optional quick redirect after 10s if they don't click anything
         setTimeout(() => {
-            clearInterval(labelInterval);
-            window.location.href = 'index.html'; 
+            window.location.href = 'index.html';
         }, 10000);
     </script>
 </body>
