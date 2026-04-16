@@ -217,6 +217,11 @@ io.on('connection', (socket) => {
         socket.broadcast.to(roomId).emit('hc_toss_spun', { choice, outcome, hostName });
     });
 
+    socket.on('hc_toss_decision', (data) => {
+        const { roomId, decision, winnerName } = data;
+        socket.broadcast.to(roomId).emit('hc_toss_decided', { decision, winnerName });
+    });
+
     socket.on('send_emote', (data) => {
         const { roomId, emote, playerName } = data;
         io.to(roomId).emit('receive_emote', { emote, playerName });

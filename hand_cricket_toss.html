@@ -99,6 +99,11 @@
             <button class="toss-btn" onclick="executeToss('Heads')">HEADS</button>
             <button class="toss-btn" onclick="executeToss('Tails')">TAILS</button>
         </div>
+
+        <div class="toss-btn-group" id="decision-group" style="display:none;">
+            <button class="toss-btn" onclick="makeDecision('Batting')">CHOOSE BATTING</button>
+            <button class="toss-btn" onclick="makeDecision('Bowling')">CHOOSE BOWLING</button>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -106,6 +111,7 @@
         let socket;
         let isHost = localStorage.getItem('hc_isHost') === 'true'; 
         const roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
+        let iWonToss = false;
 
         window.onload = () => {
             const subLabel = document.querySelector('.toss-sub');
@@ -125,8 +131,24 @@
                 });
 
                 socket.on('hc_toss_spun', (data) => {
-                    // Success! Opponent now sees the host's call and the exact same coin flip live
                     executeSyncedToss(data.choice, data.outcome, data.hostName);
+                });
+
+                socket.on('hc_toss_decided', (data) => {
+                    const opponentDecision = data.decision;
+                    const myAssignment = (opponentDecision === 'Batting') ? 'BOWLING' : 'BATTING';
+                    
+                    const tObj = document.querySelector('.toss-title');
+                    const sObj = document.querySelector('.toss-sub');
+                    
+                    tObj.innerText = `OPPONENT CHOSE ${opponentDecision.toUpperCase()}!`;
+                    sObj.innerText = `READY UP! YOU ARE ${myAssignment}...`;
+                    
+                    localStorage.setItem('hc_player_role', myAssignment.toLowerCase());
+                    
+                    setTimeout(() => {
+                        window.location.href = 'hand_cricket_arena.html';
+                    }, 3000);
                 });
             } catch(e) {
                 console.error("Socket Link Error:", e);
@@ -134,12 +156,11 @@
         };
 
         function executeToss(choice) {
-            if (!isHost) return; // Protection
+            if (!isHost) return; 
 
             document.getElementById('btn-group').style.display = 'none';
             const outcome = Math.random() > 0.5 ? 'Heads' : 'Tails';
             
-            // Broadcast the exact choice and outcome so both screens match perfectly
             if (socket) {
                 socket.emit('hc_toss_spin', { 
                     roomId, 
@@ -165,22 +186,58 @@
                 sObj.innerText = `${callerName} CALLED ${choice.toUpperCase()}!`;
             }
             
-            // Trigger 3D Spin
             coin.classList.add('flip');
 
             setTimeout(() => {
-                // Determine Winner
                 const won = choice === outcome;
+                // Determine if 'I' am the winner globally
+                // In this role-based toss, if caller is host, host wins if choice==outcome.
+                // If caller is NOT host, then... wait. Choice is ALWAYS from host.
+                // So if won is true, Host wins. If won is false, Opponent wins.
+                
+                let globalWinner = won ? 'Host' : 'Opponent';
+                iWonToss = (isHost && won) || (!isHost && !won);
 
-                tObj.innerText = won ? `${callerName} WON THE TOSS!` : `OPPONENT WON TOSS!`;
+                tObj.innerText = won ? "HOST WON THE TOSS!" : "OPPONENT WON TOSS!";
                 tObj.style.color = won ? "var(--neon-green)" : "#ff4d4d";
                 tObj.style.textShadow = won ? "0 0 20px rgba(0,255,170,0.5)" : "0 0 20px rgba(255,77,77,0.5)";
                 sObj.innerText = `COIN LANDED ON ${outcome.toUpperCase()}`;
 
                 setTimeout(() => {
-                    // Navigate to actual match
-                    window.location.href = 'hand_cricket.html';
-                }, 3000);
+                    if (iWonToss) {
+                        tObj.innerText = "YOU WON THE TOSS!";
+                        sObj.innerText = "DECIDE YOUR DESTINY...";
+                        document.getElementById('decision-group').style.display = 'flex';
+                    } else {
+                        tObj.innerText = "OPPONENT WON TOSS!";
+                        sObj.innerText = "WAITING FOR THEIR DECISION...";
+                    }
+                }, 2000);
+            }, 3000);
+        }
+
+        function makeDecision(decision) {
+            if (!iWonToss) return;
+            
+            document.getElementById('decision-group').style.display = 'none';
+            const tObj = document.querySelector('.toss-title');
+            const sObj = document.querySelector('.toss-sub');
+            
+            tObj.innerText = `YOU CHOSE ${decision.toUpperCase()}!`;
+            sObj.innerText = "PREPARING THE ARENA...";
+            
+            localStorage.setItem('hc_player_role', decision.toLowerCase());
+
+            if (socket) {
+                socket.emit('hc_toss_decision', { 
+                    roomId, 
+                    decision, 
+                    winnerName: localStorage.getItem('playerName') || 'WINNER' 
+                });
+            }
+
+            setTimeout(() => {
+                window.location.href = 'hand_cricket_arena.html';
             }, 3000);
         }
     </script>
