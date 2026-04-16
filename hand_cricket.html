@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Cricket | Premiere Arena</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #050505;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #animation-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
+
+        /* Scanlines and Noise */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0px, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(173, 255, 47, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: pulseGlow 4s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { transform: scale(1); opacity: 0.5; }
+            to { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        /* ---- Cricket Animation Components ---- */
+        .arena {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            perspective: 1000px;
+        }
+
+        /* Stumps */
+        .stumps {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            transform-style: preserve-3d;
+            animation: stumpsAppear 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        .stump {
+            width: 12px;
+            height: 150px;
+            background: linear-gradient(to right, #8b4513, #a0522d, #8b4513);
+            border-radius: 6px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .stump::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 8px;
+            background: #5d2e0c;
+            border-radius: 4px;
+        }
+
+        /* Bat */
+        .bat {
+            position: absolute;
+            width: 30px;
+            height: 180px;
+            background: linear-gradient(to right, #deb887, #f5deb3, #deb887);
+            border-radius: 4px 4px 15px 15px;
+            left: 100px;
+            bottom: 40px;
+            transform-origin: top center;
+            transform: rotate(-45deg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            animation: swingBat 2s infinite ease-in-out;
+            z-index: 5;
+        }
+
+        .bat-handle {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 60px;
+            background: #222;
+            border-radius: 4px;
+        }
+
+        /* Ball */
+        .ball {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, #ff1a1a, #8b0000);
+            border-radius: 50%;
+            bottom: 60px;
+            right: -100px;
+            box-shadow: 0 0 15px rgba(255,0,0,0.5);
+            animation: bowlBall 2s infinite linear;
+        }
+
+        @keyframes swingBat {
+            0% { transform: rotate(-45deg); }
+            40% { transform: rotate(60deg); }
+            50% { transform: rotate(65deg); }
+            100% { transform: rotate(-45deg); }
+        }
+
+        @keyframes bowlBall {
+            0% { transform: translateX(0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            40% { transform: translateX(-260px) translateY(-50px) scale(1); }
+            41% { transform: translateX(-270px) translateY(-40px) scale(1.1); } /* Impact */
+            70% { transform: translateX(-500px) translateY(-200px) scale(0.8); opacity: 0; }
+            100% { transform: translateX(-500px) translateY(-200px) scale(0.8); opacity: 0; }
+        }
+
+        @keyframes stumpsAppear {
+            from { transform: translateY(100px) scaleY(0); opacity: 0; }
+            to { transform: translateY(0) scaleY(1); opacity: 1; }
+        }
+
+        /* Text Effects */
+        .loading-text {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #adff2f, #fff, #adff2f);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textFlow 3s linear infinite;
+        }
+
+        .sub-title {
+            font-size: 14px;
+            color: #888;
+            letter-spacing: 4px;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+
+        @keyframes textFlow {
+            to { background-position: 200% center; }
+        }
+
+        .timer-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            margin-top: 30px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: #adff2f;
+            width: 0%;
+            animation: fillTimer 10s linear forwards;
+            box-shadow: 0 0 10px #adff2f;
+        }
+
+        @keyframes fillTimer {
+            to { width: 100%; }
+        }
+
+        /* Redirect UI */
+        #status-overlay {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0,0,0,0.6);
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(173, 255, 47, 0.3);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            animation: fadeIn 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #adff2f;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.8); }
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="overlay"></div>
+    <div class="glow"></div>
+
+    <div id="animation-container">
+        <div class="arena">
+            <div class="stumps">
+                <div class="stump"></div>
+                <div class="stump"></div>
+                <div class="stump"></div>
+            </div>
+            <div class="bat">
+                <div class="bat-handle"></div>
+            </div>
+            <div class="ball"></div>
+        </div>
+
+        <div class="loading-text">
+            <div class="main-title">HAND CRICKET</div>
+            <div class="sub-title">PREPARING DIGITAL PITCH...</div>
+        </div>
+
+        <div class="timer-bar">
+            <div class="timer-fill"></div>
+        </div>
+    </div>
+
+    <div id="status-overlay">
+        <div class="status-dot"></div>
+        <div style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #adff2f;">LOADING ARENA RESOURCES</div>
+    </div>
+
+    <script>
+        // Start 10 second sequences and return
+        setTimeout(() => {
+            // Optional: You can redirect to a game or back to lobby
+            // For now, let's go back to high-level lobby after the animation "Wow" moment
+            window.location.href = 'index.html'; 
+        }, 10000);
+    </script>
+</body>
+
+</html>
