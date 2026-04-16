@@ -122,6 +122,42 @@
             cursor: not-allowed; z-index: 100; text-transform: uppercase;
         }
 
+        /* Chat Modal CSS */
+        .chat-modal {
+            position: fixed; bottom: 20px; right: 20px; width: 320px; height: 420px;
+            background: rgba(5, 10, 8, 0.95); border: 1px solid var(--neon-green); border-radius: 15px;
+            display: flex; flex-direction: column; z-index: 200;
+            box-shadow: 0 10px 40px rgba(0, 255, 170, 0.15);
+            transform: translateY(120%); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0; pointer-events: none;
+        }
+        .chat-modal.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        
+        .chat-header {
+            padding: 15px; border-bottom: 1px solid #1a3322; display: flex; justify-content: space-between;
+            align-items: center; font-size: 12px; font-weight: 900; color: var(--neon-green); letter-spacing: 2px;
+        }
+        .close-chat { background: none; border: none; color: #777; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .close-chat:hover { color: #f33; }
+        
+        .chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { font-size: 12px; padding: 10px 14px; border-radius: 12px; max-width: 85%; word-wrap: break-word; font-weight: 500;}
+        .chat-msg.system { background: rgba(255,255,255,0.05); color: #888; align-self: center; font-size: 10px; font-weight: 700; border-radius: 8px;}
+        .chat-msg.self { background: rgba(0, 255, 170, 0.1); color: #fff; align-self: flex-end; border: 1px solid rgba(0,255,170,0.2); border-bottom-right-radius: 2px; }
+        .chat-msg.other { background: rgba(255, 255, 255, 0.1); color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
+        
+        .chat-input-area { display: flex; padding: 15px; gap: 10px; border-top: 1px solid #1a3322; }
+        #chat-input {
+            flex-grow: 1; background: #000; border: 1px solid #333; border-radius: 8px; padding: 10px; color: #fff;
+            font-family: inherit; font-size: 12px; transition: 0.3s; outline: none;
+        }
+        #chat-input:focus { border-color: var(--neon-green); }
+        .send-btn {
+            background: var(--neon-green); color: #000; border: none; border-radius: 8px; width: 45px; cursor: pointer;
+            font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .send-btn:hover { box-shadow: 0 0 15px rgba(0,255,170,0.5); }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     </style>
@@ -142,7 +178,7 @@
             <div class="arena-id-display" id="room-id">------</div>
 
             <div class="header-controls">
-                <button class="chat-btn" onclick="alert('Lobby Chat coming soon!')" style="background: #111; border: 1px solid #333; border-radius: 10px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: #fff; font-size: 14px; margin-right: 5px;">
+                <button class="chat-btn" onclick="toggleChat()" style="background: #111; border: 1px solid #333; border-radius: 10px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: #fff; font-size: 14px; margin-right: 5px;">
                     💬
                 </button>
                 <button class="exit-btn" onclick="window.location.href='hand_cricket.html'">
@@ -183,6 +219,21 @@
         <span>START MATCH</span>
     </button>
 
+    <!-- Chat Modal UI -->
+    <div id="chat-modal" class="chat-modal">
+        <div class="chat-header">
+            <span>LOBBY COMM-LINK</span>
+            <button class="close-chat" onclick="toggleChat()">✖</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg system">Lobby Created. Waiting for opponent...</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Enter message..." onkeypress="if(event.key === 'Enter') sendChat()">
+            <button class="send-btn" onclick="sendChat()">➤</button>
+        </div>
+    </div>
+
     <script>
         window.onload = () => {
             const name = localStorage.getItem('playerName') || "PLAYER";
@@ -194,6 +245,27 @@
             for(let i=0; i<6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
             document.getElementById('room-id').innerText = `${id}`;
         };
+
+        // Chat Scripting
+        function toggleChat() {
+            document.getElementById('chat-modal').classList.toggle('open');
+            setTimeout(() => document.getElementById('chat-input').focus(), 300);
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            const box = document.getElementById('chat-messages');
+            const el = document.createElement('div');
+            el.className = 'chat-msg self';
+            el.innerText = msg;
+            box.appendChild(el);
+            
+            box.scrollTop = box.scrollHeight;
+            input.value = '';
+        }
     </script>
 </body>
 </html>
