@@ -213,10 +213,22 @@
         <div style="margin-top: 45px; opacity: 0.4; font-size: 10px; letter-spacing: 3px; color: #fff; font-weight: 900; text-transform: uppercase;">
             POWERED BY ATC STUDIO ENGINE
         </div>
-    </div>
+    <!-- Looping Background Music -->
+    <audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
 
     <script>
         let clerkInstance = null;
+
+        // Auto-play music setup
+        window.addEventListener('load', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic) {
+                bgMusic.volume = 0.4;
+                bgMusic.play().catch(e => {
+                    document.body.addEventListener('click', () => bgMusic.play().catch(console.error), { once: true });
+                });
+            }
+        });
 
         // Initialize Clerk and attach listener
         window.addEventListener('load', () => {
