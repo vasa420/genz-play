@@ -181,11 +181,21 @@
     
     <button id="back-btn" onclick="window.location.href='index.html'">&larr; BACK TO HUB</button>
 
+    <script src="https://accounts.google.com/gsi/client" async></script>
+
     <div id="login-card">
         <div style="font-size: 50px; margin-bottom: 25px; filter: drop-shadow(0 0 10px rgba(57, 255, 20, 0.5));">🏏</div>
         <h2 style="margin-bottom: 35px;">HAND CRICKET</h2>
         
-        <button id="google-login-btn" onclick="alert('Google Login coming soon!');">
+        <div id="g_id_onload"
+            data-client_id="731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleGoogleLogin"
+            data-auto_prompt="false">
+        </div>
+
+        <button id="google-login-btn" onclick="startGoogleSignIn();">
             <span class="btn-text">SIGN IN WITH GOOGLE</span>
         </button>
 
@@ -193,6 +203,42 @@
             POWERED BY ATC STUDIO ENGINE
         </div>
     </div>
+
+    <script>
+        function startGoogleSignIn() {
+            google.accounts.id.prompt();
+        }
+
+        window.handleGoogleLogin = function(response) {
+            try {
+                // Decode JWT
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const user = JSON.parse(jsonPayload);
+                const playerName = user.name || "CRICKET PLAYER";
+                
+                localStorage.setItem('playerName', playerName);
+                if (user.picture) localStorage.setItem('playerAvatar', user.picture);
+
+                // Feedback and Redirect
+                document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
+                document.getElementById('google-login-btn').style.opacity = '0.5';
+                document.getElementById('google-login-btn').innerText = "AUTHENTICATED!";
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html'; // Or wherever Hand Cricket continues
+                }, 1500);
+
+            } catch (e) {
+                console.error("Login Error:", e);
+                alert("Login failed. Please try again.");
+            }
+        };
+    </script>
 
 </body>
 </html>
