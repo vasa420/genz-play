@@ -208,8 +208,10 @@
     </div>
 
     <script>
+        const CLERK_PUBLISHABLE_KEY = "pk_test_c3VidGxlLW5hcndoYWwtNTAuY2xlcmsuYWNjb3VudHMuZGV2JA";
+
         async function startGoogleSignIn() {
-            if (typeof Clerk === 'undefined') {
+            if (typeof Clerk === 'undefined' || !Clerk.isReady()) {
                 alert("Authentication system is still loading. Please wait a moment.");
                 return;
             }
@@ -223,30 +225,39 @@
                 });
             } catch (err) {
                 console.error("Auth Error:", err);
-                alert("Failed to start Google Sign-In.");
+                alert("Failed to start Google Sign-In. Check console for details.");
             }
         }
 
         // Initialize Clerk and check for existing session
         window.addEventListener('load', async () => {
             const checkClerk = setInterval(async () => {
-                if (typeof Clerk !== 'undefined' && Clerk.isReady()) {
+                if (typeof Clerk !== 'undefined') {
                     clearInterval(checkClerk);
                     
-                    // If user is already signed in, handle it
-                    if (Clerk.user) {
-                        const user = Clerk.user;
-                        const playerName = user.fullName || user.firstName || "CRICKET PLAYER";
-                        localStorage.setItem('playerName', playerName);
-                        if (user.imageUrl) localStorage.setItem('playerAvatar', user.imageUrl);
-
-                        document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
-                        document.getElementById('google-login-btn').style.opacity = '0.5';
-                        document.getElementById('google-login-btn').innerText = "AUTHENTICATED!";
+                    try {
+                        // Explicitly load Clerk if not already ready
+                        if (!Clerk.isReady()) {
+                            await Clerk.load({ publishableKey: CLERK_PUBLISHABLE_KEY });
+                        }
                         
-                        setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 1000);
+                        // If user is already signed in, handle it
+                        if (Clerk.user) {
+                            const user = Clerk.user;
+                            const playerName = user.fullName || user.firstName || "CRICKET PLAYER";
+                            localStorage.setItem('playerName', playerName);
+                            if (user.imageUrl) localStorage.setItem('playerAvatar', user.imageUrl);
+
+                            document.querySelector('h2').innerText = "WELCOME, " + playerName.toUpperCase();
+                            document.getElementById('google-login-btn').style.opacity = '0.5';
+                            document.getElementById('google-login-btn').innerText = "AUTHENTICATED!";
+                            
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 1000);
+                        }
+                    } catch (err) {
+                        console.error("Clerk Load Error:", err);
                     }
                 }
             }, 100);
