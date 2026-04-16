@@ -225,9 +225,7 @@
                     clearInterval(checkClerk);
                     clerkInstance = window.Clerk;
                     clerkInstance.load().then(() => {
-                        if (clerkInstance.user) {
-                            handleSuccess(clerkInstance.user.firstName || clerkInstance.user.fullName, clerkInstance.user.imageUrl);
-                        }
+                        // Clerk loaded successfully. Awaiting explicit user action.
                     });
                 }
             }, 100);
@@ -265,14 +263,6 @@
                 alert("Login failed. Please try again.");
             }
         };
-
-        // Auto-detect existing player
-        window.addEventListener('load', () => {
-            const existingName = localStorage.getItem('playerName');
-            if (existingName) {
-                handleSuccess(existingName, localStorage.getItem('playerAvatar'));
-            }
-        });
     </script>
 
 </body>
