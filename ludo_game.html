@@ -307,6 +307,39 @@
         .hub-tag { font-size: 10px; color: #888; font-weight: 900; letter-spacing: 1px; }
         .hub-close { position: absolute; top: 30px; right: 40px; font-size: 30px; color: #555; cursor: pointer; transition: 0.3s; }
         .hub-close:hover { color: #fff; transform: rotate(90deg); }
+        /* Ludo Lobby Modal */
+        #ludo-lobby-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 5000;
+            display: none; align-items: center; justify-content: center;
+        }
+
+        .lobby-card {
+            background: #111; border: 1px solid #333; border-radius: 30px; width: 450px;
+            padding: 40px; text-align: center; box-shadow: 0 0 50px rgba(0,122,255,0.2);
+            animation: slideUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .lobby-id-wrap {
+            background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 20px;
+            border-radius: 15px; margin: 25px 0;
+        }
+
+        .lobby-id { font-size: 36px; font-weight: 950; letter-spacing: 5px; color: var(--blue); }
+        .lobby-status { font-size: 12px; font-weight: 900; color: #555; letter-spacing: 2px; margin-bottom: 20px; }
+        
+        .lobby-chat { height: 150px; background: #000; border: 1px solid #1a1a1a; border-radius: 12px; margin-bottom: 20px; overflow-y: auto; text-align: left; padding: 10px; font-size: 11px; color: #888; }
+        .chat-msg { margin-bottom: 5px; }
+
+        .btn-lobby {
+            width: 100%; padding: 15px; border-radius: 12px; border: none; font-family: inherit;
+            font-weight: 950; font-size: 14px; cursor: pointer; transition: 0.3s;
+            background: #fff; color: #000; margin-top: 10px;
+        }
+        .btn-lobby:disabled { background: #333; color: #555; cursor: not-allowed; }
+        .btn-lobby-blue { background: var(--blue); color: #fff; }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -359,10 +392,10 @@
 
         <div style="font-size: 11px; letter-spacing: 3px; color: #555; font-weight: 900; margin-bottom: 20px; text-transform: uppercase;">Direct Networking</div>
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 30px;">
-            <button class="nav-btn" onclick="alert('LUDO ROOM CREATION: UNDER DEVELOPMENT')" style="background: rgba(0, 122, 255, 0.15); color: #007AFF; border: 1px solid rgba(0, 122, 255, 0.3); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 950; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;">
+            <button class="nav-btn" onclick="openLudoLobby('create')" style="background: rgba(0, 122, 255, 0.15); color: #007AFF; border: 1px solid rgba(0, 122, 255, 0.3); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 950; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;">
                 <span>🌐</span> CREATE ARENA
             </button>
-            <button class="nav-btn" onclick="alert('LUDO JOINING: UNDER DEVELOPMENT')" style="background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 950; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;">
+            <button class="nav-btn" onclick="openLudoLobby('join')" style="background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 950; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;">
                 <span>🔑</span> JOIN BY CODE
             </button>
         </div>
@@ -403,15 +436,25 @@
             <button id="return-btn" style="position: static;" onclick="openGameHub()">MORE GAMES</button>
         </div>
 
-            <div class="game-board" id="board">
-                <!-- Board cells generated via JS -->
-                <div class="home-center">
-                    <div class="triangle tri-top"></div>
-                    <div class="triangle tri-bottom"></div>
-                    <div class="triangle tri-left"></div>
-                    <div class="triangle tri-right"></div>
-                </div>
+    <!-- Ludo Lobby Modal -->
+    <div id="ludo-lobby-modal" style="display: none;">
+        <div class="lobby-card">
+            <h2 id="lobby-title" style="font-weight: 950; font-size: 24px; letter-spacing: 2px;">CREATING ROOM...</h2>
+            <div class="lobby-id-wrap">
+                <div id="lobby-id-display" class="lobby-id">------</div>
+                <div style="font-size: 10px; color: #555; font-weight: 900; margin-top: 5px; text-transform: uppercase;">6-DIGIT ARENA ACCESS CODE</div>
             </div>
+
+            <div class="lobby-status" id="lobby-participants">WAITING FOR NETWORK...</div>
+            
+            <div class="lobby-chat" id="lobby-chat-box">
+                <div class="chat-msg"><i>System: Establishing secure channel...</i></div>
+            </div>
+
+            <button class="btn-lobby btn-lobby-blue" id="lobby-start-btn" disabled>START MATCH</button>
+            <button class="btn-lobby" onclick="closeLudoLobby()" style="background: transparent; color: #555; border: 1px solid #222;">CANCEL ACCESS</button>
+        </div>
+    </div>
 
             <div class="dice-area" id="dice-btn">
                 <div class="dice-cube" id="dice-cube">
@@ -425,11 +468,76 @@
             </div>
         </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         /** 
          * LUDO REALM - CORE GAME ENGINE
-         * State-driven modular logic for piece movement, captures, and win conditions.
          */
+        let socket;
+        try { socket = io(); } catch(e) { console.warn("Socket.io missing."); }
+
+        let currentRoomId = null;
+        let isLudoHost = false;
+
+        function openLudoLobby(mode) {
+            const modal = document.getElementById('ludo-lobby-modal');
+            const title = document.getElementById('lobby-title');
+            const display = document.getElementById('lobby-id-display');
+            const startBtn = document.getElementById('lobby-start-btn');
+            
+            modal.style.display = 'flex';
+            
+            if (mode === 'create') {
+                isLudoHost = true;
+                currentRoomId = Math.floor(100000 + Math.random() * 899999).toString();
+                display.innerText = currentRoomId;
+                title.innerText = "HOSTING CO-OP ARENA";
+                startBtn.style.display = 'block';
+                
+                socket.emit('join_room', { roomId: currentRoomId, playerName: gameState.playerNames.RED, isCreating: true });
+            } else {
+                isLudoHost = false;
+                const entryId = prompt("ENTER 6-DIGIT ROOM CODE:");
+                if (!entryId || entryId.length !== 6) { closeLudoLobby(); return; }
+                
+                currentRoomId = entryId;
+                display.innerText = currentRoomId;
+                title.innerText = "JOINING ARENA...";
+                startBtn.style.display = 'none'; // Only host starts
+
+                socket.emit('join_room', { roomId: currentRoomId, playerName: gameState.playerNames.RED, isCreating: false });
+            }
+        }
+
+        if (socket) {
+            socket.on('player_joined', (data) => {
+                const parts = document.getElementById('lobby-participants');
+                parts.innerText = `PARTICIPANTS: ${data.players.length} / 4`;
+                addLobbyChat(`Player ${data.players[data.players.length-1].name} connected.`);
+                
+                if (isLudoHost && data.players.length >= 2) {
+                    document.getElementById('lobby-start-btn').disabled = false;
+                }
+            });
+
+            socket.on('room_error', (data) => {
+                alert(data.message);
+                closeLudoLobby();
+            });
+        }
+
+        function addLobbyChat(msg) {
+            const box = document.getElementById('lobby-chat-box');
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            div.innerHTML = `<i>${msg}</i>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function closeLudoLobby() {
+            document.getElementById('ludo-lobby-modal').style.display = 'none';
+        }
 
         // 1. Path Mapping System (15x15 Grid)
         // Main circuit around the board (52 cells)
