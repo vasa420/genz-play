@@ -348,6 +348,34 @@
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
         }
 
+        /* Game Hub Modal */
+        #game-hub-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); z-index: 3000;
+            flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        #game-hub-modal.open { display: flex; opacity: 1; }
+        .hub-container { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; padding: 20px; }
+        .hub-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 30px 20px; text-align: center; cursor: pointer;
+            transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 15px;
+            position: relative; overflow: hidden;
+        }
+        .hub-card:hover { background: rgba(255,255,255,0.07); border-color: var(--neon-green); transform: translateY(-10px); }
+        .hub-card::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0,255,170,0.1) 0%, transparent 70%);
+            opacity: 0; transition: 0.3s;
+        }
+        .hub-card:hover::after { opacity: 1; }
+        .hub-icon { font-size: 50px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); }
+        .hub-name { font-size: 18px; font-weight: 950; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
+        .hub-tag { font-size: 10px; color: #888; font-weight: 900; letter-spacing: 1px; }
+        .hub-close { position: absolute; top: 30px; right: 40px; font-size: 30px; color: #555; cursor: pointer; transition: 0.3s; }
+        .hub-close:hover { color: #fff; transform: rotate(90deg); }
+
     </style>
 </head>
 <body>
@@ -431,11 +459,47 @@
                 <span style="font-size: 18px;">🔊</span> MUSIC: ON
             </button>
             
-            <button onclick="window.location.href='index.html'" style="background: rgba(255, 59, 48, 0.2); color: var(--neon-red); border: 1px solid var(--neon-red); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.3s;">
+            <button onclick="openGameHub()" style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid #ff3b30; padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.3s; box-shadow: 0 0 15px rgba(255, 59, 48, 0.1);">
                 OTHER GAMES
             </button>
         </aside>
     </div> <!-- Close main-layout -->
+
+    <!-- Universal Game Hub Modal -->
+    <div id="game-hub-modal">
+        <div class="hub-close" onclick="closeGameHub()">×</div>
+        <div style="text-align: center; margin-bottom: 50px;">
+            <div style="font-size: 11px; letter-spacing: 5px; color: var(--neon-green); font-weight: 900; margin-bottom: 10px;">MULTI-ARENA NETWORK</div>
+            <div style="font-size: 32px; font-weight: 950; color: #fff; letter-spacing: 2px;">SELECT YOUR ARENA</div>
+        </div>
+        
+        <div class="hub-container">
+            <!-- Carrom -->
+            <div class="hub-card" onclick="window.location.href='index.html'">
+                <div class="hub-icon">🎯</div>
+                <div class="hub-name">CARROM PRO</div>
+                <div class="hub-tag">ORIGINAL HUB</div>
+            </div>
+            <!-- Hand Cricket -->
+            <div class="hub-card" style="border-color: var(--neon-green); background: rgba(0,255,170,0.05);">
+                <div class="hub-icon">🏏</div>
+                <div class="hub-name" style="color: var(--neon-green);">HAND CRICKET</div>
+                <div class="hub-tag">YOU ARE HERE</div>
+            </div>
+            <!-- Ludo -->
+            <div class="hub-card" onclick="window.location.href='ludo_login.html'">
+                <div class="hub-icon">🎲</div>
+                <div class="hub-name">LUDO SUPREME</div>
+                <div class="hub-tag">MULTIPLAYER CLASSIC</div>
+            </div>
+            <!-- Chess -->
+            <div class="hub-card" onclick="window.location.href='chess_login.html'">
+                <div class="hub-icon">♔</div>
+                <div class="hub-name">GRAND CHESS</div>
+                <div class="hub-tag">TACTICAL ARENA</div>
+            </div>
+        </div>
+    </div>
 
     <!-- Looping Background Music -->
     <audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
@@ -444,6 +508,18 @@
     <script>
         let socket;
         try { socket = io(); } catch(e) { console.warn("Socket integration pending server spinup."); }
+
+        function openGameHub() {
+            const modal = document.getElementById('game-hub-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('open'); }, 10);
+        }
+
+        function closeGameHub() {
+            const modal = document.getElementById('game-hub-modal');
+            modal.classList.remove('open');
+            setTimeout(() => { modal.style.display = 'none'; }, 400);
+        }
     </script>
 
     <!-- Custom Alert Modal UI -->
