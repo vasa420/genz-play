@@ -378,44 +378,81 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         let socket;
+        let isHost = localStorage.getItem('hc_isHost') === 'true';
+
         window.onload = () => {
             const name = localStorage.getItem('playerName') || "PLAYER";
-            document.getElementById('my-name').innerText = name.toUpperCase();
+            let roomId = localStorage.getItem('hc_roomId');
             
-            // Generate random 6-digit room ID
-            const chars = '0123456789';
-            let id = '';
-            for(let i=0; i<6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-            const roomId = id;
+            if (isHost) {
+                // Generate random 6-digit room ID for host
+                const chars = '0123456789';
+                let id = '';
+                for(let i=0; i<6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+                roomId = id;
+                localStorage.setItem('hc_roomId', roomId);
+                document.getElementById('my-name').innerText = name.toUpperCase();
+            } else {
+                // Guest setup
+                document.getElementById('room-id').innerText = roomId;
+                // Guest name goes on the right card usually, but for local feel we put self on left
+                document.getElementById('my-name').innerText = name.toUpperCase();
+                document.querySelector('.player-main .tag').innerText = "GUEST";
+                
+                // Guests can't start the match
+                const startBtn = document.getElementById('start-btn');
+                startBtn.style.display = 'none';
+                
+                // Show a 'Waiting for Host' indicator
+                const inviteBtn = document.querySelector('.invite-friends-btn');
+                inviteBtn.style.pointerEvents = 'none';
+                inviteBtn.style.background = '#111';
+                inviteBtn.style.borderColor = '#333';
+                inviteBtn.innerHTML = `<span class="btn-lbl" style="color:#777">WAITING FOR HOST TO START...</span>`;
+            }
+
             document.getElementById('room-id').innerText = roomId;
 
-            // Critical Role Assignment
-            localStorage.setItem('hc_isHost', 'true');
-            localStorage.setItem('hc_roomId', roomId);
-
-            // Connect to real server to register this room
+            // Connect to real server
             try {
                 socket = io();
                 socket.on('connect', () => {
                     socket.emit('join_room', { 
                         roomId: roomId, 
                         playerName: name, 
-                        isCreating: true 
+                        isCreating: isHost 
                     });
                 });
 
                 socket.on('player_joined', (data) => {
+                    // Update the matchup UI based on who is in the room
                     if (data.players.length >= 2) {
-                        const guest = data.players.find(p => p.id !== socket.id);
-                        if (guest) updateOpponentUI(guest.name);
+                        const otherPlayer = data.players.find(p => p.id !== socket.id);
+                        if (otherPlayer) {
+                            updateOpponentUI(otherPlayer.name, isHost ? "GUEST" : "HOST");
+                        }
                     }
+                });
+
+                socket.on('game_start', (data) => {
+                    startCinematicTransition();
                 });
             } catch(e) { console.warn("Socket connection failed:", e); }
         };
 
-        function updateOpponentUI(playerName) {
-            const inviteBtn = document.querySelector('.invite-friends-btn');
-            inviteBtn.style.display = 'none';
+        function updateOpponentUI(playerName, tag) {
+            // If host, enable the start button now that someone joined
+            if (isHost) {
+                const startBtn = document.getElementById('start-btn');
+                startBtn.classList.add('active-ready');
+                startBtn.style.background = 'var(--neon-green)';
+                startBtn.style.color = '#000';
+                startBtn.style.cursor = 'pointer';
+                startBtn.innerText = 'START MATCH';
+
+                const inviteBtn = document.querySelector('.invite-friends-btn');
+                inviteBtn.style.display = 'none';
+            }
             
             const box = document.getElementById('chat-messages');
             const el = document.createElement('div');
@@ -427,22 +464,15 @@
 
             // Update opponent card UI
             localStorage.setItem('hc_opponentName', playerName);
-            localStorage.setItem('hc_isBot', 'false'); // It's a real player
+            localStorage.setItem('hc_isBot', 'false');
             const oppCard = document.getElementById('opponent-card');
             oppCard.classList.remove('dashed');
             oppCard.innerHTML = `
                 <div class="player-main" style="display:flex; flex-direction:column; align-items:center;">
                     <div class="name" style="font-size:24px; font-weight:950; color:#fff; letter-spacing:2px;">${playerName.toUpperCase()}</div>
-                    <div class="tag" style="font-size:11px; color:#00ffaa; font-weight:900; text-transform:uppercase;">OPERATIVE</div>
+                    <div class="tag" style="font-size:11px; color:${tag === 'HOST' ? '#00ffaa' : '#ffaa00'}; font-weight:900; text-transform:uppercase;">${tag}</div>
                 </div>
             `;
-
-            const startBtn = document.getElementById('start-btn');
-            startBtn.classList.add('active-ready');
-            startBtn.style.background = 'var(--neon-green)';
-            startBtn.style.color = '#000';
-            startBtn.style.cursor = 'pointer';
-            startBtn.innerText = 'START MATCH';
         }
 
         // Chat Scripting
