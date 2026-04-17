@@ -39,13 +39,14 @@
             background: #000;
         }
 
-        .video-background iframe {
+        .video-background iframe,
+        .video-background video {
             position: absolute;
-            /* Hide Drive UI by over-scaling and offsetting */
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             pointer-events: none;
             filter: brightness(0.7) contrast(1.1);
         }
@@ -194,7 +195,9 @@
 
 <body>
     <div class="video-background">
-        <iframe src="./Snake_and_Ladder_Video_Intro.mp4" allow="autoplay" frameborder="0"></iframe>
+        <video autoplay muted loop playsinline id="bg-video">
+            <source src="./Snake_and_Ladder_Video_Intro.mp4" type="video/mp4">
+        </video>
     </div>
     <div id="countdown">INIT // 15.0</div>
 
