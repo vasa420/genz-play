@@ -374,7 +374,10 @@
         </div>
     </div>
 
+    <audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        let socket;
         window.onload = () => {
             const name = localStorage.getItem('playerName') || "PLAYER";
             document.getElementById('my-name').innerText = name.toUpperCase();
@@ -383,12 +386,64 @@
             const chars = '0123456789';
             let id = '';
             for(let i=0; i<6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-            document.getElementById('room-id').innerText = `${id}`;
+            const roomId = id;
+            document.getElementById('room-id').innerText = roomId;
 
             // Critical Role Assignment
             localStorage.setItem('hc_isHost', 'true');
-            localStorage.setItem('hc_roomId', document.getElementById('room-id').innerText);
+            localStorage.setItem('hc_roomId', roomId);
+
+            // Connect to real server to register this room
+            try {
+                socket = io();
+                socket.on('connect', () => {
+                    socket.emit('join_room', { 
+                        roomId: roomId, 
+                        playerName: name, 
+                        isCreating: true 
+                    });
+                });
+
+                socket.on('player_joined', (data) => {
+                    if (data.players.length >= 2) {
+                        const guest = data.players.find(p => p.id !== socket.id);
+                        if (guest) updateOpponentUI(guest.name);
+                    }
+                });
+            } catch(e) { console.warn("Socket connection failed:", e); }
         };
+
+        function updateOpponentUI(playerName) {
+            const inviteBtn = document.querySelector('.invite-friends-btn');
+            inviteBtn.style.display = 'none';
+            
+            const box = document.getElementById('chat-messages');
+            const el = document.createElement('div');
+            el.className = 'chat-msg system';
+            el.style.color = 'var(--neon-green)';
+            el.innerText = `${playerName.toUpperCase()} HAS JOINED THE LOBBY!`;
+            box.appendChild(el);
+            box.scrollTop = box.scrollHeight;
+
+            // Update opponent card UI
+            localStorage.setItem('hc_opponentName', playerName);
+            localStorage.setItem('hc_isBot', 'false'); // It's a real player
+            const oppCard = document.getElementById('opponent-card');
+            oppCard.classList.remove('dashed');
+            oppCard.innerHTML = `
+                <div class="player-main" style="display:flex; flex-direction:column; align-items:center;">
+                    <div class="name" style="font-size:24px; font-weight:950; color:#fff; letter-spacing:2px;">${playerName.toUpperCase()}</div>
+                    <div class="tag" style="font-size:11px; color:#00ffaa; font-weight:900; text-transform:uppercase;">OPERATIVE</div>
+                </div>
+            `;
+
+            const startBtn = document.getElementById('start-btn');
+            startBtn.classList.add('active-ready');
+            startBtn.style.background = 'var(--neon-green)';
+            startBtn.style.color = '#000';
+            startBtn.style.cursor = 'pointer';
+            startBtn.innerText = 'START MATCH';
+        }
 
         // Chat Scripting
         function toggleChat() {
@@ -483,7 +538,23 @@
 
         function executeZoomAndStart() {
             closeConfirmModal();
-            
+            const roomId = localStorage.getItem('hc_roomId');
+            if (socket) {
+                socket.emit('player_ready', { roomId });
+            } else {
+                // Fallback for local testing
+                startCinematicTransition();
+            }
+        }
+
+        // Listener for server-side game start (Syncs both players)
+        if (socket) {
+            socket.on('game_start', (data) => {
+                startCinematicTransition();
+            });
+        }
+
+        function startCinematicTransition() {
             // Phase 1: Vaporize the UI flawlessly
             document.querySelector('.grand-lobby-shell').classList.add('fade-out-ui');
             document.getElementById('chat-modal').classList.add('fade-out-ui');
