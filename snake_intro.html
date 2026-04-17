@@ -21,19 +21,31 @@
             justify-content: center; align-items: center;
         }
 
-        /* Cinematic Jungle Background */
-        .cinematic-bg {
-            position: absolute; inset: 0;
-            background: radial-gradient(circle at center, #0a1f1a 0%, #000 100%);
+        /* Cinematic Video Background */
+        .video-background {
+            position: absolute;
+            inset: 0;
             z-index: -2;
+            overflow: hidden;
+            background: #000;
         }
 
-        .god-rays {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(0, 255, 136, 0.03) 2%, transparent 5%);
-            filter: blur(30px); animation: raysRotate 80s linear infinite;
+        .video-background iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: 100vh;
+            transform: translate(-50%, -50%) scale(1.5); /* Scale to hide Drive UI if possible */
+            pointer-events: none;
         }
-        @keyframes raysRotate { from { transform: rotate(0deg) scale(2); } to { transform: rotate(360deg) scale(2); } }
+
+        @media (min-aspect-ratio: 16/9) {
+            .video-background iframe { height: 56.25vw; }
+        }
+        @media (max-aspect-ratio: 16/9) {
+            .video-background iframe { width: 177.78vh; }
+        }
 
         /* 3D Board Visualization */
         .scene {
@@ -116,14 +128,11 @@
     </style>
 </head>
 <body>
-    <div class="cinematic-bg"></div>
-    
-    <!-- Cinematic Video Background -->
-    <video id="intro-video" autoplay muted loop style="position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; display: none;">
-        <source src="snake_intro_vid.mp4" type="video/mp4">
-    </video>
-
-    <div class="god-rays"></div>
+    <div class="video-background">
+        <iframe src="https://drive.google.com/file/d/1O3mV5GpQGnqgI9NqMgUBDxE1-HQNOBtU/preview" 
+                allow="autoplay" 
+                frameborder="0"></iframe>
+    </div>
     <div id="countdown">INIT // 15.0</div>
 
     <div class="scene">
@@ -191,9 +200,6 @@
         }, 10);
 
         function finish() {
-            const vid = document.getElementById('intro-video');
-            if(vid) vid.pause(); // Stop video on exit
-            
             st.textContent = "ACCESS GRANTED";
             const flash = document.createElement('div');
             flash.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:2000;opacity:0;transition:1s;';
@@ -205,16 +211,6 @@
                     window.location.href = 'snake_game.html';
                 }, 1000);
             }, 500);
-        }
-
-        // Logic to show video if it loads successfully
-        const vid = document.getElementById('intro-video');
-        if(vid) {
-            vid.oncanplay = () => {
-                vid.style.display = 'block';
-                document.querySelector('.scene').style.display = 'none'; // Hide CSS board if video works
-                document.querySelector('.cinematic-bg').style.display = 'none';
-            }
         }
     </script>
 </body>
