@@ -528,11 +528,15 @@
             localStorage.removeItem('hc_toss_winner');
             localStorage.removeItem('hc_toss_choice');
             localStorage.removeItem('hc_player_role');
-            // We keep hc_opponentName and hc_isBot until back in room
+            // Unlock refresh/redirect
             window.onbeforeunload = null; 
+            window.onunload = null;
         }
 
         function showResult(status, reason) {
+            // Unlock page immediately since match is over
+            resetMatchData();
+
             const screen = document.getElementById('result-screen');
             document.getElementById('final-status').innerText = status;
             document.getElementById('final-reason').innerText = reason;
@@ -547,7 +551,6 @@
                 document.getElementById('lobby-timer').innerText = exitCount;
                 if (exitCount <= 0) {
                     clearInterval(exitT);
-                    resetMatchData();
                     window.location.href = 'hand_cricket_room.html';
                 }
             }, 1000);
