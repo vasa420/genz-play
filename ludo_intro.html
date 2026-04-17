@@ -30,28 +30,31 @@
             align-items: center;
         }
 
-        /* Deep Cinematic Background */
+        /* Volumetric Cinematic Lighting */
         .cinematic-bg {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            background: radial-gradient(circle at 50% 50%, #151520 0%, #000 100%);
             z-index: -2;
-            filter: brightness(0.5);
         }
+
+        .god-rays {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(255,255,255,0.02) 2%, transparent 5%);
+            filter: blur(20px); animation: raysRotate 60s linear infinite;
+        }
+        @keyframes raysRotate { from { transform: rotate(0deg) scale(1.5); } to { transform: rotate(360deg) scale(1.5); } }
 
         .cinematic-light {
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.02) 90deg, transparent 180deg);
-            animation: lightRotate 20s linear infinite;
-            z-index: -1;
-            pointer-events: none;
+            position: absolute; width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.05) 0%, transparent 50%);
+            animation: pulse-light 8s infinite alternate ease-in-out;
+            z-index: -1; pointer-events: none;
         }
 
-        @keyframes lightRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        @keyframes pulse-light {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.7; transform: scale(1.2); }
         }
 
         /* 3D Board & Camera */
@@ -78,14 +81,14 @@
         }
 
         @keyframes cameraEntrance {
-            0% { transform: rotateX(85deg) rotateZ(180deg) translateZ(-800px); opacity: 0; filter: blur(10px); }
-            40% { opacity: 1; filter: blur(0); }
-            100% { transform: rotateX(60deg) rotateZ(45deg) translateZ(0); opacity: 1; }
+            0% { transform: rotateX(85deg) rotateZ(180deg) translateZ(-1000px); opacity: 0; filter: blur(20px); }
+            60% { opacity: 1; filter: blur(0); }
+            100% { transform: rotateX(55deg) rotateZ(45deg) translateZ(0); opacity: 1; }
         }
 
         @keyframes boardIdle {
-            0%, 100% { transform: rotateX(60deg) rotateZ(45deg) translateZ(0); }
-            50% { transform: rotateX(55deg) rotateZ(48deg) translateZ(30px); }
+            0%, 100% { transform: rotateX(55deg) rotateZ(45deg) translateZ(0); }
+            50% { transform: rotateX(50deg) rotateZ(42deg) translateZ(50px); }
         }
 
         @keyframes cameraShake {
@@ -135,9 +138,9 @@
             width: 100%; height: 100%;
             background: inherit;
             border-radius: 50%;
-            transform: translateZ(15px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            border: 2px solid rgba(255,255,255,0.1);
+            transform: translateZ(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 10px rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .token-head {
@@ -222,17 +225,25 @@
         }
 
         .game-title {
-            font-size: 80px;
+            font-size: 85px;
             font-weight: 950;
-            letter-spacing: 12px;
+            letter-spacing: 15px;
             text-transform: uppercase;
-            background: linear-gradient(to bottom, #fff 0%, #aaa 100%);
+            background: linear-gradient(to bottom, #fff 0%, #777 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 5px;
             opacity: 0;
-            animation: textReveal 1s ease-out forwards 1s;
+            animation: textReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards 1.2s, glitchText 4s infinite 3s;
+            text-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        @keyframes glitchText {
+            0%, 90%, 100% { transform: skew(0); }
+            92% { transform: skew(3deg); opacity: 0.8; }
+            94% { transform: skew(-3deg); color: var(--blue); }
+            96% { transform: skew(1deg); }
         }
 
         .status-msg {
@@ -299,8 +310,9 @@
     <div id="particles"></div>
     <div class="scanlines"></div>
     <div class="cinematic-bg"></div>
+    <div class="god-rays"></div>
     <div class="cinematic-light"></div>
-    <div id="countdown">SEC // 10</div>
+    <div id="countdown">ACCESS // GRANTED</div>
 
     <div class="scene">
         <div class="board-container">
