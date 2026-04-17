@@ -214,22 +214,40 @@
     </style>
 </head>
 <body>
+    <audio id="ludo-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
+    
     <div class="sidebar">
         <div class="profile-card">
-            <img class="avatar" id="user-avatar" src="" alt="">
+            <img class="avatar" id="user-avatar" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Lucky" alt="">
             <div>
-                <div style="font-weight: 950; font-size: 16px;" id="user-name">PLAYER NAME</div>
-                <div style="font-size: 10px; color: var(--yellow); letter-spacing: 1px;">LEVEL 12 🏆</div>
+                <div style="font-weight: 950; font-size: 16px; color: #fff;" id="user-name">PLAYER NAME</div>
+                <div style="font-size: 10px; color: var(--yellow); letter-spacing: 1.5px; font-weight: 900;">ONLINE OPERATIVE 🟢</div>
             </div>
         </div>
 
-        <h2 style="font-weight: 950; font-size: 11px; color: #444; letter-spacing: 3px; margin-bottom: 20px;">GAME LOG</h2>
-        <div class="game-log" id="game-log-container">
-            <div class="log-entry">Welcome to the Arena.</div>
-            <div class="log-entry" style="color: #fff; font-weight: bold;">[ SYSTEM ] Match Start.</div>
+        <div style="font-size: 11px; letter-spacing: 3px; color: #555; font-weight: 900; margin-bottom: 20px; text-transform: uppercase;">Direct Networking</div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 30px;">
+            <button class="nav-btn" onclick="alert('LUDO ROOM CREATION: UNDER DEVELOPMENT')" style="background: rgba(0, 122, 255, 0.15); color: #007AFF; border: 1px solid rgba(0, 122, 255, 0.3); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 950; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;">
+                <span>🌐</span> CREATE ARENA
+            </button>
+            <button class="nav-btn" onclick="alert('LUDO JOINING: UNDER DEVELOPMENT')" style="background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 950; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;">
+                <span>🔑</span> JOIN BY CODE
+            </button>
         </div>
 
-        <div class="stats-grid">
+        <h2 style="font-weight: 950; font-size: 11px; color: #444; letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase;">COMBAT LOG</h2>
+        <div class="game-log" id="game-log-container">
+            <div class="log-entry">Welcome to Ludo Reality.</div>
+            <div class="log-entry" style="color: #fff; font-weight: bold;">[ SYSTEM ] Ready for Kick-off.</div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button id="music-toggle" onclick="toggleMusic()" style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; font-size: 11px; font-weight: 900; letter-spacing: 2px; cursor: pointer; transition: 0.3s;">
+                🔊 MUSIC: ON
+            </button>
+        </div>
+
+        <div class="stats-grid" style="margin-top:20px;">
             <div class="stat-box">
                 <span class="stat-val">0</span>
                 <span class="stat-label">Wins</span>
@@ -249,7 +267,9 @@
 
         <div class="game-status-banner" id="status-banner">WAITING FOR YOUR TURN...</div>
         
-        <button id="return-btn" onclick="window.location.href='index.html'">EXIT GAME</button>
+        <div style="position: absolute; top: 40px; right: 40px; display: flex; gap: 10px;">
+            <button id="return-btn" style="position: static;" onclick="window.location.href='index.html'">EXIT GAME</button>
+        </div>
 
         <div class="game-board" id="board">
             <!-- Board cells generated via JS -->
@@ -552,7 +572,28 @@
         }
 
         document.getElementById('dice-btn').addEventListener('click', rollDice);
-        initGame();
+
+        // Music Logic
+        let musicOn = true;
+        const music = document.getElementById('ludo-music');
+        function toggleMusic() {
+            musicOn = !musicOn;
+            if(musicOn) {
+                music.play();
+                document.getElementById('music-toggle').innerText = "🔊 MUSIC: ON";
+            } else {
+                music.pause();
+                document.getElementById('music-toggle').innerText = "🔈 MUSIC: OFF";
+            }
+        }
+
+        window.onload = () => {
+            music.volume = 0.3;
+            music.play().catch(() => {
+                document.getElementById('music-toggle').innerText = "🔈 TAP TO PLAY";
+            });
+            initGame();
+        };
     </script>
 </body>
 </html>
