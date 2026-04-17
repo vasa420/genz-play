@@ -530,8 +530,9 @@
                         // Setup session for joining
                         localStorage.setItem('hc_roomId', code);
                         localStorage.setItem('hc_isHost', 'false');
-                        // Redirect to the WAITING ROOM first, not the toss
-                        window.location.href = 'hand_cricket_room.html';
+                        // Redirect to the WAITING ROOM first with cache-breaker
+                        console.log("JOIN SUCCESS: Routing Guest to Grand Lobby...");
+                        window.location.href = 'hand_cricket_room.html?v=' + Date.now();
                     } else {
                         showCustomAlert("ROOM NOT FOUND", response.message || "THIS ARENA ID DOES NOT EXIST IN ANY ACTIVE SERVER!");
                     }
