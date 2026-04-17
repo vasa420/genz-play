@@ -134,10 +134,8 @@
             </div>
 
             <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                <div class="timer-ring">
-                    <span class="timer-val" id="timer-sec">10</span>
-                </div>
-                <div class="kb-indicator" id="kb-status" style="bottom: -15px;">KEYBOARD ACCESS: OFF</div>
+                <div class="vs-tag">VS</div>
+                <div class="kb-indicator" id="kb-status">KEYBOARD ACCESS: OFF</div>
             </div>
 
             <div style="display:flex; align-items:center; gap:20px;">
@@ -153,14 +151,20 @@
         </div>
 
         <div class="arena-main">
-            <div class="player-zone active">
+            <div class="player-zone active" id="my-zone">
+                <div class="timer-ring" style="margin-bottom:20px;">
+                    <span class="timer-val" id="my-timer-sec">10</span>
+                </div>
                 <div class="hand-display" id="my-hand">✋</div>
                 <div class="player-info">
                     <div class="p-name" id="user-name">PLAYER</div>
                     <div class="p-role" id="user-role">BATTING</div>
                 </div>
             </div>
-            <div class="player-zone">
+            <div class="player-zone" id="opp-zone">
+                <div class="timer-ring" style="margin-bottom:20px;">
+                    <span class="timer-val" id="opp-timer-sec">10</span>
+                </div>
                 <div class="hand-display" id="opp-hand">❓</div>
                 <div class="player-info">
                     <div class="p-name" id="opp-name">OPPONENT</div>
@@ -200,7 +204,8 @@
         let roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
         let socket;
         
-        let timer = 10;
+        let myTimer = 10;
+        let oppTimer = 10;
         let timerInterval;
         
         let myChoice = null;
@@ -231,11 +236,12 @@
                 socket.on('hc_match_moved', (data) => {
                     oppChoice = data.num;
                     document.getElementById('opp-hand').innerText = "✅";
+                    document.getElementById('opp-zone').classList.add('active');
                     checkTurnCompletion();
                 });
             } catch(e) { console.error(e); }
 
-            startTimer();
+            startTimers();
 
             window.addEventListener('keydown', (e) => {
                 if (!kbActive) return;
@@ -245,30 +251,39 @@
             });
         };
 
-        function startTimer() {
-            timer = 10;
-            document.getElementById('timer-sec').innerText = timer;
+        function startTimers() {
+            myTimer = 10;
+            oppTimer = 10;
+            document.getElementById('my-timer-sec').innerText = myTimer;
+            document.getElementById('opp-timer-sec').innerText = oppTimer;
+            
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                timer--;
-                document.getElementById('timer-sec').innerText = timer;
-                if (timer <= 0) {
+                if (myChoice === null) {
+                    myTimer--;
+                    document.getElementById('my-timer-sec').innerText = myTimer;
+                }
+                
+                if (oppChoice === null) {
+                    oppTimer--;
+                    document.getElementById('opp-timer-sec').innerText = oppTimer;
+                }
+
+                if (myTimer <= 0) {
                     clearInterval(timerInterval);
-                    handleTimeout();
+                    showResult("YOU LOSE", "TIME EXPIRED! YOU FAILED TO PLAY.");
+                } else if (oppTimer <= 0) {
+                    clearInterval(timerInterval);
+                    showResult("YOU WIN!", `OPPONENT (${oppName}) FAILED TO PLAY IN TIME!`);
                 }
             }, 1000);
-        }
-
-        function handleTimeout() {
-            if (myChoice === null) {
-                showResult("YOU LOSE", "TIME EXPIRED! YOU FAILED TO PLAY.");
-            }
         }
 
         function sendMove(num) {
             if (myChoice !== null) return;
             myChoice = num;
             document.getElementById('my-hand').innerText = num;
+            document.getElementById('my-zone').classList.remove('active');
             if (socket) {
                 socket.emit('hc_match_move', { roomId, num, playerName: myName, role: myRole });
             }
@@ -329,7 +344,9 @@
                     oppChoice = null;
                     myHandEl.innerText = "❓";
                     oppHandEl.innerText = "❓";
-                    startTimer();
+                    document.getElementById('my-zone').classList.add('active');
+                    document.getElementById('opp-zone').classList.remove('active');
+                    startTimers();
                 }
             }, 1500);
         }
