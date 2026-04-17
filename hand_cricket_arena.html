@@ -486,8 +486,12 @@
                             else { msgTitle = "WELL BOWLED!"; msgReason = "CLUTCH DEFENSE!"; }
                         }
                         
-                        if (myRole === 'batting') showResult(msgTitle, msgReason);
-                        else showResult(msgTitle === "WELL BOWLED!" ? "YOU WIN!" : "WICKET!", msgReason);
+                        if (myRole === 'batting') {
+                            showResult("YOU LOSE", msgReason || "COULD NOT REACH TARGET.");
+                        } else {
+                            // Bowling person wins if they get a wicket in 2nd innings
+                            showResult("YOU WON!", "DISMISSED OPPONENT BEFORE TARGET!");
+                        }
                     } else {
                         updateScore();
                         checkChaseSuccess();
