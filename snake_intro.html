@@ -117,6 +117,12 @@
 </head>
 <body>
     <div class="cinematic-bg"></div>
+    
+    <!-- Cinematic Video Background -->
+    <video id="intro-video" autoplay muted loop style="position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; display: none;">
+        <source src="snake_intro_vid.mp4" type="video/mp4">
+    </video>
+
     <div class="god-rays"></div>
     <div id="countdown">INIT // 15.0</div>
 
@@ -185,6 +191,9 @@
         }, 10);
 
         function finish() {
+            const vid = document.getElementById('intro-video');
+            if(vid) vid.pause(); // Stop video on exit
+            
             st.textContent = "ACCESS GRANTED";
             const flash = document.createElement('div');
             flash.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:2000;opacity:0;transition:1s;';
@@ -196,6 +205,16 @@
                     window.location.href = 'snake_game.html';
                 }, 1000);
             }, 500);
+        }
+
+        // Logic to show video if it loads successfully
+        const vid = document.getElementById('intro-video');
+        if(vid) {
+            vid.oncanplay = () => {
+                vid.style.display = 'block';
+                document.querySelector('.scene').style.display = 'none'; // Hide CSS board if video works
+                document.querySelector('.cinematic-bg').style.display = 'none';
+            }
         }
     </script>
 </body>
