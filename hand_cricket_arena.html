@@ -86,6 +86,16 @@
         .result-title { font-size: 60px; font-weight: 950; color: var(--neon-green); margin-bottom: 10px; }
         .result-sub { font-size: 20px; color: #888; letter-spacing: 2px; }
 
+        /* Innings Overlay */
+        .innings-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); z-index: 600;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .target-tag { color: var(--neon-green); font-size: 40px; font-weight: 950; margin: 20px 0; }
+        .countdown-wrap { font-size: 14px; letter-spacing: 2px; color: #555; }
+        #innings-timer { color: var(--neon-green); font-weight: 900; }
+
         .arena-main {
             flex-grow: 1; width: 90%; display: flex; align-items: center; justify-content: space-around;
         }
@@ -134,8 +144,9 @@
             </div>
 
             <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                <div class="vs-tag">VS</div>
+                <div class="vs-tag" id="innings-status">INN-1</div>
                 <div class="kb-indicator" id="kb-status">KEYBOARD ACCESS: OFF</div>
+                <div id="target-display" style="display:none; color:var(--neon-green); font-weight:900; font-size:12px; margin-top:5px;">TARGET: 0</div>
             </div>
 
             <div style="display:flex; align-items:center; gap:20px;">
@@ -187,12 +198,21 @@
         </div>
     </div>
 
+    <!-- Innings Transition Overlay -->
+    <div class="innings-overlay" id="innings-screen">
+        <div class="result-title">READY FOR SECOND INNINGS</div>
+        <div class="target-tag" id="target-text">TARGET: 0</div>
+        <div class="result-sub" id="role-swap-text">ROLES ARE SWAPPING...</div>
+        <div class="countdown-wrap" style="margin-top:50px;">RESUMING IN <span id="innings-timer">20</span>s</div>
+    </div>
+
     <!-- Result Overlay -->
     <div class="result-overlay" id="result-screen">
         <div class="result-title" id="final-status">YOU WIN!</div>
         <div class="result-sub" id="final-reason">OPPONENT FAILED TO PLAY</div>
-        <button class="kb-toggle active" style="margin-top:40px; padding:15px 40px;" onclick="window.location.href='hand_cricket_room.html'">
-            EXIT TO LOBBY
+        <div class="countdown-wrap" style="margin-top:20px;">RETURNING TO LOBBY IN <span id="lobby-timer">10</span>s</div>
+        <button class="kb-toggle active" style="margin-top:20px; padding:10px 30px;" onclick="window.location.href='hand_cricket_room.html'">
+            EXIT NOW
         </button>
     </div>
 
@@ -205,6 +225,9 @@
         let roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
         let socket;
         
+        let currentInnings = 1;
+        let targetScore = null;
+        
         let myTimer = 10;
         let oppTimer = 10;
         let timerInterval;
@@ -214,7 +237,6 @@
         let myScore = 0;
         let oppScore = 0;
         
-        // Hat-trick tracking
         let consecutiveHits = 0;
         let lastHitNum = null;
 
@@ -223,10 +245,7 @@
             myName = localStorage.getItem('playerName') || 'YOU';
             oppName = localStorage.getItem('hc_opponentName') || 'OPPONENT';
             
-            document.getElementById('user-name').innerText = myName.toUpperCase();
-            document.getElementById('opp-name').innerText = oppName.toUpperCase();
-            document.getElementById('user-role').innerText = myRole.toUpperCase();
-            document.getElementById('opp-role').innerText = myRole === 'batting' ? 'BOWLING' : 'BATTING';
+            updateUIRoles();
             
             try {
                 socket = io();
@@ -252,20 +271,32 @@
             });
         };
 
+        function updateUIRoles() {
+            document.getElementById('user-name').innerText = myName.toUpperCase();
+            document.getElementById('opp-name').innerText = oppName.toUpperCase();
+            document.getElementById('user-role').innerText = myRole.toUpperCase();
+            document.getElementById('opp-role').innerText = myRole === 'batting' ? 'BOWLING' : 'BATTING';
+            
+            const myZone = document.getElementById('my-zone');
+            const oppZone = document.getElementById('opp-zone');
+            
+            if (myRole === 'batting') {
+                myZone.style.borderColor = 'var(--neon-green)';
+                oppZone.style.borderColor = '#1a3322';
+            } else {
+                oppZone.style.borderColor = 'var(--neon-green)';
+                myZone.style.borderColor = '#1a3322';
+            }
+        }
+
         function startTimers() {
             myTimer = 10;
             oppTimer = 10;
             document.getElementById('my-timer-sec').innerText = myTimer;
             document.getElementById('opp-timer-sec').innerText = oppTimer;
             
-            // Re-detect bot status every turn for safety
             isBot = localStorage.getItem('hc_isBot') === 'true';
-
-            // If playing against bot, schedule AI move
-            if (isBot) {
-                console.log("AI Bot detected... preparing move.");
-                triggerBotMove();
-            }
+            if (isBot) triggerBotMove();
 
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -273,7 +304,6 @@
                     myTimer--;
                     document.getElementById('my-timer-sec').innerText = myTimer;
                 }
-                
                 if (oppChoice === null) {
                     oppTimer--;
                     document.getElementById('opp-timer-sec').innerText = oppTimer;
@@ -290,17 +320,10 @@
         }
 
         function triggerBotMove() {
-            // Random delay between 0.5s and 2.5s to keep it fast and responsive
             const thinkingTime = 500 + Math.random() * 2000; 
-            
             setTimeout(() => {
-                // Ensure turn hasn't finished already by some miracle
                 if (oppChoice !== null) return;
-                
-                // AI selection (1-10)
                 oppChoice = Math.floor(Math.random() * 10) + 1;
-                console.log(`AI Bot Decided: ${oppChoice}`);
-                
                 document.getElementById('opp-hand').innerText = "✅";
                 document.getElementById('opp-zone').classList.add('active');
                 checkTurnCompletion();
@@ -328,55 +351,110 @@
         function calculateMatch() {
             const myHandEl = document.getElementById('my-hand');
             const oppHandEl = document.getElementById('opp-hand');
-            
-            // Visual reveal
             myHandEl.innerText = myChoice;
             oppHandEl.innerText = oppChoice;
 
             setTimeout(() => {
-                if (myChoice === oppChoice) {
-                    // OUT Condition
-                    if (myRole === 'batting') {
-                        showResult("OUT!", "YOU TRACKED THE SAME NUMBER!");
+                const isOut = (myChoice === oppChoice);
+
+                if (currentInnings === 1) {
+                    if (isOut) {
+                        startSecondInnings();
                     } else {
-                        showResult("WICKET!", "YOU CAUGHT THE BATSMAN OUT!");
+                        updateScore();
+                        prepareNextBall();
                     }
                 } else {
-                    // Score Calculation
-                    if (myRole === 'batting') {
-                        let runs = myChoice;
-                        
-                        // Hat-trick Logic
-                        if (myChoice === lastHitNum) {
-                            consecutiveHits++;
-                        } else {
-                            consecutiveHits = 1;
-                            lastHitNum = myChoice;
-                        }
-
-                        if (consecutiveHits === 3) {
-                            runs += myChoice; // Add bonus (double score on 3rd hit)
-                            consecutiveHits = 0; // Reset
-                            alert("HAT-TRICK BONUS! UNSTOPPABLE STREAK!");
-                        }
-
-                        myScore += runs;
-                        document.getElementById('my-score').innerText = myScore;
+                    // Innings 2 Chasing logic
+                    if (isOut) {
+                        // Batsman failed to chase
+                        if (myRole === 'batting') showResult("YOU LOSE", `FAILED TO REACH TARGET OF ${targetScore}`);
+                        else showResult("YOU WIN!", `DEFENDED THE TARGET OF ${targetScore}!`);
                     } else {
-                        oppScore += oppChoice;
-                        document.getElementById('opp-score').innerText = oppScore;
+                        updateScore();
+                        checkChaseSuccess();
                     }
-
-                    // Reset for next turn
-                    myChoice = null;
-                    oppChoice = null;
-                    myHandEl.innerText = "❓";
-                    oppHandEl.innerText = "❓";
-                    document.getElementById('my-zone').classList.add('active');
-                    document.getElementById('opp-zone').classList.remove('active');
-                    startTimers();
                 }
             }, 1500);
+        }
+
+        function updateScore() {
+            if (myRole === 'batting') {
+                let runs = myChoice;
+                if (myChoice === lastHitNum) consecutiveHits++;
+                else { consecutiveHits = 1; lastHitNum = myChoice; }
+
+                if (consecutiveHits === 3) {
+                    runs += myChoice;
+                    consecutiveHits = 0;
+                    alert("HAT-TRICK BONUS!");
+                }
+                myScore += runs;
+                document.getElementById('my-score').innerText = myScore;
+            } else {
+                oppScore += oppChoice;
+                document.getElementById('opp-score').innerText = oppScore;
+            }
+        }
+
+        function prepareNextBall() {
+            myChoice = null;
+            oppChoice = null;
+            document.getElementById('my-hand').innerText = "❓";
+            document.getElementById('opp-hand').innerText = "❓";
+            document.getElementById('my-zone').classList.add('active');
+            document.getElementById('opp-zone').classList.remove('active');
+            startTimers();
+        }
+
+        function checkChaseSuccess() {
+            const currentBattingScore = (myRole === 'batting') ? myScore : oppScore;
+            if (currentBattingScore >= targetScore) {
+                if (myRole === 'batting') showResult("YOU WON!", `SUCCESSFULLY CHASED ${targetScore} RUNS!`);
+                else showResult("YOU LOSE", `OPPONENT REACHED THE TARGET OF ${targetScore}.`);
+            } else {
+                prepareNextBall();
+            }
+        }
+
+        function startSecondInnings() {
+            const firstInnScore = (myRole === 'batting') ? myScore : oppScore;
+            targetScore = firstInnScore + 1;
+            
+            const screen = document.getElementById('innings-screen');
+            document.getElementById('target-text').innerText = `TARGET: ${targetScore}`;
+            screen.style.display = 'flex';
+
+            let count = 20;
+            const innT = setInterval(() => {
+                count--;
+                document.getElementById('innings-timer').innerText = count;
+                if (count <= 0) {
+                    clearInterval(innT);
+                    screen.style.display = 'none';
+                    swappingRolesLogic();
+                }
+            }, 1000);
+        }
+
+        function swappingRolesLogic() {
+            currentInnings = 2;
+            myRole = (myRole === 'batting') ? 'bowling' : 'batting';
+            
+            // UI Reset
+            document.getElementById('innings-status').innerText = 'INN-2';
+            document.getElementById('target-display').innerText = `TARGET: ${targetScore}`;
+            document.getElementById('target-display').style.display = 'block';
+            
+            myChoice = null; oppChoice = null;
+            myScore = 0; oppScore = 0;
+            document.getElementById('my-score').innerText = 0;
+            document.getElementById('opp-score').innerText = 0;
+            document.getElementById('my-hand').innerText = "❓";
+            document.getElementById('opp-hand').innerText = "❓";
+            
+            updateUIRoles();
+            startTimers();
         }
 
         function showResult(status, reason) {
@@ -384,7 +462,18 @@
             document.getElementById('final-status').innerText = status;
             document.getElementById('final-reason').innerText = reason;
             screen.style.display = 'flex';
+            
+            let exitCount = 10;
+            const exitT = setInterval(() => {
+                exitCount--;
+                document.getElementById('lobby-timer').innerText = exitCount;
+                if (exitCount <= 0) {
+                    clearInterval(exitT);
+                    window.location.href = 'hand_cricket_room.html';
+                }
+            }, 1000);
         }
+
 
         let kbActive = false;
         function toggleKeyboardAccess() {
