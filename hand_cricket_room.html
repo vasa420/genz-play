@@ -275,7 +275,7 @@
                 <button class="chat-btn" onclick="toggleChat()" style="background: #111; border: 1px solid #333; border-radius: 10px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: #fff; font-size: 14px; margin-right: 5px;">
                     💬
                 </button>
-                <button class="exit-btn" onclick="window.location.href='hand_cricket.html'">
+                <button class="exit-btn" onclick="leaveRoom()">
                     <span class="exit-txt">LEAVE ROOM</span>
                 </button>
             </div>
@@ -616,6 +616,26 @@
             setTimeout(() => {
                 window.location.href = 'hand_cricket_toss.html';
             }, 7000);
+        }
+
+        function leaveRoom() {
+            const roomId = localStorage.getItem('hc_roomId');
+            if (socket && roomId) {
+                if (isHost) {
+                    socket.emit('close_room', { roomId });
+                } else {
+                    socket.emit('leave_room', { roomId });
+                }
+            }
+            window.location.href = 'hand_cricket.html';
+        }
+
+        // Listener for room closure (for guests)
+        if (socket) {
+            socket.on('room_closed', () => {
+                alert("THE ROOM HAS BEEN TERMINATED BY THE OPERATIVE-ONE.");
+                window.location.href = 'hand_cricket.html';
+            });
         }
     </script>
 </body>

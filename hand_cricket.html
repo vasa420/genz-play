@@ -439,7 +439,7 @@
         <aside class="sidebar" style="width: 260px; flex-shrink: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); border-left: 1px solid var(--border-glass); padding: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 50; overflow-y: auto;">
             <div style="font-size: 11px; letter-spacing: 3px; color: #888; font-weight: 900; margin-bottom: 20px;">LOBBY MAIN</div>
             
-            <button class="nav-btn" onclick="window.location.href='hand_cricket_room.html'" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
+            <button class="nav-btn" onclick="createMatch()" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
                 <span style="font-size: 20px;">🎮</span> Create Match
             </button>
             <button class="nav-btn" onclick="openJoinModal()" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
@@ -520,6 +520,12 @@
             const modal = document.getElementById('game-hub-modal');
             modal.classList.remove('open');
             setTimeout(() => { modal.style.display = 'none'; }, 400);
+        }
+
+        function createMatch() {
+            localStorage.setItem('hc_isHost', 'true');
+            localStorage.removeItem('hc_roomId'); // Force room_id regeneration on the next page
+            window.location.href = 'hand_cricket_room.html';
         }
     </script>
 
