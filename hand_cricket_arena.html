@@ -278,6 +278,19 @@
             myName = localStorage.getItem('playerName') || 'YOU';
             oppName = localStorage.getItem('hc_opponentName') || 'OPPONENT';
             
+            // Refresh Lock & Keyboard Overrides
+            window.onbeforeunload = function() {
+                return "REFRESH LOCKED FOR THIS PAGE";
+            };
+
+            window.addEventListener('keydown', function(e) {
+                // Block F5, Ctrl+R, Cmd+R
+                if ((e.which || e.keyCode) == 116 || (e.ctrlKey && e.keyCode == 82) || (e.metaKey && e.keyCode == 82)) {
+                    e.preventDefault();
+                    showAlert("REFRESH LOCKED", "Manual refresh is disabled during active matches to prevent synchronization loss. Please finish your match!");
+                }
+            });
+
             updateUIRoles();
             
             try {
