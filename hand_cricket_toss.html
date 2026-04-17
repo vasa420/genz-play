@@ -132,12 +132,19 @@
                 restoreTossState(savedChoice, savedOutcome, savedWinner);
             }
 
-            // Refresh Lock
+            // Refresh Lock & Keyboard Overrides
             window.onbeforeunload = function() {
                 if (localStorage.getItem('hc_toss_outcome')) {
-                    return "Toss in progress. Refreshing may cause synchronization issues. Continue?";
+                    return "REFRESH LOCKED FOR THIS PAGE";
                 }
             };
+
+            window.addEventListener('keydown', function(e) {
+                if ((e.which || e.keyCode) == 116 || (e.ctrlKey && e.keyCode == 82) || (e.metaKey && e.keyCode == 82)) {
+                    e.preventDefault();
+                    showCustomAlert("REFRESH LOCKED", "Manual refresh is disabled to maintain match synchronization. Please proceed with the toss.");
+                }
+            });
 
             try {
                 socket = io();
