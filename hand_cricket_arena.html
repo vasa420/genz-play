@@ -138,22 +138,49 @@
         .p-name { font-size: 24px; font-weight: 950; color: #fff; letter-spacing: 2px; }
         .p-role { font-size: 12px; color: var(--neon-green); font-weight: 900; letter-spacing: 1px; }
 
-        /* Celebration Styles */
-        .celebration-box { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; animation: trophyPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        .trophy-cup { font-size: 120px; filter: drop-shadow(0 0 30px #ffd700); animation: float 2s ease-in-out infinite; }
+        /* Detailed Celebration Phase */
+        .celebration-box { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 1001; }
+        .victory-glow { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, rgba(0,0,0,0) 70%); z-index: -1; animation: glowPulse 2s ease-in-out infinite; }
+        @keyframes glowPulse { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+        
+        .trophy-cup { font-size: 150px; filter: drop-shadow(0 0 50px #ffd700); animation: floatRotate 3s ease-in-out infinite; }
+        @keyframes floatRotate {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-30px) rotate(5deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-30px) rotate(-5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; overflow: hidden; }
+        .confetti-piece {
+            position: absolute; width: 10px; height: 10px; background: #ffd700; top: -20px;
+            animation: confettiFall 4s linear infinite; opacity: 0.8; border-radius: 2px;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        .victory-banner {
+            font-size: 48px; font-weight: 950; color: #fff; text-transform: uppercase; letter-spacing: 12px;
+            text-shadow: 0 0 30px rgba(255,215,0,0.5); animation: bannerPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            margin-top: 30px; text-align: center;
+        }
+        @keyframes bannerPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
         .lightning-effect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 2000; }
         @keyframes flash {
             0% { opacity: 0; }
-            10% { opacity: 0.8; }
-            20% { opacity: 0; }
-            25% { opacity: 0.7; }
-            40% { opacity: 0; }
+            5% { opacity: 0.9; }
+            10% { opacity: 0; }
+            15% { opacity: 0.8; }
+            30% { opacity: 0; }
             100% { opacity: 0; }
         }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-        @keyframes trophyPop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .sad-emoji { font-size: 100px; margin-bottom: 20px; animation: sadFloat 3s ease-in-out infinite; }
-        @keyframes sadFloat { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.9); } }
+
+        .sad-emoji { font-size: 120px; margin-bottom: 20px; animation: sadFloat 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(255,0,0,0.3)); }
+        @keyframes sadFloat { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(0.9) translateY(15px); } }
 
         .control-panel {
             width: 90%; max-width: 800px;
@@ -258,17 +285,24 @@
     <!-- Result Overlay -->
     <div class="result-overlay" id="result-screen">
         <div class="lightning-effect" id="lightning"></div>
+        <div class="confetti-container" id="confetti-box"></div>
+        
         <div id="celebration-phase" class="celebration-box">
+            <div class="victory-glow"></div>
             <div class="trophy-cup">🏆</div>
-            <div style="font-size: 20px; color: #ffd700; font-weight: 900; letter-spacing: 4px;">WORLD CHAMPION</div>
+            <div class="victory-banner">VICTORY</div>
+            <div style="font-size: 14px; color: #ffd700; font-weight: 900; letter-spacing: 5px; margin-bottom: 15px;">ARENA CHAMPION</div>
         </div>
+        
         <div id="lose-phase" style="display:none; flex-direction:column; align-items:center;">
             <div class="sad-emoji">😔</div>
+            <div style="font-size: 12px; color: #ff4444; font-weight: 900; letter-spacing: 3px;">NOT YOUR DAY, CHAMP</div>
         </div>
-        <div class="result-title" id="final-status">YOU WIN!</div>
-        <div class="result-sub" id="final-reason">OPPONENT FAILED TO PLAY</div>
-        <div class="countdown-wrap" id="exit-timer-wrap" style="margin-top:20px;">RETURNING IN <span id="lobby-timer">10</span>s</div>
-        <button class="kb-toggle active" id="exit-now-btn" style="margin-top:20px; padding:10px 30px; display:none;" onclick="exitArena()">
+        
+        <div class="result-title" id="final-status" style="z-index:1002;">YOU WON!</div>
+        <div class="result-sub" id="final-reason" style="z-index:1002;">OPPONENT FAILED TO PLAY</div>
+        <div class="countdown-wrap" id="exit-timer-wrap" style="margin-top:20px; z-index:1002;">RETURNING IN <span id="lobby-timer">10</span>s</div>
+        <button class="kb-toggle active" id="exit-now-btn" style="margin-top:20px; padding:10px 30px; display:none; z-index:1002;" onclick="exitArena()">
             EXIT NOW
         </button>
     </div>
@@ -588,6 +622,10 @@
                 // Winner Cinematic logic
                 title.innerText = "CONGRATULATIONS! YOU WON THE MATCH";
                 title.style.color = "#ffd700";
+                
+                // Spawn Confetti
+                spawnConfetti();
+                
                 celeb.style.display = 'flex';
                 light.style.animation = 'flash 1.5s ease-out 3';
                 
@@ -673,6 +711,20 @@
                 status.classList.remove('active');
                 status.innerText = "KEYBOARD ACCESS: OFF";
                 controlPanel.style.display = 'flex';
+            }
+        function spawnConfetti() {
+            const container = document.getElementById('confetti-box');
+            container.innerHTML = '';
+            const colors = ['#ffd700', '#ffffff', '#00ffaa', '#ff4444', '#00eeff'];
+            for (let i = 0; i < 60; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDelay = Math.random() * 3 + 's';
+                piece.style.width = Math.random() * 10 + 5 + 'px';
+                piece.style.height = piece.style.width;
+                container.appendChild(piece);
             }
         }
     </script>
