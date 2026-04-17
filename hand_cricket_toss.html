@@ -111,6 +111,7 @@
     <script>
         let socket;
         let isHost = localStorage.getItem('hc_isHost') === 'true'; 
+        let isBot = localStorage.getItem('hc_isBot') === 'true';
         const roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
         let iWonToss = false;
 
@@ -210,9 +211,32 @@
                     } else {
                         tObj.innerText = "OPPONENT WON TOSS!";
                         sObj.innerText = "WAITING FOR THEIR DECISION...";
+                        
+                        // AI BOT LOGIC: If the winner is a bot, make it decide
+                        if (isBot && !iWonToss) {
+                            triggerBotTossDecision();
+                        }
                     }
                 }, 2000);
             }, 3000);
+        }
+
+        function triggerBotTossDecision() {
+            setTimeout(() => {
+                const decision = Math.random() > 0.5 ? 'Batting' : 'Bowling';
+                const tObj = document.querySelector('.toss-title');
+                const sObj = document.querySelector('.toss-sub');
+
+                tObj.innerText = `OPPONENT CHOSE ${decision.toUpperCase()}!`;
+                sObj.innerText = "THEY ARE READY. PREPARING THE ARENA...";
+                
+                const myRole = (decision === 'Batting') ? 'bowling' : 'batting';
+                localStorage.setItem('hc_player_role', myRole);
+
+                setTimeout(() => {
+                    window.location.href = 'hand_cricket_arena.html';
+                }, 3000);
+            }, 2000);
         }
 
         function makeDecision(decision) {
