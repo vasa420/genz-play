@@ -138,6 +138,23 @@
         .p-name { font-size: 24px; font-weight: 950; color: #fff; letter-spacing: 2px; }
         .p-role { font-size: 12px; color: var(--neon-green); font-weight: 900; letter-spacing: 1px; }
 
+        /* Celebration Styles */
+        .celebration-box { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; animation: trophyPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .trophy-cup { font-size: 120px; filter: drop-shadow(0 0 30px #ffd700); animation: float 2s ease-in-out infinite; }
+        .lightning-effect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 2000; }
+        @keyframes flash {
+            0% { opacity: 0; }
+            10% { opacity: 0.8; }
+            20% { opacity: 0; }
+            25% { opacity: 0.7; }
+            40% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes trophyPop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .sad-emoji { font-size: 100px; margin-bottom: 20px; animation: sadFloat 3s ease-in-out infinite; }
+        @keyframes sadFloat { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.9); } }
+
         .control-panel {
             width: 90%; max-width: 800px;
             background: var(--glass); border: 1px solid #1a3322;
@@ -240,10 +257,18 @@
 
     <!-- Result Overlay -->
     <div class="result-overlay" id="result-screen">
+        <div class="lightning-effect" id="lightning"></div>
+        <div id="celebration-phase" class="celebration-box">
+            <div class="trophy-cup">🏆</div>
+            <div style="font-size: 20px; color: #ffd700; font-weight: 900; letter-spacing: 4px;">WORLD CHAMPION</div>
+        </div>
+        <div id="lose-phase" style="display:none; flex-direction:column; align-items:center;">
+            <div class="sad-emoji">😔</div>
+        </div>
         <div class="result-title" id="final-status">YOU WIN!</div>
         <div class="result-sub" id="final-reason">OPPONENT FAILED TO PLAY</div>
-        <div class="countdown-wrap" style="margin-top:20px;">RETURNING TO LOBBY IN <span id="lobby-timer">10</span>s</div>
-        <button class="kb-toggle active" style="margin-top:20px; padding:10px 30px;" onclick="exitArena()">
+        <div class="countdown-wrap" id="exit-timer-wrap" style="margin-top:20px;">RETURNING IN <span id="lobby-timer">10</span>s</div>
+        <button class="kb-toggle active" id="exit-now-btn" style="margin-top:20px; padding:10px 30px; display:none;" onclick="exitArena()">
             EXIT NOW
         </button>
     </div>
@@ -538,27 +563,76 @@
             resetMatchData();
 
             const screen = document.getElementById('result-screen');
-            document.getElementById('final-status').innerText = status;
-            document.getElementById('final-reason').innerText = reason;
-            
-            // Start at 10 immediately
-            let exitCount = 10;
-            document.getElementById('lobby-timer').innerText = exitCount;
+            const title = document.getElementById('final-status');
+            const sub = document.getElementById('final-reason');
+            const celeb = document.getElementById('celebration-phase');
+            const lose = document.getElementById('lose-phase');
+            const light = document.getElementById('lightning');
+            const timerWrap = document.getElementById('exit-timer-wrap');
+            const exitBtn = document.getElementById('exit-now-btn');
+
             screen.style.display = 'flex';
-            
+            title.style.display = 'none';
+            sub.style.display = 'none';
+            timerWrap.style.display = 'none';
+            exitBtn.style.display = 'none';
+
+            const isWin = status.toLowerCase().includes('won') || status.toLowerCase().includes('win');
+
+            if (isWin) {
+                // Winner logic
+                title.innerText = "CONGRATULATIONS YOU WON THE MATCH";
+                title.style.color = "#ffd700";
+                celeb.style.display = 'flex';
+                light.style.animation = 'flash 1.5s ease-out 3';
+                
+                setTimeout(() => {
+                    title.style.display = 'block';
+                    sub.style.display = 'block';
+                    sub.innerText = reason;
+                    timerWrap.style.display = 'block';
+                    exitBtn.style.display = 'block';
+                    startExitCountdown(10);
+                }, 5000);
+            } else {
+                // Loser logic
+                title.innerText = "WELL TRIED BUT YOU LOSE";
+                title.style.color = "#ff4444";
+                lose.style.display = 'flex';
+                
+                setTimeout(() => {
+                    title.style.display = 'block';
+                    sub.style.display = 'block';
+                    sub.innerText = reason;
+                    timerWrap.style.display = 'block';
+                    exitBtn.style.display = 'block';
+                    startExitCountdown(10);
+                }, 1000); // Small delay for effect
+            }
+        }
+
+        function startExitCountdown(seconds) {
+            let exitCount = seconds;
+            document.getElementById('lobby-timer').innerText = exitCount;
             const exitT = setInterval(() => {
                 exitCount--;
                 document.getElementById('lobby-timer').innerText = exitCount;
                 if (exitCount <= 0) {
                     clearInterval(exitT);
-                    window.location.href = 'hand_cricket_room.html';
+                    exitArena();
                 }
             }, 1000);
         }
 
         function exitArena() {
             resetMatchData();
-            window.location.href = 'hand_cricket_room.html';
+            const isHost = localStorage.getItem('hc_isHost') === 'true';
+            if (isHost) {
+                window.location.href = 'hand_cricket_room.html';
+            } else {
+                // Guests return to the main Hand Cricket page
+                window.location.href = 'hand_cricket.html';
+            }
         }
 
 
