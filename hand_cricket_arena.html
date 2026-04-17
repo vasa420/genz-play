@@ -60,11 +60,31 @@
         .score-val { font-size: 40px; font-weight: 950; color: var(--neon-green); margin-bottom: -5px; }
         .score-lbl { font-size: 10px; font-weight: 900; color: #888; letter-spacing: 2px; }
 
+        .timer-ring {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid #111; border-top-color: var(--neon-green);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 22px; font-weight: 950; color: var(--neon-green);
+            animation: spinTimer 1s linear infinite;
+        }
+        @keyframes spinTimer { to { transform: rotate(360deg); } }
+        .timer-val { animation: stopSpin 1s linear infinite; }
+        @keyframes stopSpin { to { transform: rotate(-360deg); } }
+
         .vs-tag {
             font-size: 30px; font-weight: 950; color: #fff;
             background: #111; padding: 10px 20px; border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,255,170,0.1);
         }
+
+        /* Result Overlay */
+        .result-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 500;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .result-title { font-size: 60px; font-weight: 950; color: var(--neon-green); margin-bottom: 10px; }
+        .result-sub { font-size: 20px; color: #888; letter-spacing: 2px; }
 
         .arena-main {
             flex-grow: 1; width: 90%; display: flex; align-items: center; justify-content: space-around;
@@ -114,8 +134,10 @@
             </div>
 
             <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                <div class="vs-tag">VS</div>
-                <div class="kb-indicator" id="kb-status">KEYBOARD ACCESS: OFF</div>
+                <div class="timer-ring">
+                    <span class="timer-val" id="timer-sec">10</span>
+                </div>
+                <div class="kb-indicator" id="kb-status" style="bottom: -15px;">KEYBOARD ACCESS: OFF</div>
             </div>
 
             <div style="display:flex; align-items:center; gap:20px;">
@@ -162,28 +184,166 @@
     </div>
 
     <script>
+        </div>
+    </div>
+
+    <!-- Result Overlay -->
+    <div class="result-overlay" id="result-screen">
+        <div class="result-title" id="final-status">YOU WIN!</div>
+        <div class="result-sub" id="final-reason">OPPONENT FAILED TO PLAY</div>
+        <button class="kb-toggle active" style="margin-top:40px; padding:15px 40px;" onclick="window.location.href='hand_cricket_room.html'">
+            EXIT TO LOBBY
+        </button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let myRole = 'batting';
+        let myName = 'PLAYER';
+        let oppName = 'OPPONENT';
+        let roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
+        let socket;
+        
+        let timer = 10;
+        let timerInterval;
+        
+        let myChoice = null;
+        let oppChoice = null;
+        let myScore = 0;
+        let oppScore = 0;
+        
+        // Hat-trick tracking
+        let consecutiveHits = 0;
+        let lastHitNum = null;
+
         window.onload = () => {
-            const role = localStorage.getItem('hc_player_role') || 'batting';
-            const name = localStorage.getItem('playerName') || 'YOU';
-            const oppName = localStorage.getItem('hc_opponentName') || 'OPPONENT';
+            myRole = localStorage.getItem('hc_player_role') || 'batting';
+            myName = localStorage.getItem('playerName') || 'YOU';
+            oppName = localStorage.getItem('hc_opponentName') || 'OPPONENT';
             
-            document.getElementById('user-name').innerText = name.toUpperCase();
+            document.getElementById('user-name').innerText = myName.toUpperCase();
             document.getElementById('opp-name').innerText = oppName.toUpperCase();
-            document.getElementById('user-role').innerText = role.toUpperCase();
-            document.getElementById('opp-role').innerText = role === 'batting' ? 'BOWLING' : 'BATTING';
+            document.getElementById('user-role').innerText = myRole.toUpperCase();
+            document.getElementById('opp-role').innerText = myRole === 'batting' ? 'BOWLING' : 'BATTING';
             
-            // Setup Keyboard Listeners
+            try {
+                socket = io();
+                socket.on('connect', () => {
+                    socket.emit('join_room', { roomId, playerName: myName, isCreating: false });
+                });
+
+                socket.on('hc_match_moved', (data) => {
+                    oppChoice = data.num;
+                    document.getElementById('opp-hand').innerText = "✅";
+                    checkTurnCompletion();
+                });
+            } catch(e) { console.error(e); }
+
+            startTimer();
+
             window.addEventListener('keydown', (e) => {
                 if (!kbActive) return;
-                
                 const key = e.key;
-                if (key >= '1' && key <= '9') {
-                    sendMove(parseInt(key));
-                } else if (key === '0') {
-                    sendMove(10);
-                }
+                if (key >= '1' && key <= '9') sendMove(parseInt(key));
+                else if (key === '0') sendMove(10);
             });
         };
+
+        function startTimer() {
+            timer = 10;
+            document.getElementById('timer-sec').innerText = timer;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById('timer-sec').innerText = timer;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function handleTimeout() {
+            if (myChoice === null) {
+                showResult("YOU LOSE", "TIME EXPIRED! YOU FAILED TO PLAY.");
+            }
+        }
+
+        function sendMove(num) {
+            if (myChoice !== null) return;
+            myChoice = num;
+            document.getElementById('my-hand').innerText = num;
+            if (socket) {
+                socket.emit('hc_match_move', { roomId, num, playerName: myName, role: myRole });
+            }
+            checkTurnCompletion();
+        }
+
+        function checkTurnCompletion() {
+            if (myChoice !== null && oppChoice !== null) {
+                clearInterval(timerInterval);
+                calculateMatch();
+            }
+        }
+
+        function calculateMatch() {
+            const myHandEl = document.getElementById('my-hand');
+            const oppHandEl = document.getElementById('opp-hand');
+            
+            // Visual reveal
+            myHandEl.innerText = myChoice;
+            oppHandEl.innerText = oppChoice;
+
+            setTimeout(() => {
+                if (myChoice === oppChoice) {
+                    // OUT Condition
+                    if (myRole === 'batting') {
+                        showResult("OUT!", "YOU TRACKED THE SAME NUMBER!");
+                    } else {
+                        showResult("WICKET!", "YOU CAUGHT THE BATSMAN OUT!");
+                    }
+                } else {
+                    // Score Calculation
+                    if (myRole === 'batting') {
+                        let runs = myChoice;
+                        
+                        // Hat-trick Logic
+                        if (myChoice === lastHitNum) {
+                            consecutiveHits++;
+                        } else {
+                            consecutiveHits = 1;
+                            lastHitNum = myChoice;
+                        }
+
+                        if (consecutiveHits === 3) {
+                            runs += myChoice; // Add bonus (double score on 3rd hit)
+                            consecutiveHits = 0; // Reset
+                            alert("HAT-TRICK BONUS! UNSTOPPABLE STREAK!");
+                        }
+
+                        myScore += runs;
+                        document.getElementById('my-score').innerText = myScore;
+                    } else {
+                        oppScore += oppChoice;
+                        document.getElementById('opp-score').innerText = oppScore;
+                    }
+
+                    // Reset for next turn
+                    myChoice = null;
+                    oppChoice = null;
+                    myHandEl.innerText = "❓";
+                    oppHandEl.innerText = "❓";
+                    startTimer();
+                }
+            }, 1500);
+        }
+
+        function showResult(status, reason) {
+            const screen = document.getElementById('result-screen');
+            document.getElementById('final-status').innerText = status;
+            document.getElementById('final-reason').innerText = reason;
+            screen.style.display = 'flex';
+        }
 
         let kbActive = false;
         function toggleKeyboardAccess() {
@@ -206,9 +366,13 @@
         }
 
         function sendMove(num) {
-            console.log("Move selected:", num);
+            if (myChoice !== null) return;
+            myChoice = num;
             document.getElementById('my-hand').innerText = num;
-            // logic for socket game play would go here
+            if (socket) {
+                socket.emit('hc_match_move', { roomId, num, playerName: myName, role: myRole });
+            }
+            checkTurnCompletion();
         }
     </script>
 </body>

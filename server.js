@@ -222,6 +222,11 @@ io.on('connection', (socket) => {
         socket.broadcast.to(roomId).emit('hc_toss_decided', { decision, winnerName });
     });
 
+    socket.on('hc_match_move', (data) => {
+        const { roomId, num, playerName, role } = data;
+        socket.broadcast.to(roomId).emit('hc_match_moved', { num, playerName, role });
+    });
+
     socket.on('send_emote', (data) => {
         const { roomId, emote, playerName } = data;
         io.to(roomId).emit('receive_emote', { emote, playerName });
