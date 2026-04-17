@@ -21,7 +21,7 @@
             justify-content: center; align-items: center;
         }
 
-        /* Cinematic Video Background */
+        /* Cinematic Video Background - Cropped Iframe Approach */
         .video-background {
             position: absolute;
             inset: 0;
@@ -30,14 +30,15 @@
             background: #000;
         }
 
-        #bg-video {
+        .video-background iframe {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: brightness(0.6) contrast(1.2);
+            /* Hide Drive UI by over-scaling and offsetting */
+            top: -10%; 
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            pointer-events: none;
+            filter: brightness(0.7) contrast(1.1);
         }
 
         /* 3D Board Visualization */
@@ -122,9 +123,9 @@
 </head>
 <body>
     <div class="video-background">
-        <video autoplay muted loop id="bg-video">
-            <source src="https://drive.google.com/uc?export=download&id=1O3mV5GpQGnqgI9NqMgUBDxE1-HQNOBtU" type="video/mp4">
-        </video>
+        <iframe src="https://drive.google.com/file/d/1O3mV5GpQGnqgI9NqMgUBDxE1-HQNOBtU/preview" 
+                allow="autoplay" 
+                frameborder="0"></iframe>
     </div>
     <div id="countdown">INIT // 15.0</div>
 
