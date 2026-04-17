@@ -84,16 +84,49 @@
         }
 
         .game-board {
-            width: 650px;
-            height: 650px;
-            background: #111;
-            border: 15px solid #222;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            width: 600px;
+            height: 600px;
+            background: #fff;
+            border: 10px solid #fff;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
             display: grid;
             grid-template-columns: repeat(15, 1fr);
             grid-template-rows: repeat(15, 1fr);
             position: relative;
+            overflow: hidden;
+            border-radius: 4px;
         }
+
+        .board-cell {
+            border: 1px solid #ddd;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            box-sizing: border-box;
+        }
+
+        /* Home Center Triangle Container */
+        .home-center {
+            position: absolute;
+            top: 40%; left: 40%; width: 20%; height: 20%;
+            background: #fff;
+            display: flex; flex-wrap: wrap; z-index: 10;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        
+        .triangle {
+            position: absolute; width: 0; height: 0; border: 60px solid transparent;
+        }
+        .tri-top { border-top-color: var(--yellow); top: 0; left: 0; border-bottom: 0; border-left-width: 60px; border-right-width: 60px; }
+        .tri-bottom { border-bottom-color: var(--red); bottom: 0; left: 0; border-top: 0; border-left-width: 60px; border-right-width: 60px; }
+        .tri-left { border-left-color: var(--blue); left: 0; top: 0; border-right: 0; border-top-width: 60px; border-bottom-width: 60px; }
+        .tri-right { border-right-color: var(--green); right: 0; top: 0; border-left: 0; border-top-width: 60px; border-bottom-width: 60px; }
+
+        .safe-spot { font-size: 14px; color: #555; }
+        .base-inner { width: 70%; height: 70%; background: #fff; border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        .base-pos { width: 25px; height: 25px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.05); }
 
         /* Ambient Glows */
         .glow {
@@ -336,6 +369,12 @@
 
         <div class="game-board" id="board">
             <!-- Board cells generated via JS -->
+            <div class="home-center">
+                <div class="triangle tri-top"></div>
+                <div class="triangle tri-bottom"></div>
+                <div class="triangle tri-left"></div>
+                <div class="triangle tri-right"></div>
+            </div>
         </div>
 
         <div class="dice-control" id="dice-btn">🎲</div>
@@ -563,23 +602,78 @@
 
         function renderBoard() {
             const b = document.getElementById('board');
+            // Retain triangles
+            const center = b.querySelector('.home-center');
             b.innerHTML = '';
+             b.appendChild(center);
+
             for (let i = 0; i < 225; i++) {
                 const cell = document.createElement('div');
                 cell.id = `cell-${i}`;
-                cell.dataset.cellId = i;
-                cell.style.border = '1px solid #1a1a1a';
-                cell.style.position = 'relative';
+                cell.className = 'board-cell';
                 
                 const row = Math.floor(i / 15);
                 const col = i % 15;
-                if (row < 6 && col < 6) cell.style.background = '#301010';
-                else if (row < 6 && col > 8) cell.style.background = '#101030';
-                else if (row > 8 && col < 6) cell.style.background = '#103010';
-                else if (row > 8 && col > 8) cell.style.background = '#303010';
-                else if (SAFE_ZONES.includes(i)) cell.style.background = 'rgba(255,255,255,0.05)';
-                else if (i === CENTER_ZONE) cell.style.background = '#000';
-                else cell.style.background = '#111';
+                
+                // Color mapping logic for Classic Ludo Board
+                if (row < 6 && col < 6) {
+                    cell.style.background = 'var(--blue)';
+                    if (row > 0 && row < 5 && col > 0 && col < 5) {
+                        cell.style.background = '#fff';
+                        cell.style.borderRadius = '5px';
+                    }
+                }
+                else if (row < 6 && col > 8) {
+                    cell.style.background = 'var(--yellow)';
+                    if (row > 0 && row < 5 && col > 10 && col < 14) {
+                        cell.style.background = '#fff';
+                        cell.style.borderRadius = '5px';
+                    }
+                }
+                else if (row > 8 && col < 6) {
+                    cell.style.background = 'var(--red)';
+                    if (row > 10 && row < 14 && col > 0 && col < 5) {
+                        cell.style.background = '#fff';
+                        cell.style.borderRadius = '5px';
+                    }
+                }
+                else if (row > 8 && col > 8) {
+                    cell.style.background = 'var(--green)';
+                    if (row > 10 && row < 14 && col > 10 && col < 14) {
+                        cell.style.background = '#fff';
+                        cell.style.borderRadius = '5px';
+                    }
+                }
+                // Home stretch paths
+                else if (row === 7 && col > 0 && col < 6) cell.style.background = 'var(--blue)';
+                else if (row === 7 && col > 8 && col < 14) cell.style.background = 'var(--yellow)';
+                else if (col === 7 && row > 0 && row < 6) cell.style.background = 'var(--yellow)'; // Image shows yellow on top stretch
+                else if (col === 7 && row > 8 && row < 14) cell.style.background = 'var(--red)'; // Image shows red on bottom stretch
+                // Actually image has: Top stretch is yellow? Wait.
+                // Image Analysis:
+                // Upper Left: Blue Base. Path starting cell is BLUE (star).
+                // Upper Right: Yellow Base. Path starting cell is YELLOW (star).
+                // Lower Left: Red Base. Path starting cell is RED (star).
+                // Lower Right: Green Base. Path starting cell is GREEN (star).
+                
+                // Correction based on image:
+                if (row === 7 && col > 0 && col < 6) cell.style.background = 'var(--blue)';
+                if (row === 7 && col > 8 && col < 14) cell.style.background = 'var(--green)';
+                if (col === 7 && row > 0 && row < 6) cell.style.background = 'var(--yellow)';
+                if (col === 7 && row > 8 && row < 14) cell.style.background = 'var(--red)';
+
+                // Safe spots from image (Stars)
+                if ([91, 23, 133, 201, 8, 104, 216, 120].includes(i)) {
+                    cell.innerHTML = '<span class="safe-spot">★</span>';
+                    if (i === 91) cell.style.background = 'var(--blue)';
+                    if (i === 23) cell.style.background = 'var(--yellow)';
+                    if (i === 133) cell.style.background = 'var(--green)';
+                    if (i === 201) cell.style.background = 'var(--red)';
+                }
+
+                if (row >= 6 && row <= 8 && col >= 6 && col <= 8) {
+                    cell.style.visibility = 'hidden'; // Hide these as they are covered by triangle center
+                }
 
                 b.appendChild(cell);
             }
