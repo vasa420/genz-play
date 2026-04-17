@@ -36,9 +36,25 @@
         .match-header {
             width: 90%; max-width: 1200px;
             background: var(--glass); border: 1px solid #1a3322;
-            border-radius: 20px; padding: 20px 40px;
+            border-radius: 20px; padding: 15px 30px;
             display: flex; justify-content: space-between; align-items: center;
+            position: relative;
         }
+
+        .kb-indicator {
+            position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; font-weight: 900; color: #555; letter-spacing: 1px;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .kb-indicator.active { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+
+        .kb-toggle {
+            background: #111; border: 1px solid #333; border-radius: 10px;
+            padding: 8px 12px; cursor: pointer; color: #888; font-size: 14px;
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .kb-toggle.active { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 15px rgba(0,255,170,0.2); }
+        .kb-toggle:hover { background: #222; }
 
         .score-box { text-align: center; }
         .score-val { font-size: 40px; font-weight: 950; color: var(--neon-green); margin-bottom: -5px; }
@@ -96,10 +112,21 @@
                 <div class="score-val" id="my-score">0</div>
                 <div class="score-lbl">YOUR SCORE</div>
             </div>
-            <div class="vs-tag">VS</div>
-            <div class="score-box">
-                <div class="score-val" id="opp-score">0</div>
-                <div class="score-lbl">OPPONENT SCORE</div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                <div class="vs-tag">VS</div>
+                <div class="kb-indicator" id="kb-status">KEYBOARD ACCESS: OFF</div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:20px;">
+                <button class="kb-toggle" id="kb-toggle-btn" onclick="toggleKeyboardAccess()">
+                    <span>⌨️</span>
+                    <span style="font-size:10px; font-weight:900;">KEYBOARD</span>
+                </button>
+                <div class="score-box">
+                    <div class="score-val" id="opp-score">0</div>
+                    <div class="score-lbl">OPPONENT SCORE</div>
+                </div>
             </div>
         </div>
 
@@ -140,7 +167,36 @@
             document.getElementById('opp-name').innerText = oppName.toUpperCase();
             document.getElementById('user-role').innerText = role.toUpperCase();
             document.getElementById('opp-role').innerText = role === 'batting' ? 'BOWLING' : 'BATTING';
+            
+            // Setup Keyboard Listeners
+            window.addEventListener('keydown', (e) => {
+                if (!kbActive) return;
+                
+                const key = e.key;
+                if (key >= '1' && key <= '9') {
+                    sendMove(parseInt(key));
+                } else if (key === '0') {
+                    sendMove(10);
+                }
+            });
         };
+
+        let kbActive = false;
+        function toggleKeyboardAccess() {
+            kbActive = !kbActive;
+            const btn = document.getElementById('kb-toggle-btn');
+            const status = document.getElementById('kb-status');
+            
+            if (kbActive) {
+                btn.classList.add('active');
+                status.classList.add('active');
+                status.innerText = "KEYBOARD ACCESS: ON (1-9, 0=10)";
+            } else {
+                btn.classList.remove('active');
+                status.classList.remove('active');
+                status.innerText = "KEYBOARD ACCESS: OFF";
+            }
+        }
 
         function sendMove(num) {
             console.log("Move selected:", num);
