@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Realm - Strategy Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --blue: #007AFF;
+            --red: #FF3B30;
+            --green: #4CD964;
+            --yellow: #FFCC00;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--bg); color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        #bg-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; opacity: 0.15; object-fit: cover; filter: grayscale(1);
+        }
+
+        .lobby-shell {
+            z-index: 10; width: 100vw; height: 100vh;
+            padding: 40px; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+
+        .lobby-header {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            backdrop-filter: blur(20px); border-radius: 20px; padding: 20px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .room-badge {
+            background: rgba(0, 122, 255, 0.1); border: 1px solid var(--blue);
+            padding: 10px 25px; border-radius: 100px;
+            font-size: 18px; font-weight: 950; color: var(--blue);
+            letter-spacing: 5px; text-shadow: 0 0 15px rgba(0,122,255,0.4);
+        }
+
+        /* Player Grid */
+        .player-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+            flex-grow: 1;
+        }
+
+        .player-slot {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            border-radius: 30px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 15px;
+            position: relative; transition: 0.4s; padding: 30px;
+        }
+
+        .player-slot.active-red { border-color: var(--red); box-shadow: 0 0 40px rgba(255,59,48,0.1); }
+        .player-slot.active-blue { border-color: var(--blue); box-shadow: 0 0 40px rgba(0,122,255,0.1); }
+        .player-slot.active-green { border-color: var(--green); box-shadow: 0 0 40px rgba(76,217,100,0.1); }
+        .player-slot.active-yellow { border-color: var(--yellow); box-shadow: 0 0 40px rgba(255,204,0,0.1); }
+
+        .avatar-frame {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: #111; border: 2px solid #222;
+            padding: 5px; box-sizing: border-box; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .empty-icon { font-size: 40px; color: #222; }
+
+        .slot-name { font-size: 20px; font-weight: 950; color: #fff; letter-spacing: 1px; }
+        .slot-tag { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #555; }
+
+        /* Combat Communications */
+        .lobby-footer {
+            height: 250px; display: flex; gap: 20px;
+        }
+
+        .chat-section {
+            flex: 1; background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            border-radius: 20px; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .chat-header { padding: 15px 20px; background: rgba(255,255,255,0.02); font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #444; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { font-size: 13px; color: #aaa; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 12px; width: fit-content; max-width: 80%; }
+        .msg b { color: #fff; margin-right: 8px; }
+
+        .controls-section {
+            width: 350px; display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .btn-action {
+            width: 100%; height: 75px; border-radius: 15px; border: none;
+            font-family: 'Outfit'; font-weight: 950; font-size: 16px;
+            letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: 0.3s;
+        }
+
+        .btn-start {
+            background: var(--blue); color: #fff;
+            box-shadow: 0 15px 30px rgba(0,122,255,0.2);
+        }
+        .btn-start:disabled { background: #111; color: #444; cursor: not-allowed; box-shadow: none; }
+        .btn-start:hover:not(:disabled) { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,122,255,0.4); }
+
+        .btn-cancel {
+            background: #111; border: 1px solid #333; color: #888;
+        }
+        .btn-cancel:hover { background: #500; color: #fff; border-color: #f00; }
+
+    </style>
+</head>
+<body>
+    <img id="bg-video" src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=1974" alt="">
+    
+    <div class="lobby-shell">
+        <div class="lobby-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 40px; height: 40px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🎲</div>
+                <div>
+                    <div style="font-size: 12px; font-weight: 900; color: #555; letter-spacing: 2px;">LUDO ARENA NETWORK</div>
+                    <div style="font-size: 24px; font-weight: 950; letter-spacing: 1px;">WAITING LOBBY</div>
+                </div>
+            </div>
+            <div class="room-badge" id="room-id-display">------</div>
+        </div>
+
+        <div class="player-grid" id="player-grid">
+            <!-- Slot 1: RED -->
+            <div class="player-slot" id="slot-0">
+                <div class="avatar-frame"><div class="empty-icon">👤</div></div>
+                <div class="slot-name">OPEN SLOT</div>
+                <div class="slot-tag" style="color: var(--red);">RED TEAM</div>
+            </div>
+            <!-- Slot 2: BLUE -->
+            <div class="player-slot" id="slot-1">
+                <div class="avatar-frame"><div class="empty-icon">👤</div></div>
+                <div class="slot-name">OPEN SLOT</div>
+                <div class="slot-tag" style="color: var(--blue);">BLUE TEAM</div>
+            </div>
+            <!-- Slot 3: GREEN -->
+            <div class="player-slot" id="slot-2">
+                <div class="avatar-frame"><div class="empty-icon">👤</div></div>
+                <div class="slot-name">OPEN SLOT</div>
+                <div class="slot-tag" style="color: var(--green);">GREEN TEAM</div>
+            </div>
+            <!-- Slot 4: YELLOW -->
+            <div class="player-slot" id="slot-3">
+                <div class="avatar-frame"><div class="empty-icon">👤</div></div>
+                <div class="slot-name">OPEN SLOT</div>
+                <div class="slot-tag" style="color: var(--yellow);">YELLOW TEAM</div>
+            </div>
+        </div>
+
+        <div class="lobby-footer">
+            <div class="chat-section">
+                <div class="chat-header">COMBAT COMMUNICATIONS</div>
+                <div class="chat-messages" id="chat-box">
+                    <div class="msg"><b>SYSTEM:</b> Encryption established. Waiting for participants...</div>
+                </div>
+            </div>
+            <div class="controls-section">
+                <button class="btn-action btn-start" id="start-btn" disabled>READY FOR KICK-OFF</button>
+                <button class="btn-action btn-cancel" onclick="window.location.href='ludo_intro.html'">ABANDON MISSION</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const isHost = urlParams.get('host') === 'true';
+        const playerName = localStorage.getItem('playerName') || 'Player';
+        const playerAvatar = localStorage.getItem('playerAvatar');
+
+        document.getElementById('room-id-display').innerText = roomId;
+
+        if (roomId) {
+            socket.emit('join_room', { 
+                roomId: roomId, 
+                playerName: playerName, 
+                isCreating: isHost 
+            });
+        }
+
+        socket.on('player_joined', (data) => {
+            updatePlayerList(data.players);
+            addChatMessage('System', `${data.players[data.players.length-1].name} entered the lobby.`);
+            
+            if (isHost && data.players.length >= 2) {
+                const startBtn = document.getElementById('start-btn');
+                startBtn.disabled = false;
+                startBtn.innerText = "START MISSION";
+            }
+        });
+
+        socket.on('match_started', () => {
+             window.location.href = `ludo_game.html?roomId=${roomId}&multiplayer=true&role=${isHost ? 'host' : 'participant'}`;
+        });
+
+        document.getElementById('start-btn').onclick = () => {
+            socket.emit('start_match', { roomId: roomId });
+        };
+
+        function updatePlayerList(players) {
+            const colors = ['red', 'blue', 'green', 'yellow'];
+            // Reset slots
+            for (let i = 0; i < 4; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.className = 'player-slot';
+                slot.querySelector('.avatar-frame').innerHTML = '<div class="empty-icon">👤</div>';
+                slot.querySelector('.slot-name').innerText = "OPEN SLOT";
+            }
+
+            players.forEach((p, idx) => {
+                if (idx > 3) return;
+                const slot = document.getElementById(`slot-${idx}`);
+                slot.classList.add(`active-${colors[idx]}`);
+                
+                const avatar = p.avatar || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${p.name}`;
+                slot.querySelector('.avatar-frame').innerHTML = `<img src="${avatar}" class="avatar-img">`;
+                slot.querySelector('.slot-name').innerText = p.name.toUpperCase();
+            });
+        }
+
+        function addChatMessage(sender, text) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = `<b>${sender.toUpperCase()}:</b> ${text}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>

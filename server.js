@@ -99,6 +99,11 @@ io.on('connection', (socket) => {
         });
     });
 
+    socket.on('start_match', (data) => {
+        const { roomId } = data;
+        io.to(roomId).emit('match_started');
+    });
+
     socket.on('player_ready', (data) => {
         const { roomId } = data;
         const room = rooms.get(roomId);
