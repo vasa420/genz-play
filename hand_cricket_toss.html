@@ -56,7 +56,8 @@
             transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .coin.flip { transform: rotateY(1800deg); }
+        .coin.flip-heads { transform: rotateY(1800deg); }
+        .coin.flip-tails { transform: rotateY(1980deg); }
 
         .coin-face {
             position: absolute; width: 100%; height: 100%;
@@ -186,21 +187,19 @@
                 sObj.innerText = `${callerName} CALLED ${choice.toUpperCase()}!`;
             }
             
-            coin.classList.add('flip');
+            coin.classList.remove('flip-heads', 'flip-tails');
+            void coin.offsetWidth; 
+            if (outcome === 'Heads') coin.classList.add('flip-heads');
+            else coin.classList.add('flip-tails');
 
             setTimeout(() => {
-                const won = choice === outcome;
-                // Determine if 'I' am the winner globally
-                // In this role-based toss, if caller is host, host wins if choice==outcome.
-                // If caller is NOT host, then... wait. Choice is ALWAYS from host.
-                // So if won is true, Host wins. If won is false, Opponent wins.
+                const hostWon = (choice === outcome);
+                iWonToss = (isHost && hostWon) || (!isHost && !hostWon);
+                const resultText = iWonToss ? "YOU WON THE TOSS!" : "OPPONENT WON TOSS!";
                 
-                let globalWinner = won ? 'Host' : 'Opponent';
-                iWonToss = (isHost && won) || (!isHost && !won);
-
-                tObj.innerText = won ? "HOST WON THE TOSS!" : "OPPONENT WON TOSS!";
-                tObj.style.color = won ? "var(--neon-green)" : "#ff4d4d";
-                tObj.style.textShadow = won ? "0 0 20px rgba(0,255,170,0.5)" : "0 0 20px rgba(255,77,77,0.5)";
+                tObj.innerText = resultText;
+                tObj.style.color = iWonToss ? "var(--neon-green)" : "#ff4d4d";
+                tObj.style.textShadow = iWonToss ? "0 0 20px rgba(0,255,170,0.5)" : "0 0 20px rgba(255,77,77,0.5)";
                 sObj.innerText = `COIN LANDED ON ${outcome.toUpperCase()}`;
 
                 setTimeout(() => {
