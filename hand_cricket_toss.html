@@ -122,6 +122,15 @@
                 subLabel.innerText = "WAITING FOR HOST TO CALL...";
             }
 
+            // Persistence Recovery
+            const savedOutcome = localStorage.getItem('hc_toss_outcome');
+            const savedWinner = localStorage.getItem('hc_toss_winner');
+            const savedChoice = localStorage.getItem('hc_toss_choice');
+
+            if (savedOutcome && savedWinner) {
+                restoreTossState(savedChoice, savedOutcome, savedWinner);
+            }
+
             try {
                 socket = io();
                 socket.on('connect', () => {
@@ -137,6 +146,8 @@
                 });
 
                 socket.on('hc_toss_decided', (data) => {
+                    // Clear persistence on transition
+                    clearTossPersist();
                     const opponentDecision = data.decision;
                     const myAssignment = (opponentDecision === 'Batting') ? 'BOWLING' : 'BATTING';
                     
@@ -156,6 +167,36 @@
                 console.error("Socket Link Error:", e);
             }
         };
+
+        function restoreTossState(choice, outcome, winner) {
+            document.getElementById('btn-group').style.display = 'none';
+            const coin = document.getElementById('coin');
+            const tObj = document.querySelector('.toss-title');
+            const sObj = document.querySelector('.toss-sub');
+
+            if (outcome === 'Heads') coin.classList.add('flip-heads');
+            else coin.classList.add('flip-tails');
+            coin.style.transition = 'none';
+
+            iWonToss = (winner === 'YOU');
+            const resultText = iWonToss ? "YOU WON THE TOSS!" : "OPPONENT WON TOSS!";
+            
+            tObj.innerText = resultText;
+            tObj.style.color = iWonToss ? "var(--neon-green)" : "#ff4d4d";
+            sObj.innerText = `COIN LANDED ON ${outcome.toUpperCase()}`;
+
+            if (iWonToss) {
+                document.getElementById('decision-group').style.display = 'flex';
+            } else {
+                if (isBot) triggerBotTossDecision();
+            }
+        }
+
+        function clearTossPersist() {
+            localStorage.removeItem('hc_toss_outcome');
+            localStorage.removeItem('hc_toss_winner');
+            localStorage.removeItem('hc_toss_choice');
+        }
 
         function executeToss(choice) {
             if (!isHost) return; 
@@ -198,6 +239,11 @@
                 iWonToss = (isHost && hostWon) || (!isHost && !hostWon);
                 const resultText = iWonToss ? "YOU WON THE TOSS!" : "OPPONENT WON TOSS!";
                 
+                // Save state for persistence
+                localStorage.setItem('hc_toss_outcome', outcome);
+                localStorage.setItem('hc_toss_winner', iWonToss ? "YOU" : "OPPONENT");
+                localStorage.setItem('hc_toss_choice', choice);
+
                 tObj.innerText = resultText;
                 tObj.style.color = iWonToss ? "var(--neon-green)" : "#ff4d4d";
                 tObj.style.textShadow = iWonToss ? "0 0 20px rgba(0,255,170,0.5)" : "0 0 20px rgba(255,77,77,0.5)";
@@ -242,6 +288,7 @@
         function makeDecision(decision) {
             if (!iWonToss) return;
             
+            clearTossPersist();
             document.getElementById('decision-group').style.display = 'none';
             const tObj = document.querySelector('.toss-title');
             const sObj = document.querySelector('.toss-sub');
