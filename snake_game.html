@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Realm - Tactical Arena</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Snake & Ladder - tactical Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --jungle: #00ff88;
-            --sidebar: rgba(20, 20, 20, 0.8);
+            --bg: #030a08;
+            --jungle-green: #00ff88;
             --gold: #ffcc00;
+            --snake-red: #ff3333;
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: var(--bg); color: #fff;
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: #fff;
             font-family: 'Outfit', sans-serif;
-            display: flex; overflow: hidden;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         /* Cinematic Video Background */
@@ -29,106 +39,163 @@
             background: #000;
         }
 
-        #bg-video {
+        .video-background video {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: brightness(0.5) contrast(1.1);
+            pointer-events: none;
+            filter: brightness(0.6) contrast(1.1);
         }
 
-        .sidebar {
-            width: 350px; height: 100vh; background: var(--sidebar);
-            backdrop-filter: blur(30px);
-            border-right: 1px solid rgba(255,255,255,0.05);
-            padding: 40px; box-sizing: border-box; display: flex; flex-direction: column;
-            z-index: 10;
+        /* 3D Board Visualization */
+        .scene {
+            perspective: 2500px;
+            width: 450px;
+            height: 450px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .main-arena {
-            flex-grow: 1; height: 100vh; position: relative;
-            display: flex; justify-content: center; align-items: center;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+        .board-wrap {
+            width: 400px;
+            height: 400px;
+            transform-style: preserve-3d;
+            transform: rotateX(65deg) rotateZ(45deg);
         }
 
-        .game-status {
-            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
-            padding: 12px 35px; background: rgba(0,0,0,0.6); border: 1px solid var(--jungle);
-            border-radius: 100px; font-weight: 950; font-size: 11px; letter-spacing: 3px;
-            color: var(--jungle); backdrop-filter: blur(15px);
-            box-shadow: 0 0 30px rgba(0,255,136,0.1);
-        }
-
-        .snake-board {
-            width: 650px; height: 650px; background: rgba(0,0,0,0.8);
-            border: 15px solid #111; display: grid;
+        .grid-10x10 {
+            width: 100%;
+            height: 100%;
+            display: grid;
             grid-template: repeat(10, 1fr) / repeat(10, 1fr);
-            box-shadow: 0 0 100px rgba(0,0,0,1), 0 0 40px rgba(0,255,136,0.05);
-            position: relative; backdrop-filter: blur(5px);
+            background: rgba(0, 255, 136, 0.05);
+            border: 12px solid #111;
+            box-shadow: 0 0 100px rgba(0, 255, 136, 0.1), inset 0 0 50px rgba(0, 0, 0, 1);
         }
 
         .cell {
-            border: 1px solid rgba(255,255,255,0.03);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 900; color: #444;
-            transition: 0.3s;
+            border: 1px solid rgba(0, 255, 136, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.1);
         }
 
-        .cell:hover { background: rgba(0,255,136,0.05); color: var(--jungle); }
+        /* Animated Snakes & Ladders */
+        .ladder {
+            position: absolute;
+            width: 40px;
+            height: 200px;
+            background: repeating-linear-gradient(0deg, #555 0px, #555 5px, transparent 5px, transparent 20px);
+            border-left: 4px solid var(--gold);
+            border-right: 4px solid var(--gold);
+            transform: translateZ(20px) rotateZ(-10deg);
+        }
+
+        .snake {
+            position: absolute;
+            width: 10px;
+            height: 180px;
+            background: linear-gradient(to bottom, var(--snake-red), #500);
+            border-radius: 50px;
+            filter: blur(2px);
+            transform: translateZ(10px) rotateZ(20deg);
+        }
+
+        /* UI Panel */
+        .ui-panel {
+            margin-top: 50px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .title {
+            font-size: 70px;
+            font-weight: 950;
+            letter-spacing: 10px;
+            background: linear-gradient(to bottom, #fff, var(--jungle-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: var(--jungle-green);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--jungle-green);
+        }
 
         .btn-hub {
-            position: absolute; top: 40px; right: 40px;
+            position: fixed; top: 40px; right: 40px;
             background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff;
             padding: 14px 28px; border-radius: 12px; font-weight: 950;
             font-size: 11px; cursor: pointer; transition: 0.3s;
             backdrop-filter: blur(10px); letter-spacing: 1px;
         }
         .btn-hub:hover { background: #fff; color: #000; }
+
     </style>
 </head>
+
 <body>
     <div class="video-background">
         <video autoplay muted loop playsinline id="bg-video">
             <source src="https://cdn.jsdelivr.net/gh/vasa420/genz-play/Snake_and_Ladder_Video_Intro.mp4" type="video/mp4">
         </video>
     </div>
-    <div class="sidebar">
-        <h2 style="font-weight: 950; letter-spacing: 2px;">SNAKE REALM</h2>
-        <p style="font-size: 11px; color: #555; margin-bottom: 30px;">TACTICAL VERTICALITY</p>
-        
-        <div style="flex-grow: 1;">
-             <div style="font-size: 10px; color: #333; font-weight: 900; letter-spacing: 2px;">ARENA STATUS: ACTIVE</div>
-        </div>
 
-        <button onclick="window.location.href='index.html'" style="background: transparent; color: #555; border: 1px solid #222; padding: 15px; border-radius: 12px; font-family: inherit; font-weight: 950; cursor: pointer;">EXIT ARENA</button>
-    </div>
+    <button class="btn-hub" onclick="window.location.href='index.html'">EXIT ARENA</button>
 
-    <div class="main-arena">
-        <div class="game-status">ARENA SYNCHRONIZED. READY FOR CLIMB.</div>
-        <button class="btn-hub" onclick="alert('OPENING GAME HUB...')">MORE GAMES</button>
-
-        <div class="snake-board" id="board">
-            <!-- 10x10 grid -->
+    <div class="scene">
+        <div class="board-wrap">
+            <div class="grid-10x10">
+                <!-- 100 cells generated via JS -->
+            </div>
+            <!-- Decorative Elements -->
+            <div class="ladder" style="top: 10%; left: 20%;"></div>
+            <div class="ladder" style="top: 40%; left: 70%; height: 150px; transform: rotate(15deg);"></div>
+            <div class="snake" style="top: 20%; left: 50%;"></div>
+            <div class="snake" style="top: 60%; left: 10%; height: 100px;"></div>
         </div>
     </div>
+
+    <div class="ui-panel">
+        <div class="title">SNAKE REALM</div>
+        <div class="status" id="status-txt">READY FOR TACTICAL ASCENT</div>
+    </div>
+
+    <audio id="intro-music" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-2-411.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
-        const board = document.getElementById('board');
-        let count = 100;
-        for (let row = 0; row < 10; row++) {
-            let rowCells = [];
-            for (let col = 0; col < 10; col++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.textContent = count--;
-                rowCells.push(cell);
-            }
-            // Snake and ladder grid zigzag logic
-            if (row % 2 !== 0) rowCells.reverse();
-            rowCells.forEach(c => board.appendChild(c));
+        const grid = document.querySelector('.grid-10x10');
+        for (let i = 100; i >= 1; i--) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.textContent = i;
+            grid.appendChild(cell);
         }
+
+        const music = document.getElementById('intro-music');
+
+        // Start music and video on first click
+        window.addEventListener('click', () => {
+            if (music.paused) music.play();
+            const video = document.getElementById('bg-video');
+            if (video && video.paused) video.play();
+        }, { once: true });
+
     </script>
 </body>
+
 </html>
