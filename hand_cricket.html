@@ -632,6 +632,12 @@
             if (name) document.getElementById('display-name').innerText = name.toUpperCase();
             if (avatar) document.getElementById('display-avatar').src = avatar;
             
+            // Initial Lobby Cleansing - Ensures 'Create Match' starts fresh
+            if (!localStorage.getItem('hc_roomId')) {
+                const hcKeys = ['hc_isHost', 'hc_isBot', 'hc_opponentName', 'hc_player_role'];
+                hcKeys.forEach(key => localStorage.removeItem(key));
+            }
+
             initGame();
 
             // Attempt to autoplay music (browsers might block it until interaction)

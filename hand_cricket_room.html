@@ -627,6 +627,13 @@
                     socket.emit('leave_room', { roomId });
                 }
             }
+            // Comprehensive Session Cleansing
+            const hcKeys = [
+                'hc_roomId', 'hc_isHost', 'hc_isBot', 'hc_opponentName', 
+                'hc_player_role', 'hc_toss_outcome', 'hc_toss_winner', 'hc_toss_choice'
+            ];
+            hcKeys.forEach(key => localStorage.removeItem(key));
+            
             window.location.href = 'hand_cricket.html';
         }
 
