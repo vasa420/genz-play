@@ -328,6 +328,27 @@
                 window.location.href = 'hand_cricket_arena.html';
             }, 3000);
         }
+
+        function resetMatch() {
+            clearTossPersist();
+            // Clear any match-specific room state if necessary
+            localStorage.removeItem('hc_player_role');
+            window.location.href = 'hand_cricket_login.html'; // Back to login/entry to reset fully
+        }
+
+        // Show emergency reset if stuck for too long
+        setTimeout(() => {
+            const resetBtn = document.getElementById('emergency-reset');
+            if (resetBtn && !localStorage.getItem('hc_player_role')) {
+                resetBtn.style.display = 'block';
+            }
+        }, 8000); 
     </script>
+    
+    <button id="emergency-reset" onclick="resetMatch()" 
+        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,0,0,0.2); border: 1px solid #ff4d4d; color: #ff4d4d; padding: 8px 20px; border-radius: 20px; font-size: 10px; font-weight: 950; letter-spacing: 2px; cursor: pointer; z-index: 1000; text-transform: uppercase; transition: 0.3s;"
+        onmouseover="this.style.background='#ff4d4d'; this.style.color='#000';">
+        GAME STUCK? FORCED RESET
+    </button>
 </body>
 </html>
