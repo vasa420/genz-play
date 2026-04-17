@@ -128,8 +128,16 @@
             const savedChoice = localStorage.getItem('hc_toss_choice');
 
             if (savedOutcome && savedWinner) {
+                console.log("Restoring toss state...");
                 restoreTossState(savedChoice, savedOutcome, savedWinner);
             }
+
+            // Refresh Lock
+            window.onbeforeunload = function() {
+                if (localStorage.getItem('hc_toss_outcome')) {
+                    return "Toss in progress. Refreshing may cause synchronization issues. Continue?";
+                }
+            };
 
             try {
                 socket = io();
@@ -174,15 +182,17 @@
             const tObj = document.querySelector('.toss-title');
             const sObj = document.querySelector('.toss-sub');
 
+            // Set final coin position without spin animation
+            coin.style.transition = 'none';
             if (outcome === 'Heads') coin.classList.add('flip-heads');
             else coin.classList.add('flip-tails');
-            coin.style.transition = 'none';
 
             iWonToss = (winner === 'YOU');
             const resultText = iWonToss ? "YOU WON THE TOSS!" : "OPPONENT WON TOSS!";
             
             tObj.innerText = resultText;
             tObj.style.color = iWonToss ? "var(--neon-green)" : "#ff4d4d";
+            tObj.style.textShadow = iWonToss ? "0 0 20px rgba(0,255,170,0.5)" : "0 0 20px rgba(255,77,77,0.5)";
             sObj.innerText = `COIN LANDED ON ${outcome.toUpperCase()}`;
 
             if (iWonToss) {
