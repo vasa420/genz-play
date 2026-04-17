@@ -440,8 +440,14 @@
     <!-- Looping Background Music -->
     <audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
 
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        try { socket = io(); } catch(e) { console.warn("Socket integration pending server spinup."); }
+    </script>
+
     <!-- Custom Alert Modal UI -->
-    <div id="custom-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div id="custom-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
         <div style="background: rgba(15,15,15,0.95); border: 1px solid var(--border-glass); padding: 35px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(0, 255, 170, 0.1); transform: translateY(20px); transition: transform 0.3s ease;" id="modal-box">
             <div id="modal-title" style="font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 15px; letter-spacing: 2px;">NOTICE</div>
             <div id="modal-message" style="font-size: 14px; color: #bbb; margin-bottom: 25px; line-height: 1.6;">Message goes here</div>
@@ -516,13 +522,22 @@
                 showCustomAlert("INVALID CODE", "Please enter a valid 6-digit room ID to proceed.");
                 return;
             }
-            
-            // Setup session for joining
-            localStorage.setItem('hc_roomId', code);
-            localStorage.setItem('hc_isHost', 'false');
-            
-            // Redirect to toss (assuming joining takes you straight to match prep)
-            window.location.href = 'hand_cricket_toss.html';
+
+            // Real Server Verification
+            if (socket) {
+                socket.emit('hc_check_room', { roomId: code }, (response) => {
+                    if (response.success) {
+                        // Setup session for joining
+                        localStorage.setItem('hc_roomId', code);
+                        localStorage.setItem('hc_isHost', 'false');
+                        window.location.href = 'hand_cricket_toss.html';
+                    } else {
+                        showCustomAlert("ROOM NOT FOUND", response.message || "THIS ARENA ID DOES NOT EXIST IN ANY ACTIVE SERVER!");
+                    }
+                });
+            } else {
+                showCustomAlert("SERVER OFFLINE", "COULD NOT CONNECT TO THE ARENA NETWORK. PLEASE TRY AGAIN LATER.");
+            }
         }
 
         // User Setup

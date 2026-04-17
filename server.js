@@ -23,6 +23,16 @@ const rooms = new Map();
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
+    socket.on('hc_check_room', (data, callback) => {
+        const { roomId } = data;
+        const exists = rooms.has(roomId);
+        if (exists) {
+            callback({ success: true });
+        } else {
+            callback({ success: false, message: `ROOM ID ${roomId} WAS NOT CREATED IN ANY SERVER!` });
+        }
+    });
+
     socket.on('join_room', (data) => {
         const { roomId, playerName, password, isCreating } = data;
 
