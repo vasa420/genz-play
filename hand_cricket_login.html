@@ -272,10 +272,52 @@
 
             } catch (e) {
                 console.error("Login Error:", e);
-                alert("Login failed. Please try again.");
+                showAlert("LOGIN FAILED", "Authentication encountered a technical glitch. Please refresh and try again.");
             }
         };
+
+        function showAlert(title, msg) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('custom-modal').style.display = 'flex';
+        }
+
+        function closeAlert() {
+            document.getElementById('custom-modal').style.display = 'none';
+        }
     </script>
+
+    <!-- Custom Professional Alert Modal -->
+    <style>
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-card {
+            background: #111; border: 1px solid #39FF14;
+            border-radius: 20px; padding: 40px; width: 340px; text-align: center;
+            box-shadow: 0 0 50px rgba(57, 255, 20, 0.2);
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-title { font-size: 20px; font-weight: 950; color: #39FF14; margin-bottom: 15px; letter-spacing: 2px; }
+        .modal-msg { font-size: 13px; color: #aaa; margin-bottom: 30px; line-height: 1.6; letter-spacing: 1px; }
+        .modal-btn {
+            background: #39FF14; color: #000; border: none;
+            padding: 12px 40px; border-radius: 10px; font-size: 12px; font-weight: 950;
+            cursor: pointer; transition: 0.3s;
+        }
+        .modal-btn:hover { box-shadow: 0 0 20px #39FF14; }
+    </style>
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">ALERT</div>
+            <div class="modal-msg" id="modal-msg">Message goes here...</div>
+            <button class="modal-btn" onclick="closeAlert()">CONTINUE</button>
+        </div>
+    </div>
 
 </body>
 </html>

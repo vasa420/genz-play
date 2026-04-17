@@ -86,6 +86,29 @@
         .result-title { font-size: 60px; font-weight: 950; color: var(--neon-green); margin-bottom: 10px; }
         .result-sub { font-size: 20px; color: #888; letter-spacing: 2px; }
 
+        /* Professional Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-card {
+            background: #0a0f0d; border: 1px solid var(--neon-green);
+            border-radius: 25px; padding: 40px; width: 400px; text-align: center;
+            box-shadow: 0 0 50px rgba(0,255,170,0.3);
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-title { font-size: 28px; font-weight: 950; color: var(--neon-green); margin-bottom: 15px; letter-spacing: 2px; }
+        .modal-msg { font-size: 16px; color: #aaa; margin-bottom: 30px; line-height: 1.6; }
+        .modal-btn {
+            background: var(--neon-green); color: #000; border: none;
+            padding: 12px 40px; border-radius: 12px; font-size: 14px; font-weight: 900;
+            cursor: pointer; transition: 0.3s;
+        }
+        .modal-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--neon-green); }
+
         /* Innings Overlay */
         .innings-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -195,6 +218,15 @@
             <button class="move-btn" onclick="sendMove(8)">8</button>
             <button class="move-btn" onclick="sendMove(9)">9</button>
             <button class="move-btn" onclick="sendMove(10)">10</button>
+        </div>
+    </div>
+
+    <!-- Custom Professional Alert Modal -->
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">ALERT</div>
+            <div class="modal-msg" id="modal-msg">Message goes here...</div>
+            <button class="modal-btn" onclick="closeAlert()">CONTINUE</button>
         </div>
     </div>
 
@@ -401,7 +433,7 @@
                 if (consecutiveHits === 3) {
                     runs += myChoice;
                     consecutiveHits = 0;
-                    alert("HAT-TRICK BONUS!");
+                    showAlert("HAT-TRICK BONUS!", `Incredible! Three consecutive ${myChoice}s earned you a double bonus!`);
                 }
                 myScore += runs;
                 document.getElementById('my-score').innerText = myScore;
@@ -492,6 +524,21 @@
             }, 1000);
         }
 
+
+        function closeAlert() {
+            document.getElementById('custom-modal').style.display = 'none';
+            if (window.pendingCallback) {
+                window.pendingCallback();
+                window.pendingCallback = null;
+            }
+        }
+
+        function showAlert(title, msg, callback) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('custom-modal').style.display = 'flex';
+            if (callback) window.pendingCallback = callback;
+        }
 
         let kbActive = false;
         function toggleKeyboardAccess() {
