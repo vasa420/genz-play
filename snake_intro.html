@@ -240,9 +240,11 @@
         const ct = document.getElementById('countdown');
         const music = document.getElementById('intro-music');
 
-        // Start music on first click if needed, but here we try auto-play strategy
+        // Start music and video on first click to bypass browser restrictions
         window.addEventListener('click', () => {
             if (music.paused) music.play();
+            const video = document.getElementById('bg-video');
+            if (video && video.paused) video.play();
         }, { once: true });
 
         let progress = 0;
