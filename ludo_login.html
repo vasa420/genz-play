@@ -337,6 +337,20 @@
                     initClerk();
                 }
             }, 100);
+
+            // Manual Google Sign-In Initialization
+            if (typeof google !== 'undefined') {
+                google.accounts.id.initialize({
+                    client_id: "731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com",
+                    callback: window.handleGoogleLogin
+                });
+                const container = document.querySelector('.g_id_signin');
+                if (container) {
+                    google.accounts.id.renderButton(container, {
+                        theme: "filled_blue", size: "large", shape: "pill", text: "signin_with", width: 280
+                    });
+                }
+            }
         });
 
         // Simple ambient animation for dice

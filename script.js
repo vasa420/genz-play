@@ -511,6 +511,24 @@ window.addEventListener('load', () => {
     }, 100);
     // Timeout after 5 seconds
     setTimeout(() => clearInterval(checkClerk), 5000);
+
+    // Initialize Google Login manually as a secondary trigger
+    if (typeof google !== 'undefined') {
+        google.accounts.id.initialize({
+            client_id: "731634414121-6nbfdnaetc5clc54h93ahrh9j17km0pl.apps.googleusercontent.com",
+            callback: window.handleGoogleLogin
+        });
+        const containers = document.querySelectorAll('.g_id_signin');
+        containers.forEach(container => {
+            google.accounts.id.renderButton(container, {
+                theme: "filled_blue",
+                size: "large",
+                shape: "pill",
+                text: "signin_with",
+                width: 280
+            });
+        });
+    }
 });
 
 let equippedStrikerId = parseInt(localStorage.getItem('equippedStrikerId')) || 0;
