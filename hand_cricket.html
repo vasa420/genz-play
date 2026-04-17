@@ -412,6 +412,12 @@
             <div style="font-size: 11px; letter-spacing: 3px; color: #888; font-weight: 900; margin-bottom: 20px;">LOBBY MAIN</div>
             
             <button class="nav-btn" onclick="window.location.href='hand_cricket_room.html'" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 20px;">🎮</span> Create Match
+            </button>
+            <button class="nav-btn" onclick="openJoinModal()" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 20px;">🔑</span> Join Room
+            </button>
+            <button class="nav-btn" onclick="window.location.href='hand_cricket_friends.html'" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
                 <span style="font-size: 20px;">👥</span> Play with Friends
             </button>
             <button class="nav-btn" onclick="showCustomAlert('COLLECTION', 'Avatar and skin collection is currently locked! Keep playing to unlock it.')" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px;">
@@ -448,6 +454,22 @@
         </div>
     </div>
 
+    <!-- Join Room Modal UI -->
+    <div id="join-room-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 1100; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; padding: 20px;">
+        <div style="background: #080808; border: 2px solid var(--neon-blue); padding: 40px; border-radius: 25px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);">
+            <div style="font-size: 50px; margin-bottom: 20px;">🔐</div>
+            <h2 style="font-size: 22px; font-weight: 950; color: #fff; margin-bottom: 5px; letter-spacing: 2px;">JOIN PRIVATE ROOM</h2>
+            <p style="font-size: 11px; color: #888; font-weight: 900; letter-spacing: 2px; margin-bottom: 30px;">ENTER THE 6-DIGIT ARENA CODE</p>
+            
+            <input type="text" id="join-room-id" maxlength="6" placeholder="000000" style="background: #000; border: 1px solid #333; border-radius: 12px; padding: 15px; width: 100%; font-family: inherit; font-size: 24px; font-weight: 950; color: var(--neon-blue); text-align: center; letter-spacing: 8px; outline: none; margin-bottom: 30px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='var(--neon-blue)'" onblur="this.style.borderColor='#333'">
+            
+            <div style="display: flex; gap: 15px;">
+                <button onclick="closeJoinModal()" style="flex:1; background: #1a1a1a; color: #888; border: none; padding: 15px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 11px; letter-spacing: 2px;">CANCEL</button>
+                <button onclick="confirmJoin()" style="flex:2; background: var(--neon-blue); color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: 950; cursor: pointer; transition: 0.3s; font-size: 11px; letter-spacing: 2px;">JOIN MATCH</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Custom Modal Logic
         function showCustomAlert(title, message) {
@@ -473,6 +495,37 @@
             setTimeout(() => {
                 modal.style.display = 'none';
             }, 300);
+        }
+
+        // Join Room Functions
+        function openJoinModal() {
+            const modal = document.getElementById('join-room-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => { 
+                modal.style.opacity = '1'; 
+                document.getElementById('join-room-id').focus();
+            }, 10);
+        }
+
+        function closeJoinModal() {
+            const modal = document.getElementById('join-room-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        function confirmJoin() {
+            const code = document.getElementById('join-room-id').value.trim();
+            if (code.length < 6) {
+                showCustomAlert("INVALID CODE", "Please enter a valid 6-digit room ID to proceed.");
+                return;
+            }
+            
+            // Setup session for joining
+            localStorage.setItem('hc_roomId', code);
+            localStorage.setItem('hc_isHost', 'false');
+            
+            // Redirect to toss (assuming joining takes you straight to match prep)
+            window.location.href = 'hand_cricket_toss.html';
         }
 
         // User Setup
