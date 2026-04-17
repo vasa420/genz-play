@@ -53,7 +53,7 @@
 
         .coin {
             width: 100%; height: 100%; position: relative;
-            transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .coin.flip-heads { transform: rotateY(1800deg); }
@@ -280,8 +280,8 @@
                             triggerBotTossDecision();
                         }
                     }
-                }, 2000);
-            }, 3000);
+                }, 1000); // Faster decision reveal
+            }, 1200); // Matches the new fast coin transition
         }
 
         function triggerBotTossDecision() {
@@ -297,9 +297,10 @@
                 localStorage.setItem('hc_player_role', myRole);
 
                 setTimeout(() => {
+                    clearTossPersist();
                     window.location.href = 'hand_cricket_arena.html';
-                }, 3000);
-            }, 2000);
+                }, 1200);
+            }, 800); // Shorter bot thinking time
         }
 
         function makeDecision(decision) {

@@ -243,7 +243,7 @@
         <div class="result-title" id="final-status">YOU WIN!</div>
         <div class="result-sub" id="final-reason">OPPONENT FAILED TO PLAY</div>
         <div class="countdown-wrap" style="margin-top:20px;">RETURNING TO LOBBY IN <span id="lobby-timer">10</span>s</div>
-        <button class="kb-toggle active" style="margin-top:20px; padding:10px 30px;" onclick="window.location.href='hand_cricket_room.html'">
+        <button class="kb-toggle active" style="margin-top:20px; padding:10px 30px;" onclick="exitArena()">
             EXIT NOW
         </button>
     </div>
@@ -522,6 +522,16 @@
             startTimers();
         }
 
+        function resetMatchData() {
+            // Cleanup persistence tokens
+            localStorage.removeItem('hc_toss_outcome');
+            localStorage.removeItem('hc_toss_winner');
+            localStorage.removeItem('hc_toss_choice');
+            localStorage.removeItem('hc_player_role');
+            // We keep hc_opponentName and hc_isBot until back in room
+            window.onbeforeunload = null; 
+        }
+
         function showResult(status, reason) {
             const screen = document.getElementById('result-screen');
             document.getElementById('final-status').innerText = status;
@@ -537,9 +547,15 @@
                 document.getElementById('lobby-timer').innerText = exitCount;
                 if (exitCount <= 0) {
                     clearInterval(exitT);
+                    resetMatchData();
                     window.location.href = 'hand_cricket_room.html';
                 }
             }, 1000);
+        }
+
+        function exitArena() {
+            resetMatchData();
+            window.location.href = 'hand_cricket_room.html';
         }
 
 
