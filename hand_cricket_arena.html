@@ -201,6 +201,7 @@
         let myRole = 'batting';
         let myName = 'PLAYER';
         let oppName = 'OPPONENT';
+        let isBot = localStorage.getItem('hc_isBot') === 'true';
         let roomId = localStorage.getItem('hc_roomId') || 'HC-ACTIVE-MATCH';
         let socket;
         
@@ -257,6 +258,11 @@
             document.getElementById('my-timer-sec').innerText = myTimer;
             document.getElementById('opp-timer-sec').innerText = oppTimer;
             
+            // If playing against bot, schedule a bit of AI thinking time
+            if (isBot) {
+                triggerBotMove();
+            }
+
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if (myChoice === null) {
@@ -277,6 +283,17 @@
                     showResult("YOU WIN!", `OPPONENT (${oppName}) FAILED TO PLAY IN TIME!`);
                 }
             }, 1000);
+        }
+
+        function triggerBotMove() {
+            const thinkingTime = 1000 + Math.random() * 2000; // 1-3 seconds
+            setTimeout(() => {
+                if (oppChoice !== null) return;
+                oppChoice = Math.floor(Math.random() * 10) + 1;
+                document.getElementById('opp-hand').innerText = "✅";
+                document.getElementById('opp-zone').classList.add('active');
+                checkTurnCompletion();
+            }, thinkingTime);
         }
 
         function sendMove(num) {
