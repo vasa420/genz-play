@@ -307,6 +307,32 @@
             z-index: 200;
         }
 
+        /* Mute Button Neon Styling */
+        .mute-btn-neon {
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 950;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            text-transform: uppercase;
+        }
+        .mute-btn-neon:hover { 
+            background: var(--primary); color: #000; 
+            box-shadow: 0 0 25px var(--primary);
+            transform: translateY(-2px);
+        }
+        .mute-btn-neon.muted { 
+            color: #ff3333; border-color: #ff3333; 
+            background: rgba(255, 51, 51, 0.1);
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.2);
+        }
+
         .top-btn {
             background: transparent;
             border: none;
@@ -377,7 +403,7 @@
         <div class="top-bar">
             <button class="top-btn" onclick="toggleView()">Switch View</button>
             <div style="width: 1px; height: 10px; background: #333;"></div>
-            <button class="top-btn" id="mute-btn" onclick="toggleAudio()" style="color: var(--primary);">🔊 MUSIC</button>
+            <button class="mute-btn-neon" id="mute-btn" onclick="toggleAudio()">🔊 Music On</button>
         </div>
         <audio id="bg-music" src="samuelfjohanns-creepy-ambient-7539.mp3" loop></audio>
 
@@ -439,8 +465,8 @@
                 isMuted = !isMuted;
                 music.muted = isMuted;
             }
-            muteBtn.innerHTML = isMuted ? '🔇 MUTED' : '🔊 MUSIC';
-            muteBtn.style.color = isMuted ? '#ff3333' : 'var(--primary)';
+            muteBtn.innerHTML = isMuted ? '🔇 Muted' : '🔊 Music On';
+            muteBtn.classList.toggle('muted', isMuted);
         }
 
         ['click', 'keydown', 'touchstart'].forEach(evt => {

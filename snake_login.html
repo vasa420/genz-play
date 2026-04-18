@@ -137,30 +137,33 @@
             letter-spacing: 3px; text-decoration: none;
             text-transform: uppercase; transition: 0.3s; z-index: 20;
         }
-        .back-btn:hover { color: #fff; }
-
-        /* Mute Toggle Styling */
-        .audio-control {
-            position: absolute; top: 40px; right: 40px;
-            z-index: 100; display: flex; align-items: center; gap: 15px;
+        .audio-status {
+            font-size: 9px; font-weight: 950; letter-spacing: 2px;
+            color: var(--primary); text-transform: uppercase;
+            text-shadow: 0 0 10px var(--primary);
         }
 
         .mute-btn {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            color: #fff; width: 45px; height: 45px;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary); width: 50px; height: 50px;
             border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px; transition: 0.3s;
+            font-size: 20px; transition: 0.3s;
             backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
         }
 
-        .mute-btn:hover { border-color: var(--primary); transform: scale(1.1); }
-        .mute-btn.muted { color: #ff3333; border-color: rgba(255, 51, 51, 0.3); }
+        .mute-btn:hover { 
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 30px var(--primary);
+            transform: scale(1.1);
+        }
 
-        .audio-status {
-            font-size: 10px; font-weight: 950; letter-spacing: 2px;
-            color: #666; text-transform: uppercase;
+        .mute-btn.muted { 
+            color: #ff3333; border-color: #ff3333; 
+            background: rgba(255, 51, 51, 0.1);
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.2);
         }
     </style>
 </head>
@@ -170,12 +173,13 @@
     <div id="thunder-vis" class="thunder"></div>
     <div id="blood" class="blood-overlay"></div>
     <div id="splatter" class="blood-splatter"></div>
-    <a href="index.html" class="back-btn">← Back to Hub</a>
-
-    <div class="audio-control">
-        <span class="audio-status" id="audio-status">Atmosphere: Ready</span>
-        <button id="mute-btn" class="mute-btn" onclick="toggleAudio()">🔊</button>
+    
+    <div class="audio-control" style="position: absolute; top: 40px; right: 40px; z-index: 1000; display: flex; align-items: center; gap: 15px;">
+        <span class="audio-status" id="audio-status" style="display: none;">Active</span>
+        <button id="mute-btn" class="mute-btn" onclick="toggleAudio()" title="Toggle Atmosphere">🔊</button>
     </div>
+
+    <a href="index.html" class="back-btn">← Back to Hub</a>
 
     <audio id="bg-music" src="samuelfjohanns-creepy-ambient-7539.mp3" loop></audio>
 
