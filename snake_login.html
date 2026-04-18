@@ -185,25 +185,22 @@
         </div>
     </div>
 
-    <!-- Pure Storm & Nature Soundscape (Absolutely No Instruments) -->
+    <!-- Sequenced Horror Soundscape (Absolutely No Instruments) -->
     <audio id="snd-wind" loop preload="auto" crossorigin="anonymous">
         <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/wind.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-insects" loop preload="auto">
-        <source src="https://cdn.pixabay.com/audio/2022/02/12/audio_ed23769c02.mp3" type="audio/mpeg">
+    <audio id="snd-thunder" preload="auto" crossorigin="anonymous">
+        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_b333a5980b.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-leaf" loop preload="auto">
-        <source src="https://cdn.pixabay.com/audio/2021/11/25/audio_e6a57fdb7e.mp3" type="audio/mpeg">
+    <audio id="snd-shots" preload="auto" crossorigin="anonymous">
+        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_7313a29410.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-snake" preload="auto">
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="snd-tiger" preload="auto">
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
+    <audio id="snd-screams" preload="auto" crossorigin="anonymous">
+        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_291a89c362.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        // Leaf Creation
+        // Leaf Creation (Always active)
         function createLeaf() {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
@@ -216,64 +213,88 @@
         setInterval(createLeaf, 2000);
 
         let audioActive = false;
+        let sequenceTimer = null;
         
         function toggleAudio() {
             const wind = document.getElementById('snd-wind');
-            const insects = document.getElementById('snd-insects');
-            const leaf = document.getElementById('snd-leaf');
+            const thunder = document.getElementById('snd-thunder');
+            const shots = document.getElementById('snd-shots');
+            const screams = document.getElementById('snd-screams');
             const prompt = document.getElementById('audio-prompt');
             
             if (!audioActive) {
                 audioActive = true;
-                prompt.innerText = "FOREST AWAKENED 🍃";
+                prompt.innerText = "SEQUENCING HORROR... 🌑";
                 prompt.style.color = "var(--primary)";
-
-                // Play all background layers at High Volume
-                [wind, insects, leaf].forEach(s => {
-                    s.volume = (s.id === 'snd-wind') ? 1.0 : 0.8;
-                    s.play().catch(e => {
-                        console.warn("Audio play blocked for " + s.id, e);
-                        audioActive = false;
-                        prompt.innerText = "Click again to retry...";
-                    });
-                });
-
-                if (audioActive) {
-                    startAnimalSounds();
-                    startLightning();
-                }
+                startSequence();
             } else {
-                [wind, insects, leaf].forEach(s => s.pause());
                 audioActive = false;
-                prompt.innerText = "FOREST SILENCED 🌑";
+                clearTimeout(sequenceTimer);
+                [wind, thunder, shots, screams].forEach(s => s.pause());
+                prompt.innerText = "REALM SILENCED ❄️";
                 prompt.style.color = "#555";
             }
         }
 
-        function playAnimal(id) {
-            if (!audioActive) return;
-            const snd = document.getElementById(id);
-            snd.volume = 0.5;
-            snd.play().catch(e => console.log("Audio trigger blocked"));
-        }
-
-        function startAnimalSounds() {
+        function startSequence() {
             if (!audioActive) return;
             
-            // Randomly play snake or tiger
-            const chance = Math.random();
-            if (chance < 0.3) playAnimal('snd-snake');
-            else if (chance > 0.8) playAnimal('snd-tiger');
+            const wind = document.getElementById('snd-wind');
+            const thunder = document.getElementById('snd-thunder');
+            const shots = document.getElementById('snd-shots');
+            const screams = document.getElementById('snd-screams');
+            const prompt = document.getElementById('audio-prompt');
 
-            setTimeout(startAnimalSounds, Math.random() * 10000 + 5000);
+            // --- SEGMENT 1: 0-10s WIND ---
+            prompt.innerText = "SURGING WIND... 🌬️";
+            [thunder, shots, screams].forEach(s => { s.pause(); s.currentTime = 0; });
+            wind.volume = 1.0;
+            wind.play();
+
+            sequenceTimer = setTimeout(() => {
+                if (!audioActive) return;
+
+                // --- SEGMENT 2: 10-20s THUNDER ---
+                prompt.innerText = "STORM AWAKENING... ⛈️";
+                wind.pause();
+                thunder.volume = 1.0;
+                thunder.play();
+                startLightningSegment();
+
+                sequenceTimer = setTimeout(() => {
+                    if (!audioActive) return;
+
+                    // --- SEGMENT 3: 20-30s CHAOS ---
+                    prompt.innerText = "CHAOS ERUPTING... 💀";
+                    thunder.pause();
+                    shots.volume = 1.0;
+                    screams.volume = 0.8;
+                    shots.play();
+                    screams.play();
+
+                    sequenceTimer = setTimeout(() => {
+                        if (!audioActive) return;
+                        startSequence(); // LOOP BACK
+                    }, 10000);
+                }, 10000);
+            }, 10000);
         }
 
-        function startLightning() {
+        let lightningActive = false;
+        function startLightningSegment() {
             if (!audioActive) return;
-            const thunder = document.getElementById('thunder');
-            thunder.classList.add('flash');
-            setTimeout(() => thunder.classList.remove('flash'), 500);
-            setTimeout(startLightning, Math.random() * 12000 + 6000);
+            lightningActive = true;
+            
+            const runLightning = () => {
+                if (!lightningActive || !audioActive) return;
+                const flash = document.getElementById('thunder');
+                flash.classList.add('flash');
+                setTimeout(() => flash.classList.remove('flash'), 500);
+                setTimeout(runLightning, Math.random() * 2000 + 500);
+            };
+            
+            runLightning();
+            setTimeout(() => { lightningActive = false; }, 10000);
         }
 
         function handleGoogleLogin(response) {
