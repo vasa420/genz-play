@@ -185,18 +185,21 @@
         </div>
     </div>
 
-    <!-- Pure Nature Soundscape (No Music) -->
-    <audio id="snd-wind" loop>
-        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_b333a5980b.mp3" type="audio/mpeg">
+    <!-- Pure Nature Soundscape (Improved Sources) -->
+    <audio id="snd-wind" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-insects" loop>
+    <audio id="snd-insects" loop preload="auto">
         <source src="https://cdn.pixabay.com/audio/2022/02/12/audio_ed23769c02.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-snake">
-        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_f5f6da98c8.mp3" type="audio/mpeg">
+    <audio id="snd-leaf" loop preload="auto">
+        <source src="https://cdn.pixabay.com/audio/2021/11/25/audio_e6a57fdb7e.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-tiger">
-        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_6e4c7064d5.mp3" type="audio/mpeg">
+    <audio id="snd-snake" preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="snd-tiger" preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -217,21 +220,30 @@
         function toggleAudio() {
             const wind = document.getElementById('snd-wind');
             const insects = document.getElementById('snd-insects');
+            const leaf = document.getElementById('snd-leaf');
             const prompt = document.getElementById('audio-prompt');
             
             if (!audioActive) {
-                wind.volume = 0.5;
-                insects.volume = 0.2;
-                wind.play();
-                insects.play();
                 audioActive = true;
                 prompt.innerText = "FOREST AWAKENED 🍃";
                 prompt.style.color = "var(--primary)";
-                startAnimalSounds();
-                startLightning();
+
+                // Play all background layers
+                [wind, insects, leaf].forEach(s => {
+                    s.volume = 0.4;
+                    s.play().catch(e => {
+                        console.warn("Audio play blocked for " + s.id, e);
+                        audioActive = false;
+                        prompt.innerText = "Click again to retry...";
+                    });
+                });
+
+                if (audioActive) {
+                    startAnimalSounds();
+                    startLightning();
+                }
             } else {
-                wind.pause();
-                insects.pause();
+                [wind, insects, leaf].forEach(s => s.pause());
                 audioActive = false;
                 prompt.innerText = "FOREST SILENCED 🌑";
                 prompt.style.color = "#555";
