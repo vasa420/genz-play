@@ -219,15 +219,20 @@
         }
 
         async function attemptPlay() {
+            if (!music.paused) return;
             try {
                 await music.play();
-                showStatus('Atmosphere: Active');
                 updateAudioUI();
-            } catch(e) { console.log("Waiting for interaction..."); }
+            } catch(e) { 
+                console.log("Waiting for seamless trigger..."); 
+            }
         }
 
-        window.addEventListener('DOMContentLoaded', attemptPlay);
-        ['click', 'keydown', 'touchstart', 'mousemove'].forEach(evt => {
+        // Try every possible trigger point
+        window.addEventListener('load', attemptPlay);
+        document.addEventListener('mouseenter', attemptPlay);
+        document.addEventListener('mousemove', attemptPlay, { once: true });
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
             window.addEventListener(evt, attemptPlay, { once: true });
         });
 
