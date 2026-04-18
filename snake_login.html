@@ -131,13 +131,6 @@
         #google-login-container { border-radius: 100px; overflow: hidden; transition: 0.3s; }
         #google-login-container:hover { transform: scale(1.05); cursor: pointer; }
 
-        .guest-btn {
-            background: rgba(255,255,255,0.05); color: #888;
-            border: 1px solid var(--border);
-            padding: 18px 50px; border-radius: 100px;
-            font-size: 12px; font-weight: 950; letter-spacing: 3px;
-            text-transform: uppercase; cursor: pointer; transition: 0.3s;
-        }
         .back-btn {
             position: absolute; top: 40px; left: 40px;
             color: #666; font-size: 14px; font-weight: 950;
@@ -145,6 +138,30 @@
             text-transform: uppercase; transition: 0.3s; z-index: 20;
         }
         .back-btn:hover { color: #fff; }
+
+        /* Mute Toggle Styling */
+        .audio-control {
+            position: absolute; top: 40px; right: 40px;
+            z-index: 100; display: flex; align-items: center; gap: 15px;
+        }
+
+        .mute-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: #fff; width: 45px; height: 45px;
+            border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; transition: 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .mute-btn:hover { border-color: var(--primary); transform: scale(1.1); }
+        .mute-btn.muted { color: #ff3333; border-color: rgba(255, 51, 51, 0.3); }
+
+        .audio-status {
+            font-size: 10px; font-weight: 950; letter-spacing: 2px;
+            color: #666; text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -154,6 +171,13 @@
     <div id="blood" class="blood-overlay"></div>
     <div id="splatter" class="blood-splatter"></div>
     <a href="index.html" class="back-btn">← Back to Hub</a>
+
+    <div class="audio-control">
+        <span class="audio-status" id="audio-status">Atmosphere: Ready</span>
+        <button id="mute-btn" class="mute-btn" onclick="toggleAudio()">🔊</button>
+    </div>
+
+    <audio id="bg-music" src="samuelfjohanns-creepy-ambient-7539.mp3" loop></audio>
 
     <div class="login-card">
         <div class="logo" style="font-size: 60px;">🐍</div>
@@ -186,12 +210,53 @@
             setTimeout(() => leaf.remove(), 12000);
         }, 2000);
 
-        // Silent Lightning Visuals
+        // Enhanced Lightning Visuals
         setInterval(() => {
+            if (Math.random() > 0.7) return; 
             const v = document.getElementById('thunder-vis');
             v.classList.add('flash');
-            setTimeout(() => v.classList.remove('flash'), 400);
-        }, 12000);
+            setTimeout(() => v.classList.remove('flash'), 150 + Math.random() * 300);
+        }, 8000);
+
+        // Audio Logic
+        const music = document.getElementById('bg-music');
+        const muteBtn = document.getElementById('mute-btn');
+        const statusText = document.getElementById('audio-status');
+        let isMuted = false;
+
+        function toggleAudio() {
+            if (music.paused) {
+                music.play().catch(e => console.error("Playback failed:", e));
+                isMuted = false;
+            } else {
+                isMuted = !isMuted;
+                music.muted = isMuted;
+            }
+            updateAudioUI();
+        }
+
+        function updateAudioUI() {
+            muteBtn.innerHTML = isMuted ? '🔇' : '🔊';
+            muteBtn.classList.toggle('muted', isMuted);
+            statusText.innerText = isMuted ? 'Atmosphere: Muted' : 'Atmosphere: Active';
+            statusText.style.color = isMuted ? '#ff3333' : '#00f2ff';
+        }
+
+        // Broad interaction trigger to bypass browser blocks
+        ['click', 'keydown', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, () => {
+                if (music.paused && !isMuted) {
+                    music.play().then(() => {
+                        updateAudioUI();
+                    }).catch(e => console.log("Playback blocked:", e));
+                }
+            }, { once: true });
+        });
+
+        music.addEventListener('error', (e) => {
+            statusText.innerText = 'Atmosphere: Error';
+            statusText.style.color = '#ff3333';
+        });
 
         function handleGoogleLogin(response) {
             const payload = decodeJwtResponse(response.credential);

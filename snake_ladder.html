@@ -375,12 +375,11 @@
 
     <div class="arena">
         <div class="top-bar">
-            <button class="top-btn" onclick="resetGame()">Reset</button>
-            <div style="width: 1px; height: 10px; background: #333;"></div>
             <button class="top-btn" onclick="toggleView()">Switch View</button>
             <div style="width: 1px; height: 10px; background: #333;"></div>
-            <button class="top-btn">Multiplayer</button>
+            <button class="top-btn" id="mute-btn" onclick="toggleAudio()" style="color: var(--primary);">🔊 MUSIC</button>
         </div>
+        <audio id="bg-music" src="samuelfjohanns-creepy-ambient-7539.mp3" loop></audio>
 
         <div class="board-container" id="board-container">
             <div class="board" id="board">
@@ -427,6 +426,31 @@
     </div>
 
     <script>
+        // Audio Logic
+        const music = document.getElementById('bg-music');
+        const muteBtn = document.getElementById('mute-btn');
+        let isMuted = false;
+
+        function toggleAudio() {
+            if (music.paused) {
+                music.play().catch(e => console.log("Init play"));
+                isMuted = false;
+            } else {
+                isMuted = !isMuted;
+                music.muted = isMuted;
+            }
+            muteBtn.innerHTML = isMuted ? '🔇 MUTED' : '🔊 MUSIC';
+            muteBtn.style.color = isMuted ? '#ff3333' : 'var(--primary)';
+        }
+
+        ['click', 'keydown', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, () => {
+                if (music.paused && !isMuted) {
+                    music.play().catch(e => console.log("Blocked"));
+                }
+            }, { once: true });
+        });
+
         const boardSize = 10;
         const totalSquares = boardSize * boardSize;
         let currentPlayer = 1;
