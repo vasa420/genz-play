@@ -21,24 +21,39 @@
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* Gatekeeper Overlay (To fix browser audio block) */
+        #gatekeeper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #gatekeeper button {
+            background: none; border: 2px solid var(--primary); color: #fff;
+            padding: 25px 60px; font-size: 20px; font-weight: 950; letter-spacing: 10px;
+            text-transform: uppercase; cursor: pointer; border-radius: 100px;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.3); transition: 0.4s;
+            margin-top: 30px;
+        }
+        #gatekeeper button:hover { background: var(--primary); color: #000; transform: scale(1.1); box-shadow: 0 0 80px var(--primary); }
+
         .bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url('snake_login_bg.png') center/cover no-repeat;
             filter: brightness(0.5) contrast(1.1);
             z-index: 1;
-            animation: treeSway 10s infinite alternate ease-in-out;
+            animation: treeSway 20s infinite alternate ease-in-out;
         }
 
         @keyframes treeSway {
             from { transform: scale(1.05) rotate(0deg); }
-            to { transform: scale(1.1) rotate(1deg); }
+            to { transform: scale(1.15) rotate(1deg); }
         }
 
-        /* Rain Overlay */
         .rain {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://raw.githubusercontent.com/Anand-Subramanian/Rainy-Effect/master/rain.png');
-            opacity: 0.2; z-index: 2; pointer-events: none;
+            opacity: 0.15; z-index: 2; pointer-events: none;
             animation: rainMove 0.5s linear infinite;
         }
 
@@ -47,7 +62,6 @@
             to { background-position: 50px 500px; }
         }
 
-        /* Lightning Flash */
         .thunder {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0); z-index: 3; pointer-events: none;
@@ -61,109 +75,102 @@
             100% { background: rgba(255,255,255,0); }
         }
 
-        .login-card {
-            position: relative;
-            z-index: 10;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 40px;
-            padding: 60px;
-            width: 90%; max-width: 450px;
-            text-align: center;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-            transform: translateY(0);
-            animation: float 4s infinite ease-in-out, flicker 10s infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* Ghostly Flicker */
-        @keyframes flicker {
-            0%, 100% { opacity: 1; filter: brightness(1); }
-            5% { opacity: 0.8; filter: brightness(0.8); }
-            10% { opacity: 0.9; filter: brightness(1.2); }
-            15% { opacity: 0.7; filter: brightness(0.7); }
-            20% { opacity: 1; filter: brightness(1); }
-            80% { opacity: 1; filter: brightness(1); }
-            85% { opacity: 0.9; filter: brightness(0.8); }
-            90% { opacity: 0.8; filter: brightness(1.5); }
-        }
-
-        /* Falling Leaves */
         .leaf {
-            position: fixed; width: 15px; height: 15px;
+            position: fixed; width: 12px; height: 12px;
             background: #4a5d23; border-radius: 0 10px;
-            z-index: 5; pointer-events: none;
-            opacity: 0.6;
-            animation: leafFall 10s linear infinite;
+            z-index: 5; pointer-events: none; opacity: 0.6;
+            animation: leafFall 12s linear infinite;
         }
 
         @keyframes leafFall {
             0% { transform: translate(0, -10vh) rotate(0deg); opacity: 0; }
             10% { opacity: 0.6; }
             90% { opacity: 0.6; }
-            100% { transform: translate(100px, 110vh) rotate(360deg); opacity: 0; }
+            100% { transform: translate(150px, 110vh) rotate(540deg); opacity: 0; }
         }
 
-        .logo { font-size: 60px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--primary)); }
-
-        h1 {
-            color: #fff; font-size: 32px; font-weight: 950;
-            letter-spacing: 5px; text-transform: uppercase;
-            margin-bottom: 10px;
+        .login-card {
+            position: relative; z-index: 10;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 70px;
+            width: 90%; max-width: 480px;
+            text-align: center;
+            box-shadow: 0 50px 120px rgba(0,0,0,0.9);
+            animation: float 5s infinite ease-in-out, flicker 15s infinite;
         }
 
-        p { color: #888; font-size: 11px; letter-spacing: 3px; margin-bottom: 50px; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; filter: brightness(1); }
+            5% { opacity: 0.9; filter: brightness(0.8); }
+            10% { opacity: 1; filter: brightness(1.2); }
+            15% { opacity: 0.8; filter: brightness(0.7); }
+            80% { opacity: 1; filter: brightness(1); }
+        }
+
+        .logo { font-size: 80px; margin-bottom: 25px; filter: drop-shadow(0 0 20px var(--primary)); }
+        h1 { color: #fff; font-size: 38px; font-weight: 950; letter-spacing: 8px; text-transform: uppercase; margin-bottom: 15px; }
+        p { color: #888; font-size: 12px; letter-spacing: 4px; margin-bottom: 50px; }
 
         .google-btn-wrapper {
             margin: 0 auto; width: fit-content;
             padding: 2px; border-radius: 100px;
             background: linear-gradient(45deg, var(--primary), var(--accent));
-            box-shadow: 0 10px 30px rgba(0, 242, 255, 0.2);
-            margin-bottom: 20px;
+            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.3);
+            margin-bottom: 25px;
         }
 
-        #google-login-container {
-            border-radius: 100px; overflow: hidden;
-            transition: 0.3s;
-        }
-
+        #google-login-container { border-radius: 100px; overflow: hidden; transition: 0.3s; }
         #google-login-container:hover { transform: scale(1.05); cursor: pointer; }
 
         .guest-btn {
             background: rgba(255,255,255,0.05); color: #888;
             border: 1px solid var(--border);
-            padding: 15px 40px; border-radius: 100px;
-            font-size: 11px; font-weight: 900; letter-spacing: 2px;
+            padding: 18px 50px; border-radius: 100px;
+            font-size: 12px; font-weight: 950; letter-spacing: 3px;
             text-transform: uppercase; cursor: pointer; transition: 0.3s;
         }
+        .guest-btn:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: #fff; }
 
-        .guest-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: #fff; }
+        .status-text {
+            margin-top: 40px; font-size: 10px; color: #555; font-weight: 950;
+            letter-spacing: 3px; text-transform: uppercase; transition: 0.5s;
+        }
 
         .back-btn {
             position: absolute; top: 40px; left: 40px;
-            color: #666; font-size: 12px; font-weight: 950;
-            letter-spacing: 2px; text-decoration: none;
-            text-transform: uppercase; transition: 0.3s;
+            color: #666; font-size: 14px; font-weight: 950;
+            letter-spacing: 3px; text-decoration: none;
+            text-transform: uppercase; transition: 0.3s; z-index: 20;
         }
-
         .back-btn:hover { color: #fff; }
     </style>
 </head>
 <body>
+    <!-- Gatekeeper: Forces a powerful browser interaction -->
+    <div id="gatekeeper">
+        <div class="logo">🐍</div>
+        <h1>SNAKE REALM</h1>
+        <button onclick="unlockRealm()">ENTER THE ARENA</button>
+        <p style="margin-top: 30px; opacity: 0.5;">PREPARING SONIC LAYERS</p>
+    </div>
+
     <div class="bg"></div>
     <div class="rain"></div>
-    <div id="thunder" class="thunder"></div>
+    <div id="thunder-vis" class="thunder"></div>
     <a href="index.html" class="back-btn">← Back to Hub</a>
 
     <div class="login-card">
-        <div class="logo" id="snake-logo">🐍</div>
-        <h1>Snake Realm</h1>
-        <p>Tactical Arena Access</p>
+        <div class="logo">🐍</div>
+        <h1>SNAKE REALM</h1>
+        <p>TACTICAL ACCESS ARENA</p>
 
         <div class="google-btn-wrapper">
             <div id="google-login-container">
@@ -179,134 +186,104 @@
         </div>
 
         <button class="guest-btn" onclick="enterAsGuest()">Enter as Guest</button>
-        
-        <div id="audio-prompt" style="margin-top: 30px; font-size: 10px; color: #555; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;" onclick="toggleAudio()">
-            Click to Wake the Forest 🌲
-        </div>
+        <div id="status" class="status-text">SONIC REALM INITIALIZING...</div>
     </div>
 
-    <!-- Sequenced Horror Soundscape (High-Stability Sources) -->
+    <!-- Master Soundscape Controller -->
     <audio id="snd-wind" loop preload="auto" crossorigin="anonymous">
         <source src="https://audio-samples.github.io/samples/mp3/wind/wind-1.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-thunder" preload="auto" crossorigin="anonymous">
         <source src="https://audio-samples.github.io/samples/mp3/storm/storm-1.mp3" type="audio/mpeg">
     </audio>
-    <audio id="snd-shots" preload="auto" crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_7313a29410.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="snd-screams" preload="auto" crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_291a89c362.mp3" type="audio/mpeg">
+    <audio id="snd-chaos" preload="auto" crossorigin="anonymous">
+        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/gunshot.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        // Leaf Creation (Always active)
-        function createLeaf() {
+        let audioActive = false;
+        let masterTimer = null;
+
+        function unlockRealm() {
+            // This click satisfies browser audio policies
+            const gk = document.getElementById('gatekeeper');
+            gk.style.opacity = '0';
+            setTimeout(() => {
+                gk.style.display = 'none';
+                audioActive = true;
+                startLogicLoop();
+            }, 1000);
+        }
+
+        // Always running visual
+        setInterval(() => {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
             leaf.style.left = Math.random() * 100 + 'vw';
-            leaf.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            leaf.style.animationDuration = (Math.random() * 5 + 7) + 's';
             leaf.style.background = `hsl(${Math.random() * 40 + 80}, 40%, 30%)`;
             document.body.appendChild(leaf);
-            setTimeout(() => leaf.remove(), 10000);
-        }
-        setInterval(createLeaf, 2000);
+            setTimeout(() => leaf.remove(), 12000);
+        }, 1500);
 
-        let audioActive = false;
-        let sequenceTimer = null;
-        
-        function toggleAudio() {
-            const prompt = document.getElementById('audio-prompt');
-            
-            if (!audioActive) {
-                audioActive = true;
-                prompt.innerText = "PREPARING REALM... ⌛";
-                prompt.style.color = "var(--primary)";
-                startSequence();
-            } else {
-                audioActive = false;
-                clearTimeout(sequenceTimer);
-                document.querySelectorAll('audio').forEach(s => s.pause());
-                prompt.innerText = "REALM SILENCED ❄️";
-                prompt.style.color = "#555";
-            }
+        function playSafe(id, vol = 1.0) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.volume = vol;
+            el.currentTime = 0;
+            const p = el.play();
+            if (p) p.catch(() => console.log("Blocked: " + id));
         }
 
-        function playSafe(el) {
-            el.volume = 1.0;
-            const playPromise = el.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    // Success: Clear any previous error message
-                    if (document.getElementById('audio-prompt').innerText.includes("ERROR")) {
-                        document.getElementById('audio-prompt').innerText = "AUDIO RESTORED ✅";
-                    }
-                }).catch(e => {
-                    console.warn("Playback failed for " + el.id, e);
-                    document.getElementById('audio-prompt').innerText = "ERROR: CLICK TO RETRY ⚠️";
-                });
-            }
+        function stopSafe(id) {
+            const el = document.getElementById(id);
+            if (el) el.pause();
         }
 
-        function startSequence() {
+        function startLogicLoop() {
             if (!audioActive) return;
+            const status = document.getElementById('status');
             
-            const wind = document.getElementById('snd-wind');
-            const thunder = document.getElementById('snd-thunder');
-            const shots = document.getElementById('snd-shots');
-            const screams = document.getElementById('snd-screams');
-            const prompt = document.getElementById('audio-prompt');
+            // --- SEGMENT 1: 0-10s WIND ---
+            status.innerText = "[ 0-10s ] HEAVY WIND... 🌬️";
+            status.style.color = "var(--primary)";
+            stopSafe('snd-thunder');
+            stopSafe('snd-chaos');
+            playSafe('snd-wind', 1.0);
 
-            // --- SEGMENT 1: WIND ---
-            prompt.innerText = "[ 0-10s ] HEAVY WIND... 🌬️";
-            [thunder, shots, screams].forEach(s => { s.pause(); s.currentTime = 0; });
-            wind.volume = 1.0;
-            playSafe(wind);
-
-            sequenceTimer = setTimeout(() => {
+            masterTimer = setTimeout(() => {
                 if (!audioActive) return;
 
-                // --- SEGMENT 2: THUNDER ---
-                prompt.innerText = "[ 10-20s ] THUNDERSTORM... ⛈️";
-                wind.pause();
-                thunder.volume = 1.0;
-                playSafe(thunder);
-                startLightningSegment();
+                // --- SEGMENT 2: 10-20s THUNDER ---
+                status.innerText = "[ 10-20s ] THUNDERSTORM... ⛈️";
+                stopSafe('snd-wind');
+                playSafe('snd-thunder', 1.0);
+                startLightningVis();
 
-                sequenceTimer = setTimeout(() => {
+                masterTimer = setTimeout(() => {
                     if (!audioActive) return;
 
-                    // --- SEGMENT 3: CHAOS ---
-                    prompt.innerText = "[ 20-30s ] CHAOS... 💀";
-                    thunder.pause();
-                    shots.volume = 1.0;
-                    screams.volume = 0.8;
-                    playSafe(shots);
-                    playSafe(screams);
+                    // --- SEGMENT 3: 20-30s CHAOS ---
+                    status.innerText = "[ 20-30s ] CHAOS ERUPTS... 💀";
+                    stopSafe('snd-thunder');
+                    playSafe('snd-chaos', 1.0);
 
-                    sequenceTimer = setTimeout(() => {
-                        if (!audioActive) return;
-                        startSequence(); // LOOP BACK
+                    masterTimer = setTimeout(() => {
+                        if (audioActive) startLogicLoop(); // Loop back
                     }, 10000);
                 }, 10000);
             }, 10000);
         }
 
-        let lightningActive = false;
-        function startLightningSegment() {
-            if (!audioActive) return;
-            lightningActive = true;
-            
-            const runLightning = () => {
-                if (!lightningActive || !audioActive) return;
-                const flash = document.getElementById('thunder');
-                flash.classList.add('flash');
-                setTimeout(() => flash.classList.remove('flash'), 500);
-                setTimeout(runLightning, Math.random() * 2000 + 500);
-            };
-            
-            runLightning();
-            setTimeout(() => { lightningActive = false; }, 10000);
+        function startLightningVis() {
+            let count = 0;
+            const i = setInterval(() => {
+                const v = document.getElementById('thunder-vis');
+                v.classList.add('flash');
+                setTimeout(() => v.classList.remove('flash'), 400);
+                count++;
+                if (count > 4 || !audioActive) clearInterval(i);
+            }, 2000);
         }
 
         function handleGoogleLogin(response) {
@@ -331,6 +308,7 @@
         }
 
         function enterGame() {
+            audioActive = false; // Stop audio before leave
             window.location.href = 'snake_ladder.html';
         }
     </script>
