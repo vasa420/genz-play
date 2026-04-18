@@ -228,11 +228,24 @@
             window.statusTimer = setTimeout(() => { statusText.style.opacity = '0'; }, 3000);
         }
 
-        ['click', 'keydown', 'touchstart'].forEach(evt => {
+        // Attempt automatic playback
+        function attemptAutoPlay() {
+            if (music.paused && !isMuted) {
+                music.play().then(() => {
+                    showStatus('Atmosphere: Active');
+                    updateAudioUI();
+                }).catch(e => {
+                    console.log("Auto-play blocked, waiting for interaction");
+                });
+            }
+        }
+
+        // Run on load and on any interaction
+        window.addEventListener('DOMContentLoaded', attemptAutoPlay);
+        
+        ['click', 'keydown', 'touchstart', 'mousemove'].forEach(evt => {
             window.addEventListener(evt, () => {
-                if (music.paused && !isMuted) {
-                    music.play().then(() => showStatus('Atmosphere: Active')).catch(e => console.log("Blocked"));
-                }
+                attemptAutoPlay();
             }, { once: true });
         });
 
