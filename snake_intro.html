@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAKE REALM | ENTERING THE STORM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .bg-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('snake_intro_bg.png') center/cover no-repeat;
+            filter: brightness(0.7) contrast(1.2);
+            animation: kenBurns 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes kenBurns {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        /* Thunder Flash */
+        .thunder-flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; z-index: 10;
+            pointer-events: none;
+        }
+
+        .flash-anim { animation: lightning 0.5s ease-out; }
+
+        @keyframes lightning {
+            0% { opacity: 0; }
+            10% { opacity: 0.8; }
+            30% { opacity: 0.1; }
+            40% { opacity: 0.5; }
+            100% { opacity: 0; }
+        }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+            z-index: 5;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .game-title {
+            font-size: 80px; color: #fff; letter-spacing: 20px;
+            text-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+            margin-bottom: 50px; opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1s forwards 0.5s;
+        }
+
+        .loading-container {
+            width: 300px; height: 4px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; overflow: hidden; position: relative;
+        }
+
+        .loading-bar {
+            width: 0%; height: 100%; background: #00f2ff;
+            box-shadow: 0 0 15px #00f2ff;
+            transition: width 10s linear;
+        }
+
+        .status-text {
+            color: #888; font-size: 12px; letter-spacing: 5px;
+            margin-top: 20px; font-weight: 300; text-transform: uppercase;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Rain and clouds */
+        .rain-surface {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://cdn.pixabay.com/photo/2016/11/29/03/42/rain-1867131_1280.jpg') repeat;
+            opacity: 0.1; pointer-events: none; mix-blend-mode: screen;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container"></div>
+    <div class="thunder-flash" id="flash"></div>
+    <div class="rain-surface"></div>
+
+    <div class="overlay">
+        <h1 class="game-title">SNAKE REALM</h1>
+        <div class="loading-container">
+            <div class="loading-bar" id="bar"></div>
+        </div>
+        <p class="status-text" id="status">Summoning the arena...</p>
+    </div>
+
+    <script>
+        const bar = document.getElementById('bar');
+        const status = document.getElementById('status');
+        const flash = document.getElementById('flash');
+
+        const messages = [
+            "Summoning the arena...",
+            "Awakening the serpents...",
+            "Forging golden ladders...",
+            "Channeling the storm...",
+            "Synchronizing realm data..."
+        ];
+
+        let msgIdx = 0;
+        setInterval(() => {
+            msgIdx = (msgIdx + 1) % messages.length;
+            status.innerText = messages[msgIdx];
+        }, 2000);
+
+        // Thunder effect
+        function triggerLightning() {
+            flash.classList.add('flash-anim');
+            setTimeout(() => flash.classList.remove('flash-anim'), 500);
+            setTimeout(triggerLightning, Math.random() * 5000 + 2000);
+        }
+
+        window.onload = () => {
+            setTimeout(() => { bar.style.width = '100%'; }, 100);
+            triggerLightning();
+            
+            // Redirect after 10 seconds
+            setTimeout(() => {
+                window.location.href = 'snake_login.html';
+            }, 10500);
+        };
+    </script>
+</body>
+</html>
