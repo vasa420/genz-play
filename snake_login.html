@@ -113,9 +113,34 @@
         </div>
 
         <button class="guest-btn" onclick="enterAsGuest()">Enter as Guest</button>
+        
+        <div id="audio-prompt" style="margin-top: 30px; font-size: 10px; color: #555; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;" onclick="toggleMusic()">
+            Click to Enable Spooky Audio 🔊
+        </div>
     </div>
 
+    <!-- Spooky Background Music -->
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
+        let musicStarted = false;
+        function toggleMusic() {
+            const music = document.getElementById('bg-music');
+            const prompt = document.getElementById('audio-prompt');
+            if (!musicStarted) {
+                music.play();
+                musicStarted = true;
+                prompt.innerText = "Audio Enabled 🔉";
+                prompt.style.color = "var(--primary)";
+            } else {
+                music.pause();
+                musicStarted = false;
+                prompt.innerText = "Audio Muted 🔇";
+                prompt.style.color = "#555";
+            }
+        }
         function handleGoogleLogin(response) {
             const payload = decodeJwtResponse(response.credential);
             localStorage.setItem('playerName', payload.name);
