@@ -26,6 +26,39 @@
             background: url('snake_login_bg.png') center/cover no-repeat;
             filter: brightness(0.5) contrast(1.1);
             z-index: 1;
+            animation: treeSway 10s infinite alternate ease-in-out;
+        }
+
+        @keyframes treeSway {
+            from { transform: scale(1.05) rotate(0deg); }
+            to { transform: scale(1.1) rotate(1deg); }
+        }
+
+        /* Rain Overlay */
+        .rain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://raw.githubusercontent.com/Anand-Subramanian/Rainy-Effect/master/rain.png');
+            opacity: 0.2; z-index: 2; pointer-events: none;
+            animation: rainMove 0.5s linear infinite;
+        }
+
+        @keyframes rainMove {
+            from { background-position: 0 0; }
+            to { background-position: 50px 500px; }
+        }
+
+        /* Lightning Flash */
+        .thunder {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0); z-index: 3; pointer-events: none;
+        }
+
+        .flash { animation: lightningFlash 0.4s ease-out; }
+
+        @keyframes lightningFlash {
+            0% { background: rgba(255,255,255,0); }
+            10% { background: rgba(255,255,255,0.4); }
+            100% { background: rgba(255,255,255,0); }
         }
 
         .login-card {
@@ -107,6 +140,8 @@
 </head>
 <body>
     <div class="bg"></div>
+    <div class="rain"></div>
+    <div id="thunder" class="thunder"></div>
     <a href="index.html" class="back-btn">← Back to Hub</a>
 
     <div class="login-card">
@@ -130,13 +165,13 @@
         <button class="guest-btn" onclick="enterAsGuest()">Enter as Guest</button>
         
         <div id="audio-prompt" style="margin-top: 30px; font-size: 10px; color: #555; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;" onclick="toggleMusic()">
-            Click to Enable Spooky Audio 🔊
+            Click to Enable Jungle Storm ⛈️
         </div>
     </div>
 
-    <!-- Intensified Thriller/Ghost Music -->
+    <!-- Atmospheric Jungle Storm Music -->
     <audio id="bg-music" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -147,15 +182,25 @@
             if (!musicStarted) {
                 music.play();
                 musicStarted = true;
-                prompt.innerText = "Audio Enabled 🔉";
+                prompt.innerText = "Storm Active 🌬️";
                 prompt.style.color = "var(--primary)";
+                startLightning();
             } else {
                 music.pause();
                 musicStarted = false;
-                prompt.innerText = "Audio Muted 🔇";
+                prompt.innerText = "Storm Muted 🔇";
                 prompt.style.color = "#555";
             }
         }
+
+        function startLightning() {
+            if (!musicStarted) return;
+            const thunder = document.getElementById('thunder');
+            thunder.classList.add('flash');
+            setTimeout(() => thunder.classList.remove('flash'), 500);
+            setTimeout(startLightning, Math.random() * 8000 + 4000);
+        }
+
         function handleGoogleLogin(response) {
             const payload = decodeJwtResponse(response.credential);
             localStorage.setItem('playerName', payload.name);
