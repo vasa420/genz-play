@@ -185,18 +185,18 @@
         </div>
     </div>
 
-    <!-- Sequenced Horror Soundscape (Absolutely No Instruments) -->
+    <!-- Sequenced Horror Soundscape (Improved Stable Sources) -->
     <audio id="snd-wind" loop preload="auto" crossorigin="anonymous">
         <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/wind.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-thunder" preload="auto" crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_b333a5980b.mp3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/thunder.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-shots" preload="auto" crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_7313a29410.mp3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/gunshot.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-screams" preload="auto" crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_291a89c362.mp3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/scream.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -216,24 +216,27 @@
         let sequenceTimer = null;
         
         function toggleAudio() {
-            const wind = document.getElementById('snd-wind');
-            const thunder = document.getElementById('snd-thunder');
-            const shots = document.getElementById('snd-shots');
-            const screams = document.getElementById('snd-screams');
             const prompt = document.getElementById('audio-prompt');
             
             if (!audioActive) {
                 audioActive = true;
-                prompt.innerText = "SEQUENCING HORROR... 🌑";
+                prompt.innerText = "PREPARING REALM... ⌛";
                 prompt.style.color = "var(--primary)";
                 startSequence();
             } else {
                 audioActive = false;
                 clearTimeout(sequenceTimer);
-                [wind, thunder, shots, screams].forEach(s => s.pause());
+                document.querySelectorAll('audio').forEach(s => s.pause());
                 prompt.innerText = "REALM SILENCED ❄️";
                 prompt.style.color = "#555";
             }
+        }
+
+        function playSafe(el) {
+            return el.play().catch(e => {
+                console.warn("Playback failed for " + el.id, e);
+                document.getElementById('audio-prompt').innerText = "ERROR: CLICK TO RETRY ⚠️";
+            });
         }
 
         function startSequence() {
@@ -245,32 +248,32 @@
             const screams = document.getElementById('snd-screams');
             const prompt = document.getElementById('audio-prompt');
 
-            // --- SEGMENT 1: 0-10s WIND ---
-            prompt.innerText = "SURGING WIND... 🌬️";
+            // --- SEGMENT 1: WIND ---
+            prompt.innerText = "[ 0-10s ] HEAVY WIND... 🌬️";
             [thunder, shots, screams].forEach(s => { s.pause(); s.currentTime = 0; });
             wind.volume = 1.0;
-            wind.play();
+            playSafe(wind);
 
             sequenceTimer = setTimeout(() => {
                 if (!audioActive) return;
 
-                // --- SEGMENT 2: 10-20s THUNDER ---
-                prompt.innerText = "STORM AWAKENING... ⛈️";
+                // --- SEGMENT 2: THUNDER ---
+                prompt.innerText = "[ 10-20s ] THUNDERSTORM... ⛈️";
                 wind.pause();
                 thunder.volume = 1.0;
-                thunder.play();
+                playSafe(thunder);
                 startLightningSegment();
 
                 sequenceTimer = setTimeout(() => {
                     if (!audioActive) return;
 
-                    // --- SEGMENT 3: 20-30s CHAOS ---
-                    prompt.innerText = "CHAOS ERUPTING... 💀";
+                    // --- SEGMENT 3: CHAOS ---
+                    prompt.innerText = "[ 20-30s ] CHAOS... 💀";
                     thunder.pause();
                     shots.volume = 1.0;
                     screams.volume = 0.8;
-                    shots.play();
-                    screams.play();
+                    playSafe(shots);
+                    playSafe(screams);
 
                     sequenceTimer = setTimeout(() => {
                         if (!audioActive) return;
