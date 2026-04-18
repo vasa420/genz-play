@@ -185,18 +185,18 @@
         </div>
     </div>
 
-    <!-- Sequenced Horror Soundscape (Improved Stable Sources) -->
+    <!-- Sequenced Horror Soundscape (High-Stability Sources) -->
     <audio id="snd-wind" loop preload="auto" crossorigin="anonymous">
-        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/wind.mp3" type="audio/mpeg">
+        <source src="https://audio-samples.github.io/samples/mp3/wind/wind-1.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-thunder" preload="auto" crossorigin="anonymous">
-        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/thunder.mp3" type="audio/mpeg">
+        <source src="https://audio-samples.github.io/samples/mp3/storm/storm-1.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-shots" preload="auto" crossorigin="anonymous">
-        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/gunshot.mp3" type="audio/mpeg">
+        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_7313a29410.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-screams" preload="auto" crossorigin="anonymous">
-        <source src="https://raw.githubusercontent.com/rafael-p-l/horror-music/main/scream.mp3" type="audio/mpeg">
+        <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_291a89c362.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -233,10 +233,19 @@
         }
 
         function playSafe(el) {
-            return el.play().catch(e => {
-                console.warn("Playback failed for " + el.id, e);
-                document.getElementById('audio-prompt').innerText = "ERROR: CLICK TO RETRY ⚠️";
-            });
+            el.volume = 1.0;
+            const playPromise = el.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Success: Clear any previous error message
+                    if (document.getElementById('audio-prompt').innerText.includes("ERROR")) {
+                        document.getElementById('audio-prompt').innerText = "AUDIO RESTORED ✅";
+                    }
+                }).catch(e => {
+                    console.warn("Playback failed for " + el.id, e);
+                    document.getElementById('audio-prompt').innerText = "ERROR: CLICK TO RETRY ⚠️";
+                });
+            }
         }
 
         function startSequence() {
