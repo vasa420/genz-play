@@ -34,7 +34,6 @@
             background: radial-gradient(circle at center, #111 0%, #000 100%);
         }
 
-        /* Ambient Background Elements */
         #bg-canvas {
             position: fixed;
             top: 0; left: 0;
@@ -52,7 +51,6 @@
             pointer-events: none;
         }
 
-        /* Sidebar UI */
         .sidebar {
             width: 350px;
             background: rgba(10, 10, 10, 0.8);
@@ -143,7 +141,6 @@
             animation: fadeIn 0.3s forwards;
         }
 
-        /* Main Game Arena */
         .arena {
             flex: 1;
             position: relative;
@@ -188,7 +185,6 @@
         .cell-light { background: #151515; }
         .cell-dark { background: #0d0d0d; }
 
-        /* Snakes and Ladders Visuals (SVG Overlay) */
         #game-overlay {
             position: absolute;
             top: 0; left: 0;
@@ -197,7 +193,6 @@
             z-index: 10;
         }
 
-        /* Interactive Elements */
         .controls {
             position: absolute;
             bottom: 40px;
@@ -247,18 +242,12 @@
 
         .dot { width: 10px; height: 10px; background: #222; border-radius: 50%; justify-self: center; align-self: center; }
 
-        /* Rotate Sides */
         .face-1 { transform: translateZ(30px); }
         .face-2 { transform: rotateY(180deg) translateZ(30px); }
         .face-3 { transform: rotateY(90deg) translateZ(30px); }
         .face-4 { transform: rotateY(-90deg) translateZ(30px); }
         .face-5 { transform: rotateX(90deg) translateZ(30px); }
         .face-6 { transform: rotateX(-90deg) translateZ(30px); }
-
-        /* Dot Mapping */
-        .face-1 .dot { grid-area: 2/2; }
-        .face-2 .dot:nth-child(1) { grid-area: 1/1; } .face-2 .dot:nth-child(2) { grid-area: 3/3; }
-        /* ... more faces ... */
 
         .token {
             position: absolute;
@@ -271,26 +260,9 @@
             transform-style: preserve-3d;
         }
 
-        .token::after {
-            content: '';
-            width: 70%; height: 70%;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-        }
-
         .token.p1 { background: linear-gradient(135deg, var(--primary), #00aaff); border: 2px solid #fff; }
         .token.p2 { background: linear-gradient(135deg, var(--accent), #ff00ff); border: 2px solid #fff; }
 
-        .token-glow {
-            position: absolute;
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            filter: blur(10px);
-            opacity: 0.5;
-            z-index: -1;
-        }
-
-        /* Top Bar */
         .top-bar {
             position: absolute;
             top: 40px;
@@ -307,24 +279,6 @@
             z-index: 200;
         }
 
-        /* Ghost Mute Button for Arena */
-        .mute-btn-ghost {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.05);
-            color: #444;
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s;
-            font-size: 13px;
-        }
-        .mute-btn-ghost:hover { 
-            border-color: var(--primary); color: var(--primary);
-            background: rgba(0, 242, 255, 0.05);
-            opacity: 1;
-        }
-        .mute-btn-ghost.muted { color: #ff3333; border-color: #ff3333; opacity: 0.6; }
-
         .top-btn {
             background: transparent;
             border: none;
@@ -340,19 +294,10 @@
         .top-btn:hover { color: #fff; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .dice-rolling { animation: roll 0.2s linear infinite; }
         @keyframes roll {
             0% { transform: rotateX(0deg) rotateY(0deg); }
             100% { transform: rotateX(360deg) rotateY(360deg); }
-        }
-
-        /* Responsive */
-        @media (max-width: 1000px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-            .arena { height: 100%; overflow: hidden; }
-            .board-container { transform: scale(0.8) rotateX(20deg); }
         }
     </style>
 </head>
@@ -393,24 +338,18 @@
 
     <div class="arena">
         <div class="top-bar">
+            <button class="top-btn" onclick="resetGame()">Reset</button>
+            <div style="width: 1px; height: 10px; background: #333;"></div>
             <button class="top-btn" onclick="toggleView()">Switch View</button>
             <div style="width: 1px; height: 10px; background: #333;"></div>
-            <button class="mute-btn-ghost" id="mute-btn" onclick="toggleAudio()" title="Atmosphere">🔊</button>
+            <button class="top-btn">Multiplayer</button>
         </div>
-        <audio id="bg-music" src="samuelfjohanns-creepy-ambient-7539.mp3" loop></audio>
 
         <div class="board-container" id="board-container">
-            <div class="board" id="board">
-                <!-- Cells will be generated here -->
-            </div>
+            <div class="board" id="board"></div>
             <svg id="game-overlay"></svg>
-            
-            <div id="p1-token" class="token p1">
-                <div class="token-glow" style="background: var(--primary);"></div>
-            </div>
-            <div id="p2-token" class="token p2">
-                <div class="token-glow" style="background: var(--accent);"></div>
-            </div>
+            <div id="p1-token" class="token p1"></div>
+            <div id="p2-token" class="token p2"></div>
         </div>
 
         <div class="controls">
@@ -420,55 +359,18 @@
             </div>
             <div class="dice-outer" id="dice-btn">
                 <div class="dice-inner" id="dice-cube">
-                    <div class="dice-face face-1">
-                        <div class="dot"></div>
-                    </div>
-                    <div class="dice-face face-2">
-                        <div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="dice-face face-3">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="dice-face face-4">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="dice-face face-5">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
-                    <div class="dice-face face-6">
-                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    </div>
+                    <div class="dice-face face-1"><div class="dot"></div></div>
+                    <div class="dice-face face-2"><div class="dot"></div><div class="dot"></div></div>
+                    <div class="dice-face face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="dice-face face-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="dice-face face-5"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="dice-face face-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Audio Logic
-        const music = document.getElementById('bg-music');
-        const muteBtn = document.getElementById('mute-btn');
-        let isMuted = false;
-
-        function toggleAudio() {
-            if (music.paused) {
-                music.play().catch(e => console.log("Init play"));
-                isMuted = false;
-            } else {
-                isMuted = !isMuted;
-                music.muted = isMuted;
-            }
-            muteBtn.innerHTML = isMuted ? '🔇 Muted' : '🔊 Music On';
-            muteBtn.classList.toggle('muted', isMuted);
-        }
-
-        ['click', 'keydown', 'touchstart'].forEach(evt => {
-            window.addEventListener(evt, () => {
-                if (music.paused && !isMuted) {
-                    music.play().catch(e => console.log("Blocked"));
-                }
-            }, { once: true });
-        });
-
         const boardSize = 10;
         const totalSquares = boardSize * boardSize;
         let currentPlayer = 1;
@@ -476,40 +378,25 @@
         let isMoving = false;
         let isGameOver = false;
 
-        const snakes = {
-            17: 7, 54: 34, 62: 18, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78
-        };
-        const ladders = {
-            4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91
-        };
+        const snakes = { 17: 7, 54: 34, 62: 18, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+        const ladders = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
 
-        // Initialize Board
         function initBoard() {
             const board = document.getElementById('board');
             board.innerHTML = '';
-            
-            // Generate cells in zigzag order
             for (let r = boardSize - 1; r >= 0; r--) {
                 for (let c = 0; c < boardSize; c++) {
                     let col = (r % 2 === 0) ? (boardSize - 1 - c) : c;
                     let num = (r * boardSize) + col + 1;
-                    
                     const cell = document.createElement('div');
                     cell.className = `cell ${(r + c) % 2 === 0 ? 'cell-light' : 'cell-dark'}`;
                     cell.id = `cell-${num}`;
                     cell.innerHTML = `<span>${num}</span>`;
-                    
-                    if (snakes[num]) cell.style.boxShadow = 'inset 0 0 10px rgba(255,0,0,0.2)';
-                    if (ladders[num]) cell.style.boxShadow = 'inset 0 0 10px rgba(0,255,0,0.2)';
-                    
                     board.appendChild(cell);
                 }
             }
-            
             drawConnections();
             updateTokenPositions(true);
-
-            // Sync Guest Name
             const name = localStorage.getItem('playerName') || 'GUEST';
             document.getElementById('p1-name').innerText = name.toUpperCase();
         }
@@ -517,45 +404,27 @@
         function drawConnections() {
             const svg = document.getElementById('game-overlay');
             svg.innerHTML = '';
-            
-            // Draw Snakes
-            Object.keys(snakes).forEach(start => {
-                drawPath(start, snakes[start], '#ff3333', true);
-            });
-            
-            // Draw Ladders
-            Object.keys(ladders).forEach(start => {
-                drawPath(start, ladders[start], '#33ff33', false);
-            });
+            Object.keys(snakes).forEach(start => drawPath(start, snakes[start], '#ff3333', true));
+            Object.keys(ladders).forEach(start => drawPath(start, ladders[start], '#33ff33', false));
         }
 
         function drawPath(startNum, endNum, color, isSnake) {
-            const svg = document.getElementById('game-overlay');
             const startCell = document.getElementById(`cell-${startNum}`);
             const endCell = document.getElementById(`cell-${endNum}`);
             if (!startCell || !endCell) return;
-
             const bRect = document.getElementById('board').getBoundingClientRect();
             const sRect = startCell.getBoundingClientRect();
             const eRect = endCell.getBoundingClientRect();
-
             const x1 = sRect.left - bRect.left + sRect.width / 2;
             const y1 = sRect.top - bRect.top + sRect.height / 2;
             const x2 = eRect.left - bRect.left + eRect.width / 2;
             const y2 = eRect.top - bRect.top + eRect.height / 2;
-
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", x1);
-            line.setAttribute("y1", y1);
-            line.setAttribute("x2", x2);
-            line.setAttribute("y2", y2);
-            line.setAttribute("stroke", color);
-            line.setAttribute("stroke-width", isSnake ? "4" : "6");
+            line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+            line.setAttribute("stroke", color); line.setAttribute("stroke-width", isSnake ? "4" : "6");
             line.setAttribute("stroke-opacity", "0.4");
-            line.setAttribute("stroke-linecap", "round");
-            if (!isSnake) line.setAttribute("stroke-dasharray", "5,5"); // Ladders are dashed
-            
-            svg.appendChild(line);
+            document.getElementById('game-overlay').appendChild(line);
         }
 
         function updateTokenPositions(instant = false) {
@@ -563,55 +432,32 @@
                 const pos = playerPositions[p];
                 const cell = document.getElementById(`cell-${pos}`);
                 const token = document.getElementById(`p${p}-token`);
-                
                 if (cell && token) {
                     const bRect = document.getElementById('board').getBoundingClientRect();
                     const cRect = cell.getBoundingClientRect();
-                    
                     const x = cRect.left - bRect.left + (cRect.width / 2) - 17;
                     const y = cRect.top - bRect.top + (cRect.height / 2) - 17;
-                    
-                    // Slightly offset tokens if on same square
                     const offset = (playerPositions[1] === playerPositions[2]) ? (p === 1 ? -10 : 10) : 0;
-                    
                     if (instant) token.style.transition = 'none';
-                    token.style.left = `${x + offset}px`;
-                    token.style.top = `${y}px`;
+                    token.style.left = `${x + offset}px`; token.style.top = `${y}px`;
                     if (instant) setTimeout(() => token.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)', 50);
                 }
-
                 document.getElementById(`p${p}-pos-text`).innerText = `Square: ${pos}`;
             });
         }
 
-        // Dice Logic
         const diceBtn = document.getElementById('dice-btn');
-        diceBtn.onclick = () => {
-            if (isMoving || isGameOver || currentPlayer !== 1) return;
-            rollDice();
-        };
+        diceBtn.onclick = () => { if (!isMoving && !isGameOver && currentPlayer === 1) rollDice(); };
 
         function rollDice() {
             const cube = document.getElementById('dice-cube');
             cube.classList.add('dice-rolling');
-            
             setTimeout(() => {
                 const roll = Math.floor(Math.random() * 6) + 1;
                 cube.classList.remove('dice-rolling');
-                
-                const rotations = {
-                    1: 'rotateX(0deg) rotateY(0deg)',
-                    2: 'rotateX(0deg) rotateY(180deg)',
-                    3: 'rotateX(0deg) rotateY(-90deg)',
-                    4: 'rotateX(0deg) rotateY(90deg)',
-                    5: 'rotateX(-90deg) rotateY(0deg)',
-                    6: 'rotateX(90deg) rotateY(0deg)'
-                };
+                const rotations = { 1: 'rotateX(0deg) rotateY(0deg)', 2: 'rotateX(0deg) rotateY(180deg)', 3: 'rotateX(0deg) rotateY(-90deg)', 4: 'rotateX(0deg) rotateY(90deg)', 5: 'rotateX(-90deg) rotateY(0deg)', 6: 'rotateX(90deg) rotateY(0deg)' };
                 cube.style.transform = rotations[roll];
-                
-                document.getElementById('roll-res').innerText = `You rolled a ${roll}!`;
-                addLog(`${currentPlayer === 1 ? 'YOU' : 'ARCADE BOT'} rolled ${roll}`);
-                
+                document.getElementById('roll-res').innerText = `Rolled a ${roll}!`;
                 handleMove(roll);
             }, 600);
         }
@@ -620,147 +466,58 @@
             isMoving = true;
             let currentPos = playerPositions[currentPlayer];
             let targetPos = currentPos + roll;
-            
-            if (targetPos > totalSquares) {
-                addLog(`Too high! Need exact roll.`);
-                finishTurn();
-                return;
-            }
-
-            // Animate step by step
+            if (targetPos > totalSquares) { finishTurn(); return; }
             for (let i = currentPos + 1; i <= targetPos; i++) {
-                playerPositions[currentPlayer] = i;
-                updateTokenPositions();
+                playerPositions[currentPlayer] = i; updateTokenPositions();
                 await new Promise(r => setTimeout(r, 300));
             }
-
-            // Check for snake/ladder
             if (snakes[targetPos]) {
-                addLog(`OH NO! A SNAKE 🐍`, '#ff4444');
                 playerPositions[currentPlayer] = snakes[targetPos];
-                await new Promise(r => setTimeout(r, 600));
-                updateTokenPositions();
+                await new Promise(r => setTimeout(r, 600)); updateTokenPositions();
             } else if (ladders[targetPos]) {
-                addLog(`GREAT! A LADDER 🪜`, '#44ff44');
                 playerPositions[currentPlayer] = ladders[targetPos];
-                await new Promise(r => setTimeout(r, 600));
-                updateTokenPositions();
+                await new Promise(r => setTimeout(r, 600)); updateTokenPositions();
             }
-
-            if (playerPositions[currentPlayer] === totalSquares) {
-                victory();
-            } else {
-                finishTurn();
-            }
+            if (playerPositions[currentPlayer] === totalSquares) victory();
+            else finishTurn();
         }
 
         function finishTurn() {
-            currentPlayer = currentPlayer === 1 ? 2 : 1;
-            isMoving = false;
-            
+            currentPlayer = currentPlayer === 1 ? 2 : 1; isMoving = false;
             const status = document.getElementById('status-msg');
-            const p1Card = document.getElementById('p1-card');
-            const p2Card = document.getElementById('p2-card');
-
             if (currentPlayer === 1) {
-                status.innerText = "YOUR TURN";
-                status.style.color = "var(--primary)";
-                p1Card.classList.add('active');
-                p2Card.classList.remove('active');
+                status.innerText = "YOUR TURN"; status.style.color = "var(--primary)";
+                document.getElementById('p1-card').classList.add('active');
+                document.getElementById('p2-card').classList.remove('active');
             } else {
-                status.innerText = "ARCADE BOT IS THINKING...";
-                status.style.color = "var(--accent)";
-                p1Card.classList.remove('active');
-                p2Card.classList.add('active');
-                setTimeout(rollDice, 1500); // Bot turn
+                status.innerText = "BOT THINKING..."; status.style.color = "var(--accent)";
+                document.getElementById('p1-card').classList.remove('active');
+                document.getElementById('p2-card').classList.add('active');
+                setTimeout(rollDice, 1500);
             }
         }
 
-        function victory() {
-            isGameOver = true;
-            const winner = currentPlayer === 1 ? 'YOU' : 'ARCADE BOT';
-            document.getElementById('status-msg').innerText = `${winner} WON!`;
-            addLog(`🎊 ${winner} reached the summit!`, '#ffd700');
-            alert(`${winner} wins the game!`);
-        }
-
-        function addLog(msg, color = '#666') {
-            const log = document.getElementById('log');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.style.color = color;
-            entry.innerText = `> ${msg}`;
-            log.prepend(entry);
-        }
-
-        function resetGame() {
-            playerPositions = { 1: 1, 2: 1 };
-            currentPlayer = 1;
-            isGameOver = false;
-            isMoving = false;
-            updateTokenPositions(true);
-            document.getElementById('status-msg').innerText = "YOUR TURN";
-            document.getElementById('p1-card').classList.add('active');
-            document.getElementById('p2-card').classList.remove('active');
-            addLog("Game Reset.");
-        }
-
+        function victory() { isGameOver = true; alert(`${currentPlayer === 1 ? 'YOU' : 'BOT'} WON!`); }
+        function resetGame() { playerPositions = { 1: 1, 2: 1 }; currentPlayer = 1; isGameOver = false; initBoard(); }
         function toggleView() {
             const container = document.getElementById('board-container');
-            const current = container.style.transform;
-            if (current.includes('rotateX(0deg)')) {
-                container.style.transform = 'rotateX(20deg)';
-            } else {
-                container.style.transform = 'rotateX(0deg)';
-            }
+            container.style.transform = container.style.transform.includes('rotateX(0deg)') ? 'rotateX(20deg)' : 'rotateX(0deg)';
         }
 
-        // Particle BG
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-
         function initBG() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            for (let i = 0; i < 50; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 2,
-                    speedX: Math.random() * 0.5 - 0.25,
-                    speedY: Math.random() * 0.5 - 0.25
-                });
-            }
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for (let i = 0; i < 50; i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2, speedX: Math.random() * 0.5 - 0.25, speedY: Math.random() * 0.5 - 0.25 });
             animateBG();
         }
-
         function animateBG() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.speedX;
-                p.y += p.speedY;
-                if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
-                ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
+            particles.forEach(p => { p.x += p.speedX; p.y += p.speedY; if (p.x < 0 || p.x > canvas.width) p.speedX *= -1; if (p.y < 0 || p.y > canvas.height) p.speedY *= -1; ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
             requestAnimationFrame(animateBG);
         }
-
-        window.onload = () => {
-            initBoard();
-            initBG();
-        };
-
-        window.onresize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            drawConnections();
-            updateTokenPositions();
-        };
+        window.onload = () => { initBoard(); initBG(); };
     </script>
 </body>
 </html>

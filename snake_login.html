@@ -109,40 +109,6 @@
             text-transform: uppercase; transition: 0.3s; z-index: 20;
         }
         .back-btn:hover { color: #fff; }
-
-        /* Subdued Audio Control */
-        .audio-control { 
-            position: absolute; top: 40px; right: 40px; z-index: 1000; 
-            display: flex; align-items: center; gap: 15px;
-        }
-
-        .audio-status {
-            font-size: 9px; font-weight: 950; letter-spacing: 2px;
-            color: var(--primary); text-transform: uppercase;
-            text-shadow: 0 0 10px var(--primary);
-            transition: 1s ease-in-out;
-            opacity: 0;
-        }
-
-        .mute-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff; width: 40px; height: 40px;
-            border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; transition: 0.3s;
-            backdrop-filter: blur(5px);
-            opacity: 0.3;
-        }
-
-        .mute-btn:hover { 
-            opacity: 1;
-            background: rgba(0, 242, 255, 0.1);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .mute-btn.muted { opacity: 0.6; color: #ff3333; border-color: #ff3333; }
     </style>
 </head>
 <body>
@@ -150,13 +116,6 @@
     <div class="rain"></div>
     <div id="thunder-vis" class="thunder"></div>
     <a href="index.html" class="back-btn">← Back to Hub</a>
-
-    <div class="audio-control">
-        <span class="audio-status" id="audio-status">Atmosphere: Active</span>
-        <button id="mute-btn" class="mute-btn" onclick="toggleAudio()">🔊</button>
-    </div>
-
-    <audio id="bg-music" src="samuelfjohanns-creepy-ambient-7539.mp3" loop></audio>
 
     <div class="login-card">
         <div class="logo" style="font-size: 60px;">🐍</div>
@@ -196,58 +155,6 @@
             v.classList.add('flash');
             setTimeout(() => v.classList.remove('flash'), 150 + Math.random() * 300);
         }, 8000);
-
-        // Audio Logic
-        const music = document.getElementById('bg-music');
-        const muteBtn = document.getElementById('mute-btn');
-        const statusText = document.getElementById('audio-status');
-        let isMuted = false;
-
-        function toggleAudio() {
-            if (music.paused) {
-                music.play().then(() => showStatus('Atmosphere: Active')).catch(e => console.log("Blocked"));
-                isMuted = false;
-            } else {
-                isMuted = !isMuted;
-                music.muted = isMuted;
-                showStatus(isMuted ? 'Atmosphere: Muted' : 'Atmosphere: Active');
-            }
-            updateAudioUI();
-        }
-
-        function updateAudioUI() {
-            muteBtn.innerHTML = isMuted ? '🔇' : '🔊';
-            muteBtn.classList.toggle('muted', isMuted);
-        }
-
-        function showStatus(msg) {
-            statusText.innerText = msg;
-            statusText.style.color = isMuted ? '#ff3333' : '#00f2ff';
-            statusText.style.opacity = '1';
-            clearTimeout(window.statusTimer);
-            window.statusTimer = setTimeout(() => { statusText.style.opacity = '0'; }, 3000);
-        }
-
-        // Attempt automatic playback
-        function attemptAutoPlay() {
-            if (music.paused && !isMuted) {
-                music.play().then(() => {
-                    showStatus('Atmosphere: Active');
-                    updateAudioUI();
-                }).catch(e => {
-                    console.log("Auto-play blocked, waiting for interaction");
-                });
-            }
-        }
-
-        // Run on load and on any interaction
-        window.addEventListener('DOMContentLoaded', attemptAutoPlay);
-        
-        ['click', 'keydown', 'touchstart', 'mousemove'].forEach(evt => {
-            window.addEventListener(evt, () => {
-                attemptAutoPlay();
-            }, { once: true });
-        });
 
         function handleGoogleLogin(response) {
             const base64Url = response.credential.split('.')[1];
