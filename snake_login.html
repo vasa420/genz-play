@@ -145,7 +145,7 @@
     <a href="index.html" class="back-btn">← Back to Hub</a>
 
     <div class="login-card">
-        <div class="logo">🐍</div>
+        <div class="logo" id="snake-logo">🐍</div>
         <h1>Snake Realm</h1>
         <p>Tactical Arena Access</p>
 
@@ -164,41 +164,69 @@
 
         <button class="guest-btn" onclick="enterAsGuest()">Enter as Guest</button>
         
-        <div id="audio-prompt" style="margin-top: 30px; font-size: 10px; color: #555; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;" onclick="toggleMusic()">
-            Click to Enable Jungle Storm ⛈️
+        <div id="audio-prompt" style="margin-top: 30px; font-size: 10px; color: #555; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;" onclick="toggleAudio()">
+            Click to Wake the Forest 🌲
         </div>
     </div>
 
-    <!-- Atmospheric Jungle Storm Music -->
-    <audio id="bg-music" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
+    <!-- Multi-Layered Forest Soundscape -->
+    <audio id="snd-wind" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="snd-snake">
+        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_f5f6da98c8.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="snd-tiger">
+        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_6e4c7064d5.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        let musicStarted = false;
-        function toggleMusic() {
-            const music = document.getElementById('bg-music');
+        let audioActive = false;
+        
+        function toggleAudio() {
+            const wind = document.getElementById('snd-wind');
             const prompt = document.getElementById('audio-prompt');
-            if (!musicStarted) {
-                music.play();
-                musicStarted = true;
-                prompt.innerText = "Storm Active 🌬️";
+            
+            if (!audioActive) {
+                wind.volume = 0.3;
+                wind.play();
+                audioActive = true;
+                prompt.innerText = "FOREST AWAKENED 🐘";
                 prompt.style.color = "var(--primary)";
+                startAnimalSounds();
                 startLightning();
             } else {
-                music.pause();
-                musicStarted = false;
-                prompt.innerText = "Storm Muted 🔇";
+                wind.pause();
+                audioActive = false;
+                prompt.innerText = "FOREST SILENCED 🌑";
                 prompt.style.color = "#555";
             }
         }
 
+        function playAnimal(id) {
+            if (!audioActive) return;
+            const snd = document.getElementById(id);
+            snd.volume = 0.5;
+            snd.play().catch(e => console.log("Audio trigger blocked"));
+        }
+
+        function startAnimalSounds() {
+            if (!audioActive) return;
+            
+            // Randomly play snake or tiger
+            const chance = Math.random();
+            if (chance < 0.3) playAnimal('snd-snake');
+            else if (chance > 0.8) playAnimal('snd-tiger');
+
+            setTimeout(startAnimalSounds, Math.random() * 10000 + 5000);
+        }
+
         function startLightning() {
-            if (!musicStarted) return;
+            if (!audioActive) return;
             const thunder = document.getElementById('thunder');
             thunder.classList.add('flash');
             setTimeout(() => thunder.classList.remove('flash'), 500);
-            setTimeout(startLightning, Math.random() * 8000 + 4000);
+            setTimeout(startLightning, Math.random() * 12000 + 6000);
         }
 
         function handleGoogleLogin(response) {
