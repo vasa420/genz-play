@@ -141,10 +141,26 @@
             z-index: 10;
         }
 
-        /* Snakes and Ladders Styling */
-        .snake-path { stroke: var(--snake); stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 0 5px rgba(0,0,0,0.2)); }
-        .ladder-path { stroke: var(--ladder); stroke-width: 12; stroke-linecap: butt; stroke-dasharray: 4, 10; filter: drop-shadow(0 0 5px rgba(0,0,0,0.2)); }
-        .ladder-side { stroke: var(--ladder); stroke-width: 4; }
+        /* High-Visibility Snakes and Ladders */
+        .snake-path { 
+            stroke: #2e7d32; /* Stronger Green */
+            stroke-width: 10; 
+            stroke-linecap: round; 
+            fill: none;
+            opacity: 0.9;
+        }
+        .ladder-path { 
+            stroke: #1565c0; /* Stronger Blue */
+            stroke-width: 14; 
+            stroke-dasharray: 6, 8;
+            fill: none;
+            opacity: 0.8;
+        }
+        .ladder-side { 
+            stroke: #1565c0; 
+            stroke-width: 5; 
+            fill: none;
+        }
 
         .token {
             position: absolute;
@@ -286,9 +302,13 @@
             const svg = document.getElementById('game-overlay');
             if (!board || !svg) return;
 
-            // Sync SVG size to board
-            svg.setAttribute('width', board.offsetWidth);
-            svg.setAttribute('height', board.offsetHeight);
+            const boardWidth = board.clientWidth || 600;
+            const boardHeight = board.clientHeight || 600;
+
+            // Sync SVG size and viewBox to board
+            svg.setAttribute('width', boardWidth);
+            svg.setAttribute('height', boardHeight);
+            svg.setAttribute('viewBox', `0 0 ${boardWidth} ${boardHeight}`);
             svg.innerHTML = '';
             
             Object.keys(snakes).forEach(start => drawSnake(start, snakes[start]));
