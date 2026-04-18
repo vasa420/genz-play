@@ -121,23 +121,23 @@
         }
 
         .mute-btn {
-            background: rgba(0, 242, 255, 0.1);
-            border: 1px solid rgba(0, 242, 255, 0.3);
+            background: transparent;
+            border: 1px solid transparent;
             color: var(--primary); width: 45px; height: 45px;
             border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px; transition: 0.3s;
-            backdrop-filter: blur(10px);
-            opacity: 0.6;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+            font-size: 18px; transition: 0.5s;
+            opacity: 0;
+            z-index: 1000;
         }
 
         .mute-btn:hover { 
-            opacity: 1; border-color: var(--primary); color: var(--primary);
-            background: rgba(0, 242, 255, 0.1);
+            opacity: 0.2; 
+            border-color: rgba(0, 242, 255, 0.2);
+            background: rgba(0, 242, 255, 0.05);
         }
 
-        .mute-btn.muted { opacity: 0.6; color: #ff3333; border-color: #ff3333; }
+        .mute-btn.muted { opacity: 0.4; color: #ff3333; }
     </style>
 </head>
 <body>
@@ -147,8 +147,7 @@
     <a href="index.html" class="back-btn">← Back to Hub</a>
 
     <div class="audio-control">
-        <span class="audio-status" id="audio-status">Atmosphere: Active</span>
-        <button id="mute-btn" class="mute-btn" onclick="toggleAudio()" title="Toggle Atmosphere">🔊</button>
+        <button id="mute-btn" class="mute-btn" onclick="toggleAudio()" title="Atmosphere">🔊</button>
     </div>
 
     <audio id="bg-music" src="johnbritton-thunder-156423 (1).mp3" loop></audio>
@@ -216,11 +215,7 @@
         }
 
         function showStatus(msg) {
-            statusText.innerText = msg;
-            statusText.style.color = isMuted ? '#ff3333' : '#00f2ff';
-            statusText.style.opacity = '1';
-            clearTimeout(window.statusTimer);
-            window.statusTimer = setTimeout(() => { statusText.style.opacity = '0'; }, 3000);
+            // Logic removed to keep UI invisible
         }
 
         async function attemptPlay() {
