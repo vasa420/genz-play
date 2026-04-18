@@ -93,6 +93,22 @@
             90% { opacity: 0.8; filter: brightness(1.5); }
         }
 
+        /* Falling Leaves */
+        .leaf {
+            position: fixed; width: 15px; height: 15px;
+            background: #4a5d23; border-radius: 0 10px;
+            z-index: 5; pointer-events: none;
+            opacity: 0.6;
+            animation: leafFall 10s linear infinite;
+        }
+
+        @keyframes leafFall {
+            0% { transform: translate(0, -10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translate(100px, 110vh) rotate(360deg); opacity: 0; }
+        }
+
         .logo { font-size: 60px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--primary)); }
 
         h1 {
@@ -169,9 +185,12 @@
         </div>
     </div>
 
-    <!-- Multi-Layered Forest Soundscape -->
+    <!-- Pure Nature Soundscape (No Music) -->
     <audio id="snd-wind" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" type="audio/mpeg">
+        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_b333a5980b.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="snd-insects" loop>
+        <source src="https://cdn.pixabay.com/audio/2022/02/12/audio_ed23769c02.mp3" type="audio/mpeg">
     </audio>
     <audio id="snd-snake">
         <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_f5f6da98c8.mp3" type="audio/mpeg">
@@ -181,22 +200,38 @@
     </audio>
 
     <script>
+        // Leaf Creation
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            leaf.style.left = Math.random() * 100 + 'vw';
+            leaf.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            leaf.style.background = `hsl(${Math.random() * 40 + 80}, 40%, 30%)`;
+            document.body.appendChild(leaf);
+            setTimeout(() => leaf.remove(), 10000);
+        }
+        setInterval(createLeaf, 2000);
+
         let audioActive = false;
         
         function toggleAudio() {
             const wind = document.getElementById('snd-wind');
+            const insects = document.getElementById('snd-insects');
             const prompt = document.getElementById('audio-prompt');
             
             if (!audioActive) {
-                wind.volume = 0.3;
+                wind.volume = 0.5;
+                insects.volume = 0.2;
                 wind.play();
+                insects.play();
                 audioActive = true;
-                prompt.innerText = "FOREST AWAKENED 🐘";
+                prompt.innerText = "FOREST AWAKENED 🍃";
                 prompt.style.color = "var(--primary)";
                 startAnimalSounds();
                 startLightning();
             } else {
                 wind.pause();
+                insects.pause();
                 audioActive = false;
                 prompt.innerText = "FOREST SILENCED 🌑";
                 prompt.style.color = "#555";
