@@ -274,13 +274,23 @@
                     board.appendChild(cell);
                 }
             }
-            setTimeout(drawConnections, 100);
+            // Wait for DOM to paint cells
+            requestAnimationFrame(() => {
+                setTimeout(drawConnections, 200);
+            });
             updateTokenPositions(true);
         }
 
         function drawConnections() {
+            const board = document.getElementById('board');
             const svg = document.getElementById('game-overlay');
+            if (!board || !svg) return;
+
+            // Sync SVG size to board
+            svg.setAttribute('width', board.offsetWidth);
+            svg.setAttribute('height', board.offsetHeight);
             svg.innerHTML = '';
+            
             Object.keys(snakes).forEach(start => drawSnake(start, snakes[start]));
             Object.keys(ladders).forEach(start => drawLadder(start, ladders[start]));
         }
