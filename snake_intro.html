@@ -3,135 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAKE REALM | ENTERING THE STORM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <title>SNAKE REALM | INITIALIZING</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;950&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #00f2ff;
+            --glass: rgba(0, 0, 0, 0.8);
+        }
+
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #000;
-            font-family: 'Outfit', sans-serif;
+            background: #000; font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .bg-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('snake_intro_bg.png') center/cover no-repeat;
-            filter: brightness(0.7) contrast(1.2);
-            animation: kenBurns 15s infinite alternate ease-in-out;
+        .bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('snake_realm_intro_bg_1776500270908.png') center/cover no-repeat;
+            filter: brightness(0.4) contrast(1.2) blur(5px);
+            z-index: 1;
+            animation: moveCam 12s infinite alternate ease-in-out;
         }
 
-        @keyframes kenBurns {
-            from { transform: scale(1); }
-            to { transform: scale(1.1); }
-        }
-
-        /* Thunder Flash */
-        .thunder-flash {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; opacity: 0; z-index: 10;
-            pointer-events: none;
-        }
-
-        .flash-anim { animation: lightning 0.5s ease-out; }
-
-        @keyframes lightning {
-            0% { opacity: 0; }
-            10% { opacity: 0.8; }
-            30% { opacity: 0.1; }
-            40% { opacity: 0.5; }
-            100% { opacity: 0; }
+        @keyframes moveCam {
+            from { transform: scale(1.1) rotate(0deg); }
+            to { transform: scale(1.2) rotate(2deg); }
         }
 
         .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
-            z-index: 5;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; z-index: 10;
+            text-align: center; width: 80%; max-width: 500px;
         }
 
-        .game-title {
-            font-size: 80px; color: #fff; letter-spacing: 20px;
-            text-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
-            margin-bottom: 50px; opacity: 0;
-            transform: translateY(20px);
-            animation: fadeUp 1s forwards 0.5s;
+        .logo { 
+            font-size: 100px; margin-bottom: 30px; 
+            filter: drop-shadow(0 0 30px var(--primary));
+            animation: logoPulse 2s infinite ease-in-out;
         }
 
-        .loading-container {
-            width: 300px; height: 4px; background: rgba(255,255,255,0.1);
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 30px var(--primary)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 60px var(--primary)); }
+        }
+
+        h1 { 
+            color: #fff; font-size: 42px; font-weight: 950; 
+            letter-spacing: 15px; margin-bottom: 10px; text-transform: uppercase;
+        }
+
+        p { 
+            color: var(--primary); font-size: 14px; font-weight: 400; 
+            letter-spacing: 5px; margin-bottom: 50px; text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .loader-container {
+            width: 100%; height: 4px; background: rgba(255,255,255,0.05);
             border-radius: 10px; overflow: hidden; position: relative;
         }
 
-        .loading-bar {
-            width: 0%; height: 100%; background: #00f2ff;
-            box-shadow: 0 0 15px #00f2ff;
-            transition: width 10s linear;
+        .loader-fill {
+            height: 100%; background: linear-gradient(90deg, transparent, var(--primary));
+            width: 0%; box-shadow: 0 0 20px var(--primary);
+            animation: loadProgress 10s forwards linear;
         }
 
-        .status-text {
-            color: #888; font-size: 12px; letter-spacing: 5px;
-            margin-top: 20px; font-weight: 300; text-transform: uppercase;
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            20% { width: 15%; }
+            50% { width: 60%; }
+            80% { width: 85%; }
+            100% { width: 100%; }
         }
 
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
+        .status {
+            margin-top: 20px; color: #444; font-size: 10px; font-weight: 950;
+            letter-spacing: 3px; text-transform: uppercase;
         }
 
-        /* Rain and clouds */
-        .rain-surface {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://cdn.pixabay.com/photo/2016/11/29/03/42/rain-1867131_1280.jpg') repeat;
-            opacity: 0.1; pointer-events: none; mix-blend-mode: screen;
+        .vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.9) 100%);
+            z-index: 5; pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="bg-container"></div>
-    <div class="thunder-flash" id="flash"></div>
-    <div class="rain-surface"></div>
+    <div class="bg"></div>
+    <div class="vignette"></div>
 
     <div class="overlay">
-        <h1 class="game-title">SNAKE REALM</h1>
-        <div class="loading-container">
-            <div class="loading-bar" id="bar"></div>
+        <div class="logo">🐍</div>
+        <h1>SNAKE REALM</h1>
+        <p>Initializing Forest...</p>
+
+        <div class="loader-container">
+            <div class="loader-fill"></div>
         </div>
-        <p class="status-text" id="status">Summoning the arena...</p>
+        <div id="status-text" class="status">AUTHENTICATING REALM...</div>
     </div>
 
     <script>
-        const bar = document.getElementById('bar');
-        const status = document.getElementById('status');
-        const flash = document.getElementById('flash');
-
-        const messages = [
-            "Summoning the arena...",
-            "Awakening the serpents...",
-            "Forging golden ladders...",
-            "Channeling the storm...",
-            "Synchronizing realm data..."
+        const statuses = [
+            "WAKENING THE SERPENT...",
+            "GATHERING DARK CLOUDS...",
+            "GROWING ANCIENT TREES...",
+            "PREPARING THE ARENA...",
+            "REALM SYNCHRONIZED ✓"
         ];
 
-        let msgIdx = 0;
-        setInterval(() => {
-            msgIdx = (msgIdx + 1) % messages.length;
-            status.innerText = messages[msgIdx];
-        }, 2000);
-
-        // Thunder effect
-        function triggerLightning() {
-            flash.classList.add('flash-anim');
-            setTimeout(() => flash.classList.remove('flash-anim'), 500);
-            setTimeout(triggerLightning, Math.random() * 5000 + 2000);
-        }
-
-        window.onload = () => {
-            setTimeout(() => { bar.style.width = '100%'; }, 100);
-            triggerLightning();
-            
-            // Redirect after 10 seconds
-            setTimeout(() => {
-                window.location.href = 'snake_login.html';
-            }, 10500);
+        let i = 0;
+        const statusEl = document.getElementById('status-text');
+        
+        const updateStatus = () => {
+            if(i < statuses.length) {
+                statusEl.innerText = statuses[i];
+                i++;
+                setTimeout(updateStatus, 2000);
+            }
         };
+
+        updateStatus();
+
+        // Automatic redirect after 10 seconds
+        setTimeout(() => {
+            window.location.href = 'snake_login.html';
+        }, 10000);
     </script>
 </body>
 </html>
