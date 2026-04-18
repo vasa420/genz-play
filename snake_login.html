@@ -184,12 +184,15 @@
         let timer = null;
 
         function unlockRealm() {
+            // PLAY IMMEDIATELY on click to satisfy strict browser policies
+            playSafe('snd-wind', 1.0); 
+            
             const gk = document.getElementById('gatekeeper');
             gk.style.opacity = '0';
             setTimeout(() => {
                 gk.style.display = 'none';
                 audioActive = true;
-                startMainSequence();
+                startMainSequence(true); // true means skip the first wind start since we just did it
             }, 800);
         }
 
@@ -198,9 +201,13 @@
             if (!el) return;
             el.volume = vol;
             document.getElementById('vol-fill').style.width = (vol * 100) + '%';
-            el.play().catch(e => {
+            el.play().then(() => {
+                document.getElementById('status').style.color = "var(--primary)";
+            }).catch(e => {
                 console.error(e);
-                document.getElementById('status').innerText = "AUDIO BLOCKED: CLICK PAGE";
+                document.getElementById('status').innerText = "AUDIO BLOCKED: CLICK HERE TO UNMUTE 🔊";
+                document.getElementById('status').style.cursor = "pointer";
+                document.getElementById('status').onclick = () => { unlockRealm(); };
             });
         }
 
@@ -209,15 +216,19 @@
             if (el) el.pause();
         }
 
-        function startMainSequence() {
+        function startMainSequence(skipFirst = false) {
             if (!audioActive) return;
             const status = document.getElementById('status');
             
-            // 0-10s WIND
-            status.innerText = "PHASE 1: WIND... 🌬️";
-            stopSafe('snd-thunder');
-            stopSafe('snd-chaos');
-            playSafe('snd-wind', 1.0);
+            if (!skipFirst) {
+                // 0-10s WIND
+                status.innerText = "PHASE 1: WIND... 🌬️";
+                stopSafe('snd-thunder');
+                stopSafe('snd-chaos');
+                playSafe('snd-wind', 1.0);
+            } else {
+                status.innerText = "PHASE 1: WIND... 🌬️";
+            }
 
             timer = setTimeout(() => {
                 if (!audioActive) return;
