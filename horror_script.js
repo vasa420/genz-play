@@ -95,6 +95,14 @@ let currentGameState = 'start';
 
 function startGame() {
     document.getElementById('intro-overlay').classList.remove('active');
+    
+    // Play background ambience
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        bgMusic.volume = 0.5;
+        bgMusic.play().catch(e => console.log("Music autoplay blocked, waiting for next interaction"));
+    }
+
     updateTime();
     setInterval(updateTime, 60000);
     setTimeout(() => {
@@ -108,6 +116,14 @@ function updateTime() {
         now.getHours().toString().padStart(2, '0') + ":" + 
         now.getMinutes().toString().padStart(2, '0');
 }
+
+// Global User Interaction Listener to ensure music starts as soon as user clicks anywhere
+window.addEventListener('mousedown', function startHorrorMusic() {
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic && bgMusic.paused) {
+        bgMusic.play().catch(e => { });
+    }
+}, { once: false });
 
 async function playMessage(stateKey) {
     const node = story[stateKey];
