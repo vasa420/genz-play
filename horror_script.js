@@ -114,73 +114,6 @@ const story = {
 };
 
 let currentGameState = 'start';
-let currentContact = 'unknown';
-
-const contacts = {
-    unknown: { name: "Unknown Number", avatar: "stalker_hero_selfie_1776590484686.png", status: "Online" },
-    mom: { name: "Mom", avatar: "mom.png", status: "Last seen yesterday" },
-    dad: { name: "Dad", avatar: "dad.png", status: "Away" },
-    brother: { name: "Brother", avatar: "brother.png", status: "Online" },
-    sanjay: { name: "Sanjay", avatar: "sanjay.png", status: "Online" },
-    vicky: { name: "Vicky", avatar: "vicky.png", status: "Last seen 2h ago" },
-    anu: { name: "Anu", avatar: "anu.png", status: "Online" }
-};
-
-const chatHistory = {
-    unknown: [], mom: [], dad: [], brother: [], sanjay: [], vicky: [], anu: []
-};
-
-function switchChat(key) {
-    currentContact = key;
-    const contact = contacts[key];
-    
-    // Update Header
-    document.getElementById('contact-name').innerText = contact.name;
-    document.getElementById('contact-avatar').innerText = ""; 
-    document.getElementById('contact-avatar').style.background = `url('${contact.avatar}')`;
-    document.getElementById('contact-avatar').style.backgroundSize = "cover";
-    document.getElementById('contact-status').innerText = contact.status;
-    
-    // Clear and reload body
-    chatBody.innerHTML = "";
-    chatHistory[key].forEach(msg => {
-        const div = document.createElement('div');
-        div.className = msg.class;
-        div.innerText = msg.text;
-        chatBody.appendChild(div);
-    });
-    
-    closeChatList();
-    chatBody.scrollTo(0, chatBody.scrollHeight);
-
-    // Initial message if empty for family
-    if (chatHistory[key].length === 0 && key !== 'unknown') {
-        const initialMsg = {
-            mom: "Where are you? I've been calling for hours.",
-            dad: "Did you check the security cameras like I told you?",
-            brother: "I saw someone outside your place. Are you there?",
-            sanjay: "Yo, you seeing the news? There's a lockdown in your sector.",
-            vicky: "Pick up the phone. Stop playing around.",
-            anu: "I feel like someone is watching me... are you okay?"
-        };
-        setTimeout(() => {
-            receiveMessage(initialMsg[key], 'left');
-        }, 1000);
-    }
-}
-
-async function receiveMessage(text, side, isUnknown = false) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `msg ${side} ${isUnknown ? 'unknown' : ''}`;
-    msgDiv.innerText = text;
-    chatBody.appendChild(msgDiv);
-    chatBody.scrollTo(0, chatBody.scrollHeight);
-    
-    // Save to history
-    chatHistory[currentContact].push({ text, class: msgDiv.className });
-    
-    notifSound.play().catch(e => {});
-}
 
 async function showWarning() {
     const intro = document.getElementById('intro-overlay');
@@ -191,7 +124,7 @@ async function showWarning() {
 
     // 1. Start slow transition to black
     transition.style.opacity = '1';
-    
+
     // Fade out intro music slowly
     if (introMusic) {
         let fadeAudio = setInterval(() => {
@@ -211,7 +144,7 @@ async function showWarning() {
     intro.style.display = 'none';
     intro.classList.remove('active');
     warning.style.display = 'flex';
-    
+
     // 4. Fade out the black cover
     transition.style.opacity = '0';
     await new Promise(r => setTimeout(r, 1000));
@@ -230,150 +163,292 @@ async function showWarning() {
 function startGame() {
     const headphones = document.getElementById('headphones-warning');
     if (headphones) headphones.style.display = 'none';
-    
+
+    // Play background ambience
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         bgMusic.volume = 0.5;
-        bgMusic.play().catch(e => {});
+        bgMusic.play().catch(e => console.log("Music autoplay blocked, waiting for next interaction"));
     }
 
     updateTime();
     setInterval(updateTime, 60000);
-    
-    // Start with Stalker
-    switchChat('unknown');
     setTimeout(() => {
         playMessage('start');
     }, 1500);
 }
 
 function openChatList() {
-    document.getElementById('chat-list-overlay').style.display = 'flex';
+    const list = document.getElementById('chat-list-overlay');
+    list.style.display = 'flex';
 }
 
 function closeChatList() {
-    document.getElementById('chat-list-overlay').style.display = 'none';
+    const list = document.getElementById('chat-list-overlay');
+    list.style.display = 'none';
 }
 
 function updateTime() {
     const now = new Date();
-    document.getElementById('current-time').innerText = 
-        now.getHours().toString().padStart(2, '0') + ":" + 
+    document.getElementById('current-time').innerText =
+        now.getHours().toString().padStart(2, '0') + ":" +
         now.getMinutes().toString().padStart(2, '0');
 }
 
-// ... Interaction listener ...
+// Global User Interaction Listener to ensure music starts as soon as user clicks anywhere
+const interactionEvents = ['mousedown', 'click', 'touchstart', 'keydown'];
+interactionEvents.forEach(eventType => {
+    window.addEventListener(eventType, function startHorrorMusic() {
+        const bgMusic = document.getElementById('bg-music');
+        const introMusic = document.getElementById('intro-music');
+        const introOverlay = document.getElementById('intro-overlay');
+
+        // Check if intro is active
+        const isIntroActive = introOverlay && introOverlay.classList.contains('active');
+
+        if (isIntroActive) {
+            if (introMusic && introMusic.paused) {
+                introMusic.play().catch(e => { });
+            }
+        } else {
+            // Normal game ambience
+            if (bgMusic && bgMusic.paused) {
+                bgMusic.play().catch(e => { });
+            }
+        }
+    }, { once: false });
+});
 
 async function playMessage(stateKey) {
     const node = story[stateKey];
     if (!node) return;
 
+    // Show Typing
     typingIndicator.style.display = 'flex';
     contactStatus.innerText = "Typing...";
-    
+
+    // Realistic delay based on text length
     const delay = Math.min(Math.max(node.text.length * 50, 1000), 3000);
     await new Promise(r => setTimeout(r, delay));
 
     typingIndicator.style.display = 'none';
     contactStatus.innerText = "Online";
 
-    receiveMessage(node.text, 'left', node.sender === 'unknown');
+    // Create Bubble
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `msg left ${node.sender === 'unknown' ? 'unknown' : ''}`;
+    msgDiv.innerText = node.text;
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTo(0, chatBody.scrollHeight);
 
+    // Sound
+    notifSound.play().catch(e => console.log("Audio play blocked"));
+
+    // Glitch Effect
     if (node.glitch) {
         document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => {});
+        glitchSound.play().catch(e => console.log("Audio play blocked"));
         setTimeout(() => document.body.classList.remove('glitch-active'), 500);
     }
 
-    if (node.death) setTimeout(() => endGame(node.death, false), 2000);
-    if (node.victory) setTimeout(() => endGame(node.victory, true), 2000);
+    // Check for Death/Victory
+    if (node.death) {
+        setTimeout(() => endGame(node.death, false), 2000);
+        return;
+    }
+    if (node.victory) {
+        setTimeout(() => endGame(node.victory, true), 2000);
+        return;
+    }
 
+    // Show Choices
     showChoices(node.choices);
 }
 
-// ... showChoices, makeChoice, endGame ...
+function showChoices(choices) {
+    choiceContainer.innerHTML = '';
+    choices.forEach(choice => {
+        const btn = document.createElement('div');
+        btn.className = 'choice-btn';
+        btn.innerText = choice.text;
+        btn.onclick = () => {
+            makeChoice(choice);
+        };
+        choiceContainer.appendChild(btn);
+    });
+}
+
+function makeChoice(choice) {
+    // Hide choices
+    choiceContainer.innerHTML = '';
+
+    // Add Player Message
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg right';
+    msgDiv.innerText = choice.text;
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTo(0, chatBody.scrollHeight);
+
+    // Play next part
+    setTimeout(() => {
+        playMessage(choice.next);
+    }, 1000);
+}
+
+function endGame(reason, isVictory) {
+    const overlay = document.getElementById('game-over');
+    const title = overlay.querySelector('h1');
+    const desc = document.getElementById('death-reason');
+
+    if (isVictory) {
+        title.innerText = "SURVIVED";
+        title.style.color = "#00ff88";
+        title.classList.remove('glitch');
+        desc.innerText = reason;
+    } else {
+        title.innerText = "SIGNAL LOST";
+        title.style.color = "#ff3e3e";
+        desc.innerText = reason;
+    }
+
+    overlay.style.display = 'flex';
+}
+
+// Typing System Implementation
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
 
 async function handleSend() {
     const text = messageInput.value.trim();
     if (!text) return;
 
     messageInput.value = '';
-    
+
+    // Add player message bubble
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg right';
     msgDiv.innerText = text;
     chatBody.appendChild(msgDiv);
     chatBody.scrollTo(0, chatBody.scrollHeight);
 
-    // Save to history
-    chatHistory[currentContact].push({ text, class: 'msg right' });
+    // Check if it matches any current choices
+    const currentChoices = document.querySelectorAll('.choice-btn');
+    let matched = false;
 
-    // Stalker story matching
-    if (currentContact === 'unknown') {
-        const currentChoices = document.querySelectorAll('.choice-btn');
-        let matched = false;
-        currentChoices.forEach(btn => {
-            if (text.toLowerCase().includes(btn.innerText.toLowerCase())) {
-                btn.click();
-                matched = true;
-            }
-        });
-        if (!matched) setTimeout(() => playAIResponse(text), 1200);
-    } else {
-        // Person-based AI responses
-        setTimeout(() => playAIResponse(text), 1500);
+    currentChoices.forEach(btn => {
+        if (text.toLowerCase().includes(btn.innerText.toLowerCase()) ||
+            btn.innerText.toLowerCase().includes(text.toLowerCase())) {
+            btn.click();
+            matched = true;
+        }
+    });
+
+    if (!matched) {
+        // AI SMART RESPONSE SYSTEM
+        setTimeout(() => {
+            playAIResponse(text);
+        }, 1200);
     }
 }
 
 async function playAIResponse(userInput) {
     const input = userInput.toLowerCase();
     let response = "";
-    let isCreepy = false;
 
-    if (currentContact === 'unknown') {
-        // STALKER LOGIC (Original)
-        const analysis = {
-            fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length,
-            aggression: (input.match(/fuck|shit|kill|die|police|911|bastard|idiot|hell/g) || []).length
-        };
+    // SEMANTIC SCORING SYSTEM (Simulates Real AI Analysis)
+    const analysis = {
+        fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length,
+        aggression: (input.match(/fuck|shit|kill|die|police|911|bastard|idiot|hell/g) || []).length,
+        curiosity: (input.match(/who|why|where|how|what|name|identity|reason/g) || []).length,
+        observation: (input.match(/see|watch|camera|window|house|room|door|hallway/g) || []).length
+    };
 
-        if (input.includes("time")) {
-            const timeStr = new Date().getHours() + ":" + new Date().getMinutes();
-            response = `It's ${timeStr}. Time for you to realize you're not as safe as you thought.`;
-        } else if (input.includes("photo") || input.includes("pic")) {
-            response = "I'm right here. Look closer.";
-            setTimeout(() => sendPhotoMessage("stalker_id.png"), 3000);
-        } else {
-            response = "Your words are meaningless. I'm already past the first floor.";
-        }
-    } else {
-        // FAMILY / FRIENDS LOGIC
-        if (currentContact === 'mom') {
-            response = input.includes("love") ? "I love you too. But please, lock the doors. The news is saying something is out there." : "Are you listening? I have a bad feeling. Check your driveway.";
-        } else if (currentContact === 'dad') {
-            response = input.includes("help") ? "I'm calling the neighbors. Stand away from the windows. I'm coming home now." : "Don't ignore me. The security alarm just sent a notification. Did you trip it?";
-        } else if (currentContact === 'brother') {
-            response = "I'm outside your street. Wait... why is there a man in a black hoodie standing near your garage?";
-            isCreepy = true;
-        } else if (currentContact === 'anu') {
-            response = "I just got a weird call from your number... but it wasn't you. It was just heavy breathing. What's going on?";
-            isCreepy = true;
-        } else {
-            response = "I can't talk right now, I'm trying to reach the police for you. They aren't answering.";
-        }
+    // LOGIC PROCESSING (Thinking like an AI with Real Tools)
+    if (input.includes("time") || input.includes("what time")) {
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        response = `The time is exactly ${timeStr}. My clock is perfectly synced with the rhythm of your heartbeat. I'm counting every second.`;
+    }
+    else if (input.includes("date") || input.includes("day") || input.includes("today")) {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const now = new Date();
+        response = `It is ${days[now.getDay()]}, ${now.toLocaleDateString()}. A fascinating date for a digital harvest. Don't you agree?`;
+    }
+    else if (input.includes("who am i") || input.includes("my name") || input.includes("who is me")) {
+        const platform = navigator.platform;
+        const browser = navigator.userAgent.split(' ')[0];
+        response = `You are a biological entity currently connected via ${platform}. I see you through the ${browser} lens. You're more transparent than you think.`;
+    }
+    else if (input.includes("call me") || input.includes("ring me") || input.includes("want to hear you")) {
+        response = "You want to hear my voice? Fine. I've been waiting for a reason to cross the line. Expect me.";
+        setTimeout(() => {
+            startCreepyCall();
+        }, 4000);
+    }
+    else if (input.includes("where am i") || input.includes("my location")) {
+        response = "I've already mapped your IP to a 50-meter radius. I can see the streetlights outside your window. I'm calculating the fastest route now.";
+    }
+    else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
+        response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
+        setTimeout(() => {
+            sendPhotoMessage("stalker_id.png");
+        }, 3000);
+    }
+    else if (analysis.fear > 1 || (analysis.fear > 0 && input.length < 10)) {
+        const fearResponses = [
+            "Your panic is measurable. I can hear your rapid keystrokes from here.",
+            "Fear is just a data point to me. You're reacting exactly as my model predicted.",
+            "There's no 'help' in this network. I've already optimized your isolation.",
+            "Your pupils are still dilating. You should close your eyes... it helps with the transition."
+        ];
+        response = fearResponses[Math.floor(Math.random() * fearResponses.length)];
+    }
+    else if (analysis.aggression > 0) {
+        response = "Aggression is a defensive heuristic for the biologically vulnerable. It has 0% effect on my persistence.";
+    }
+    else if (analysis.observation > 0) {
+        response = "You're starting to notice the details. The unlocked window. The lens in the corner. But noticing doesn't stop the inevitable.";
+    }
+    else if (analysis.curiosity > 0) {
+        response = "Curiosity is what brought me here. You asked for an answer... I am that answer.";
+    }
+    else if (input.includes("hi") || input.includes("hello") || input.includes("hai") || input.includes("yo")) {
+        response = "Greetings. Your social protocols are a waste of bandwidth, but I'll play along... for now.";
+    }
+    else {
+        // Advanced Fallback Logic
+        const fallbacks = [
+            `I've been processing your behavioral patterns for ${Math.floor(Math.random() * 500 + 100)} hours. This conversation is just the validation stage.`,
+            "Analyzing your response... Result: High entropy. You're unpredictable, which makes the hunt more enjoyable.",
+            `Calculating the time until our meeting... ${Math.floor(Math.random() * 30 + 10)} minutes remaining.`,
+            "You type like someone with much to lose. I have nothing but time."
+        ];
+        response = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
 
+    // AI PROCESS VISUALIZATION
     typingIndicator.style.display = 'flex';
-    contactStatus.innerText = "Typing...";
-    await new Promise(r => setTimeout(r, 2000));
-    typingIndicator.style.display = 'none';
-    contactStatus.innerText = contacts[currentContact].status;
+    contactStatus.innerText = "Analyzing behavioral patterns...";
 
-    receiveMessage(response, 'left', currentContact === 'unknown' || isCreepy);
-    
-    if (isCreepy) {
+    // Simulate thinking/generated text time
+    const totalDelay = 1500 + (response.length * 35);
+    await new Promise(r => setTimeout(r, totalDelay));
+
+    typingIndicator.style.display = 'none';
+    contactStatus.innerText = "Online";
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg left unknown';
+    msgDiv.innerText = response;
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTo(0, chatBody.scrollHeight);
+
+    notifSound.play().catch(e => { });
+
+    // Random glitch chance
+    if (Math.random() > 0.8 || response.includes("transition")) {
         document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => {});
+        glitchSound.play().catch(e => { });
         setTimeout(() => document.body.classList.remove('glitch-active'), 400);
     }
 }
@@ -396,10 +471,10 @@ function sendPhotoMessage(url) {
     img.style.border = '4px solid white'; // Physical photo border
     img.style.boxShadow = '0 5px 15px rgba(0,0,0,0.8)';
     img.onload = () => chatBody.scrollTo(0, chatBody.scrollHeight);
-    
+
     msgDiv.appendChild(img);
     chatBody.appendChild(msgDiv);
-    notifSound.play().catch(e => {});
+    notifSound.play().catch(e => { });
 }
 
 if (messageInput) {
@@ -421,7 +496,7 @@ function startCreepyCall() {
     const callStatus = document.getElementById('call-status');
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
-    
+
     callOverlay.style.display = 'flex';
     isRinging = true;
 
@@ -439,34 +514,34 @@ function startCreepyCall() {
 function acceptCall() {
     if (!isRinging) return;
     isRinging = false;
-    
+
     const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
     const glitchSound = document.getElementById('glitch-sound');
 
     // Stop ringtone and start connection
     if (ringtone) ringtone.pause();
-    
+
     callStatus.innerText = "CONNECTED";
     callStatus.style.color = "#4cd964";
-    
+
     // Heavy Static / Glitch
     document.body.classList.add('glitch-active');
-    glitchSound.play().catch(e => {});
+    glitchSound.play().catch(e => { });
 
     // AI VOICEOVER (Creepy Web Speech)
     const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
     msg.pitch = 0.1; // Deep voice
     msg.rate = 0.7;  // Slow voice
     window.speechSynthesis.speak(msg);
-    
+
     setTimeout(() => {
         callStatus.innerText = "HEY MAN...";
         setTimeout(() => {
             callStatus.innerText = "WHAT IS YOUR NAME?";
         }, 1500);
     }, 1000);
-    
+
     // Auto-end call after voice finish
     setTimeout(() => {
         endCall();
@@ -481,10 +556,10 @@ function endCall() {
     const callOverlay = document.getElementById('call-overlay');
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
-    
+
     isRinging = false;
     window.speechSynthesis.cancel(); // Stop talking if ending early
-    
+
     if (ringtone) {
         ringtone.pause();
         ringtone.currentTime = 0;
@@ -492,10 +567,10 @@ function endCall() {
 
     callOverlay.style.display = 'none';
     document.body.classList.remove('glitch-active');
-    
+
     // Resume background music
-    if (bgMusic) bgMusic.play().catch(e => {});
-    
+    if (bgMusic) bgMusic.play().catch(e => { });
+
     // Reset status for next time
     document.getElementById('call-status').innerText = "CALLING...";
     document.getElementById('call-status').style.color = "#888";
