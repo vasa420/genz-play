@@ -178,6 +178,16 @@ function startGame() {
     }, 1500);
 }
 
+function openChatList() {
+    const list = document.getElementById('chat-list-overlay');
+    list.style.display = 'flex';
+}
+
+function closeChatList() {
+    const list = document.getElementById('chat-list-overlay');
+    list.style.display = 'none';
+}
+
 function updateTime() {
     const now = new Date();
     document.getElementById('current-time').innerText = 
