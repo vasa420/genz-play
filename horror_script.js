@@ -312,7 +312,7 @@ async function playAIResponse(userInput) {
     else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
         response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
         setTimeout(() => {
-            sendPhotoMessage("stalker_hero_selfie_1776590484686.png");
+            sendPhotoMessage("stalker_id_1776590763006.png");
         }, 3000);
     }
     else if (analysis.observation > 0) {
@@ -369,16 +369,16 @@ function sendPhotoMessage(url) {
     msgDiv.style.padding = '0';
     msgDiv.style.border = 'none';
 
+    // Passport Size Styling
     const img = document.createElement('img');
     img.src = url;
-    img.style.width = '240px'; 
-    img.style.height = 'auto';
-    img.style.maxHeight = '320px';
+    img.style.width = '120px'; // Passport Width
+    img.style.height = '150px'; // Passport Height
     img.style.objectFit = 'cover';
-    img.style.borderRadius = '15px';
+    img.style.borderRadius = '4px'; // Sharper corners for ID feel
     img.style.marginTop = '10px';
-    img.style.border = '2px solid #ff3e3e';
-    img.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+    img.style.border = '4px solid white'; // Physical photo border
+    img.style.boxShadow = '0 5px 15px rgba(0,0,0,0.8)';
     img.onload = () => chatBody.scrollTo(0, chatBody.scrollHeight);
     
     msgDiv.appendChild(img);
