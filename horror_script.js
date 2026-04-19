@@ -415,48 +415,59 @@ if (sendBtn) {
     sendBtn.addEventListener('click', handleSend);
 }
 
-// Creepy Call System
+// Creepy Call System (Advanced Audio Management)
+const ringtone = document.getElementById('ringtone-sound');
+const bgMusic = document.getElementById('bg-music');
+
 function startCreepyCall() {
     const callOverlay = document.getElementById('call-overlay');
     const callStatus = document.getElementById('call-status');
     callOverlay.style.display = 'flex';
     
-    // Low level ringing sound (glitch loops)
-    const ringInt = setInterval(() => {
-        glitchSound.play().catch(e => {});
-    }, 2000);
+    // Stop Ambient Music
+    if (bgMusic) bgMusic.pause();
 
+    // Start Ringtone
+    if (ringtone) {
+        ringtone.currentTime = 0;
+        ringtone.play().catch(e => console.log("Ringtone blocked"));
+    }
+}
+
+function acceptCall() {
+    const callStatus = document.getElementById('call-status');
+    
+    // Stop Ringtone
+    if (ringtone) ringtone.pause();
+
+    callStatus.innerText = "CONNECTED";
+    callStatus.style.color = "#4cd964";
+    
+    // Heavy Static / Glitch effect
+    document.body.classList.add('glitch-active');
+    glitchSound.play().catch(e => {});
+
+    // AI VOICEOVER (Creepy Web Speech starts AFTER connection)
     setTimeout(() => {
-        clearInterval(ringInt);
-        callStatus.innerText = "CONNECTED";
-        callStatus.style.color = "#4cd964";
+        const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
+        msg.pitch = 0.1; 
+        msg.rate = 0.7;  
+        window.speechSynthesis.speak(msg);
         
-        // Heavy Static / Glitch
-        document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => {});
-
-        // AI VOICEOVER (Creepy Web Speech)
+        callStatus.innerText = "HEY MAN...";
         setTimeout(() => {
-            const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
-            msg.pitch = 0.1; // Deep voice
-            msg.rate = 0.7;  // Slow voice
-            window.speechSynthesis.speak(msg);
-            
-            callStatus.innerText = "HEY MAN...";
-            setTimeout(() => {
-                callStatus.innerText = "WHAT IS YOUR NAME?";
-            }, 1500);
+            callStatus.innerText = "WHAT IS YOUR NAME?";
+        }, 1500);
+    }, 1000);
+    
+    // After voice connection ends
+    setTimeout(() => {
+        endCall();
+        // Follow up chat message
+        setTimeout(() => {
+            playAIResponse("I'm waiting for your name. Don't keep me waiting.");
         }, 1000);
-        
-        // After voice connection fakeout
-        setTimeout(() => {
-            endCall();
-            // Follow up chat message
-            setTimeout(() => {
-                playAIResponse("I'm waiting for your name. Don't keep me waiting.");
-            }, 1000);
-        }, 6000);
-    }, 4000);
+    }, 7000);
 }
 
 function endCall() {
@@ -464,6 +475,13 @@ function endCall() {
     callOverlay.style.display = 'none';
     document.body.classList.remove('glitch-active');
     
+    // Stop all calling sounds
+    if (ringtone) ringtone.pause();
+    window.speechSynthesis.cancel(); // Stop talking if we decline
+    
+    // Resume Ambient Music
+    if (bgMusic) bgMusic.play().catch(e => {});
+
     // Reset status for next time
     document.getElementById('call-status').innerText = "CALLING...";
     document.getElementById('call-status').style.color = "#888";
