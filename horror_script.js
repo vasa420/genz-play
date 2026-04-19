@@ -332,6 +332,47 @@ function openVideos() {
     setTimeout(() => document.body.classList.remove('glitch-active'), 500);
 }
 
+function openCamera() {
+    // Show a full-screen or phone-screen "Security Static"
+    const chatBody = document.getElementById('chat-body');
+    const header = document.querySelector('.chat-header');
+    
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('chat-list-overlay').style.display = 'none';
+    
+    // Create static effect
+    const staticDiv = document.createElement('div');
+    staticDiv.className = 'phone-overlay';
+    staticDiv.style.display = 'flex';
+    staticDiv.style.background = "url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif')";
+    staticDiv.style.opacity = '0.5';
+    staticDiv.style.justifyContent = 'center';
+    staticDiv.style.alignItems = 'center';
+    staticDiv.innerHTML = '<h1 style="color: white; text-shadow: 0 0 10px red; letter-spacing: 5px;">SIGNAL LOST</h1>';
+    
+    document.querySelector('.phone-container').appendChild(staticDiv);
+    
+    glitchSound.play().catch(e => {});
+    
+    setTimeout(() => {
+        staticDiv.remove();
+        openHome();
+        alert("Camera Feed Hijacked. Connection Terminated.");
+    }, 3000);
+}
+
+function openMusic() {
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        bgMusic.playbackRate = 0.5; // Distort the music
+        setTimeout(() => {
+            bgMusic.playbackRate = 1.0;
+            openHome();
+        }, 5000);
+    }
+    alert("Now Playing: Requiem for a Forgotten User");
+}
+
 function closeChatList() {
     console.log("Closing Chat List Overlay...");
     const overlay = document.getElementById('chat-list-overlay');
