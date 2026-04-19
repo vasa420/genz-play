@@ -334,10 +334,14 @@ function openVideos() {
 }
 
 function openCamera() {
-    console.log("Opening Security Camera System...");
+    console.log("INITIALIZING SECURITY FEED...");
+    // Force close everything else
     document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('chat-list-overlay').style.display = 'none';
     document.getElementById('camera-system').style.display = 'flex';
-    switchCamera(1); // Start with Cam 1
+    
+    // Reset camera state
+    switchCamera(1); 
 }
 
 function switchCamera(id) {
@@ -347,12 +351,22 @@ function switchCamera(id) {
     const location = document.getElementById('cam-location');
     const buttons = document.querySelectorAll('.cam-btn');
     
-    // UI Update
+    // Clear any previous alerts/timeouts if possible (state reset)
+    
+    // UI Button Update
     buttons.forEach((btn, idx) => {
-        btn.style.background = (idx + 1 === id) ? "#ff3b30" : "#222";
+        if (idx + 1 === id) {
+            btn.style.background = "#ff3e3e";
+            btn.style.borderColor = "#ff3e3e";
+            btn.style.boxShadow = "0 0 10px rgba(255, 62, 62, 0.5)";
+        } else {
+            btn.style.background = "#222";
+            btn.style.borderColor = "#444";
+            btn.style.boxShadow = "none";
+        }
     });
     
-    // Glitch Effect during switch
+    // Switch Effect
     glitch.style.opacity = '1';
     glitchSound.play().catch(e => {});
     
@@ -360,20 +374,23 @@ function switchCamera(id) {
         glitch.style.opacity = '0';
         label.innerText = `CAM ${id}`;
         
-        // Feed Logic
+        const timestamp = new Date().toLocaleTimeString();
+        document.querySelector('.cctv-time').innerText = timestamp;
+
         if (id === 1) {
             feed.src = "camera_porch_view_1776596595360.png";
-            location.innerText = "PORCH";
+            location.innerText = "FRONT PORCH - LIVE";
+            feed.style.filter = "none";
         } else if (id === 2) {
             feed.src = "camera_backyard_view_1776596617682.png";
-            location.innerText = "BACKYARD";
+            location.innerText = "BACKYARD - NIGHT VISION";
+            feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8)"; // Night vision tint
         } else {
-            // Simulated Lost Feed for other cams
             feed.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif";
-            location.innerText = id === 3 ? "LIVING ROOM (SIGNAL LOST)" : 
-                               id === 4 ? "HALLWAY (SIGNAL LOST)" : "GARAGE (SIGNAL LOST)";
+            location.innerText = "SIGNAL LOST - UNABLE TO CONNECT";
+            feed.style.filter = "grayscale(1) contrast(1.5)";
         }
-    }, 400);
+    }, 300);
 }
 
 function openMusic() {
