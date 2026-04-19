@@ -382,15 +382,28 @@ function startCreepyCall() {
         // Heavy Static / Glitch
         document.body.classList.add('glitch-active');
         glitchSound.play().catch(e => {});
+
+        // AI VOICEOVER (Creepy Web Speech)
+        setTimeout(() => {
+            const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
+            msg.pitch = 0.1; // Deep voice
+            msg.rate = 0.7;  // Slow voice
+            window.speechSynthesis.speak(msg);
+            
+            callStatus.innerText = "HEY MAN...";
+            setTimeout(() => {
+                callStatus.innerText = "WHAT IS YOUR NAME?";
+            }, 1500);
+        }, 1000);
         
         // After voice connection fakeout
         setTimeout(() => {
             endCall();
             // Follow up chat message
             setTimeout(() => {
-                playAIResponse("why did you call me?");
+                playAIResponse("I'm waiting for your name. Don't keep me waiting.");
             }, 1000);
-        }, 3000);
+        }, 6000);
     }, 4000);
 }
 
