@@ -362,3 +362,44 @@ if (messageInput) {
 if (sendBtn) {
     sendBtn.addEventListener('click', handleSend);
 }
+
+// Creepy Call System
+function startCreepyCall() {
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    callOverlay.style.display = 'flex';
+    
+    // Low level ringing sound (glitch loops)
+    const ringInt = setInterval(() => {
+        glitchSound.play().catch(e => {});
+    }, 2000);
+
+    setTimeout(() => {
+        clearInterval(ringInt);
+        callStatus.innerText = "CONNECTED";
+        callStatus.style.color = "#4cd964";
+        
+        // Heavy Static / Glitch
+        document.body.classList.add('glitch-active');
+        glitchSound.play().catch(e => {});
+        
+        // After voice connection fakeout
+        setTimeout(() => {
+            endCall();
+            // Follow up chat message
+            setTimeout(() => {
+                playAIResponse("why did you call me?");
+            }, 1000);
+        }, 3000);
+    }, 4000);
+}
+
+function endCall() {
+    const callOverlay = document.getElementById('call-overlay');
+    callOverlay.style.display = 'none';
+    document.body.classList.remove('glitch-active');
+    
+    // Reset status for next time
+    document.getElementById('call-status').innerText = "CALLING...";
+    document.getElementById('call-status').style.color = "#888";
+}
