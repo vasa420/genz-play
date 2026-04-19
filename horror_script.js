@@ -312,7 +312,7 @@ async function playAIResponse(userInput) {
     else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
         response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
         setTimeout(() => {
-            sendPhotoMessage("stalker_mirror_selfie_1776589637959.png");
+            sendPhotoMessage("stalker_hero_selfie_1776590484686.png");
         }, 3000);
     }
     else if (analysis.observation > 0) {
@@ -365,12 +365,20 @@ async function playAIResponse(userInput) {
 function sendPhotoMessage(url) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg left unknown photo-msg';
+    msgDiv.style.background = 'transparent';
+    msgDiv.style.padding = '0';
+    msgDiv.style.border = 'none';
+
     const img = document.createElement('img');
     img.src = url;
-    img.style.maxWidth = '100%';
-    img.style.borderRadius = '10px';
+    img.style.width = '240px'; 
+    img.style.height = 'auto';
+    img.style.maxHeight = '320px';
+    img.style.objectFit = 'cover';
+    img.style.borderRadius = '15px';
     img.style.marginTop = '10px';
-    img.style.border = '1px solid #ff3e3e';
+    img.style.border = '2px solid #ff3e3e';
+    img.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
     img.onload = () => chatBody.scrollTo(0, chatBody.scrollHeight);
     
     msgDiv.appendChild(img);
