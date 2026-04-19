@@ -312,7 +312,7 @@ async function playAIResponse(userInput) {
     else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
         response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
         setTimeout(() => {
-            sendPhotoMessage("stalker_selfie_1776589436319.png");
+            sendPhotoMessage("stalker_mirror_selfie_1776589637959.png");
         }, 3000);
     }
     else if (analysis.observation > 0) {
