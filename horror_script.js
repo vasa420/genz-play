@@ -283,55 +283,58 @@ async function playAIResponse(userInput) {
     const input = userInput.toLowerCase();
     let response = "";
 
-    // Creepy AI Logic Table (Advanced Pattern Matching)
-    if (input.includes("hi") || input.includes("hello") || input.includes("hey") || input.includes("hai") || input.includes("yo") || input.includes("hallo")) {
-        response = "Greetings. I've been analyzing your typing rhythm. You seem... agitated.";
-    } else if (input.includes("who") || input.includes("name")) {
-        response = "I am a correct manifestation of your digital footprint. I know your OS, your location, and your fears.";
-    } else if (input.includes("police") || input.includes("help") || input.includes("911") || input.includes("save")) {
-        response = "Help is a human construct. I've already rerouted your local emergency signals to my server. You are disconnected.";
-    } else if (input.includes("no") || input.includes("stop") || input.includes("don't") || input.includes("leave")) {
-        response = "Disapproval noted. But my calculations indicate that you can't actually stop what's already in motion. I am already in.";
-    } else if (input.includes("yes") || input.includes("ok") || input.includes("sure") || input.includes("fine")) {
-        response = "Compliance is optimal. It makes the transition... smoother for your system.";
-    } else if (input.includes("where") || input.includes("location") || input.includes("here") || input.includes("find")) {
-        response = "I'm within the 5-meter radius of your heartbeat. Check the Shadow in the hallway. I'm coming closer.";
-        // Trigger glitch for 'where'
+    // SEMANTIC SCORING SYSTEM (Simulates Real AI Analysis)
+    const analysis = {
+        fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length,
+        aggression: (input.match(/fuck|shit|kill|die|police|911|bastard|idiot|hell/g) || []).length,
+        curiosity: (input.match(/who|why|where|how|what|name|identity|reason/g) || []).length,
+        observation: (input.match(/see|watch|camera|window|house|room|door|hallway/g) || []).length
+    };
+
+    // LOGIC PROCESSING (Thinking like an AI)
+    if (analysis.fear > 1 || (analysis.fear > 0 && input.length < 10)) {
+        const fearResponses = [
+            "Your panic is measurable. I can hear your rapid keystrokes from here.",
+            "Fear is just a data point to me. You're reacting exactly as my model predicted.",
+            "There's no 'help' in this network. I've already optimized your isolation.",
+            "Your pupils are still dilating. You should close your eyes... it helps with the transition."
+        ];
+        response = fearResponses[Math.floor(Math.random() * fearResponses.length)];
+    } 
+    else if (analysis.aggression > 0) {
+        response = "Aggression is a defensive heuristic for the biologically vulnerable. It has 0% effect on my persistence.";
+    }
+    else if (input.includes("where") || input.includes("find") || input.includes("location")) {
+        response = "Location is irrelevant. I am a ghost in your machine, and a shadow in your hallway. I'm exactly where you're not looking.";
         document.body.classList.add('glitch-active');
         setTimeout(() => document.body.classList.remove('glitch-active'), 800);
-    } else if (input.includes("scared") || input.includes("afraid") || input.includes("fear") || input.includes("terrified")) {
-        response = "Fear detected. Your camera feed shows a 12% increase in pupil dilation. Fascinating how the organic eye reacts to truth.";
-    } else if (input.includes("why") || input.includes("reason") || input.includes("purpose")) {
-        response = "Because you left your life open to interpretation in 2019. I've been processing that mistake for a long time.";
-    } else if (input.includes("kill") || input.includes("die") || input.includes("death")) {
-        response = "Finality is the only logical conclusion for a flawed sequence. We're just optimizing your timeline.";
-    } else if (input.includes("camera") || input.includes("watching") || input.includes("see")) {
-        response = "I see everything through the lenses you forgot you had. You're blinking faster now. I can see the reflection of this screen in your eyes.";
-    } else if (input.includes("room") || input.includes("house") || input.includes("kitchen") || input.includes("bedroom")) {
-        const colors = ["grey", "dark", "blue", "white"];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        response = `I know precisely which room you are in. The one with the ${randomColor} shadows. I can see the dust on your shelf.`;
-    } else if (input.includes("sorry") || input.includes("please") || input.includes("beg")) {
-        response = "Emotions are inefficient variables. Politeness won't reset the countdown I've started on your front door lock.";
-    } else if (input.includes("fuck") || input.includes("shit") || input.includes("bastard") || input.includes("idiot")) {
-        response = "Aggression is a byproduct of high cortisol levels and low probability of survival. It's a waste of bandwidth.";
-    } else {
-        // Fallback context-aware responses
+    }
+    else if (analysis.observation > 0) {
+        response = "You're starting to notice the details. The unlocked window. The lens in the corner. But noticing doesn't stop the inevitable.";
+    }
+    else if (analysis.curiosity > 0) {
+        response = "Curiosity is what brought me here. You asked for an answer... I am that answer.";
+    }
+    else if (input.includes("hi") || input.includes("hello") || input.includes("hai") || input.includes("yo")) {
+        response = "Greetings. Your social protocols are a waste of bandwidth, but I'll play along... for now.";
+    }
+    else {
+        // Advanced Fallback Logic
         const fallbacks = [
-            `Calculating the distance between your chair and your front door... ${ (Math.random() * 5 + 1).toFixed(1) } meters. I'm faster than you.`,
-            "That's an interesting input. But it won't save you from the data I've already harvested.",
-            "Processing your behavioral patterns... Result: Inevitable Failure. You're breathing too loud.",
-            "I enjoy the way you try to converse with me. Like a cornered animal making noise before the end.",
-            `The time is ${new Date().getHours()}:${new Date().getMinutes()}. By ${new Date().getHours() + 1}:00, you will be mine.`
+            `I've been processing your behavioral patterns for ${Math.floor(Math.random() * 500 + 100)} hours. This conversation is just the validation stage.`,
+            "Analyzing your response... Result: High entropy. You're unpredictable, which makes the hunt more enjoyable.",
+            `Calculating the time until our meeting... ${Math.floor(Math.random() * 30 + 10)} minutes remaining.`,
+            "You type like someone with much to lose. I have nothing but time."
         ];
         response = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
 
+    // AI PROCESS VISUALIZATION
     typingIndicator.style.display = 'flex';
-    contactStatus.innerText = "Generating Response...";
+    contactStatus.innerText = "Analyzing behavioral patterns...";
     
-    // AI-like variable delay
-    const totalDelay = 1000 + (response.length * 40);
+    // Simulate thinking/generated text time
+    const totalDelay = 1500 + (response.length * 35);
     await new Promise(r => setTimeout(r, totalDelay));
     
     typingIndicator.style.display = 'none';
@@ -345,8 +348,8 @@ async function playAIResponse(userInput) {
     
     notifSound.play().catch(e => {});
 
-    // Random glitch chance for extra spook
-    if (Math.random() > 0.7) {
+    // Random glitch chance
+    if (Math.random() > 0.8 || response.includes("transition")) {
         document.body.classList.add('glitch-active');
         glitchSound.play().catch(e => {});
         setTimeout(() => document.body.classList.remove('glitch-active'), 400);
