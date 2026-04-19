@@ -167,6 +167,15 @@ window.speakMessage = function (t, forceVoice = null) {
     let inp = document.getElementById('custom-msg-input'); if (inp) inp.value = "";
 };
 
+window.switchToHorrorGame = function() {
+    window.playSound('hit');
+    currentMessage = "⚠️ WARNING: ENTERING HORROR REALM...";
+    messageDisplayTime = Date.now() + 2000;
+    setTimeout(() => {
+        window.location.href = 'horror_game.html';
+    }, 1500);
+};
+
 // ==========================================
 // 1.8. PROFESSIONAL CUSTOM MODAL SYSTEM
 // ==========================================
@@ -314,6 +323,7 @@ window.triggerCinematic = function (px, py) {
 
 // Event & Updates Feed System
 window.eventFeeds = [
+    { type: 'NEW', title: 'PHONE MESSAGE HORROR', desc: 'Can you survive the mysterious texts? Stay alive in the night!', icon: '📱', color: '#FF3E3E' },
     { type: 'EVENT', title: 'T-TOURNAMENT FINALS', desc: 'Join the grand stage and win $10,000!', icon: '🏆', color: '#FFD700' },
     { type: 'UPDATE', title: 'TITAN STRIKER (NEW)', desc: 'New heavy-weight striker added to shop.', icon: '🦾', color: '#00FFFF' },
     { type: 'EVENT', title: 'MIDNIGHT HUSTLE', desc: 'Extreme difficulty mode open now!', icon: '🌙', color: '#8A2BE2' },

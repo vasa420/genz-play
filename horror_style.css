@@ -1,0 +1,294 @@
+:root {
+    --bg-dark: #050505;
+    --phone-bg: #0a0a0a;
+    --text-primary: #e0e0e0;
+    --acc-red: #ff3e3e;
+    --acc-blue: #0084ff;
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: var(--text-primary);
+}
+
+/* Background Static */
+.screen-static {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif');
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Phone Mockup */
+.phone-container {
+    width: 380px;
+    height: 780px;
+    background: linear-gradient(180deg, #111 0%, #000 100%);
+    border: 12px solid #222;
+    border-radius: 50px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0,0,0,1), 0 0 20px rgba(255,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Status Bar */
+.status-bar {
+    height: 40px;
+    padding: 0 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+}
+
+.status-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.battery {
+    color: var(--acc-red);
+    animation: pulse 1s infinite alternate;
+}
+
+/* Chat Header */
+.chat-header {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 10;
+}
+
+.back-btn { font-size: 24px; color: var(--acc-blue); cursor: pointer; }
+
+.contact-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: #222;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    border: 1px solid var(--acc-red);
+    text-shadow: 0 0 5px var(--acc-red);
+}
+
+.contact-name { font-size: 16px; font-weight: 700; }
+.status { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* Chat body */
+.chat-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    scrollbar-width: none;
+}
+
+.chat-body::-webkit-scrollbar { display: none; }
+
+/* Message Bubbles */
+.msg {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+.msg.left {
+    align-self: flex-start;
+    background: #262626;
+    border-bottom-left-radius: 4px;
+    color: #fff;
+}
+
+.msg.right {
+    align-self: flex-end;
+    background: var(--acc-blue);
+    border-bottom-right-radius: 4px;
+    color: white;
+}
+
+.msg.unknown {
+    color: var(--acc-red);
+    border: 1px solid rgba(255, 62, 62, 0.3);
+    text-shadow: 0 0 2px var(--acc-red);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    padding: 0 20px 10px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing-indicator span {
+    width: 6px;
+    height: 6px;
+    background: #555;
+    border-radius: 50%;
+    animation: blink 1.4s infinite both;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+/* Choices */
+.choice-container {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(0,0,0,0.5);
+    border-top: 1px solid var(--glass-border);
+}
+
+.choice-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    padding: 12px;
+    border-radius: 12px;
+    color: #888;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.choice-btn:hover {
+    background: var(--acc-blue);
+    color: white;
+    border-color: var(--acc-blue);
+    transform: translateY(-2px);
+}
+
+/* Input area */
+.input-area {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #111;
+    opacity: 0.3;
+}
+
+.message-input {
+    flex: 1;
+    background: #222;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #555;
+}
+
+/* Overlays */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.overlay.active { display: flex; }
+
+.glitch-title {
+    font-size: 48px;
+    letter-spacing: 10px;
+    color: var(--acc-red);
+    margin-bottom: 20px;
+    text-shadow: 2px 0 red, -2px 0 blue;
+    animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+.start-btn, .retry-btn {
+    margin-top: 30px;
+    padding: 15px 40px;
+    background: transparent;
+    border: 1px solid var(--acc-red);
+    color: var(--acc-red);
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.start-btn:hover {
+    background: var(--acc-red);
+    color: black;
+    box-shadow: 0 0 20px var(--acc-red);
+}
+
+/* Animations */
+@keyframes pulse { to { opacity: 0.3; } }
+@keyframes blink { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+@keyframes glitch-anim {
+    0% { clip-path: inset(40% 0 61% 0); }
+    20% { clip-path: inset(92% 0 1% 0); }
+    40% { clip-path: inset(43% 0 1% 0); }
+    60% { clip-path: inset(25% 0 58% 0); }
+    80% { clip-path: inset(54% 0 7% 0); }
+    100% { clip-path: inset(58% 0 43% 0); }
+}
+
+.home-indicator {
+    width: 120px;
+    height: 5px;
+    background: #333;
+    border-radius: 10px;
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
