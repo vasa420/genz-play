@@ -88,6 +88,28 @@ const story = {
         text: "You can't hang up on fate.",
         sender: "unknown",
         death: "The phone kept ringing... even after you smashed it. Then he appeared."
+    },
+    proof_window: {
+        text: "Check your messages again. I just sent you a photo.",
+        sender: "unknown",
+        choices: [
+            { text: "What photo?", next: "photo_event" },
+            { text: "I'm not looking.", next: "scary_detail" }
+        ]
+    },
+    photo_event: {
+        text: "It's a photo of your back. From five seconds ago.",
+        sender: "unknown",
+        glitch: true,
+        death: "The flash was the last thing you saw."
+    },
+    hallway_event: {
+        text: "Do you hear that? The floorboards in the hallway? That's not the wind.",
+        sender: "unknown",
+        choices: [
+            { text: "Hide!", next: "hide_death" },
+            { text: "Who's there?!", next: "stalker_angry" }
+        ]
     }
 };
 
@@ -218,4 +240,67 @@ function endGame(reason, isVictory) {
     }
     
     overlay.style.display = 'flex';
+}
+
+// Typing System Implementation
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+
+function handleSend() {
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    messageInput.value = '';
+    
+    // Add player message bubble
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg right';
+    msgDiv.innerText = text;
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTo(0, chatBody.scrollHeight);
+
+    // Check if it matches any current choices
+    const currentChoices = document.querySelectorAll('.choice-btn');
+    let matched = false;
+    
+    currentChoices.forEach(btn => {
+        if (text.toLowerCase().includes(btn.innerText.toLowerCase()) || 
+            btn.innerText.toLowerCase().includes(text.toLowerCase())) {
+            btn.click();
+            matched = true;
+        }
+    });
+
+    if (!matched) {
+        // Spooky default response if they type arbitrary stuff
+        setTimeout(() => {
+            playGenericResponse();
+        }, 1000);
+    }
+}
+
+async function playGenericResponse() {
+    typingIndicator.style.display = 'flex';
+    contactStatus.innerText = "Typing...";
+    await new Promise(r => setTimeout(r, 2000));
+    typingIndicator.style.display = 'none';
+    contactStatus.innerText = "Online";
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg left unknown';
+    msgDiv.innerText = "..."; // Silence is scarier
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTo(0, chatBody.scrollHeight);
+    
+    notifSound.play().catch(e => {});
+}
+
+if (messageInput) {
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSend();
+    });
+}
+
+if (sendBtn) {
+    sendBtn.addEventListener('click', handleSend);
 }
