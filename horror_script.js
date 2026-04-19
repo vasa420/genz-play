@@ -284,7 +284,7 @@ async function playAIResponse(userInput) {
     let response = "";
 
     // Creepy AI Logic Table
-    if (input.includes("hi") || input.includes("hello") || input.includes("hey")) {
+    if (input.includes("hi") || input.includes("hello") || input.includes("hey") || input.includes("hai") || input.includes("yo") || input.includes("hallo")) {
         response = "Greetings. I've been analyzing your typing rhythm. You seem... agitated.";
     } else if (input.includes("who") || input.includes("name")) {
         response = "I am a correct manifestation of your digital footprint. I know your OS, your location, and your fears.";
