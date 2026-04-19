@@ -309,6 +309,12 @@ async function playAIResponse(userInput) {
         document.body.classList.add('glitch-active');
         setTimeout(() => document.body.classList.remove('glitch-active'), 800);
     }
+    else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
+        response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
+        setTimeout(() => {
+            sendPhotoMessage("stalker_selfie_1776589436319.png");
+        }, 3000);
+    }
     else if (analysis.observation > 0) {
         response = "You're starting to notice the details. The unlocked window. The lens in the corner. But noticing doesn't stop the inevitable.";
     }
@@ -354,6 +360,22 @@ async function playAIResponse(userInput) {
         glitchSound.play().catch(e => {});
         setTimeout(() => document.body.classList.remove('glitch-active'), 400);
     }
+}
+
+function sendPhotoMessage(url) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg left unknown photo-msg';
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.borderRadius = '10px';
+    img.style.marginTop = '10px';
+    img.style.border = '1px solid #ff3e3e';
+    img.onload = () => chatBody.scrollTo(0, chatBody.scrollHeight);
+    
+    msgDiv.appendChild(img);
+    chatBody.appendChild(msgDiv);
+    notifSound.play().catch(e => {});
 }
 
 if (messageInput) {
