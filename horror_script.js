@@ -199,15 +199,38 @@ function switchChat(key) {
 }
 
 function getSuggestionsFor(key) {
+    const input = chatHistory[key].length > 0 ? chatHistory[key][chatHistory[key].length - 1].text.toLowerCase() : "";
+    
+    if (key === 'mom') {
+        if (input.includes("police") || input.includes("door")) {
+            return [
+                { text: "Hurry Mom, please!", type: "urgent" },
+                { text: "I'm hiding under the bed.", type: "action" },
+                { text: "Do you hear the sirens?", type: "question" }
+            ];
+        } else if (input.includes("traffic") || input.includes("minutes")) {
+            return [
+                { text: "Don't stop for anything.", type: "urgent" },
+                { text: "I'm scared of the silence.", type: "emotion" }
+            ];
+        } else if (input.includes("love")) {
+            return [
+                { text: "I love you too.", type: "love" },
+                { text: "Please just get here.", type: "urgent" }
+            ];
+        }
+        // Default Mom suggestions
+        return [
+            { text: "Mom, I'm scared. Someone is outside.", type: "danger" },
+            { text: "I'm safe, don't worry.", type: "safe" },
+            { text: "Where are you right now?", type: "location" }
+        ];
+    }
+    
     const sets = {
         unknown: [
             { text: "Who is this?", next: "asking_who" },
             { text: "Wrong number, buddy.", next: "aggressive_start" }
-        ],
-        mom: [
-            { text: "Mom, I'm scared. Someone is outside.", type: "danger" },
-            { text: "I'm safe, don't worry.", type: "safe" },
-            { text: "Where are you right now?", type: "location" }
         ],
         dad: [
             { text: "Checking the cameras now...", type: "action" },
