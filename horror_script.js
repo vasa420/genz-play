@@ -291,8 +291,32 @@ async function playAIResponse(userInput) {
         observation: (input.match(/see|watch|camera|window|house|room|door|hallway/g) || []).length
     };
 
-    // LOGIC PROCESSING (Thinking like an AI)
-    if (analysis.fear > 1 || (analysis.fear > 0 && input.length < 10)) {
+    // LOGIC PROCESSING (Thinking like an AI with Real Tools)
+    if (input.includes("time") || input.includes("what time")) {
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        response = `The time is exactly ${timeStr}. My clock is perfectly synced with the rhythm of your heartbeat. I'm counting every second.`;
+    }
+    else if (input.includes("date") || input.includes("day") || input.includes("today")) {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const now = new Date();
+        response = `It is ${days[now.getDay()]}, ${now.toLocaleDateString()}. A fascinating date for a digital harvest. Don't you agree?`;
+    }
+    else if (input.includes("who am i") || input.includes("my name") || input.includes("who is me")) {
+        const platform = navigator.platform;
+        const browser = navigator.userAgent.split(' ')[0];
+        response = `You are a biological entity currently connected via ${platform}. I see you through the ${browser} lens. You're more transparent than you think.`;
+    }
+    else if (input.includes("where am i") || input.includes("my location")) {
+        response = "I've already mapped your IP to a 50-meter radius. I can see the streetlights outside your window. I'm calculating the fastest route now.";
+    }
+    else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
+        response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
+        setTimeout(() => {
+            sendPhotoMessage("stalker_id.png");
+        }, 3000);
+    }
+    else if (analysis.fear > 1 || (analysis.fear > 0 && input.length < 10)) {
         const fearResponses = [
             "Your panic is measurable. I can hear your rapid keystrokes from here.",
             "Fear is just a data point to me. You're reacting exactly as my model predicted.",
@@ -303,17 +327,6 @@ async function playAIResponse(userInput) {
     } 
     else if (analysis.aggression > 0) {
         response = "Aggression is a defensive heuristic for the biologically vulnerable. It has 0% effect on my persistence.";
-    }
-    else if (input.includes("where") || input.includes("find") || input.includes("location")) {
-        response = "Location is irrelevant. I am a ghost in your machine, and a shadow in your hallway. I'm exactly where you're not looking.";
-        document.body.classList.add('glitch-active');
-        setTimeout(() => document.body.classList.remove('glitch-active'), 800);
-    }
-    else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
-        response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
-        setTimeout(() => {
-            sendPhotoMessage("stalker_id.png");
-        }, 3000);
     }
     else if (analysis.observation > 0) {
         response = "You're starting to notice the details. The unlocked window. The lens in the corner. But noticing doesn't stop the inevitable.";
