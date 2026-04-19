@@ -305,6 +305,7 @@ function openHome() {
     console.log("Opening Home Screen...");
     document.getElementById('home-screen').style.display = 'block';
     document.getElementById('chat-list-overlay').style.display = 'none';
+    document.getElementById('camera-system').style.display = 'none';
 }
 
 function openChatList() {
@@ -333,32 +334,46 @@ function openVideos() {
 }
 
 function openCamera() {
-    // Show a full-screen or phone-screen "Security Static"
-    const chatBody = document.getElementById('chat-body');
-    const header = document.querySelector('.chat-header');
-    
+    console.log("Opening Security Camera System...");
     document.getElementById('home-screen').style.display = 'none';
-    document.getElementById('chat-list-overlay').style.display = 'none';
+    document.getElementById('camera-system').style.display = 'flex';
+    switchCamera(1); // Start with Cam 1
+}
+
+function switchCamera(id) {
+    const feed = document.getElementById('active-feed');
+    const glitch = document.getElementById('feed-glitch');
+    const label = document.getElementById('cam-label');
+    const location = document.getElementById('cam-location');
+    const buttons = document.querySelectorAll('.cam-btn');
     
-    // Create static effect
-    const staticDiv = document.createElement('div');
-    staticDiv.className = 'phone-overlay';
-    staticDiv.style.display = 'flex';
-    staticDiv.style.background = "url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif')";
-    staticDiv.style.opacity = '0.5';
-    staticDiv.style.justifyContent = 'center';
-    staticDiv.style.alignItems = 'center';
-    staticDiv.innerHTML = '<h1 style="color: white; text-shadow: 0 0 10px red; letter-spacing: 5px;">SIGNAL LOST</h1>';
+    // UI Update
+    buttons.forEach((btn, idx) => {
+        btn.style.background = (idx + 1 === id) ? "#ff3b30" : "#222";
+    });
     
-    document.querySelector('.phone-container').appendChild(staticDiv);
-    
+    // Glitch Effect during switch
+    glitch.style.opacity = '1';
     glitchSound.play().catch(e => {});
     
     setTimeout(() => {
-        staticDiv.remove();
-        openHome();
-        alert("Camera Feed Hijacked. Connection Terminated.");
-    }, 3000);
+        glitch.style.opacity = '0';
+        label.innerText = `CAM ${id}`;
+        
+        // Feed Logic
+        if (id === 1) {
+            feed.src = "camera_porch_view_1776596595360.png";
+            location.innerText = "PORCH";
+        } else if (id === 2) {
+            feed.src = "camera_backyard_view_1776596617682.png";
+            location.innerText = "BACKYARD";
+        } else {
+            // Simulated Lost Feed for other cams
+            feed.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif";
+            location.innerText = id === 3 ? "LIVING ROOM (SIGNAL LOST)" : 
+                               id === 4 ? "HALLWAY (SIGNAL LOST)" : "GARAGE (SIGNAL LOST)";
+        }
+    }, 400);
 }
 
 function openMusic() {

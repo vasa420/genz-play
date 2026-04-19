@@ -56,6 +56,40 @@
 
         <div class="home-indicator"></div>
 
+        <!-- Security Camera System Overlay -->
+        <div id="camera-system" class="phone-overlay" style="background: #000; display: none; flex-direction: column;">
+            <!-- Camera Feed Head -->
+            <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); z-index: 10;">
+                <div onclick="openHome()" style="color: #007aff; font-size: 18px; cursor: pointer;">Home</div>
+                <div style="color: #fff; font-weight: bold; font-family: 'JetBrains Mono', monospace;">
+                    <span style="color: #ff3b30; animation: blink 1s infinite;">●</span> REC <span id="cam-label">CAM 1</span>
+                </div>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <!-- Feed Monitor -->
+            <div id="camera-monitor" style="flex: 1; background: #000; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <img id="active-feed" src="camera_porch_view_1776596595360.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s;">
+                <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.1) 2px); pointer-events: none;"></div>
+                <div id="feed-glitch" style="position: absolute; top:0; left:0; width:100%; height:100%; background: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif'); opacity: 0; pointer-events: none;"></div>
+                
+                <!-- On-Screen Text -->
+                <div style="position: absolute; bottom: 20px; left: 20px; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-shadow: 2px 2px #000;">
+                    LIVE: <span id="cam-location">PORCH</span><br>
+                    TIME: <span class="cctv-time">16:32:46</span>
+                </div>
+            </div>
+
+            <!-- Controller -->
+            <div style="background: #111; padding: 25px 15px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; border-top: 1px solid #333;">
+                <button onclick="switchCamera(1)" class="cam-btn active-cam" style="background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">CAM 1</button>
+                <button onclick="switchCamera(2)" class="cam-btn" style="background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">CAM 2</button>
+                <button onclick="switchCamera(3)" class="cam-btn" style="background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">CAM 3</button>
+                <button onclick="switchCamera(4)" class="cam-btn" style="background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">CAM 4</button>
+                <button onclick="switchCamera(5)" class="cam-btn" style="background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">CAM 5</button>
+            </div>
+        </div>
+
         <!-- Home Screen Overlay -->
         <div id="home-screen" class="phone-overlay" style="background: url('horror_phone_wallpaper_1776596000573.png'); background-size: cover; background-position: center; display: none; padding: 60px 20px;">
             <div class="app-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 15px; width: 100%;">
