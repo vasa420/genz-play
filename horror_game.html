@@ -153,6 +153,14 @@
         <div id="home-screen" class="phone-overlay" style="background: url('horror_phone_wallpaper_1776596000573.png'); background-size: cover; background-position: center; display: none; padding: 60px 20px;">
             <div class="app-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 15px; width: 100%;">
                 
+                <!-- Phone App -->
+                <div class="app-icon-container" onclick="openDialer()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+                    <div class="app-icon" style="width: 62px; height: 62px; background: #4cd964; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                        📞
+                    </div>
+                    <span style="font-size: 11px; color: white; margin-top: 8px; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Phone</span>
+                </div>
+
                 <!-- Messages App -->
                 <div class="app-icon-container" onclick="openChatList()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
                     <div class="app-icon" style="width: 62px; height: 62px; background: #fff; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;">
@@ -203,42 +211,6 @@
                 </div>
             </div>
 
-            <!-- Dialer Page (INSIDE PHONE) -->
-            <div id="dialer-overlay" class="phone-overlay" style="background: #000; padding-top: 60px; display: none; flex-direction: column; align-items: center;">
-                <div style="width: 100%; padding: 0 20px; display: flex; justify-content: flex-start; margin-bottom: 30px;">
-                    <div onclick="openHome()" style="color: #007aff; font-size: 16px; cursor: pointer; display: flex; align-items: center;">‹ Home</div>
-                </div>
-
-                <div id="dialer-display" style="color: white; font-size: 40px; font-weight: 300; height: 60px; margin-bottom: 40px; letter-spacing: 2px;"></div>
-
-                <div class="dialer-keypad" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                    <button class="dial-btn" onclick="dialDigit('1')">1</button>
-                    <button class="dial-btn" onclick="dialDigit('2')">2</button>
-                    <button class="dial-btn" onclick="dialDigit('3')">3</button>
-                    <button class="dial-btn" onclick="dialDigit('4')">4</button>
-                    <button class="dial-btn" onclick="dialDigit('5')">5</button>
-                    <button class="dial-btn" onclick="dialDigit('6')">6</button>
-                    <button class="dial-btn" onclick="dialDigit('7')">7</button>
-                    <button class="dial-btn" onclick="dialDigit('8')">8</button>
-                    <button class="dial-btn" onclick="dialDigit('9')">9</button>
-                    <button class="dial-btn" onclick="dialDigit('*')">*</button>
-                    <button class="dial-btn" onclick="dialDigit('0')">0</button>
-                    <button class="dial-btn" onclick="dialDigit('#')">#</button>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 40px; margin-top: 40px; width: 100%; justify-content: center;">
-                    <div style="width: 70px;"></div> <!-- Spacer -->
-                    <div onclick="performCall()" style="width: 70px; height: 70px; background: #4cd964; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; cursor: pointer; transition: 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">📞</div>
-                    <div onclick="deleteDialDigit()" style="width: 70px; color: #333; font-size: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#333'">⌫</div>
-                </div>
-
-                <style>
-                    .dial-btn {
-                        width: 75px; height: 75px; border-radius: 50%; background: #1c1c1e; border: none;
-                        color: white; font-size: 32px; font-weight: 400; cursor: pointer; transition: 0.2s;
-                    }
-                    .dial-btn:active { background: #3a3a3c; }
-                </style>
             </div>
 
             <!-- Dock -->
@@ -248,6 +220,44 @@
                 <div style="font-size: 30px; width: 60px; height: 60px; background: #ffcc00; border-radius: 14px; display: flex; align-items: center; justify-content: center;">✉️</div>
                 <div style="font-size: 30px; width: 60px; height: 60px; background: #5856d6; border-radius: 14px; display: flex; align-items: center; justify-content: center;">🎵</div>
             </div>
+        </div>
+
+        <!-- Dialer Page (INSIDE PHONE) -->
+        <div id="dialer-overlay" class="phone-overlay" style="background: #000; padding-top: 60px; display: none; flex-direction: column; align-items: center;">
+            <div style="width: 100%; padding: 0 20px; display: flex; justify-content: flex-start; margin-bottom: 30px;">
+                <div onclick="openHome()" style="color: #007aff; font-size: 16px; cursor: pointer; display: flex; align-items: center;">‹ Home</div>
+            </div>
+
+            <div id="dialer-display" style="color: white; font-size: 40px; font-weight: 300; height: 60px; margin-bottom: 40px; letter-spacing: 2px;"></div>
+
+            <div class="dialer-keypad" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <button class="dial-btn" onclick="dialDigit('1')">1</button>
+                <button class="dial-btn" onclick="dialDigit('2')">2</button>
+                <button class="dial-btn" onclick="dialDigit('3')">3</button>
+                <button class="dial-btn" onclick="dialDigit('4')">4</button>
+                <button class="dial-btn" onclick="dialDigit('5')">5</button>
+                <button class="dial-btn" onclick="dialDigit('6')">6</button>
+                <button class="dial-btn" onclick="dialDigit('7')">7</button>
+                <button class="dial-btn" onclick="dialDigit('8')">8</button>
+                <button class="dial-btn" onclick="dialDigit('9')">9</button>
+                <button class="dial-btn" onclick="dialDigit('*')">*</button>
+                <button class="dial-btn" onclick="dialDigit('0')">0</button>
+                <button class="dial-btn" onclick="dialDigit('#')">#</button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 40px; margin-top: 40px; width: 100%; justify-content: center;">
+                <div style="width: 70px;"></div> <!-- Spacer -->
+                <div onclick="performCall()" style="width: 70px; height: 70px; background: #4cd964; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; cursor: pointer; transition: 0.2s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">📞</div>
+                <div onclick="deleteDialDigit()" style="width: 70px; color: #333; font-size: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#333'">⌫</div>
+            </div>
+
+            <style>
+                .dial-btn {
+                    width: 75px; height: 75px; border-radius: 50%; background: #1c1c1e; border: none;
+                    color: white; font-size: 32px; font-weight: 400; cursor: pointer; transition: 0.2s;
+                }
+                .dial-btn:active { background: #3a3a3c; }
+            </style>
         </div>
 
         <!-- Chat List Page (INSIDE PHONE) -->
