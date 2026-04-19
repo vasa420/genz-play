@@ -173,9 +173,10 @@ function switchChat(key) {
 
         chatBody.scrollTo(0, chatBody.scrollHeight);
 
-        // Initial message and choices for family/friends
-        if (history.length === 0 && key !== 'unknown') {
+        // Initial message and choices for EVERY person
+        if (history.length === 0 || key !== 'unknown') {
             const initialMsgs = {
+                unknown: "Hello?",
                 mom: "Where are you? I've been calling for hours.",
                 dad: "Did you check the security cameras like I told you?",
                 brother: "I saw someone outside your place. Are you there?",
@@ -184,27 +185,55 @@ function switchChat(key) {
                 anu: "I feel like someone is watching me... are you okay?"
             };
             
-            setTimeout(() => {
-                receiveMessage(initialMsgs[key], 'left');
-                
-                // Show specific choices for the first time
-                if (key === 'mom') {
-                    showFamilyChoices([
-                        { text: "Mom, I'm scared. Someone is outside.", type: 'danger' },
-                        { text: "Where are you? Come home fast.", type: 'location' },
-                        { text: "I love you Mom.", type: 'love' }
-                    ]);
-                } else if (key === 'dad') {
-                    showFamilyChoices([
-                        { text: "Dad, the camera showed a man in a mask.", type: 'danger' },
-                        { text: "Why is the alarm beeping?", type: 'question' }
-                    ]);
-                }
-            }, 800);
+            // If it's a NEW chat or we just switched back, show current suggestions
+            if (history.length === 0) {
+                 setTimeout(() => receiveMessage(initialMsgs[key], 'left', key === 'unknown'), 800);
+            }
+            
+            // ALWAYS show suggestions when opening a chat
+            setTimeout(() => showFamilyChoices(getSuggestionsFor(key)), 1500);
         }
     } catch (err) {
         console.error("Error in switchChat:", err);
     }
+}
+
+function getSuggestionsFor(key) {
+    const sets = {
+        unknown: [
+            { text: "Who is this?", next: "asking_who" },
+            { text: "Wrong number, buddy.", next: "aggressive_start" }
+        ],
+        mom: [
+            { text: "Mom, I'm scared. Someone is outside.", type: "danger" },
+            { text: "I'm safe, don't worry.", type: "safe" },
+            { text: "Where are you right now?", type: "location" }
+        ],
+        dad: [
+            { text: "Checking the cameras now...", type: "action" },
+            { text: "I see someone on the porch!", type: "danger" },
+            { text: "Everything is quiet here.", type: "safe" }
+        ],
+        brother: [
+            { text: "Wait, what car?", type: "question" },
+            { text: "I didn't invite anyone.", type: "danger" },
+            { text: "Stop trying to scare me.", type: "annoyed" }
+        ],
+        sanjay: [
+            { text: "What lockdown?", type: "question" },
+            { text: "The power just went out.", type: "danger" },
+            { text: "I'm heading to yours.", type: "action" }
+        ],
+        vicky: [
+            { text: "Something is wrong here.", type: "danger" },
+            { text: "I'm just busy, leave me alone.", type: "safe" }
+        ],
+        anu: [
+            { text: "I got that link too!", type: "danger" },
+            { text: "Are you okay? Is anyone there?", type: "question" }
+        ]
+    };
+    return sets[key] || [{ text: "Are you there?", type: "generic" }];
 }
 
 function showFamilyChoices(choices) {
@@ -605,6 +634,12 @@ async function playAIResponse(userInput) {
     typingIndicator.style.display = 'none';
     contactStatus.innerText = contacts[currentContact].status;
     receiveMessage(response, 'left', currentContact === 'unknown' || isCreepy);
+    
+    // RE-SHOW SUGGESTIONS AFTER RESPONSE
+    setTimeout(() => {
+        showFamilyChoices(getSuggestionsFor(currentContact));
+    }, 1500);
+
     if (isCreepy || (currentContact === 'unknown' && Math.random() > 0.7)) {
         document.body.classList.add('glitch-active');
         glitchSound.play().catch(e => {});
