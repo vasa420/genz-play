@@ -307,6 +307,12 @@ async function playAIResponse(userInput) {
         const browser = navigator.userAgent.split(' ')[0];
         response = `You are a biological entity currently connected via ${platform}. I see you through the ${browser} lens. You're more transparent than you think.`;
     }
+    else if (input.includes("call me") || input.includes("ring me") || input.includes("want to hear you")) {
+        response = "You want to hear my voice? Fine. I've been waiting for a reason to cross the line. Expect me.";
+        setTimeout(() => {
+            startCreepyCall();
+        }, 4000);
+    }
     else if (input.includes("where am i") || input.includes("my location")) {
         response = "I've already mapped your IP to a 50-meter radius. I can see the streetlights outside your window. I'm calculating the fastest route now.";
     }
