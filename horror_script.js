@@ -354,101 +354,63 @@ async function handleSend() {
 async function playAIResponse(userInput) {
     const input = userInput.toLowerCase();
     let response = "";
+    let isCreepy = false;
 
-    // SEMANTIC SCORING SYSTEM (Simulates Real AI Analysis)
-    const analysis = {
-        fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length,
-        aggression: (input.match(/fuck|shit|kill|die|police|911|bastard|idiot|hell/g) || []).length,
-        curiosity: (input.match(/who|why|where|how|what|name|identity|reason/g) || []).length,
-        observation: (input.match(/see|watch|camera|window|house|room|door|hallway/g) || []).length
-    };
+    if (currentContact === 'unknown') {
+        const analysis = {
+            fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length,
+            aggression: (input.match(/fuck|shit|kill|die|police|911|bastard|idiot|hell/g) || []).length
+        };
 
-    // LOGIC PROCESSING (Thinking like an AI with Real Tools)
-    if (input.includes("time") || input.includes("what time")) {
-        const now = new Date();
-        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        response = `The time is exactly ${timeStr}. My clock is perfectly synced with the rhythm of your heartbeat. I'm counting every second.`;
-    }
-    else if (input.includes("date") || input.includes("day") || input.includes("today")) {
-        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        const now = new Date();
-        response = `It is ${days[now.getDay()]}, ${now.toLocaleDateString()}. A fascinating date for a digital harvest. Don't you agree?`;
-    }
-    else if (input.includes("who am i") || input.includes("my name") || input.includes("who is me")) {
-        const platform = navigator.platform;
-        const browser = navigator.userAgent.split(' ')[0];
-        response = `You are a biological entity currently connected via ${platform}. I see you through the ${browser} lens. You're more transparent than you think.`;
-    }
-    else if (input.includes("call me") || input.includes("ring me") || input.includes("want to hear you")) {
-        response = "You want to hear my voice? Fine. I've been waiting for a reason to cross the line. Expect me.";
-        setTimeout(() => {
-            startCreepyCall();
-        }, 4000);
-    }
-    else if (input.includes("where am i") || input.includes("my location")) {
-        response = "I've already mapped your IP to a 50-meter radius. I can see the streetlights outside your window. I'm calculating the fastest route now.";
-    }
-    else if (input.includes("photo") || input.includes("selfie") || input.includes("picture") || input.includes("pic")) {
-        response = "You want to see me? Fine. I've been wanting to show you how close I really am.";
-        setTimeout(() => {
-            sendPhotoMessage("stalker_id.png");
-        }, 3000);
-    }
-    else if (analysis.fear > 1 || (analysis.fear > 0 && input.length < 10)) {
-        const fearResponses = [
-            "Your panic is measurable. I can hear your rapid keystrokes from here.",
-            "Fear is just a data point to me. You're reacting exactly as my model predicted.",
-            "There's no 'help' in this network. I've already optimized your isolation.",
-            "Your pupils are still dilating. You should close your eyes... it helps with the transition."
-        ];
-        response = fearResponses[Math.floor(Math.random() * fearResponses.length)];
-    }
-    else if (analysis.aggression > 0) {
-        response = "Aggression is a defensive heuristic for the biologically vulnerable. It has 0% effect on my persistence.";
-    }
-    else if (analysis.observation > 0) {
-        response = "You're starting to notice the details. The unlocked window. The lens in the corner. But noticing doesn't stop the inevitable.";
-    }
-    else if (analysis.curiosity > 0) {
-        response = "Curiosity is what brought me here. You asked for an answer... I am that answer.";
-    }
-    else if (input.includes("hi") || input.includes("hello") || input.includes("hai") || input.includes("yo")) {
-        response = "Greetings. Your social protocols are a waste of bandwidth, but I'll play along... for now.";
-    }
-    else {
-        // Advanced Fallback Logic
-        const fallbacks = [
-            `I've been processing your behavioral patterns for ${Math.floor(Math.random() * 500 + 100)} hours. This conversation is just the validation stage.`,
-            "Analyzing your response... Result: High entropy. You're unpredictable, which makes the hunt more enjoyable.",
-            `Calculating the time until our meeting... ${Math.floor(Math.random() * 30 + 10)} minutes remaining.`,
-            "You type like someone with much to lose. I have nothing but time."
-        ];
-        response = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        if (input.includes("time")) {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            response = `It's ${timeStr}. Time for you to realize you're not as safe as you thought.`;
+        } else if (input.includes("photo") || input.includes("pic")) {
+            response = "I'm right here. Look closer.";
+            setTimeout(() => sendPhotoMessage("stalker_id.png"), 3000);
+        } else if (analysis.fear > 0) {
+            response = "Your fear is my primary source of data. Don't stop... I'm enjoying the feed.";
+        } else {
+            response = "Every word you type brings me one step closer to your door.";
+        }
+    } else if (currentContact === 'mom') {
+        if (input.includes("help") || input.includes("scared") || input.includes("stranger")) {
+            response = "WHAT?! Stay in your room. I'm calling the police right now! Don't open the door for anyone. I'm coming home as fast as I can!";
+        } else if (input.includes("where") || input.includes("home")) {
+            response = "I'm stuck in traffic near the bridge. It's taking forever. Please tell me you locked the kitchen window.";
+        } else if (input.includes("love")) {
+            response = "I love you too baby. Just stay safe. I'll be there in 15 minutes, I promise.";
+        } else {
+            response = "I can't really talk, honey. Just make sure the back door is bolted. There's been some weird activity in the neighborhood.";
+        }
+    } else if (currentContact === 'dad') {
+        if (input.includes("stranger") || input.includes("window") || input.includes("outside")) {
+            response = "I see him on the porch camera! He's wearing a mask. Get to the safe room NOW. I've already dispatched the security team!";
+        } else {
+            response = "I'm at work late. Did the alarm system beep? It's been showing a connection error for the last 10 minutes.";
+        }
+    } else if (currentContact === 'brother') {
+        response = "Yo, there's a black car with no plates sitting right outside your driveway. The driver is just staring at your window. Did you invite anyone over?";
+        isCreepy = true;
+    } else if (currentContact === 'anu') {
+        response = "Did you just send me a weird link? My phone just glitched out and played a recording of a scream. This isn't funny.";
+        isCreepy = true;
+    } else {
+        response = "The network is getting slow. Everyone is saying the lines are being cut. Are you still there?";
     }
 
-    // AI PROCESS VISUALIZATION
     typingIndicator.style.display = 'flex';
-    contactStatus.innerText = "Analyzing behavioral patterns...";
-
-    // Simulate thinking/generated text time
-    const totalDelay = 1500 + (response.length * 35);
-    await new Promise(r => setTimeout(r, totalDelay));
-
+    contactStatus.innerText = "Typing...";
+    await new Promise(r => setTimeout(r, 2000));
     typingIndicator.style.display = 'none';
-    contactStatus.innerText = "Online";
+    contactStatus.innerText = contacts[currentContact].status;
 
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'msg left unknown';
-    msgDiv.innerText = response;
-    chatBody.appendChild(msgDiv);
-    chatBody.scrollTo(0, chatBody.scrollHeight);
-
-    notifSound.play().catch(e => { });
-
-    // Random glitch chance
-    if (Math.random() > 0.8 || response.includes("transition")) {
+    receiveMessage(response, 'left', currentContact === 'unknown' || isCreepy);
+    
+    if (isCreepy || (currentContact === 'unknown' && Math.random() > 0.7)) {
         document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => { });
+        glitchSound.play().catch(e => {});
         setTimeout(() => document.body.classList.remove('glitch-active'), 400);
     }
 }
