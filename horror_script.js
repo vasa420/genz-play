@@ -360,6 +360,7 @@ function openHome() {
     document.getElementById('home-screen').style.display = 'block';
     document.getElementById('chat-list-overlay').style.display = 'none';
     document.getElementById('camera-system').style.display = 'none';
+    document.getElementById('dialer-overlay').style.display = 'none';
 }
 
 function openChatList() {
@@ -397,6 +398,47 @@ function openCamera() {
     // Reset camera state
     switchCamera(1); 
 }
+
+let dialedNumber = "";
+
+window.openDialer = function() {
+    console.log("Opening Dialer...");
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('dialer-overlay').style.display = 'flex';
+};
+
+window.dialDigit = function(n) {
+    if (dialedNumber.length < 11) {
+        dialedNumber += n;
+        document.getElementById('dialer-display').innerText = dialedNumber;
+        window.playBeep();
+    }
+};
+
+window.deleteDialDigit = function() {
+    dialedNumber = dialedNumber.slice(0, -1);
+    document.getElementById('dialer-display').innerText = dialedNumber;
+};
+
+window.performCall = function() {
+    if (dialedNumber === "") return;
+    
+    console.log("Calling:", dialedNumber);
+    if (dialedNumber === "911") {
+        alert("Emergency Services: The call lines in your area have been cut. We cannot reach you.");
+        document.body.classList.add('glitch-active');
+        setTimeout(() => document.body.classList.remove('glitch-active'), 1000);
+    } else if (dialedNumber === "7394") {
+        alert("The line is silent... then a faint breathing is heard.");
+        setTimeout(startCreepyCall, 2000);
+    } else {
+        alert("User Busy: The person you are trying to reach is currently unavailable.");
+    }
+    
+    dialedNumber = "";
+    document.getElementById('dialer-display').innerText = "";
+    setTimeout(openHome, 1500);
+};
 
 // --- Cam 5 Passkey Logic ---
 let cam5Passkey = "";
