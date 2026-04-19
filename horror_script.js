@@ -173,9 +173,9 @@ function switchChat(key) {
 
         chatBody.scrollTo(0, chatBody.scrollHeight);
 
-        // Initial message if empty
+        // Initial message and choices for family/friends
         if (history.length === 0 && key !== 'unknown') {
-            const initialMsg = {
+            const initialMsgs = {
                 mom: "Where are you? I've been calling for hours.",
                 dad: "Did you check the security cameras like I told you?",
                 brother: "I saw someone outside your place. Are you there?",
@@ -183,11 +183,54 @@ function switchChat(key) {
                 vicky: "Pick up the phone. Stop playing around.",
                 anu: "I feel like someone is watching me... are you okay?"
             };
-            setTimeout(() => receiveMessage(initialMsg[key], 'left'), 800);
+            
+            setTimeout(() => {
+                receiveMessage(initialMsgs[key], 'left');
+                
+                // Show specific choices for the first time
+                if (key === 'mom') {
+                    showFamilyChoices([
+                        { text: "Mom, I'm scared. Someone is outside.", type: 'danger' },
+                        { text: "Where are you? Come home fast.", type: 'location' },
+                        { text: "I love you Mom.", type: 'love' }
+                    ]);
+                } else if (key === 'dad') {
+                    showFamilyChoices([
+                        { text: "Dad, the camera showed a man in a mask.", type: 'danger' },
+                        { text: "Why is the alarm beeping?", type: 'question' }
+                    ]);
+                }
+            }, 800);
         }
     } catch (err) {
         console.error("Error in switchChat:", err);
     }
+}
+
+function showFamilyChoices(choices) {
+    if (!choiceContainer) return;
+    choiceContainer.innerHTML = '';
+    choices.forEach(choice => {
+        const btn = document.createElement('div');
+        btn.className = 'choice-btn';
+        btn.innerText = choice.text;
+        btn.onclick = () => {
+             // Add player message
+             const text = choice.text;
+             const msgDiv = document.createElement('div');
+             msgDiv.className = 'msg right';
+             msgDiv.innerText = text;
+             chatBody.appendChild(msgDiv);
+             chatBody.scrollTo(0, chatBody.scrollHeight);
+             chatHistory[currentContact].push({ text, class: 'msg right' });
+             
+             choiceContainer.innerHTML = ''; // Hide choices
+             
+             // AI Response based on type
+             setTimeout(() => playAIResponse(text), 1000);
+        };
+        choiceContainer.appendChild(btn);
+    });
 }
 
 async function receiveMessage(text, side, isUnknown = false) {
