@@ -115,24 +115,41 @@ const story = {
 
 let currentGameState = 'start';
 
-function showWarning() {
+async function showWarning() {
     const intro = document.getElementById('intro-overlay');
-    intro.style.display = 'none';
-    intro.classList.remove('active'); // Immediately deactivate to prevent music restart
-    
+    const transition = document.getElementById('cinematic-transition');
     const warning = document.getElementById('headphones-warning');
     const bar = document.getElementById('loading-progress');
-    
-    // Stop intro music immediately
     const introMusic = document.getElementById('intro-music');
+
+    // 1. Start slow transition to black
+    transition.style.opacity = '1';
+    
+    // Fade out intro music slowly
     if (introMusic) {
-        introMusic.pause();
-        introMusic.currentTime = 0;
+        let fadeAudio = setInterval(() => {
+            if (introMusic.volume > 0.1) {
+                introMusic.volume -= 0.1;
+            } else {
+                introMusic.pause();
+                clearInterval(fadeAudio);
+            }
+        }, 200);
     }
 
+    // 2. Wait for full black screen (2 seconds)
+    await new Promise(r => setTimeout(r, 2100));
+
+    // 3. Switch screens under the black cover
+    intro.style.display = 'none';
+    intro.classList.remove('active');
     warning.style.display = 'flex';
     
-    // Animate loading bar
+    // 4. Fade out the black cover
+    transition.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 1000));
+
+    // 5. Start loading bar
     bar.style.transition = 'width 5s linear';
     setTimeout(() => {
         bar.style.width = '100%';
