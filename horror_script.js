@@ -233,6 +233,7 @@ function getSuggestionsFor(key) {
             { text: "Wrong number, buddy.", next: "aggressive_start" }
         ],
         dad: [
+            { text: "FATHER you know the pass key for cam 5?", type: "question" },
             { text: "Checking the cameras now...", type: "action" },
             { text: "I see someone on the porch!", type: "danger" },
             { text: "Everything is quiet here.", type: "safe" }
@@ -397,6 +398,62 @@ function openCamera() {
     switchCamera(1); 
 }
 
+// --- Cam 5 Passkey Logic ---
+let cam5Passkey = "";
+const correctPasskey = "7394"; // Narratively revealed by Dad
+let isCam5Unlocked = false;
+
+window.enterDigit = function(n) {
+    if (cam5Passkey.length < 4) {
+        cam5Passkey += n;
+        updatePasskeyUI();
+        window.playBeep();
+        if (cam5Passkey.length === 4) {
+            setTimeout(checkPasskey, 300);
+        }
+    }
+};
+
+window.resetPasskey = function() {
+    cam5Passkey = "";
+    updatePasskeyUI();
+};
+
+function updatePasskeyUI() {
+    const dots = document.querySelectorAll('.passkey-dot');
+    dots.forEach((dot, i) => {
+        dot.classList.remove('filled', 'error');
+        if (i < cam5Passkey.length) dot.classList.add('filled');
+    });
+}
+
+async function checkPasskey() {
+    if (cam5Passkey === correctPasskey) {
+        isCam5Unlocked = true;
+        document.getElementById('cam5-lock-screen').style.display = 'none';
+        switchCamera(5);
+        document.getElementById('cam-btn-5').style.background = "#ff3b30";
+        document.getElementById('active-feed').style.backgroundColor = "transparent";
+    } else {
+        const dots = document.querySelectorAll('.passkey-dot');
+        dots.forEach(dot => dot.classList.add('error'));
+        window.playSound('foul');
+        setTimeout(resetPasskey, 500);
+    }
+}
+
+window.playBeep = function() {
+    if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = window.audioCtx.createOscillator();
+    const gain = window.audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, window.audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, window.audioCtx.currentTime);
+    osc.connect(gain); gain.connect(window.audioCtx.destination);
+    osc.start(); osc.stop(window.audioCtx.currentTime + 0.05);
+};
+// ----------------------------
+
 function switchCamera(id) {
     const feed = document.getElementById('active-feed');
     const glitch = document.getElementById('feed-glitch');
@@ -451,9 +508,17 @@ function switchCamera(id) {
             location.innerText = "MAIN HALLWAY - MOTION DETECTED";
             feed.style.filter = "grayscale(1) contrast(1.5)";
         } else if (id === 5) {
-            feed.src = "stalker_mirror_selfie_1776589637959.png"; // Stalker in mirror
-            location.innerText = "GARAGE - WARNING: UNAUTHORIZED ENTRY";
-            feed.style.filter = "grayscale(1) brightness(0.2) contrast(2.5)";
+            if (!isCam5Unlocked) {
+                document.getElementById('cam5-lock-screen').style.display = 'flex';
+                feed.src = ""; 
+                feed.style.backgroundColor = "black";
+            } else {
+                document.getElementById('cam5-lock-screen').style.display = 'none';
+                feed.src = "camera_garage_view_1776606229352.png";
+                feed.style.backgroundColor = "transparent";
+            }
+            location.innerText = isCam5Unlocked ? "GARAGE - LIVE" : "GARAGE - WARNING: UNAUTHORIZED ENTRY";
+            feed.style.filter = "none";
         }
     }, 300);
 }
@@ -638,7 +703,9 @@ async function playAIResponse(userInput) {
             response = "I can't talk right now honey. Just make sure the back door is bolted.";
         }
     } else if (currentContact === 'dad') {
-        if (input.includes("stranger") || input.includes("window")) {
+        if (input.includes("pass key") || input.includes("passcode") || input.includes("cam 5")) {
+            response = "Yeah, I remember. The passcode for the Garage (Cam 5) is 7394. I set it to that just in case of an emergency.";
+        } else if (input.includes("stranger") || input.includes("window")) {
             response = "I see him on the porch camera! He's wearing a mask. Get to the safe room NOW!";
         } else {
             response = "I'm late at work. Did the alarm system beep? It's showing a connection error.";

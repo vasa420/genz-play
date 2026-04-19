@@ -77,6 +77,47 @@
                 <!-- Shadowy Person Overlay (specifically for Cam 1) -->
                 <div id="shadow-person" style="position: absolute; bottom: 15%; left: 35%; width: 50px; height: 160px; background: rgba(0,0,0,0.9); filter: blur(4px); display: none; clip-path: polygon(50% 0%, 80% 10%, 90% 30%, 80% 50%, 95% 70%, 90% 100%, 10% 100%, 5% 70%, 20% 50%, 10% 30%, 20% 10%); animation: breathing 3s ease-in-out infinite; pointer-events: none;"></div>
 
+                <!-- Cam 5 Passkey Lock Screen -->
+                <div id="cam5-lock-screen" style="position: absolute; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(10px);">
+                    <div style="color: #ff3b30; font-size: 11px; font-weight: 900; letter-spacing: 5px; margin-bottom: 30px; text-transform: uppercase; text-align: center;">
+                        <span style="font-size: 24px; display: block; margin-bottom: 10px;">🔒</span>
+                        SECURITY ENCRYPTION ACTIVE<br>
+                        <span style="color: #444; font-size: 9px; margin-top: 5px; display: block;">UNAUTHORIZED ACCESS DETECTED</span>
+                    </div>
+                    
+                    <div id="passkey-dots" style="display: flex; gap: 20px; margin-bottom: 50px;">
+                        <div class="passkey-dot" style="width: 12px; height: 12px; border: 1px solid #333; border-radius: 50%; transition: 0.2s;"></div>
+                        <div class="passkey-dot" style="width: 12px; height: 12px; border: 1px solid #333; border-radius: 50%; transition: 0.2s;"></div>
+                        <div class="passkey-dot" style="width: 12px; height: 12px; border: 1px solid #333; border-radius: 50%; transition: 0.2s;"></div>
+                        <div class="passkey-dot" style="width: 12px; height: 12px; border: 1px solid #333; border-radius: 50%; transition: 0.2s;"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <button class="key-btn" onclick="enterDigit('1')">1</button>
+                        <button class="key-btn" onclick="enterDigit('2')">2</button>
+                        <button class="key-btn" onclick="enterDigit('3')">3</button>
+                        <button class="key-btn" onclick="enterDigit('4')">4</button>
+                        <button class="key-btn" onclick="enterDigit('5')">5</button>
+                        <button class="key-btn" onclick="enterDigit('6')">6</button>
+                        <button class="key-btn" onclick="enterDigit('7')">7</button>
+                        <button class="key-btn" onclick="enterDigit('8')">8</button>
+                        <button class="key-btn" onclick="enterDigit('9')">9</button>
+                        <div></div>
+                        <button class="key-btn" onclick="enterDigit('0')">0</button>
+                        <div onclick="resetPasskey()" style="color: #ff3b30; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; letter-spacing: 1px;">✕</div>
+                    </div>
+
+                    <style>
+                        .key-btn {
+                            width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+                            color: #fff; font-size: 24px; font-weight: 300; cursor: pointer; transition: 0.2s; font-family: 'Outfit', sans-serif;
+                        }
+                        .key-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.9); }
+                        .passkey-dot.filled { background: #fff; border-color: #fff; box-shadow: 0 0 10px #fff; }
+                        .passkey-dot.error { background: #ff3b30; border-color: #ff3b30; box-shadow: 0 0 10px #ff3b30; }
+                    </style>
+                </div>
+
                 <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.1) 2px); pointer-events: none;"></div>
                 <div id="feed-glitch" style="position: absolute; top:0; left:0; width:100%; height:100%; background: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif'); opacity: 0; pointer-events: none;"></div>
                 
