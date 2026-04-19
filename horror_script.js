@@ -394,9 +394,9 @@ function switchCamera(id) {
             location.innerText = "LIVING ROOM - CORNER CAM";
             feed.style.filter = "grayscale(1) brightness(0.4) contrast(1.5)";
         } else if (id === 4) {
-            feed.src = "stalker_selfie_1776589436319.png"; // VISIBLE SHADOWY FIGURE
+            feed.src = "stalker_id.png"; // RELIABLE LOCAL ASSET
             location.innerText = "MAIN HALLWAY - MOTION DETECTED";
-            feed.style.filter = "grayscale(1) brightness(0.5) contrast(1.5)";
+            feed.style.filter = "grayscale(1) contrast(1.5)";
         } else if (id === 5) {
             feed.src = "stalker_mirror_selfie_1776589637959.png"; // Stalker in mirror
             location.innerText = "GARAGE - WARNING: UNAUTHORIZED ENTRY";
