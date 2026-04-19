@@ -350,8 +350,7 @@ function switchCamera(id) {
     const label = document.getElementById('cam-label');
     const location = document.getElementById('cam-location');
     const buttons = document.querySelectorAll('.cam-btn');
-    
-    // Clear any previous alerts/timeouts if possible (state reset)
+    const shadowPerson = document.getElementById('shadow-person');
     
     // UI Button Update
     buttons.forEach((btn, idx) => {
@@ -376,6 +375,11 @@ function switchCamera(id) {
         
         const timestamp = new Date().toLocaleTimeString();
         document.querySelector('.cctv-time').innerText = timestamp;
+
+        // Toggle shadow person specifically for Cam 1
+        if (shadowPerson) {
+            shadowPerson.style.display = (id === 1) ? 'block' : 'none';
+        }
 
         if (id === 1) {
             feed.src = "camera_porch_view_1776596595360.png"; // Shadows outside
