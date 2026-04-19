@@ -131,41 +131,62 @@ const chatHistory = {
 };
 
 function switchChat(key) {
-    currentContact = key;
-    const contact = contacts[key];
-    
-    // Update Header
-    document.getElementById('contact-name').innerText = contact.name;
-    const avatarEl = document.getElementById('contact-avatar');
-    avatarEl.innerText = ""; 
-    avatarEl.style.background = `url('${contact.avatar}')`;
-    avatarEl.style.backgroundSize = "cover";
-    avatarEl.style.backgroundPosition = "center";
-    document.getElementById('contact-status').innerText = contact.status;
-    
-    // Clear and reload body
-    chatBody.innerHTML = "";
-    chatHistory[key].forEach(msg => {
-        const div = document.createElement('div');
-        div.className = msg.class;
-        div.innerText = msg.text;
-        chatBody.appendChild(div);
-    });
-    
-    closeChatList();
-    chatBody.scrollTo(0, chatBody.scrollHeight);
+    try {
+        console.log("Switching to chat:", key);
+        if (!contacts[key]) {
+             console.error("Contact not found:", key);
+             return;
+        }
 
-    // Initial message if empty
-    if (chatHistory[key].length === 0 && key !== 'unknown') {
-        const initialMsg = {
-            mom: "Where are you? I've been calling for hours.",
-            dad: "Did you check the security cameras like I told you?",
-            brother: "I saw someone outside your place. Are you there?",
-            sanjay: "Yo, you seeing the news? There's a lockdown in your sector.",
-            vicky: "Pick up the phone. Stop playing around.",
-            anu: "I feel like someone is watching me... are you okay?"
-        };
-        setTimeout(() => receiveMessage(initialMsg[key], 'left'), 1000);
+        currentContact = key;
+        const contact = contacts[key];
+        
+        // Update Header
+        const nameEl = document.getElementById('contact-name');
+        const avatarEl = document.getElementById('contact-avatar');
+        const statusEl = document.getElementById('contact-status');
+
+        if (nameEl) nameEl.innerText = contact.name;
+        if (avatarEl) {
+            avatarEl.innerText = ""; 
+            avatarEl.style.background = `url('${contact.avatar}')`;
+            avatarEl.style.backgroundSize = "cover";
+            avatarEl.style.backgroundPosition = "center";
+        }
+        if (statusEl) statusEl.innerText = contact.status;
+        
+        // Clear and reload body
+        chatBody.innerHTML = "";
+        const history = chatHistory[key] || [];
+        history.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = msg.class;
+            div.innerText = msg.text;
+            chatBody.appendChild(div);
+        });
+        
+        // Close the list and reveal the chat
+        closeChatList();
+        
+        // Ensure choice container is cleared when switching chats
+        if (choiceContainer) choiceContainer.innerHTML = "";
+
+        chatBody.scrollTo(0, chatBody.scrollHeight);
+
+        // Initial message if empty
+        if (history.length === 0 && key !== 'unknown') {
+            const initialMsg = {
+                mom: "Where are you? I've been calling for hours.",
+                dad: "Did you check the security cameras like I told you?",
+                brother: "I saw someone outside your place. Are you there?",
+                sanjay: "Yo, you seeing the news? There's a lockdown in your sector.",
+                vicky: "Pick up the phone. Stop playing around.",
+                anu: "I feel like someone is watching me... are you okay?"
+            };
+            setTimeout(() => receiveMessage(initialMsg[key], 'left'), 800);
+        }
+    } catch (err) {
+        console.error("Error in switchChat:", err);
     }
 }
 
@@ -237,12 +258,41 @@ function startGame() {
 }
 
 function openChatList() {
-    document.getElementById('chat-list-overlay').style.display = 'flex';
+    console.log("Opening Chat List Overlay...");
+    const overlay = document.getElementById('chat-list-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+    }
 }
 
 function closeChatList() {
-    document.getElementById('chat-list-overlay').style.display = 'none';
+    console.log("Closing Chat List Overlay...");
+    const overlay = document.getElementById('chat-list-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            overlay.style.opacity = '1'; // Reset for next open
+        }, 300);
+    }
 }
+
+// Global Listener for chat items to ensure they ALWAYS fire
+document.addEventListener('click', function(e) {
+    const chatItem = e.target.closest('.chat-item');
+    if (chatItem) {
+        const onclickAttr = chatItem.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes('switchChat')) {
+            // Extracts 'mom', 'dad' etc from switchChat('mom')
+            const contactKey = onclickAttr.match(/'([^']+)'/)[1];
+            if (contactKey) {
+                console.log("Global Click caught for contact:", contactKey);
+                switchChat(contactKey);
+            }
+        }
+    }
+});
 
 function updateTime() {
     const now = new Date();
