@@ -296,17 +296,40 @@ function startGame() {
     }
     updateTime();
     setInterval(updateTime, 60000);
-    switchChat('unknown');
-    setTimeout(() => { playMessage('start'); }, 1500);
+    
+    // START ON HOME SCREEN
+    openHome();
+}
+
+function openHome() {
+    console.log("Opening Home Screen...");
+    document.getElementById('home-screen').style.display = 'block';
+    document.getElementById('chat-list-overlay').style.display = 'none';
 }
 
 function openChatList() {
-    console.log("Opening Chat List Overlay...");
-    const overlay = document.getElementById('chat-list-overlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.style.opacity = '1';
+    console.log("Opening Messages App...");
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('chat-list-overlay').style.display = 'flex';
+    document.getElementById('chat-list-overlay').style.opacity = '1';
+    
+    // Initial STALKER message triggered when you FIRST open the app
+    if (chatHistory['unknown'].length === 0) {
+        switchChat('unknown');
+        setTimeout(() => { playMessage('start'); }, 1000);
     }
+}
+
+function openPhotos() {
+    alert("System Error: Photos database corrupted. Unauthorized access detected.");
+    document.body.classList.add('glitch-active');
+    setTimeout(() => document.body.classList.remove('glitch-active'), 500);
+}
+
+function openVideos() {
+    alert("Critical Failure: Video feed encrypted. Remote observer active.");
+    document.body.classList.add('glitch-active');
+    setTimeout(() => document.body.classList.remove('glitch-active'), 500);
 }
 
 function closeChatList() {
