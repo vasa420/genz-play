@@ -495,20 +495,25 @@ function switchCamera(id) {
             feed.src = "camera_man_at_door_1776605713116.png"; 
             location.innerText = "FRONT PORCH - LIVE";
             feed.style.filter = "none";
+            feed.classList.add('breaking-active');
         } else if (id === 2) {
+            feed.classList.remove('breaking-active');
             feed.src = "camera_backyard_view_1776596617682.png"; // Moving swing
             location.innerText = "BACKYARD - NIGHT VISION";
             feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8) contrast(1.2)"; 
         } else if (id === 3) {
+            feed.classList.remove('breaking-active');
             feed.src = "camera_living_room_view_1776607107820.png"; 
             location.innerText = "LIVING ROOM - CORNER CAM";
             feed.style.filter = "none";
             feed.style.backgroundColor = "transparent";
         } else if (id === 4) {
+            feed.classList.remove('breaking-active');
             feed.src = "stalker_id.png"; // RELIABLE LOCAL ASSET
             location.innerText = "MAIN HALLWAY - MOTION DETECTED";
             feed.style.filter = "grayscale(1) contrast(1.5)";
         } else if (id === 5) {
+            feed.classList.remove('breaking-active');
             if (!isCam5Unlocked) {
                 document.getElementById('cam5-lock-screen').style.display = 'flex';
                 feed.src = ""; 
