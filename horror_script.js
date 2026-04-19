@@ -308,6 +308,7 @@ async function receiveMessage(text, side, isUnknown = false) {
 }
 
 async function showWarning() {
+    requestFullScreen();
     const intro = document.getElementById('intro-overlay');
     const transition = document.getElementById('cinematic-transition');
     const warning = document.getElementById('headphones-warning');
@@ -430,11 +431,11 @@ function switchCamera(id) {
 
         // Toggle shadow person specifically for Cam 1
         if (shadowPerson) {
-            shadowPerson.style.display = (id === 1) ? 'block' : 'none';
+            shadowPerson.style.display = 'none';
         }
 
         if (id === 1) {
-            feed.src = "camera_porch_view_1776596595360.png"; // Shadows outside
+            feed.src = "camera_man_at_door_1776605713116.png"; 
             location.innerText = "FRONT PORCH - LIVE";
             feed.style.filter = "none";
         } else if (id === 2) {
@@ -758,4 +759,23 @@ function endCall() {
     if (bgMusic) bgMusic.play().catch(e => {});
     document.getElementById('call-status').innerText = "CALLING...";
     document.getElementById('call-status').style.color = "#888";
+}
+
+function requestFullScreen() {
+    const doc = window.document;
+    const docEl = doc.documentElement;
+
+    const requestFullScreen =
+        docEl.requestFullscreen ||
+        docEl.mozRequestFullScreen ||
+        docEl.webkitRequestFullScreen ||
+        docEl.msRequestFullscreen;
+
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        if (requestFullScreen) {
+            requestFullScreen.call(docEl).catch(err => {
+                console.log(`Fullscreen request failing (ignoring): ${err.message}`);
+            });
+        }
+    }
 }

@@ -241,8 +241,21 @@
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(window.atob(base64));
             localStorage.setItem('playerName', payload.name);
+            handleFullScreen();
             window.location.href = 'snake_ladder.html';
         }
+
+        function handleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            if (requestFS && !doc.fullscreenElement) {
+                requestFS.call(docEl).catch(e => console.log("FS failed"));
+            }
+        }
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, handleFullScreen, { once: true });
+        });
     </script>
 </body>
 </html>

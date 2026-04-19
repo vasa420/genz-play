@@ -57,6 +57,11 @@ window.playSound = function (type) {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
+    // Attempt full screen safely on user interaction
+    if (type === 'hit' || type === 'reveal' || type === 'beep') {
+        window.requestFullScreen();
+    }
+
     const volScale = (window.masterVolume || 70) / 100;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -169,11 +174,31 @@ window.speakMessage = function (t, forceVoice = null) {
 
 window.switchToHorrorGame = function() {
     window.playSound('hit');
+    window.requestFullScreen();
     currentMessage = "⚠️ WARNING: ENTERING HORROR REALM...";
     messageDisplayTime = Date.now() + 2000;
     setTimeout(() => {
         window.location.href = 'horror_game.html';
     }, 1500);
+};
+
+window.requestFullScreen = function() {
+    const doc = window.document;
+    const docEl = doc.documentElement;
+
+    const requestFullScreen =
+        docEl.requestFullscreen ||
+        docEl.mozRequestFullScreen ||
+        docEl.webkitRequestFullScreen ||
+        docEl.msRequestFullscreen;
+
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        if (requestFullScreen) {
+            requestFullScreen.call(docEl).catch(err => {
+                console.warn(`Fullscreen request failed: ${err.message}`);
+            });
+        }
+    }
 };
 
 // ==========================================
@@ -8414,6 +8439,7 @@ document.getElementById('login-btn').addEventListener('click', () => {
         window.speechSynthesis.speak(prime);
     }
 
+    window.requestFullScreen();
     triggerLoginTransition();
 });
 

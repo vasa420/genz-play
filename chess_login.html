@@ -363,8 +363,21 @@
         }
 
         function enterArena() {
+            handleFullScreen();
             window.location.href = 'chess.html';
         }
+
+        function handleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            if (requestFS && !doc.fullscreenElement) {
+                requestFS.call(docEl).catch(e => console.log("FS failed"));
+            }
+        }
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, handleFullScreen, { once: true });
+        });
 
         // Falling Chess Pieces Background
         const canvas = document.getElementById('bg-canvas');

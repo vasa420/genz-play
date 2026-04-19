@@ -264,6 +264,7 @@
         });
 
         function handleSuccess(playerName, playerAvatar) {
+            handleFullScreen();
             const finalName = playerName || "CRICKET PLAYER";
             localStorage.setItem('playerName', finalName);
             if (playerAvatar) localStorage.setItem('playerAvatar', playerAvatar);
@@ -277,6 +278,18 @@
                 window.location.href = 'hand_cricket.html'; 
             }, 1000);
         }
+
+        function handleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+            if (requestFS && !doc.fullscreenElement) {
+                requestFS.call(docEl).catch(e => console.log("FS failed"));
+            }
+        }
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, handleFullScreen, { once: true });
+        });
 
         window.handleGoogleLogin = function(response) {
             try {
