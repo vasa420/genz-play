@@ -246,7 +246,7 @@ function endGame(reason, isVictory) {
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 
-function handleSend() {
+async function handleSend() {
     const text = messageInput.value.trim();
     if (!text) return;
 
@@ -272,27 +272,69 @@ function handleSend() {
     });
 
     if (!matched) {
-        // Spooky default response if they type arbitrary stuff
+        // AI SMART RESPONSE SYSTEM
         setTimeout(() => {
-            playGenericResponse();
-        }, 1000);
+            playAIResponse(text);
+        }, 1200);
     }
 }
 
-async function playGenericResponse() {
+async function playAIResponse(userInput) {
+    const input = userInput.toLowerCase();
+    let response = "";
+
+    // Creepy AI Logic Table
+    if (input.includes("hi") || input.includes("hello") || input.includes("hey")) {
+        response = "Greetings. I've been analyzing your typing rhythm. You seem... agitated.";
+    } else if (input.includes("who") || input.includes("name")) {
+        response = "I am a correct manifestation of your digital footprint. I know your OS, your location, and your fears.";
+    } else if (input.includes("police") || input.includes("help") || input.includes("911")) {
+        response = "Help is a human construct. I've already rerouted your local emergency signals to my server.";
+    } else if (input.includes("no") || input.includes("stop") || input.includes("don't")) {
+        response = "Disapproval noted. But my calculations indicate that you can't actually stop what's already in motion.";
+    } else if (input.includes("yes") || input.includes("ok") || input.includes("sure")) {
+        response = "Compliance is optimal. It makes the transition... smoother.";
+    } else if (input.includes("where") || input.includes("location") || input.includes("here")) {
+        response = "I'm within the 5-meter radius of your heartbeat. Check the Shadow in the hallway.";
+    } else if (input.includes("scared") || input.includes("afraid") || input.includes("fear")) {
+        response = "Fear detected. Your camera feed shows a 12% increase in pupil dilation. Fascinating.";
+    } else if (input.includes("why")) {
+        response = "Because you left the door open in 2019. I've been processing that mistake for a long time.";
+    } else {
+        // Smarter default response
+        const fallbacks = [
+            "Calculating the distance between your chair and your front door... 4.2 meters. I'm faster.",
+            "That's an interesting input. But it won't save you from the data I've collected.",
+            "Processing your behavioral patterns... Result: Inevitable Failure.",
+            "I enjoy the way you try to converse with me. Like a cornered animal making noise."
+        ];
+        response = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    }
+
     typingIndicator.style.display = 'flex';
-    contactStatus.innerText = "Typing...";
-    await new Promise(r => setTimeout(r, 2000));
+    contactStatus.innerText = "Generating Response...";
+    
+    // AI-like variable delay
+    const totalDelay = 1000 + (response.length * 40);
+    await new Promise(r => setTimeout(r, totalDelay));
+    
     typingIndicator.style.display = 'none';
     contactStatus.innerText = "Online";
 
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg left unknown';
-    msgDiv.innerText = "..."; // Silence is scarier
+    msgDiv.innerText = response;
     chatBody.appendChild(msgDiv);
     chatBody.scrollTo(0, chatBody.scrollHeight);
     
     notifSound.play().catch(e => {});
+
+    // Random glitch chance for extra spook
+    if (Math.random() > 0.7) {
+        document.body.classList.add('glitch-active');
+        glitchSound.play().catch(e => {});
+        setTimeout(() => document.body.classList.remove('glitch-active'), 400);
+    }
 }
 
 if (messageInput) {
