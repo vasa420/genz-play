@@ -165,23 +165,28 @@ function updateTime() {
 }
 
 // Global User Interaction Listener to ensure music starts as soon as user clicks anywhere
-window.addEventListener('mousedown', function startHorrorMusic() {
-    const bgMusic = document.getElementById('bg-music');
-    const introMusic = document.getElementById('intro-music');
-    const introOverlay = document.getElementById('intro-overlay');
+const interactionEvents = ['mousedown', 'click', 'touchstart', 'keydown'];
+interactionEvents.forEach(eventType => {
+    window.addEventListener(eventType, function startHorrorMusic() {
+        const bgMusic = document.getElementById('bg-music');
+        const introMusic = document.getElementById('intro-music');
+        const introOverlay = document.getElementById('intro-overlay');
 
-    // If we are still in the intro, play intro music
-    if (introOverlay && (introOverlay.style.display !== 'none' && introOverlay.classList.contains('active'))) {
-        if (introMusic && introMusic.paused) {
-            introMusic.play().catch(e => { });
+        // Check if intro is active
+        const isIntroActive = introOverlay && introOverlay.classList.contains('active');
+
+        if (isIntroActive) {
+            if (introMusic && introMusic.paused) {
+                introMusic.play().catch(e => { });
+            }
+        } else {
+            // Normal game ambience
+            if (bgMusic && bgMusic.paused) {
+                bgMusic.play().catch(e => { });
+            }
         }
-    } else {
-        // Otherwise handle normal ambience
-        if (bgMusic && bgMusic.paused) {
-            bgMusic.play().catch(e => { });
-        }
-    }
-}, { once: false });
+    }, { once: false });
+});
 
 async function playMessage(stateKey) {
     const node = story[stateKey];
