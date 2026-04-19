@@ -114,6 +114,82 @@ const story = {
 };
 
 let currentGameState = 'start';
+let currentContact = 'unknown';
+
+const contacts = {
+    unknown: { name: "Unknown Number", avatar: "stalker_hero_selfie_1776590484686.png", status: "Online" },
+    mom: { name: "Mom", avatar: "mom.png", status: "Last seen yesterday" },
+    dad: { name: "Dad", avatar: "dad.png", status: "Away" },
+    brother: { name: "Brother", avatar: "brother.png", status: "Online" },
+    sanjay: { name: "Sanjay", avatar: "sanjay.png", status: "Online" },
+    vicky: { name: "Vicky", avatar: "vicky.png", status: "Last seen 2h ago" },
+    anu: { name: "Anu", avatar: "anu.png", status: "Online" }
+};
+
+const chatHistory = {
+    unknown: [], mom: [], dad: [], brother: [], sanjay: [], vicky: [], anu: []
+};
+
+function switchChat(key) {
+    currentContact = key;
+    const contact = contacts[key];
+    
+    // Update Header
+    document.getElementById('contact-name').innerText = contact.name;
+    const avatarEl = document.getElementById('contact-avatar');
+    avatarEl.innerText = ""; 
+    avatarEl.style.background = `url('${contact.avatar}')`;
+    avatarEl.style.backgroundSize = "cover";
+    avatarEl.style.backgroundPosition = "center";
+    document.getElementById('contact-status').innerText = contact.status;
+    
+    // Clear and reload body
+    chatBody.innerHTML = "";
+    chatHistory[key].forEach(msg => {
+        const div = document.createElement('div');
+        div.className = msg.class;
+        div.innerText = msg.text;
+        chatBody.appendChild(div);
+    });
+    
+    closeChatList();
+    chatBody.scrollTo(0, chatBody.scrollHeight);
+
+    // Initial message if empty
+    if (chatHistory[key].length === 0 && key !== 'unknown') {
+        const initialMsg = {
+            mom: "Where are you? I've been calling for hours.",
+            dad: "Did you check the security cameras like I told you?",
+            brother: "I saw someone outside your place. Are you there?",
+            sanjay: "Yo, you seeing the news? There's a lockdown in your sector.",
+            vicky: "Pick up the phone. Stop playing around.",
+            anu: "I feel like someone is watching me... are you okay?"
+        };
+        setTimeout(() => receiveMessage(initialMsg[key], 'left'), 1000);
+    }
+}
+
+async function receiveMessage(text, side, isUnknown = false) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `msg ${side} ${isUnknown ? 'unknown' : ''}`;
+    msgDiv.innerText = text;
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTo(0, chatBody.scrollHeight);
+    
+    // Save to history
+    chatHistory[currentContact].push({ text, class: msgDiv.className });
+    
+    // Update List Preview
+    const contactElements = document.querySelectorAll('.chat-item');
+    contactElements.forEach(el => {
+        if (el.innerText.includes(contacts[currentContact].name)) {
+            const p = el.querySelector('p');
+            if (p) p.innerText = text;
+        }
+    });
+
+    notifSound.play().catch(e => {});
+}
 
 async function showWarning() {
     const intro = document.getElementById('intro-overlay');
@@ -122,10 +198,7 @@ async function showWarning() {
     const bar = document.getElementById('loading-progress');
     const introMusic = document.getElementById('intro-music');
 
-    // 1. Start slow transition to black
     transition.style.opacity = '1';
-
-    // Fade out intro music slowly
     if (introMusic) {
         let fadeAudio = setInterval(() => {
             if (introMusic.volume > 0.1) {
@@ -137,84 +210,59 @@ async function showWarning() {
         }, 200);
     }
 
-    // 2. Wait for full black screen (2 seconds)
     await new Promise(r => setTimeout(r, 2100));
-
-    // 3. Switch screens under the black cover
     intro.style.display = 'none';
     intro.classList.remove('active');
     warning.style.display = 'flex';
-
-    // 4. Fade out the black cover
     transition.style.opacity = '0';
     await new Promise(r => setTimeout(r, 1000));
 
-    // 5. Start loading bar
     bar.style.transition = 'width 5s linear';
-    setTimeout(() => {
-        bar.style.width = '100%';
-    }, 100);
-
-    setTimeout(() => {
-        startGame();
-    }, 5100);
+    setTimeout(() => { bar.style.width = '100%'; }, 100);
+    setTimeout(() => { startGame(); }, 5100);
 }
 
 function startGame() {
     const headphones = document.getElementById('headphones-warning');
     if (headphones) headphones.style.display = 'none';
-
-    // Play background ambience
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         bgMusic.volume = 0.5;
-        bgMusic.play().catch(e => console.log("Music autoplay blocked, waiting for next interaction"));
+        bgMusic.play().catch(e => {});
     }
-
     updateTime();
     setInterval(updateTime, 60000);
-    setTimeout(() => {
-        playMessage('start');
-    }, 1500);
+    switchChat('unknown');
+    setTimeout(() => { playMessage('start'); }, 1500);
 }
 
 function openChatList() {
-    const list = document.getElementById('chat-list-overlay');
-    list.style.display = 'flex';
+    document.getElementById('chat-list-overlay').style.display = 'flex';
 }
 
 function closeChatList() {
-    const list = document.getElementById('chat-list-overlay');
-    list.style.display = 'none';
+    document.getElementById('chat-list-overlay').style.display = 'none';
 }
 
 function updateTime() {
     const now = new Date();
-    document.getElementById('current-time').innerText =
-        now.getHours().toString().padStart(2, '0') + ":" +
+    document.getElementById('current-time').innerText = 
+        now.getHours().toString().padStart(2, '0') + ":" + 
         now.getMinutes().toString().padStart(2, '0');
 }
 
-// Global User Interaction Listener to ensure music starts as soon as user clicks anywhere
+// Global User Interaction Listener
 const interactionEvents = ['mousedown', 'click', 'touchstart', 'keydown'];
 interactionEvents.forEach(eventType => {
     window.addEventListener(eventType, function startHorrorMusic() {
         const bgMusic = document.getElementById('bg-music');
         const introMusic = document.getElementById('intro-music');
         const introOverlay = document.getElementById('intro-overlay');
-
-        // Check if intro is active
         const isIntroActive = introOverlay && introOverlay.classList.contains('active');
-
         if (isIntroActive) {
-            if (introMusic && introMusic.paused) {
-                introMusic.play().catch(e => { });
-            }
+            if (introMusic && introMusic.paused) introMusic.play().catch(e => {});
         } else {
-            // Normal game ambience
-            if (bgMusic && bgMusic.paused) {
-                bgMusic.play().catch(e => { });
-            }
+            if (bgMusic && bgMusic.paused) bgMusic.play().catch(e => {});
         }
     }, { once: false });
 });
@@ -222,46 +270,20 @@ interactionEvents.forEach(eventType => {
 async function playMessage(stateKey) {
     const node = story[stateKey];
     if (!node) return;
-
-    // Show Typing
     typingIndicator.style.display = 'flex';
     contactStatus.innerText = "Typing...";
-
-    // Realistic delay based on text length
     const delay = Math.min(Math.max(node.text.length * 50, 1000), 3000);
     await new Promise(r => setTimeout(r, delay));
-
     typingIndicator.style.display = 'none';
     contactStatus.innerText = "Online";
-
-    // Create Bubble
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `msg left ${node.sender === 'unknown' ? 'unknown' : ''}`;
-    msgDiv.innerText = node.text;
-    chatBody.appendChild(msgDiv);
-    chatBody.scrollTo(0, chatBody.scrollHeight);
-
-    // Sound
-    notifSound.play().catch(e => console.log("Audio play blocked"));
-
-    // Glitch Effect
+    receiveMessage(node.text, 'left', node.sender === 'unknown');
     if (node.glitch) {
         document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => console.log("Audio play blocked"));
+        glitchSound.play().catch(e => {});
         setTimeout(() => document.body.classList.remove('glitch-active'), 500);
     }
-
-    // Check for Death/Victory
-    if (node.death) {
-        setTimeout(() => endGame(node.death, false), 2000);
-        return;
-    }
-    if (node.victory) {
-        setTimeout(() => endGame(node.victory, true), 2000);
-        return;
-    }
-
-    // Show Choices
+    if (node.death) setTimeout(() => endGame(node.death, false), 2000);
+    if (node.victory) setTimeout(() => endGame(node.victory, true), 2000);
     showChoices(node.choices);
 }
 
@@ -271,35 +293,26 @@ function showChoices(choices) {
         const btn = document.createElement('div');
         btn.className = 'choice-btn';
         btn.innerText = choice.text;
-        btn.onclick = () => {
-            makeChoice(choice);
-        };
+        btn.onclick = () => makeChoice(choice);
         choiceContainer.appendChild(btn);
     });
 }
 
 function makeChoice(choice) {
-    // Hide choices
     choiceContainer.innerHTML = '';
-
-    // Add Player Message
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg right';
     msgDiv.innerText = choice.text;
     chatBody.appendChild(msgDiv);
     chatBody.scrollTo(0, chatBody.scrollHeight);
-
-    // Play next part
-    setTimeout(() => {
-        playMessage(choice.next);
-    }, 1000);
+    chatHistory[currentContact].push({ text: choice.text, class: 'msg right' });
+    setTimeout(() => playMessage(choice.next), 1000);
 }
 
 function endGame(reason, isVictory) {
     const overlay = document.getElementById('game-over');
     const title = overlay.querySelector('h1');
     const desc = document.getElementById('death-reason');
-
     if (isVictory) {
         title.innerText = "SURVIVED";
         title.style.color = "#00ff88";
@@ -310,44 +323,34 @@ function endGame(reason, isVictory) {
         title.style.color = "#ff3e3e";
         desc.innerText = reason;
     }
-
     overlay.style.display = 'flex';
 }
 
-// Typing System Implementation
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 
 async function handleSend() {
     const text = messageInput.value.trim();
     if (!text) return;
-
     messageInput.value = '';
-
-    // Add player message bubble
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg right';
     msgDiv.innerText = text;
     chatBody.appendChild(msgDiv);
     chatBody.scrollTo(0, chatBody.scrollHeight);
-
-    // Check if it matches any current choices
-    const currentChoices = document.querySelectorAll('.choice-btn');
-    let matched = false;
-
-    currentChoices.forEach(btn => {
-        if (text.toLowerCase().includes(btn.innerText.toLowerCase()) ||
-            btn.innerText.toLowerCase().includes(text.toLowerCase())) {
-            btn.click();
-            matched = true;
-        }
-    });
-
-    if (!matched) {
-        // AI SMART RESPONSE SYSTEM
-        setTimeout(() => {
-            playAIResponse(text);
-        }, 1200);
+    chatHistory[currentContact].push({ text, class: 'msg right' });
+    if (currentContact === 'unknown') {
+        const currentChoices = document.querySelectorAll('.choice-btn');
+        let matched = false;
+        currentChoices.forEach(btn => {
+            if (text.toLowerCase().includes(btn.innerText.toLowerCase())) {
+                btn.click();
+                matched = true;
+            }
+        });
+        if (!matched) setTimeout(() => playAIResponse(text), 1200);
+    } else {
+        setTimeout(() => playAIResponse(text), 1500);
     }
 }
 
@@ -355,59 +358,52 @@ async function playAIResponse(userInput) {
     const input = userInput.toLowerCase();
     let response = "";
     let isCreepy = false;
-
     if (currentContact === 'unknown') {
         const analysis = {
-            fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length,
-            aggression: (input.match(/fuck|shit|kill|die|police|911|bastard|idiot|hell/g) || []).length
+            fear: (input.match(/scared|afraid|fear|terrified|god|help|please|no|stop/g) || []).length
         };
-
         if (input.includes("time")) {
             const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            response = `It's ${timeStr}. Time for you to realize you're not as safe as you thought.`;
+            response = `It's ${now.getHours()}:${now.getMinutes()}. Time for you to realize you're not safe.`;
         } else if (input.includes("photo") || input.includes("pic")) {
             response = "I'm right here. Look closer.";
             setTimeout(() => sendPhotoMessage("stalker_id.png"), 3000);
         } else if (analysis.fear > 0) {
-            response = "Your fear is my primary source of data. Don't stop... I'm enjoying the feed.";
+            response = "Your fear is my primary source. Keep typing.";
         } else {
-            response = "Every word you type brings me one step closer to your door.";
+            response = "I'm getting closer with every word you type.";
         }
     } else if (currentContact === 'mom') {
         if (input.includes("help") || input.includes("scared") || input.includes("stranger")) {
-            response = "WHAT?! Stay in your room. I'm calling the police right now! Don't open the door for anyone. I'm coming home as fast as I can!";
+            response = "WHAT?! Stay in your room. I'm calling the police right now! Don't open the door for anyone!";
         } else if (input.includes("where") || input.includes("home")) {
-            response = "I'm stuck in traffic near the bridge. It's taking forever. Please tell me you locked the kitchen window.";
+            response = "I'm stuck in traffic near the bridge. Please tell me you locked the kitchen window.";
         } else if (input.includes("love")) {
-            response = "I love you too baby. Just stay safe. I'll be there in 15 minutes, I promise.";
+            response = "I love you too baby. Just stay safe. I'll be there in 15 minutes.";
         } else {
-            response = "I can't really talk, honey. Just make sure the back door is bolted. There's been some weird activity in the neighborhood.";
+            response = "I can't talk right now honey. Just make sure the back door is bolted.";
         }
     } else if (currentContact === 'dad') {
-        if (input.includes("stranger") || input.includes("window") || input.includes("outside")) {
-            response = "I see him on the porch camera! He's wearing a mask. Get to the safe room NOW. I've already dispatched the security team!";
+        if (input.includes("stranger") || input.includes("window")) {
+            response = "I see him on the porch camera! He's wearing a mask. Get to the safe room NOW!";
         } else {
-            response = "I'm at work late. Did the alarm system beep? It's been showing a connection error for the last 10 minutes.";
+            response = "I'm late at work. Did the alarm system beep? It's showing a connection error.";
         }
     } else if (currentContact === 'brother') {
-        response = "Yo, there's a black car with no plates sitting right outside your driveway. The driver is just staring at your window. Did you invite anyone over?";
+        response = "Yo, there's a black car sitting outside your driveway. Driver is just staring. Did you invite someone?";
         isCreepy = true;
     } else if (currentContact === 'anu') {
-        response = "Did you just send me a weird link? My phone just glitched out and played a recording of a scream. This isn't funny.";
+        response = "Did you just send me a weird link? My phone just played a scream recording. This isn't funny.";
         isCreepy = true;
     } else {
-        response = "The network is getting slow. Everyone is saying the lines are being cut. Are you still there?";
+        response = "The network is slow. Everyone says lines are being cut. Are you there?";
     }
-
     typingIndicator.style.display = 'flex';
     contactStatus.innerText = "Typing...";
     await new Promise(r => setTimeout(r, 2000));
     typingIndicator.style.display = 'none';
     contactStatus.innerText = contacts[currentContact].status;
-
     receiveMessage(response, 'left', currentContact === 'unknown' || isCreepy);
-    
     if (isCreepy || (currentContact === 'unknown' && Math.random() > 0.7)) {
         document.body.classList.add('glitch-active');
         glitchSound.play().catch(e => {});
@@ -421,22 +417,19 @@ function sendPhotoMessage(url) {
     msgDiv.style.background = 'transparent';
     msgDiv.style.padding = '0';
     msgDiv.style.border = 'none';
-
-    // Passport Size Styling
     const img = document.createElement('img');
     img.src = url;
-    img.style.width = '120px'; // Passport Width
-    img.style.height = '150px'; // Passport Height
+    img.style.width = '120px';
+    img.style.height = '150px';
     img.style.objectFit = 'cover';
-    img.style.borderRadius = '4px'; // Sharper corners for ID feel
+    img.style.borderRadius = '4px';
     img.style.marginTop = '10px';
-    img.style.border = '4px solid white'; // Physical photo border
+    img.style.border = '4px solid white';
     img.style.boxShadow = '0 5px 15px rgba(0,0,0,0.8)';
     img.onload = () => chatBody.scrollTo(0, chatBody.scrollHeight);
-
     msgDiv.appendChild(img);
     chatBody.appendChild(msgDiv);
-    notifSound.play().catch(e => { });
+    notifSound.play().catch(e => {});
 }
 
 if (messageInput) {
@@ -444,12 +437,8 @@ if (messageInput) {
         if (e.key === 'Enter') handleSend();
     });
 }
+if (sendBtn) sendBtn.addEventListener('click', handleSend);
 
-if (sendBtn) {
-    sendBtn.addEventListener('click', handleSend);
-}
-
-// Creepy Call System
 let callTimeout;
 let isRinging = false;
 
@@ -458,59 +447,40 @@ function startCreepyCall() {
     const callStatus = document.getElementById('call-status');
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
-
     callOverlay.style.display = 'flex';
     isRinging = true;
-
-    // Stop background music and start ringtone
     if (bgMusic) bgMusic.pause();
     if (ringtone) {
         ringtone.currentTime = 0;
-        ringtone.play().catch(e => console.log("Ringtone blocked, wait for interaction"));
+        ringtone.play().catch(e => {});
     }
-
     callStatus.innerText = "INCOMING CALL...";
-    callStatus.style.color = "#888";
 }
 
 function acceptCall() {
     if (!isRinging) return;
     isRinging = false;
-
     const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
     const glitchSound = document.getElementById('glitch-sound');
-
-    // Stop ringtone and start connection
     if (ringtone) ringtone.pause();
-
     callStatus.innerText = "CONNECTED";
     callStatus.style.color = "#4cd964";
-
-    // Heavy Static / Glitch
     document.body.classList.add('glitch-active');
-    glitchSound.play().catch(e => { });
-
-    // AI VOICEOVER (Creepy Web Speech)
+    glitchSound.play().catch(e => {});
     const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
-    msg.pitch = 0.1; // Deep voice
-    msg.rate = 0.7;  // Slow voice
+    msg.pitch = 0.1;
+    msg.rate = 0.7;
     window.speechSynthesis.speak(msg);
-
     setTimeout(() => {
         callStatus.innerText = "HEY MAN...";
         setTimeout(() => {
             callStatus.innerText = "WHAT IS YOUR NAME?";
         }, 1500);
     }, 1000);
-
-    // Auto-end call after voice finish
     setTimeout(() => {
         endCall();
-        // Follow up chat message
-        setTimeout(() => {
-            playAIResponse("I'm waiting for your name. Don't keep me waiting.");
-        }, 1000);
+        setTimeout(() => playAIResponse("I'm waiting for your name."), 1000);
     }, 8000);
 }
 
@@ -518,22 +488,15 @@ function endCall() {
     const callOverlay = document.getElementById('call-overlay');
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
-
     isRinging = false;
-    window.speechSynthesis.cancel(); // Stop talking if ending early
-
+    window.speechSynthesis.cancel();
     if (ringtone) {
         ringtone.pause();
         ringtone.currentTime = 0;
     }
-
     callOverlay.style.display = 'none';
     document.body.classList.remove('glitch-active');
-
-    // Resume background music
-    if (bgMusic) bgMusic.play().catch(e => { });
-
-    // Reset status for next time
+    if (bgMusic) bgMusic.play().catch(e => {});
     document.getElementById('call-status').innerText = "CALLING...";
     document.getElementById('call-status').style.color = "#888";
 }
