@@ -500,9 +500,10 @@ function switchCamera(id) {
             location.innerText = "BACKYARD - NIGHT VISION";
             feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8) contrast(1.2)"; 
         } else if (id === 3) {
-            feed.src = "horror_phone_bg_1776586244401.png"; // Moody room
+            feed.src = "camera_living_room_view_1776607107820.png"; 
             location.innerText = "LIVING ROOM - CORNER CAM";
-            feed.style.filter = "grayscale(1) brightness(0.4) contrast(1.5)";
+            feed.style.filter = "none";
+            feed.style.backgroundColor = "transparent";
         } else if (id === 4) {
             feed.src = "stalker_id.png"; // RELIABLE LOCAL ASSET
             location.innerText = "MAIN HALLWAY - MOTION DETECTED";
