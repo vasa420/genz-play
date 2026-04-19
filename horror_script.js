@@ -378,25 +378,25 @@ function switchCamera(id) {
         document.querySelector('.cctv-time').innerText = timestamp;
 
         if (id === 1) {
-            feed.src = "camera_porch_view_1776596595360.png";
+            feed.src = "camera_porch_view_1776596595360.png"; // Shadows outside
             location.innerText = "FRONT PORCH - LIVE";
             feed.style.filter = "none";
         } else if (id === 2) {
-            feed.src = "camera_backyard_view_1776596617682.png";
+            feed.src = "camera_backyard_view_1776596617682.png"; // Moving swing
             location.innerText = "BACKYARD - NIGHT VISION";
             feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8) contrast(1.2)"; 
         } else if (id === 3) {
-            feed.src = "media__1776587554852.png";
-            location.innerText = "LIVING ROOM - INTERIOR";
-            feed.style.filter = "grayscale(1) brightness(0.5) contrast(1.5)";
+            feed.src = "horror_phone_bg_1776586244401.png"; // Moody room
+            location.innerText = "LIVING ROOM - CORNER CAM";
+            feed.style.filter = "grayscale(1) brightness(0.4) contrast(1.5)";
         } else if (id === 4) {
-            feed.src = "media__1776586840686.png";
-            location.innerText = "HALLWAY - INTERIOR";
-            feed.style.filter = "grayscale(1) brightness(0.4) contrast(1.8)";
-        } else if (id === 5) {
-            feed.src = "stalker_mirror_selfie_1776589637959.png";
-            location.innerText = "GARAGE - WARNING: MOTION DETECTED";
+            feed.src = "stalker_id_1776590763006.png"; // Stalker ID silhouette
+            location.innerText = "MAIN HALLWAY - MOTION DETECTED";
             feed.style.filter = "grayscale(1) brightness(0.3) contrast(2)";
+        } else if (id === 5) {
+            feed.src = "stalker_mirror_selfie_1776589637959.png"; // Stalker in mirror
+            location.innerText = "GARAGE - WARNING: UNAUTHORIZED ENTRY";
+            feed.style.filter = "grayscale(1) brightness(0.2) contrast(2.5)";
         }
     }, 300);
 }
