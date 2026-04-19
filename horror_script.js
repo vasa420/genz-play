@@ -120,6 +120,12 @@ function showWarning() {
     const warning = document.getElementById('headphones-warning');
     const bar = document.getElementById('loading-progress');
     
+    // Stop intro music
+    const introMusic = document.getElementById('intro-music');
+    if (introMusic) {
+        introMusic.pause();
+    }
+
     warning.style.display = 'flex';
     
     // Animate loading bar
@@ -134,8 +140,8 @@ function showWarning() {
 }
 
 function startGame() {
-    document.getElementById('intro-overlay').classList.remove('active');
-    document.getElementById('headphones-warning').style.display = 'none';
+    const headphones = document.getElementById('headphones-warning');
+    if (headphones) headphones.style.display = 'none';
     
     // Play background ambience
     const bgMusic = document.getElementById('bg-music');
@@ -161,8 +167,19 @@ function updateTime() {
 // Global User Interaction Listener to ensure music starts as soon as user clicks anywhere
 window.addEventListener('mousedown', function startHorrorMusic() {
     const bgMusic = document.getElementById('bg-music');
-    if (bgMusic && bgMusic.paused) {
-        bgMusic.play().catch(e => { });
+    const introMusic = document.getElementById('intro-music');
+    const introOverlay = document.getElementById('intro-overlay');
+
+    // If we are still in the intro, play intro music
+    if (introOverlay && (introOverlay.style.display !== 'none' && introOverlay.classList.contains('active'))) {
+        if (introMusic && introMusic.paused) {
+            introMusic.play().catch(e => { });
+        }
+    } else {
+        // Otherwise handle normal ambience
+        if (bgMusic && bgMusic.paused) {
+            bgMusic.play().catch(e => { });
+        }
     }
 }, { once: false });
 
