@@ -116,14 +116,18 @@ const story = {
 let currentGameState = 'start';
 
 function showWarning() {
-    document.getElementById('intro-overlay').style.display = 'none';
+    const intro = document.getElementById('intro-overlay');
+    intro.style.display = 'none';
+    intro.classList.remove('active'); // Immediately deactivate to prevent music restart
+    
     const warning = document.getElementById('headphones-warning');
     const bar = document.getElementById('loading-progress');
     
-    // Stop intro music
+    // Stop intro music immediately
     const introMusic = document.getElementById('intro-music');
     if (introMusic) {
         introMusic.pause();
+        introMusic.currentTime = 0;
     }
 
     warning.style.display = 'flex';
