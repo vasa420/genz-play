@@ -115,8 +115,27 @@ const story = {
 
 let currentGameState = 'start';
 
+function showWarning() {
+    document.getElementById('intro-overlay').style.display = 'none';
+    const warning = document.getElementById('headphones-warning');
+    const bar = document.getElementById('loading-progress');
+    
+    warning.style.display = 'flex';
+    
+    // Animate loading bar
+    bar.style.transition = 'width 5s linear';
+    setTimeout(() => {
+        bar.style.width = '100%';
+    }, 100);
+
+    setTimeout(() => {
+        startGame();
+    }, 5100);
+}
+
 function startGame() {
     document.getElementById('intro-overlay').classList.remove('active');
+    document.getElementById('headphones-warning').style.display = 'none';
     
     // Play background ambience
     const bgMusic = document.getElementById('bg-music');
