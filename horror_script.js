@@ -384,11 +384,19 @@ function switchCamera(id) {
         } else if (id === 2) {
             feed.src = "camera_backyard_view_1776596617682.png";
             location.innerText = "BACKYARD - NIGHT VISION";
-            feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8)"; // Night vision tint
-        } else {
-            feed.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Fluid_static.gif";
-            location.innerText = "SIGNAL LOST - UNABLE TO CONNECT";
-            feed.style.filter = "grayscale(1) contrast(1.5)";
+            feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8) contrast(1.2)"; 
+        } else if (id === 3) {
+            feed.src = "media__1776587554852.png";
+            location.innerText = "LIVING ROOM - INTERIOR";
+            feed.style.filter = "grayscale(1) brightness(0.5) contrast(1.5)";
+        } else if (id === 4) {
+            feed.src = "media__1776586840686.png";
+            location.innerText = "HALLWAY - INTERIOR";
+            feed.style.filter = "grayscale(1) brightness(0.4) contrast(1.8)";
+        } else if (id === 5) {
+            feed.src = "stalker_mirror_selfie_1776589637959.png";
+            location.innerText = "GARAGE - WARNING: MOTION DETECTED";
+            feed.style.filter = "grayscale(1) brightness(0.3) contrast(2)";
         }
     }, 300);
 }
