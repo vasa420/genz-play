@@ -300,13 +300,13 @@
                 </div>
 
                 <!-- Mail App -->
-                <div class="app-icon-container" onclick="openMail()"
+                <div id="mail-app" class="app-icon-container" onclick="openMail()"
                     style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
                     <div class="app-icon"
                         style="width: 62px; height: 62px; background: #007aff; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;">
                         ✉️
                         <div id="mail-notif-dot" class="notif-dot"
-                            style="position: absolute; top: -4px; right: -4px; width: 22px; height: 22px; background: #ff3b30; border-radius: 50%; border: 3px solid #fff; font-size: 12px; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; display: none;">
+                            style="position: absolute; top: -4px; right: -4px; width: 22px; height: 22px; background: #ff3b30; border-radius: 50%; border: 3px solid #fff; font-size: 12px; color: white; display: none; align-items: center; justify-content: center; font-weight: 700;">
                             1</div>
                     </div>
                     <span
@@ -523,34 +523,6 @@
             </div>
         </div>
     </div> <!-- chat-list-overlay end -->
-
-    <!-- Mail Overlay -->
-    <div id="mail-overlay" class="phone-overlay" style="background: #000; display: none; flex-direction: column; overflow: hidden; z-index: 4000;">
-        <div class="list-header"
-            style="display: flex; justify-content: space-between; align-items: center; padding: 25px 25px; background: linear-gradient(180deg, #111, #000); border-bottom: 2px solid #222;">
-            <div onclick="openHome()" style="color: #666; font-size: 22px; cursor: pointer; transition: 0.3s;"
-                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666'">🏠</div>
-            <h1 style="color: white; font-size: 32px; font-weight: 700; margin: 0; flex: 1; margin-left: 15px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">Inbox</h1>
-            <div style="color: #666; font-size: 18px; font-weight: 500;">Filter</div>
-        </div>
-
-        <div id="mail-content" style="flex: 1; padding: 20px; overflow-y: auto;">
-            <div class="mail-item" style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #007aff;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #007aff; font-weight: 700; font-size: 14px;">Unknown</span>
-                    <span style="color: #666; font-size: 12px;">Now</span>
-                </div>
-                <h3 style="color: white; font-size: 17px; margin: 0 0 5px 0;">Childhood Memory</h3>
-                <p style="color: #aaa; font-size: 14px; margin: 10px 0 0 0; line-height: 1.4; font-family: 'JetBrains Mono', monospace;">
-                    HEY YOU KNOW ME I AM YOUR CHILD HOOD FRIEND
-                </p>
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <div style="width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #666;">↩️</div>
-                    <div style="flex: 1; height: 40px; background: #2c2c2e; border-radius: 20px; display: flex; align-items: center; padding-left: 15px; color: #555; font-size: 13px;">Reply to friend...</div>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <!-- Call Overlay (INSIDE PHONE) -->
     <div id="call-overlay" class="phone-overlay" style="background: rgba(0,0,0,0.95); z-index: 5000; justify-content: center; align-items: center; display: none;">
@@ -572,6 +544,30 @@
             
             <!-- Call Dialogue Choices -->
             <div id="call-choice-container" style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px; align-items: center;"></div>
+        </div>
+    </div>
+
+    <!-- Mail App Overlay -->
+    <div id="mail-overlay" class="phone-overlay" style="background: #000; display: none; flex-direction: column;">
+        <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 25px; background: linear-gradient(180deg, #1a1a1c, #000); border-bottom: 1px solid #333;">
+            <div onclick="openHome()" style="color: #007aff; font-size: 18px; cursor: pointer;">Cancel</div>
+            <h1 style="color: white; font-size: 20px; font-weight: 700; margin: 0;">Inbox</h1>
+            <div style="color: #007aff; font-size: 18px; font-weight: 500; cursor: pointer;">Edit</div>
+        </div>
+        
+        <div style="padding: 20px; flex: 1; overflow-y: auto;">
+            <div id="mail-item-unknown" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #007aff; display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #007aff; font-weight: 700; font-size: 15px;">Unknown Sender</span>
+                    <span style="color: #888; font-size: 12px;">Just Now</span>
+                </div>
+                <h3 style="color: white; font-size: 16px; margin: 0 0 5px; font-weight: 700;">HEY YOU KNOW ME...</h3>
+                <p style="color: #aaa; margin: 0; font-size: 14px; line-height: 1.4;">HEY YOU KNOW ME I AM YOUR CHILD HOOD FRIEND</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <p id="no-mail-text" style="color: #444; font-size: 14px;">No other messages</p>
+            </div>
         </div>
     </div>
 </div> <!-- phone-container end -->

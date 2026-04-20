@@ -357,9 +357,24 @@ function startGame() {
 
     // START ON HOME SCREEN
     openHome();
-}
 
-let mailNotifTriggered = false;
+    // TRIGGER MAIL NOTIFICATION AFTER 10 SECONDS
+    setTimeout(() => {
+        console.log("Triggering Mail Notification...");
+        const dot = document.getElementById('mail-notif-dot');
+        const mailItem = document.getElementById('mail-item-unknown');
+        const noMailText = document.getElementById('no-mail-text');
+        
+        if (dot) {
+            dot.style.display = 'flex';
+            const notifSound = document.getElementById('notif-sound');
+            if (notifSound) notifSound.play().catch(e => {});
+        }
+        
+        if (mailItem) mailItem.style.display = 'block';
+        if (noMailText) noMailText.style.display = 'none';
+    }, 10000);
+}
 
 function openHome() {
     console.log("Opening Home Screen...");
@@ -369,33 +384,6 @@ function openHome() {
     // Pause video if playing
     const video = document.getElementById('game-video-player');
     if (video) video.pause();
-
-    // Trigger Mail Notification shortly after entering
-    if (!mailNotifTriggered) {
-        setTimeout(triggerMailNotif, 1500);
-    }
-}
-
-function triggerMailNotif() {
-    console.log("Triggering Mail Notification");
-    const dot = document.getElementById('mail-notif-dot');
-    if (dot) {
-        dot.style.display = 'flex';
-        const notifSound = document.getElementById('notif-sound');
-        if (notifSound) notifSound.play().catch(e => { });
-        mailNotifTriggered = true;
-    }
-}
-
-function openMail() {
-    console.log("Opening Mail App...");
-    hideAllOverlays();
-    const mailOverlay = document.getElementById('mail-overlay');
-    if (mailOverlay) mailOverlay.style.display = 'flex';
-    
-    // Clear notification
-    const dot = document.getElementById('mail-notif-dot');
-    if (dot) dot.style.display = 'none';
 }
 
 function openPhoneApp() {
@@ -471,12 +459,21 @@ function openChatList() {
 }
 
 function openPhotos() {
-    alert("System Error: Photos database corrupted. Unauthorized access detected.");
-    document.body.classList.add('glitch-active');
-    setTimeout(() => document.body.classList.remove('glitch-active'), 500);
+    console.log("Opening Photos...");
+    // Future implementation
 }
 
-
+function openMail() {
+    console.log("Opening Mail App...");
+    hideAllOverlays();
+    const mailOverlay = document.getElementById('mail-overlay');
+    if (mailOverlay) {
+        mailOverlay.style.display = 'flex';
+    }
+    // Clear notification when opened
+    const dot = document.getElementById('mail-notif-dot');
+    if (dot) dot.style.display = 'none';
+}
 
 function openCamera() {
     console.log("INITIALIZING SECURITY FEED...");
@@ -494,8 +491,7 @@ function hideAllOverlays() {
         'chat-active-overlay',
         'camera-system',
         'phone-app-overlay',
-        'mail-overlay',
-        'call-overlay'
+        'mail-overlay'
     ];
     overlays.forEach(id => {
         const el = document.getElementById(id);
