@@ -1137,44 +1137,53 @@ function handleCallAnswer(key) {
         callStatus.innerText = "CONNECTED";
         callStatus.style.color = "#4cd964";
         
-        // MOM'S BRANCHING DIALOGUE
-        speakVoice("What are you doing, sweetie?", 'mom');
-        callStatus.innerText = "MOM: What are you doing?";
+        // STAGE 1: MOM ASKS WHAT YOU ARE DOING
+        speakVoice("TELL MY CHILD WHAT ARE YOU DOING", 'mom');
+        callStatus.innerText = "MOM: TELL MY CHILD WHAT ARE YOU DOING";
         
         setTimeout(() => {
             showCallChoices([
                 { 
-                    text: "I am safe at home", 
+                    text: "ARE YOU SAFE MOM", 
                     callback: () => {
-                        speakVoice("I am safe at home.", 'player');
-                        callStatus.innerText = "YOU: I am safe at home";
+                        speakVoice("ARE YOU SAFE MOM", 'player', 'fearing');
+                        callStatus.innerText = "YOU: ARE YOU SAFE MOM";
+                        
+                        // STAGE 2: MOM REPLIES SHE IS SAFE
                         setTimeout(() => {
-                            speakVoice("Ok be safe, I will be home very soon.", 'mom');
-                            callStatus.innerText = "MOM: Ok be safe...";
-                            setTimeout(endCall, 4000);
-                        }, 2000);
-                    }
-                },
-                { 
-                    text: "When will you come home?", 
-                    callback: () => {
-                        speakVoice("When will you come home, Mom?", 'player');
-                        callStatus.innerText = "YOU: When are you coming?";
-                        setTimeout(() => {
-                            speakVoice("I am on the way, there was a lot of traffic.", 'mom');
-                            callStatus.innerText = "MOM: There's so much traffic...";
+                            speakVoice("YA MY CHILD I AM SAFE WHY ANY PROBLEM", 'mom');
+                            callStatus.innerText = "MOM: YA MY CHILD I AM SAFE WHY ANY PROBLEM";
+                            
                             setTimeout(() => {
                                 showCallChoices([
                                     {
-                                        text: "Ok Mom",
+                                        text: "NOTHING MOM WHEN YOU WILL COME TO HOME",
                                         callback: () => {
-                                            speakVoice("Ok Mom.", 'player');
-                                            callStatus.innerText = "YOU: Ok Mom";
-                                            setTimeout(endCall, 2000);
+                                            speakVoice("NOTHING MOM WHEN YOU WILL COME TO HOME", 'player', 'fearless');
+                                            callStatus.innerText = "YOU: NOTHING MOM...";
+                                            
+                                            // STAGE 3: MOM SAYS SHE WILL BE BACK SOON
+                                            setTimeout(() => {
+                                                speakVoice("I WILL BE SOON YOU GO AND SLEEP I WILL BE BACK AS SOON", 'mom');
+                                                callStatus.innerText = "MOM: I WILL BE BACK SOON...";
+                                                
+                                                setTimeout(() => {
+                                                    showCallChoices([
+                                                        {
+                                                            text: "OK MOM",
+                                                            callback: () => {
+                                                                speakVoice("OK MOM", 'player');
+                                                                callStatus.innerText = "YOU: OK MOM";
+                                                                setTimeout(endCall, 2000);
+                                                            }
+                                                        }
+                                                    ]);
+                                                }, 2000);
+                                            }, 2000);
                                         }
                                     }
                                 ]);
-                            }, 3000);
+                            }, 2000);
                         }, 2000);
                     }
                 }
@@ -1244,19 +1253,29 @@ function endCall() {
     document.getElementById('call-status').style.color = "#888";
 }
 
-function speakVoice(text, voiceType = 'mom') {
-    const msg = new SpeechSynthesisUtterance(text);
-    if (voiceType === 'mom') {
-        msg.pitch = 1.2;
-        msg.rate = 1.0;
-    } else if (voiceType === 'player') {
-        msg.pitch = 0.9;
-        msg.rate = 1.0;
+function speakVoice(text, character, tone = 'normal') {
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    if (character === 'mom') {
+        utterance.pitch = 1.2; // Feminine
+        utterance.rate = 1.0;
     } else {
-        msg.pitch = 0.5;
-        msg.rate = 0.8;
+        // Player
+        if (tone === 'fearing') {
+            utterance.pitch = 1.4; // High pitch for fear
+            utterance.rate = 1.2;  // Faster for panic
+        } else if (tone === 'fearless') {
+            utterance.pitch = 1.0; // Normal
+            utterance.rate = 0.9;
+        } else {
+            utterance.pitch = 0.9;
+            utterance.rate = 0.9;
+        }
     }
-    window.speechSynthesis.speak(msg);
+    
+    // Ensure existing speech is cancelled for immediate flow
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
 }
 
 function showCallChoices(choices) {
