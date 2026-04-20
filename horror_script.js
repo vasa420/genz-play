@@ -381,10 +381,9 @@ function openChatList() {
     document.getElementById('chat-list-overlay').style.display = 'flex';
     document.getElementById('chat-list-overlay').style.opacity = '1';
     
-    // Initial STALKER message triggered when you FIRST open the app
+    // Set unknown as active if it's the first time
     if (chatHistory['unknown'].length === 0) {
         switchChat('unknown');
-        setTimeout(() => { playMessage('start'); }, 1000);
     }
 }
 
