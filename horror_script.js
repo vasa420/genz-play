@@ -514,24 +514,38 @@ window.handleMailReply = function(text) {
 
 window.handleMailReply2 = function(text) {
     console.log("Mail replied phase 2 with:", text);
-    const choiceContainer = document.getElementById('mail-choice-container-2');
+    const choiceArea = document.getElementById('mail-reply-area-2');
     const repliedText = document.getElementById('mail-replied-text-2');
     const sentContent = document.getElementById('sent-mail-content-2');
     
-    if (choiceContainer) choiceContainer.style.display = 'none';
+    if (choiceArea) choiceArea.style.display = 'none';
     if (repliedText) repliedText.style.display = 'block';
     if (sentContent) sentContent.innerText = text;
     
+    // Phase 3 Scary Response after 3 seconds
     setTimeout(() => {
-        document.body.classList.add('glitch-active');
+        const scaryDiv3 = document.getElementById('mail-scary-reply-3');
+        const scaryText3 = document.getElementById('mail-scary-text-3');
         const glitchSound = document.getElementById('glitch-sound');
-        if (glitchSound) glitchSound.play().catch(e => {});
         
-        // Final ominous action - system error
-        alert("SYSTEM ERROR: UNKNOWN PROTOCOL DETECTED. ENCRYPTING DRIVE C:...");
-        
-        setTimeout(() => document.body.classList.remove('glitch-active'), 500);
-    }, 2000);
+        if (scaryDiv3 && scaryText3) {
+            scaryDiv3.style.display = 'block';
+            if (text === 'CAN I CALL POLICE') {
+                scaryText3.innerText = "I WILL KILL YOUR MOM.";
+            } else {
+                scaryText3.innerText = "YOU WANT TO KNOW WHY? LOOK BEHIND YOU.";
+            }
+            
+            document.body.classList.add('glitch-active');
+            if (glitchSound) glitchSound.play().catch(e => {});
+            
+            // Final ominous system error
+            setTimeout(() => {
+                alert("SYSTEM ERROR: UNKNOWN PROTOCOL DETECTED. ENCRYPTING DRIVE C:...");
+                document.body.classList.remove('glitch-active');
+            }, 700);
+        }
+    }, 3000);
 };
 
 function openCamera() {
