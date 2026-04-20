@@ -1123,6 +1123,8 @@ function startOutboundCall(key) {
     }, ringDuration);
 }
 
+let momCalledOnce = false;
+
 function handleCallAnswer(key) {
     const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
@@ -1133,7 +1135,8 @@ function handleCallAnswer(key) {
         return;
     }
 
-    if (key === 'mom') {
+    if (key === 'mom' && !momCalledOnce) {
+        momCalledOnce = true;
         callStatus.innerText = "CONNECTED";
         callStatus.style.color = "#4cd964";
         
