@@ -316,18 +316,20 @@ async function showWarning() {
     const transition = document.getElementById('cinematic-transition');
     const warning = document.getElementById('headphones-warning');
     const bar = document.getElementById('loading-progress');
-    const introMusic = document.getElementById('intro-music');
+    const introVideo = document.getElementById('intro-video-bg');
 
     transition.style.opacity = '1';
-    if (introMusic) {
+    
+    // Fade video audio if necessary
+    if (introVideo) {
         let fadeAudio = setInterval(() => {
-            if (introMusic.volume > 0.1) {
-                introMusic.volume -= 0.1;
+            if (introVideo.volume > 0.1) {
+                introVideo.volume -= 0.1;
             } else {
-                introMusic.pause();
+                introVideo.pause();
                 clearInterval(fadeAudio);
             }
-        }, 200);
+        }, 100);
     }
 
     await new Promise(r => setTimeout(r, 2100));
@@ -962,3 +964,20 @@ function requestFullScreen() {
         }
     }
 }
+// Intro Video Audio Trigger
+document.addEventListener('DOMContentLoaded', () => {
+    const introVideo = document.getElementById('intro-video-bg');
+    if (introVideo) {
+        const unmuteIntro = () => {
+            introVideo.muted = false;
+            introVideo.play().catch(e => console.log("Intro video play deferred"));
+            // Also stop any other music just in case
+            const introMusic = document.getElementById('intro-music');
+            if (introMusic) introMusic.pause();
+        };
+
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, unmuteIntro, { once: true });
+        });
+    }
+});
