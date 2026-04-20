@@ -496,20 +496,7 @@ window.handleMailReply = function(text) {
             if (text === 'wrong message') {
                 scaryText.innerText = "TELL ME YOUR HOME ADDRESS.";
             } else {
-                scaryText.innerText = "IDIOT? YOU WON'T BE SAYING THAT WHEN I'M INSIDE.";
-                
-                // SECOND SCARY MESSAGE AFTER 3 SECONDS
-                setTimeout(() => {
-                    const scaryDiv2 = document.getElementById('mail-scary-reply-2');
-                    const scaryText2 = document.getElementById('mail-scary-text-2');
-                    if (scaryDiv2 && scaryText2) {
-                        scaryDiv2.style.display = 'block';
-                        scaryText2.innerText = "HEY SHUT UP TELL YOUR ACCOUNT NUMBER IDIOT.";
-                        document.body.classList.add('glitch-active');
-                        if (glitchSound) glitchSound.play().catch(e => {});
-                        setTimeout(() => document.body.classList.remove('glitch-active'), 500);
-                    }
-                }, 3000);
+                scaryText.innerText = "HEY SHUT UP TELL YOUR ACCOUNT NUMBER IDIOT.";
             }
             
             document.body.classList.add('glitch-active');
