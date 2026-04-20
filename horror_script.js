@@ -393,9 +393,16 @@ function openPhotos() {
 }
 
 function openVideos() {
-    console.log("Opening Videos App...");
+    console.log("DEBUG: Attempting to open Videos App...");
     hideAllOverlays();
-    document.getElementById('video-app-overlay').style.display = 'flex';
+    const overlay = document.getElementById('video-app-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.zIndex = '9999'; // Force it to the very top
+        console.log("DEBUG: Video overlay set to display flex");
+    } else {
+        console.error("DEBUG: video-app-overlay NOT FOUND in DOM");
+    }
 }
 
 function openCamera() {
