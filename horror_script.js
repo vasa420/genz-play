@@ -495,6 +495,19 @@ window.handleMailReply = function(text) {
             scaryDiv.style.display = 'block';
             if (text === 'wrong message') {
                 scaryText.innerText = "IT IS NOT A WRONG MESSAGE. I AM STANDING AT YOUR FRONT DOOR.";
+                
+                // SECOND MESSAGE AFTER 3 SECONDS
+                setTimeout(() => {
+                    const scaryDiv2 = document.getElementById('mail-scary-reply-2');
+                    const scaryText2 = document.getElementById('mail-scary-text-2');
+                    if (scaryDiv2 && scaryText2) {
+                        scaryDiv2.style.display = 'block';
+                        scaryText2.innerText = "TELL ME YOUR HOME ADDRESS.";
+                        document.body.classList.add('glitch-active');
+                        if (glitchSound) glitchSound.play().catch(e => {});
+                        setTimeout(() => document.body.classList.remove('glitch-active'), 500);
+                    }
+                }, 3000);
             } else {
                 scaryText.innerText = "IDIOT? YOU WON'T BE SAYING THAT WHEN I'M INSIDE.";
             }
