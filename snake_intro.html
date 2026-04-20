@@ -20,8 +20,6 @@
 
         .bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('snake_realm_forest_bg.png') center/cover no-repeat;
-            filter: brightness(0.4) contrast(1.2) blur(5px);
             z-index: 1;
             animation: moveCam 12s infinite alternate ease-in-out;
         }
@@ -127,6 +125,19 @@
         };
 
         updateStatus();
+
+        // Unmute video on any interaction
+        const video = document.querySelector('video');
+        const handleInteraction = () => {
+            if(video) {
+                video.muted = false;
+                video.play().catch(e => console.log("Audio play deferred"));
+            }
+        };
+
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, handleInteraction, { once: true });
+        });
 
         // Automatic redirect after 10 seconds
         setTimeout(() => {
