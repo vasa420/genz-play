@@ -1365,27 +1365,39 @@ function handleCallAnswer(key) {
 function acceptCall() {
     if (!isRinging) return;
     isRinging = false;
-    const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
-    const glitchSound = document.getElementById('glitch-sound');
     if (ringtone) ringtone.pause();
+
+    // ROUTE TO KNOWN DIALOGUE IF NOT UNKNOWN
+    if (currentContact !== 'unknown') {
+        handleCallAnswer(currentContact);
+        return;
+    }
+
+    // UNKNOWN STALKER CALLER LOGIC
+    const callStatus = document.getElementById('call-status');
+    const glitchSound = document.getElementById('glitch-sound');
+    
     callStatus.innerText = "CONNECTED";
     callStatus.style.color = "#4cd964";
     document.body.classList.add('glitch-active');
-    glitchSound.play().catch(e => { });
+    if (glitchSound) glitchSound.play().catch(e => { });
+    
     const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
     msg.pitch = 0.1;
     msg.rate = 0.7;
     window.speechSynthesis.speak(msg);
+    
     setTimeout(() => {
         callStatus.innerText = "HEY MAN...";
         setTimeout(() => {
             callStatus.innerText = "WHAT IS YOUR NAME?";
         }, 1500);
     }, 1000);
+    
     setTimeout(() => {
         endCall();
-        setTimeout(() => playAIResponse("I'm waiting for your name."), 1000);
+        // Fallback or next event trigger
     }, 8000);
 }
 
