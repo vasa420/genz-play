@@ -1143,9 +1143,15 @@ window.endCall = function () {
     if (wasMom && momPhase === 0) {
         setTimeout(() => {
             showTopNotification("SEND YOUR LIVE LOCATION");
-            // Also update Mail
-            const mailDot = document.getElementById('mail-notif-dot');
-            if (mailDot) mailDot.style.display = 'flex';
+            // Show item in list
+            const mailItem = document.getElementById('mail-item-unknown');
+            if (mailItem) mailItem.style.display = 'block';
+            const mailDot = document.getElementById('mail-item-unknown-dot');
+            if (mailDot) mailDot.style.display = 'block';
+            const noMailText = document.getElementById('no-mail-text');
+            if (noMailText) noMailText.style.display = 'none';
+
+            // Also update Mail logic in thread
             const mailReply4 = document.getElementById('mail-scary-reply-4');
             if (mailReply4) mailReply4.style.display = 'block';
             
@@ -1262,6 +1268,30 @@ window.showTopNotification = function(text) {
     }
 };
 
+window.openMailThread = function(sender) {
+    document.getElementById('mail-list-view').style.display = 'none';
+    document.getElementById('mail-back-btn').style.display = 'block';
+    document.getElementById('mail-cancel-btn').style.display = 'none';
+    document.getElementById('mail-header-title').innerText = sender === 'unknown' ? "Unknown Sender" : "Mom";
+    
+    if (sender === 'unknown') {
+        document.getElementById('mail-thread-unknown').style.display = 'block';
+        document.getElementById('mail-item-unknown-dot').style.display = 'none';
+    } else {
+        document.getElementById('mail-thread-mom').style.display = 'block';
+        document.getElementById('mail-item-mom-dot').style.display = 'none';
+    }
+}
+
+window.backToMailList = function() {
+    document.getElementById('mail-list-view').style.display = 'block';
+    document.getElementById('mail-thread-unknown').style.display = 'none';
+    document.getElementById('mail-thread-mom').style.display = 'none';
+    document.getElementById('mail-back-btn').style.display = 'none';
+    document.getElementById('mail-cancel-btn').style.display = 'block';
+    document.getElementById('mail-header-title').innerText = "Inbox";
+}
+
 function handleCallAnswer(key) {
     const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
@@ -1334,8 +1364,13 @@ function handleCallAnswer(key) {
                                                                                             endCall();
                                                                                             setTimeout(() => {
                                                                                                 showTopNotification("NEW VIDEO FROM MOM");
-                                                                                                const mailDot = document.getElementById('mail-notif-dot');
-                                                                                                if (mailDot) mailDot.style.display = 'flex';
+                                                                                                const mailItemMom = document.getElementById('mail-item-mom');
+                                                                                                if (mailItemMom) mailItemMom.style.display = 'block';
+                                                                                                const mailItemMomDot = document.getElementById('mail-item-mom-dot');
+                                                                                                if (mailItemMomDot) mailItemMomDot.style.display = 'block';
+                                                                                                const noMailText = document.getElementById('no-mail-text');
+                                                                                                if (noMailText) noMailText.style.display = 'none';
+
                                                                                                 const mailVideo = document.getElementById('mail-video-message');
                                                                                                 if (mailVideo) mailVideo.style.display = 'block';
                                                                                                 const notifSound = document.getElementById('notif-sound');
