@@ -359,6 +359,8 @@ function startGame() {
     openHome();
 }
 
+let mailNotifTriggered = false;
+
 function openHome() {
     console.log("Opening Home Screen...");
     hideAllOverlays();
@@ -367,6 +369,33 @@ function openHome() {
     // Pause video if playing
     const video = document.getElementById('game-video-player');
     if (video) video.pause();
+
+    // Trigger Mail Notification shortly after entering
+    if (!mailNotifTriggered) {
+        setTimeout(triggerMailNotif, 1500);
+    }
+}
+
+function triggerMailNotif() {
+    console.log("Triggering Mail Notification");
+    const dot = document.getElementById('mail-notif-dot');
+    if (dot) {
+        dot.style.display = 'flex';
+        const notifSound = document.getElementById('notif-sound');
+        if (notifSound) notifSound.play().catch(e => { });
+        mailNotifTriggered = true;
+    }
+}
+
+function openMail() {
+    console.log("Opening Mail App...");
+    hideAllOverlays();
+    const mailOverlay = document.getElementById('mail-overlay');
+    if (mailOverlay) mailOverlay.style.display = 'flex';
+    
+    // Clear notification
+    const dot = document.getElementById('mail-notif-dot');
+    if (dot) dot.style.display = 'none';
 }
 
 function openPhoneApp() {
@@ -464,7 +493,9 @@ function hideAllOverlays() {
         'chat-list-overlay',
         'chat-active-overlay',
         'camera-system',
-        'phone-app-overlay'
+        'phone-app-overlay',
+        'mail-overlay',
+        'call-overlay'
     ];
     overlays.forEach(id => {
         const el = document.getElementById(id);
