@@ -399,7 +399,12 @@ function openVideos() {
     if (overlay) {
         overlay.style.display = 'flex';
         overlay.style.zIndex = '9999'; // Force it to the very top
-        console.log("DEBUG: Video overlay set to display flex");
+        
+        // Force video to load
+        const video = document.getElementById('game-video-player');
+        if (video) {
+            video.load();
+        }
     } else {
         console.error("DEBUG: video-app-overlay NOT FOUND in DOM");
     }
