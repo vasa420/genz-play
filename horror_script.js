@@ -361,6 +361,11 @@ function openHome() {
     document.getElementById('chat-list-overlay').style.display = 'none';
     document.getElementById('camera-system').style.display = 'none';
     document.getElementById('phone-app-overlay').style.display = 'none';
+    document.getElementById('video-app-overlay').style.display = 'none';
+    
+    // Pause video if playing
+    const video = document.getElementById('game-video-player');
+    if (video) video.pause();
 }
 
 function openPhoneApp() {
@@ -390,9 +395,9 @@ function openPhotos() {
 }
 
 function openVideos() {
-    alert("Critical Failure: Video feed encrypted. Remote observer active.");
-    document.body.classList.add('glitch-active');
-    setTimeout(() => document.body.classList.remove('glitch-active'), 500);
+    console.log("Opening Videos App...");
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('video-app-overlay').style.display = 'flex';
 }
 
 function openCamera() {
