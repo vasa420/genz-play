@@ -1147,10 +1147,44 @@ window.endCall = function () {
             const mailReply4 = document.getElementById('mail-scary-reply-4');
             if (mailReply4) mailReply4.style.display = 'block';
             
+            // Show reply suggestion for live location after a delay
+            setTimeout(() => {
+                const replyArea3 = document.getElementById('mail-reply-area-3');
+                if (replyArea3) replyArea3.style.display = 'block';
+            }, 2000);
+            
             const notifSound = document.getElementById('notif-sound');
             if (notifSound) notifSound.play().catch(e => {});
         }, 2000);
     }
+};
+
+window.handleMailReply3 = function(text) {
+    console.log("Mail replied phase 3 with:", text);
+    const replyArea = document.getElementById('mail-reply-area-3');
+    const repliedText = document.getElementById('mail-replied-text-3');
+    const sentContent = document.getElementById('sent-mail-content-3');
+    
+    if (replyArea) replyArea.style.display = 'none';
+    if (repliedText) repliedText.style.display = 'block';
+    if (sentContent) sentContent.innerText = text;
+    
+    // Phase 4 Scary Response after 3 seconds
+    setTimeout(() => {
+        const scaryDiv5 = document.getElementById('mail-scary-reply-5');
+        const glitchSound = document.getElementById('glitch-sound');
+        
+        if (scaryDiv5) {
+            scaryDiv5.style.display = 'block';
+            document.body.classList.add('glitch-active');
+            if (glitchSound) glitchSound.play().catch(e => {});
+            
+            setTimeout(() => {
+                alert("EXTERNAL ACCESS CONFIRMED. DOOR LOCKS ENGAGED.");
+                document.body.classList.remove('glitch-active');
+            }, 1000);
+        }
+    }, 3000);
 };
 
 window.showTopNotification = function(text) {
