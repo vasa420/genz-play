@@ -1426,18 +1426,18 @@ function speakVoice(text, character, tone = 'normal') {
     const utterance = new SpeechSynthesisUtterance(text);
     
     if (character === 'mom' || character === 'dad') {
-        utterance.pitch = character === 'mom' ? 1.2 : 0.8; 
+        utterance.pitch = character === 'mom' ? 1.1 : 0.7; 
         utterance.rate = tone === 'fearing' ? 1.1 : 1.0;
     } else {
-        // Player
+        // Player (Female character)
         if (tone === 'fearing' || tone === 'crying') {
-            utterance.pitch = 1.4; // High pitch
-            utterance.rate = tone === 'crying' ? 0.8 : 1.2; // Slower for crying/sobbing
+            utterance.pitch = 1.6; // Higher feminine pitch for panic
+            utterance.rate = tone === 'crying' ? 0.85 : 1.2; 
         } else if (tone === 'fearless') {
-            utterance.pitch = 1.1;
-            utterance.rate = 0.9;
+            utterance.pitch = 1.3; // Confident feminine pitch
+            utterance.rate = 0.95;
         } else {
-            utterance.pitch = 0.9;
+            utterance.pitch = 1.2; // Standard feminine pitch
             utterance.rate = 1.0;
         }
     }
