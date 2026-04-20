@@ -1063,7 +1063,7 @@ function handleCallAnswer(key) {
     }
 
     // FOR OTHER CONTACTS: No answer or busy
-    callStatus.innerText = "USER BUSY";
+    callStatus.innerText = "LINE BUSY";
     callStatus.style.color = "#ff3b30";
     
     const failMsg = new SpeechSynthesisUtterance("The person you are trying to reach is currently unavailable.");
