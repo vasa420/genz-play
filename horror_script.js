@@ -1125,6 +1125,46 @@ function startOutboundCall(key) {
 
 let momCalledOnce = false;
 
+window.endCall = function () {
+    console.log("Ending call...");
+    const callOverlay = document.getElementById('call-overlay');
+    const ringtone = document.getElementById('ringtone-sound');
+    if (ringtone) ringtone.pause();
+
+    const wasMom = currentContact === 'mom';
+
+    callOverlay.style.display = 'none';
+    isRinging = false;
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) bgMusic.play().catch(e => { });
+
+    if (wasMom) {
+        setTimeout(() => {
+            showTopNotification("SEND YOUR LIVE LOCATION");
+            // Also update Mail
+            const mailDot = document.getElementById('mail-notif-dot');
+            if (mailDot) mailDot.style.display = 'flex';
+            const mailReply4 = document.getElementById('mail-scary-reply-4');
+            if (mailReply4) mailReply4.style.display = 'block';
+            
+            const notifSound = document.getElementById('notif-sound');
+            if (notifSound) notifSound.play().catch(e => {});
+        }, 2000);
+    }
+};
+
+window.showTopNotification = function(text) {
+    const banner = document.getElementById('notif-banner');
+    const bannerText = document.getElementById('notif-banner-text');
+    if (banner && bannerText) {
+        bannerText.innerText = text;
+        banner.style.top = '10px';
+        setTimeout(() => {
+            banner.style.top = '-100px';
+        }, 5000);
+    }
+};
+
 function handleCallAnswer(key) {
     const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
