@@ -1124,6 +1124,7 @@ function startOutboundCall(key) {
 }
 
 let momCalledOnce = false;
+let momPhase = 0;
 
 window.endCall = function () {
     console.log("Ending call...");
@@ -1132,13 +1133,14 @@ window.endCall = function () {
     if (ringtone) ringtone.pause();
 
     const wasMom = currentContact === 'mom';
+    const wasDad = currentContact === 'dad';
 
     callOverlay.style.display = 'none';
     isRinging = false;
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) bgMusic.play().catch(e => { });
 
-    if (wasMom) {
+    if (wasMom && momPhase === 0) {
         setTimeout(() => {
             showTopNotification("SEND YOUR LIVE LOCATION");
             // Also update Mail
@@ -1147,16 +1149,47 @@ window.endCall = function () {
             const mailReply4 = document.getElementById('mail-scary-reply-4');
             if (mailReply4) mailReply4.style.display = 'block';
             
+            const notifSound = document.getElementById('notif-sound');
+            if (notifSound) notifSound.play().catch(e => {});
+            
             // Show reply suggestion for live location after a delay
             setTimeout(() => {
                 const replyArea3 = document.getElementById('mail-reply-area-3');
                 if (replyArea3) replyArea3.style.display = 'block';
             }, 2000);
-            
-            const notifSound = document.getElementById('notif-sound');
-            if (notifSound) notifSound.play().catch(e => {});
         }, 2000);
+    } else if (wasDad) {
+        // TRIGGER MOM CALL PHASE 2 AFTER 4 SECONDS
+        setTimeout(() => {
+            triggerMomCall();
+        }, 4000);
     }
+};
+
+window.triggerMomCall = function() {
+    console.log("INCOMING CALL FROM MOM (PHASE 2)...");
+    currentContact = 'mom';
+    momPhase = 1;
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const callName = document.getElementById('call-name');
+    const callAvatar = document.getElementById('call-avatar');
+    const ringtone = document.getElementById('ringtone-sound');
+    const bgMusic = document.getElementById('bg-music');
+
+    callName.innerText = contacts['mom'].name;
+    callAvatar.style.backgroundImage = `url('${contacts['mom'].avatar}')`;
+    callAvatar.innerText = "";
+    
+    callOverlay.style.display = 'flex';
+    isRinging = true;
+    if (bgMusic) bgMusic.pause();
+    if (ringtone) {
+        ringtone.currentTime = 0;
+        ringtone.play().catch(e => {});
+    }
+    callStatus.innerText = "INCOMING CALL...";
+    document.getElementById('accept-btn').style.display = 'flex';
 };
 
 window.handleMailReply3 = function(text) {
@@ -1239,12 +1272,99 @@ function handleCallAnswer(key) {
         return;
     }
 
-    if (key === 'mom' && !momCalledOnce) {
-        momCalledOnce = true;
+    if (key === 'mom' && (momPhase === 1 || !momCalledOnce)) {
+        if (!momCalledOnce) momCalledOnce = true;
         callStatus.innerText = "CONNECTED";
         callStatus.style.color = "#4cd964";
         
-        // STAGE 1: MOM ASKS WHAT YOU ARE DOING
+        if (momPhase === 1) {
+            // NEW PHASE 2 DIALOGUE
+            speakVoice("HEY MY CHILD WHAT ARE YOU DOING", 'mom', 'fearing');
+            callStatus.innerText = "MOM: WHAT ARE YOU DOING?";
+            
+            setTimeout(() => {
+                showCallChoices([
+                    {
+                        text: "SIMPLY SITTING AND WATCHING TV MOM",
+                        callback: () => {
+                            speakVoice("SIMPLY SITTING AND WATCHING TV MOM", 'player');
+                            callStatus.innerText = "YOU: SIMPLY WATCHING TV...";
+                            
+                            // 4s delay for Mom's panic
+                            setTimeout(() => {
+                                speakVoice("HEY MY CHILD DONT COME OUTSIDE FROM THE HOUSE", 'mom', 'fearing');
+                                callStatus.innerText = "MOM: DONT COME OUTSIDE!!";
+                                
+                                setTimeout(() => {
+                                    showCallChoices([
+                                        {
+                                            text: "WHY MOM ANY PROBLEM",
+                                            callback: () => {
+                                                speakVoice("WHY MOM ANY PROBLEM", 'player', 'fearing');
+                                                callStatus.innerText = "YOU: WHY MOM?";
+                                                
+                                                // 3s delay
+                                                setTimeout(() => {
+                                                    speakVoice("SOMEONE WAS STANDIND OUTSIDE OF OUR HOME", 'mom', 'fearing');
+                                                    callStatus.innerText = "MOM: SOMEONE IS OUTSIDE...";
+                                                    
+                                                    setTimeout(() => {
+                                                        showCallChoices([
+                                                            {
+                                                                text: "WHERE ARE YOU MOM",
+                                                                callback: () => {
+                                                                    speakVoice("WHERE ARE YOU MOM", 'player', 'fearing');
+                                                                    callStatus.innerText = "YOU: WHERE ARE YOU?";
+                                                                    
+                                                                    // 3s delay
+                                                                    setTimeout(() => {
+                                                                        speakVoice("I WILL SEND ONE VEDIO SEE THAT", 'mom', 'fearing');
+                                                                        callStatus.innerText = "MOM: I WILL SEND A VIDEO...";
+                                                                        
+                                                                        setTimeout(() => {
+                                                                            showCallChoices([
+                                                                                {
+                                                                                    text: "SEND IT MOM",
+                                                                                    callback: () => {
+                                                                                        speakVoice("SEND IT MOM", 'player');
+                                                                                        callStatus.innerText = "YOU: SEND IT MOM";
+                                                                                        
+                                                                                        // TRIGGER VIDEO MESSAGE EVENT
+                                                                                        setTimeout(() => {
+                                                                                            endCall();
+                                                                                            setTimeout(() => {
+                                                                                                showTopNotification("NEW VIDEO FROM MOM");
+                                                                                                const mailDot = document.getElementById('mail-notif-dot');
+                                                                                                if (mailDot) mailDot.style.display = 'flex';
+                                                                                                const mailVideo = document.getElementById('mail-video-message');
+                                                                                                if (mailVideo) mailVideo.style.display = 'block';
+                                                                                                const notifSound = document.getElementById('notif-sound');
+                                                                                                if (notifSound) notifSound.play().catch(e => {});
+                                                                                            }, 2000);
+                                                                                        }, 2000);
+                                                                                    }
+                                                                                }
+                                                                            ]);
+                                                                        }, 2000);
+                                                                    }, 3000);
+                                                                }
+                                                            }
+                                                        ]);
+                                                    }, 2000);
+                                                }, 3000);
+                                            }
+                                        }
+                                    ]);
+                                }, 2000);
+                            }, 4000);
+                        }
+                    }
+                ]);
+            }, 2000);
+            return;
+        }
+
+        // STAGE 1: MOM ASKS WHAT YOU ARE DOING (PHASE 1)
         speakVoice("TELL MY CHILD WHAT ARE YOU DOING", 'mom');
         callStatus.innerText = "MOM: TELL MY CHILD WHAT ARE YOU DOING";
         
