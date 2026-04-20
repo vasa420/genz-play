@@ -1015,11 +1015,55 @@ function handleCallAnswer(key) {
     callStatus.innerText = "CONNECTED";
     callStatus.style.color = "#4cd964";
 
+    if (key === 'mom') {
+        // MOM'S BRANCHING DIALOGUE
+        speakVoice("What are you doing, sweetie?", 'mom');
+        callStatus.innerText = "MOM: What are you doing?";
+        
+        setTimeout(() => {
+            showCallChoices([
+                { 
+                    text: "I am safe at home", 
+                    callback: () => {
+                        speakVoice("I am safe at home.", 'player');
+                        callStatus.innerText = "YOU: I am safe at home";
+                        setTimeout(() => {
+                            speakVoice("Ok be safe, I will be home very soon.", 'mom');
+                            callStatus.innerText = "MOM: Ok be safe...";
+                            setTimeout(endCall, 4000);
+                        }, 2000);
+                    }
+                },
+                { 
+                    text: "When will you come home?", 
+                    callback: () => {
+                        speakVoice("When will you come home, Mom?", 'player');
+                        callStatus.innerText = "YOU: When are you coming?";
+                        setTimeout(() => {
+                            speakVoice("I am on the way, there was a lot of traffic.", 'mom');
+                            callStatus.innerText = "MOM: There's so much traffic...";
+                            setTimeout(() => {
+                                showCallChoices([
+                                    {
+                                        text: "Ok Mom",
+                                        callback: () => {
+                                            speakVoice("Ok Mom.", 'player');
+                                            callStatus.innerText = "YOU: Ok Mom";
+                                            setTimeout(endCall, 2000);
+                                        }
+                                    }
+                                ]);
+                            }, 3000);
+                        }, 2000);
+                    }
+                }
+            ]);
+        }, 2000);
+        return;
+    }
+
     const response = contactResponses[key] || "Hello? Can you hear me? The signal is breaking up...";
-    const msg = new SpeechSynthesisUtterance(response);
-    msg.pitch = 1.0;
-    msg.rate = 0.9;
-    window.speechSynthesis.speak(msg);
+    speakVoice(response, 'mom');
 
     // Visual text display during speech
     setTimeout(() => {
@@ -1035,9 +1079,11 @@ function handleCallAnswer(key) {
         }
     }, 2000);
 
-    // End call automatically after speech
+    // End call automatically after speech if not mom
     setTimeout(() => {
-        endCall();
+        if (document.getElementById('call-overlay').style.display === 'flex') {
+            endCall();
+        }
     }, 8000);
 }
 
@@ -1072,6 +1118,10 @@ function endCall() {
     const callOverlay = document.getElementById('call-overlay');
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
+    const choiceContainer = document.getElementById('call-choice-container');
+    
+    if (choiceContainer) choiceContainer.innerHTML = "";
+    
     isRinging = false;
     window.speechSynthesis.cancel();
     if (ringtone) {
@@ -1083,6 +1133,46 @@ function endCall() {
     if (bgMusic) bgMusic.play().catch(e => { });
     document.getElementById('call-status').innerText = "CALLING...";
     document.getElementById('call-status').style.color = "#888";
+}
+
+function speakVoice(text, voiceType = 'mom') {
+    const msg = new SpeechSynthesisUtterance(text);
+    if (voiceType === 'mom') {
+        msg.pitch = 1.2;
+        msg.rate = 1.0;
+    } else if (voiceType === 'player') {
+        msg.pitch = 0.9;
+        msg.rate = 1.0;
+    } else {
+        msg.pitch = 0.5;
+        msg.rate = 0.8;
+    }
+    window.speechSynthesis.speak(msg);
+}
+
+function showCallChoices(choices) {
+    const container = document.getElementById('call-choice-container');
+    if (!container) return;
+    container.innerHTML = "";
+    
+    choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.innerText = choice.text;
+        btn.style.cssText = "background: rgba(255,255,255,0.1); border: 1.5px solid #444; color: white; padding: 12px 20px; border-radius: 25px; cursor: pointer; transition: 0.3s; width: 280px; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase;";
+        btn.onmouseover = () => {
+            btn.style.background = "rgba(255,255,255,0.2)";
+            btn.style.borderColor = "#fff";
+        };
+        btn.onmouseout = () => {
+            btn.style.background = "rgba(255,255,255,0.1)";
+            btn.style.borderColor = "#444";
+        };
+        btn.onclick = () => {
+            container.innerHTML = "";
+            choice.callback();
+        };
+        container.appendChild(btn);
+    });
 }
 
 function requestFullScreen() {
