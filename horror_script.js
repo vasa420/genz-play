@@ -362,7 +362,7 @@ function startGame() {
     setTimeout(() => {
         console.log("Triggering Mail Notification...");
         const dot = document.getElementById('mail-notif-dot');
-        const mailItem = document.getElementById('mail-item-unknown');
+        const mailInList = document.getElementById('mail-item-unknown');
         const noMailText = document.getElementById('no-mail-text');
         
         if (dot) {
@@ -371,7 +371,7 @@ function startGame() {
             if (notifSound) notifSound.play().catch(e => {});
         }
         
-        if (mailItem) mailItem.style.display = 'block';
+        if (mailInList) mailInList.style.display = 'block';
         if (noMailText) noMailText.style.display = 'none';
     }, 10000);
 }
@@ -1262,6 +1262,51 @@ window.showTopNotification = function(text) {
     }
 };
 
+// --- Mail Inbox Navigation ---
+window.openMailThread = function(type) {
+    const list = document.getElementById('mail-inbox-list');
+    const threadUnknown = document.getElementById('mail-thread-unknown');
+    const threadMom = document.getElementById('mail-thread-mom');
+    const headerTitle = document.querySelector('#mail-overlay .list-header h1');
+    const backBtn = document.querySelector('#mail-overlay .list-header div[onclick="openHome()"]');
+    
+    if (list) list.style.display = 'none';
+    
+    if (type === 'unknown' && threadUnknown) {
+        if (headerTitle) headerTitle.innerText = "Unknown Sender";
+        if (backBtn) {
+            backBtn.innerText = "Inbox";
+            backBtn.setAttribute('onclick', 'backToMailInbox()');
+        }
+        threadUnknown.style.display = 'block';
+    } else if (type === 'mom' && threadMom) {
+        if (headerTitle) headerTitle.innerText = "Mom";
+        if (backBtn) {
+            backBtn.innerText = "Inbox";
+            backBtn.setAttribute('onclick', 'backToMailInbox()');
+        }
+        threadMom.style.display = 'block';
+    }
+};
+
+window.backToMailInbox = function() {
+    const list = document.getElementById('mail-inbox-list');
+    const threadUnknown = document.getElementById('mail-thread-unknown');
+    const threadMom = document.getElementById('mail-thread-mom');
+    const headerTitle = document.querySelector('#mail-overlay .list-header h1');
+    const backBtn = document.querySelector('#mail-overlay .list-header [onclick="backToMailInbox()"]');
+    
+    if (threadUnknown) threadUnknown.style.display = 'none';
+    if (threadMom) threadMom.style.display = 'none';
+    if (list) list.style.display = 'block';
+    
+    if (headerTitle) headerTitle.innerText = "Inbox";
+    if (backBtn) {
+        backBtn.innerText = "Cancel";
+        backBtn.setAttribute('onclick', 'openHome()');
+    }
+};
+
 function handleCallAnswer(key) {
     const callStatus = document.getElementById('call-status');
     const ringtone = document.getElementById('ringtone-sound');
@@ -1336,10 +1381,14 @@ function handleCallAnswer(key) {
                                                                                                 showTopNotification("NEW VIDEO FROM MOM");
                                                                                                 const mailDot = document.getElementById('mail-notif-dot');
                                                                                                 if (mailDot) mailDot.style.display = 'flex';
-                                                                                                const mailVideo = document.getElementById('mail-video-message');
-                                                                                                if (mailVideo) mailVideo.style.display = 'block';
+                                                                                                const mailMomItem = document.getElementById('mail-item-mom');
+                                                                                                if (mailMomItem) mailMomItem.style.display = 'block';
                                                                                                 const notifSound = document.getElementById('notif-sound');
                                                                                                 if (notifSound) notifSound.play().catch(e => {});
+                                                                                                
+                                                                                                // Hide "No Mail" text
+                                                                                                const noMail = document.getElementById('no-mail-text');
+                                                                                                if (noMail) noMail.style.display = 'none';
                                                                                             }, 2000);
                                                                                         }, 2000);
                                                                                     }
