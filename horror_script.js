@@ -475,6 +475,37 @@ function openMail() {
     if (dot) dot.style.display = 'none';
 }
 
+window.handleMailReply = function(text) {
+    console.log("Mail replied with:", text);
+    const choiceContainer = document.getElementById('mail-choice-container');
+    const repliedText = document.getElementById('mail-replied-text');
+    const sentContent = document.getElementById('sent-mail-content');
+    
+    if (choiceContainer) choiceContainer.style.display = 'none';
+    if (repliedText) repliedText.style.display = 'block';
+    if (sentContent) sentContent.innerText = text;
+    
+    // Scary Response after 2 seconds
+    setTimeout(() => {
+        const scaryDiv = document.getElementById('mail-scary-reply');
+        const scaryText = document.getElementById('mail-scary-text');
+        const glitchSound = document.getElementById('glitch-sound');
+        
+        if (scaryDiv && scaryText) {
+            scaryDiv.style.display = 'block';
+            if (text === 'wrong message') {
+                scaryText.innerText = "IT IS NOT A WRONG MESSAGE. I AM STANDING AT YOUR FRONT DOOR.";
+            } else {
+                scaryText.innerText = "IDIOT? YOU WON'T BE SAYING THAT WHEN I'M INSIDE.";
+            }
+            
+            document.body.classList.add('glitch-active');
+            if (glitchSound) glitchSound.play().catch(e => {});
+            setTimeout(() => document.body.classList.remove('glitch-active'), 500);
+        }
+    }, 2000);
+};
+
 function openCamera() {
     console.log("INITIALIZING SECURITY FEED...");
     hideAllOverlays();
