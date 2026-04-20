@@ -393,21 +393,7 @@ function openPhotos() {
 }
 
 function openVideos() {
-    console.log("DEBUG: Attempting to open Videos App...");
-    hideAllOverlays();
-    const overlay = document.getElementById('video-app-overlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.style.zIndex = '9999'; // Force it to the very top
-        
-        // Force video to load
-        const video = document.getElementById('game-video-player');
-        if (video) {
-            video.load();
-        }
-    } else {
-        console.error("DEBUG: video-app-overlay NOT FOUND in DOM");
-    }
+    // App Removed
 }
 
 function openCamera() {
@@ -425,8 +411,7 @@ function hideAllOverlays() {
         'chat-list-overlay',
         'chat-active-overlay',
         'camera-system', 
-        'phone-app-overlay', 
-        'video-app-overlay'
+        'phone-app-overlay'
     ];
     overlays.forEach(id => {
         const el = document.getElementById(id);
