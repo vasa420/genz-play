@@ -357,11 +357,8 @@ function startGame() {
 
 function openHome() {
     console.log("Opening Home Screen...");
+    hideAllOverlays();
     document.getElementById('home-screen').style.display = 'block';
-    document.getElementById('chat-list-overlay').style.display = 'none';
-    document.getElementById('camera-system').style.display = 'none';
-    document.getElementById('phone-app-overlay').style.display = 'none';
-    document.getElementById('video-app-overlay').style.display = 'none';
     
     // Pause video if playing
     const video = document.getElementById('game-video-player');
@@ -370,14 +367,14 @@ function openHome() {
 
 function openPhoneApp() {
     console.log("Opening Phone App...");
-    document.getElementById('home-screen').style.display = 'none';
+    hideAllOverlays();
     document.getElementById('phone-app-overlay').style.display = 'flex';
     switchPhoneTab('recents');
 }
 
 function openChatList() {
     console.log("Opening Messages App...");
-    document.getElementById('home-screen').style.display = 'none';
+    hideAllOverlays();
     document.getElementById('chat-list-overlay').style.display = 'flex';
     document.getElementById('chat-list-overlay').style.opacity = '1';
     
@@ -395,19 +392,31 @@ function openPhotos() {
 
 function openVideos() {
     console.log("Opening Videos App...");
-    document.getElementById('home-screen').style.display = 'none';
+    hideAllOverlays();
     document.getElementById('video-app-overlay').style.display = 'flex';
 }
 
 function openCamera() {
     console.log("INITIALIZING SECURITY FEED...");
-    // Force close everything else
-    document.getElementById('home-screen').style.display = 'none';
-    document.getElementById('chat-list-overlay').style.display = 'none';
+    hideAllOverlays();
     document.getElementById('camera-system').style.display = 'flex';
     
     // Reset camera state
     switchCamera(1); 
+}
+
+function hideAllOverlays() {
+    const overlays = [
+        'home-screen', 
+        'chat-list-overlay', 
+        'camera-system', 
+        'phone-app-overlay', 
+        'video-app-overlay'
+    ];
+    overlays.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
 }
 
 let dialedNumber = "";
