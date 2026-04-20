@@ -376,6 +376,43 @@ function openPhoneApp() {
     switchPhoneTab('recents');
 }
 
+function initChatList() {
+    const listContainer = document.getElementById('chat-list-items');
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = "";
+    
+    Object.keys(contacts).forEach(key => {
+        const contact = contacts[key];
+        const lastMsg = chatHistory[key].length > 0 
+            ? chatHistory[key][chatHistory[key].length - 1].text 
+            : (key === 'unknown' ? "Hello?" : "Click to chat...");
+
+        const item = document.createElement('div');
+        item.className = 'chat-item';
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.padding = '15px';
+        item.style.borderBottom = '1px solid #1a1a1a';
+        item.style.cursor = 'pointer';
+        item.onclick = () => switchChat(key);
+
+        item.innerHTML = `
+            <div class="chat-avatar" style="width: 50px; height: 50px; border-radius: 25px; background: url('${contact.avatar}') center/cover; margin-right: 15px; flex-shrink: 0; border: 1px solid #333;"></div>
+            <div class="chat-info" style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <h3 style="font-size: 16px; margin: 0; color: #fff;">${contact.name}</h3>
+                    <span style="font-size: 10px; color: #666;">Just now</span>
+                </div>
+                <p style="font-size: 13px; color: #888; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${lastMsg}</p>
+            </div>
+            ${key === 'unknown' ? '<div style="width: 8px; height: 8px; background: #ff3b30; border-radius: 50%; margin-left: 10px;"></div>' : ''}
+        `;
+        
+        listContainer.appendChild(item);
+    });
+}
+
 function openChatList() {
     console.log("Opening Messages App...");
     hideAllOverlays();
