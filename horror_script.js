@@ -530,11 +530,8 @@ window.handleMailReply2 = function(text) {
         
         if (scaryDiv3 && scaryText3) {
             scaryDiv3.style.display = 'block';
-            if (text === 'CAN I CALL POLICE') {
-                scaryText3.innerText = "I WILL KILL YOUR MOM.";
-            } else {
-                scaryText3.innerText = "YOU WANT TO KNOW WHY? LOOK BEHIND YOU.";
-            }
+            // Unified scary response for both choices
+            scaryText3.innerText = "I WILL KILL YOUR MOM.";
             
             document.body.classList.add('glitch-active');
             if (glitchSound) glitchSound.play().catch(e => {});
