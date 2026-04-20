@@ -360,7 +360,14 @@ function openHome() {
     document.getElementById('home-screen').style.display = 'block';
     document.getElementById('chat-list-overlay').style.display = 'none';
     document.getElementById('camera-system').style.display = 'none';
-    document.getElementById('dialer-overlay').style.display = 'none';
+    document.getElementById('phone-app-overlay').style.display = 'none';
+}
+
+function openPhoneApp() {
+    console.log("Opening Phone App...");
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('phone-app-overlay').style.display = 'flex';
+    switchPhoneTab('recents');
 }
 
 function openChatList() {
@@ -401,23 +408,73 @@ function openCamera() {
 
 let dialedNumber = "";
 
-window.openDialer = function() {
-    console.log("Opening Dialer...");
-    document.getElementById('home-screen').style.display = 'none';
-    document.getElementById('dialer-overlay').style.display = 'flex';
+window.switchPhoneTab = function(tab) {
+    const listContent = document.getElementById('phone-list-content');
+    const keypadContent = document.getElementById('phone-keypad-content');
+    const tabs = document.querySelectorAll('.phone-tab');
+    
+    // UI Update
+    tabs.forEach(t => {
+        t.classList.remove('active');
+        t.style.color = "#888";
+    });
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    document.getElementById(`tab-${tab}`).style.color = "#fff";
+
+    if (tab === 'keypad') {
+        listContent.style.display = 'none';
+        keypadContent.style.display = 'flex';
+    } else {
+        listContent.style.display = 'block';
+        keypadContent.style.display = 'none';
+        populatePhoneLists(tab);
+    }
 };
+
+function populatePhoneLists(type) {
+    const list = document.getElementById('phone-list-content');
+    list.innerHTML = "";
+    
+    // Use contacts object
+    Object.keys(contacts).forEach(key => {
+        const contact = contacts[key];
+        const item = document.createElement('div');
+        item.className = type === 'recents' ? 'recent-item' : 'contact-item';
+        
+        const isMissed = type === 'recents' && Math.random() > 0.7 && key !== 'mom';
+
+        item.innerHTML = `
+            <div style="width: 45px; height: 45px; background: url('${contact.avatar}'); background-size: cover; border-radius: 50%; margin-right: 15px;"></div>
+            <div style="flex: 1;">
+                <h3 style="color: ${isMissed ? '#ff3b30' : 'white'}; font-size: 16px; font-weight: 500; margin: 0;">${contact.name}</h3>
+                <p style="color: #666; font-size: 12px; margin-top: 2px;">${type === 'recents' ? (isMissed ? 'Missed' : 'Mobile') : 'mobile'}</p>
+            </div>
+            <div style="color: #666; font-size: 12px;">${type === 'recents' ? 'Today' : ''}</div>
+        `;
+        
+        item.onclick = () => {
+            if (key === 'unknown') {
+                startCreepyCall();
+            } else {
+                dialedNumber = "0000"; // Placeholder
+                performCall();
+            }
+        };
+        list.appendChild(item);
+    });
+}
 
 window.dialDigit = function(n) {
     if (dialedNumber.length < 11) {
         dialedNumber += n;
-        document.getElementById('dialer-display').innerText = dialedNumber;
+        document.getElementById('phone-display').innerText = dialedNumber;
         window.playBeep();
     }
 };
 
 window.deleteDialDigit = function() {
     dialedNumber = dialedNumber.slice(0, -1);
-    document.getElementById('dialer-display').innerText = dialedNumber;
+    document.getElementById('phone-display').innerText = dialedNumber;
 };
 
 window.performCall = function() {
@@ -429,14 +486,14 @@ window.performCall = function() {
         document.body.classList.add('glitch-active');
         setTimeout(() => document.body.classList.remove('glitch-active'), 1000);
     } else if (dialedNumber === "7394") {
-        alert("The line is silent... then a faint breathing is heard.");
-        setTimeout(startCreepyCall, 2000);
+        document.getElementById('phone-app-overlay').style.display = 'none';
+        startCreepyCall();
     } else {
         alert("User Busy: The person you are trying to reach is currently unavailable.");
     }
     
     dialedNumber = "";
-    document.getElementById('dialer-display').innerText = "";
+    document.getElementById('phone-display').innerText = "";
     setTimeout(openHome, 1500);
 };
 
