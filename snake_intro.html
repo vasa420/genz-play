@@ -85,10 +85,39 @@
             background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.9) 100%);
             z-index: 5; pointer-events: none;
         }
+        h1 { 
+            color: #fff; font-size: 42px; font-weight: 950; 
+            letter-spacing: 15px; margin-bottom: 20px; text-transform: uppercase;
+        }
+
+        .proceed-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, #007aff 100%);
+            color: #000; border: none; padding: 15px 40px;
+            font-size: 14px; font-weight: 950; letter-spacing: 3px;
+            text-transform: uppercase; border-radius: 50px;
+            cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
+        }
+
+        .proceed-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px var(--primary);
+        }
+
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body>
-    <video autoplay muted loop class="bg" style="object-fit: cover;">
+    <div id="start-overlay">
+        <h1 style="font-size: 24px; letter-spacing: 8px; margin-bottom: 40px; color: #444;">THE REALM AWAITS</h1>
+        <button class="proceed-btn" onclick="startIntro()">Enter Realm</button>
+    </div>
+
+    <video id="intro-video" muted loop class="bg" style="object-fit: cover;">
         <source src="Snake_and_Ladder_Video_Intro.mp4" type="video/mp4">
     </video>
     <div class="vignette"></div>
@@ -124,25 +153,23 @@
             }
         };
 
-        updateStatus();
-
-        // Unmute video on any interaction
-        const video = document.querySelector('video');
-        const handleInteraction = () => {
+        const video = document.getElementById('intro-video');
+        const overlay = document.getElementById('start-overlay');
+        
+        function startIntro() {
             if(video) {
                 video.muted = false;
-                video.play().catch(e => console.log("Audio play deferred"));
+                video.play().then(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 500);
+                    updateStatus();
+                    setTimeout(() => { window.location.href = 'snake_login.html'; }, 10000);
+                }).catch(e => {
+                    video.muted = true;
+                    video.play();
+                });
             }
-        };
-
-        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
-            window.addEventListener(evt, handleInteraction, { once: true });
-        });
-
-        // Automatic redirect after 10 seconds
-        setTimeout(() => {
-            window.location.href = 'snake_login.html';
-        }, 10000);
+        }
     </script>
 </body>
 </html>
