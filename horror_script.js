@@ -519,12 +519,7 @@ function populatePhoneLists(type) {
         `;
 
         item.onclick = () => {
-            if (key === 'unknown') {
-                startCreepyCall();
-            } else {
-                dialedNumber = "0000"; // Placeholder
-                performCall();
-            }
+            startOutboundCall(key);
         };
         list.appendChild(item);
     });
@@ -943,8 +938,16 @@ let isRinging = false;
 function startCreepyCall() {
     const callOverlay = document.getElementById('call-overlay');
     const callStatus = document.getElementById('call-status');
+    const callName = document.getElementById('call-name');
+    const callAvatar = document.getElementById('call-avatar');
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
+
+    currentContact = 'unknown';
+    callName.innerText = contacts['unknown'].name;
+    callAvatar.style.backgroundImage = `url('${contacts['unknown'].avatar}')`;
+    callAvatar.innerText = "";
+
     callOverlay.style.display = 'flex';
     isRinging = true;
     if (bgMusic) bgMusic.pause();
@@ -953,6 +956,89 @@ function startCreepyCall() {
         ringtone.play().catch(e => { });
     }
     callStatus.innerText = "INCOMING CALL...";
+    document.getElementById('accept-btn').style.display = 'flex';
+}
+
+const contactResponses = {
+    mom: "Sweetie? Are you okay? I heard something outside... please tell me you're locked in.",
+    dad: "Listen to me carefully. Don't open the door for anyone. I'm almost there. Stay away from the windows.",
+    brother: "Yo, I'm stuck at Vicky's. The roads are blocked. Stay in the safe room, okay? Don't make any noise.",
+    sanjay: "Hey man, I just saw a black car outside your house. Get away from the door! They're coming for you!",
+    vicky: "I can't talk right now, I'm trying to hide. They're in the house. Just... stay quiet.",
+    anu: "Please help me... I think there's someone in the house with me. I'm under the bed. They're right outside the door."
+};
+
+function startOutboundCall(key) {
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const callName = document.getElementById('call-name');
+    const callAvatar = document.getElementById('call-avatar');
+    const bgMusic = document.getElementById('bg-music');
+    const ringtone = document.getElementById('ringtone-sound');
+
+    if (!contacts[key]) return;
+
+    currentContact = key;
+    callName.innerText = contacts[key].name;
+    callAvatar.style.backgroundImage = `url('${contacts[key].avatar}')`;
+    callAvatar.innerText = "";
+    document.getElementById('accept-btn').style.display = 'none'; // Outbound call, no accept button
+
+    callOverlay.style.display = 'flex';
+    if (bgMusic) bgMusic.pause();
+    if (ringtone) {
+        ringtone.currentTime = 0;
+        ringtone.play().catch(e => { });
+    }
+    callStatus.innerText = "CALLING...";
+    callStatus.style.color = "#888";
+
+    // Ringing period before answer
+    const ringDuration = 3000 + Math.random() * 2000;
+    setTimeout(() => {
+        if (callOverlay.style.display === 'flex') {
+            handleCallAnswer(key);
+        }
+    }, ringDuration);
+}
+
+function handleCallAnswer(key) {
+    const callStatus = document.getElementById('call-status');
+    const ringtone = document.getElementById('ringtone-sound');
+    if (ringtone) ringtone.pause();
+
+    if (key === 'unknown') {
+        acceptCall();
+        return;
+    }
+
+    callStatus.innerText = "CONNECTED";
+    callStatus.style.color = "#4cd964";
+
+    const response = contactResponses[key] || "Hello? Can you hear me? The signal is breaking up...";
+    const msg = new SpeechSynthesisUtterance(response);
+    msg.pitch = 1.0;
+    msg.rate = 0.9;
+    window.speechSynthesis.speak(msg);
+
+    // Visual text display during speech
+    setTimeout(() => {
+        callStatus.innerText = response.substring(0, 30) + "...";
+    }, 1000);
+
+    setTimeout(() => {
+        if (key === 'anu' || key === 'sanjay') {
+            document.body.classList.add('glitch-active');
+            const glitchSound = document.getElementById('glitch-sound');
+            if (glitchSound) glitchSound.play().catch(e => { });
+            setTimeout(() => document.body.classList.remove('glitch-active'), 500);
+        }
+    }, 2000);
+
+    // End call automatically after speech
+    setTimeout(() => {
+        endCall();
+    }, 8000);
 }
 
 function acceptCall() {
