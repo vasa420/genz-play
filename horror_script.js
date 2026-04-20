@@ -541,11 +541,35 @@ window.handleMailReply2 = function(text) {
             
             // Final ominous system error
             setTimeout(() => {
-                alert("SYSTEM ERROR: UNKNOWN PROTOCOL DETECTED. ENCRYPTING DRIVE C:...");
+                alert("SYSTEM DETECTED: EMERGENCY CONTACTS UNLOCKED. CALL YOUR MOTHER IMMEDIATELY.");
+                unlockPhoneApp();
                 document.body.classList.remove('glitch-active');
             }, 700);
         }
     }, 3000);
+};
+
+window.unlockPhoneApp = function() {
+    console.log("UNLOCKING PHONE APP...");
+    const phoneAppGrid = document.querySelector('.app-icon-container[onclick*="Phone dialer locked"]');
+    const phoneAppDock = document.querySelector('.dock div[onclick*="Phone dialer locked"]');
+    
+    // Fallback: search by icon text or structure
+    const icons = document.querySelectorAll('.app-icon-container');
+    icons.forEach(icon => {
+        if (icon.innerText.includes('Phone')) {
+            icon.onclick = () => openPhoneApp();
+            icon.style.opacity = '1';
+        }
+    });
+    
+    const dockIcons = document.querySelectorAll('.dock > div');
+    dockIcons.forEach(icon => {
+        if (icon.innerHTML.includes('📞')) {
+            icon.onclick = () => openPhoneApp();
+            icon.style.opacity = '1';
+        }
+    });
 };
 
 function openCamera() {
