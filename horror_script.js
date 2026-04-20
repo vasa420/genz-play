@@ -1182,9 +1182,39 @@ window.handleMailReply3 = function(text) {
             setTimeout(() => {
                 alert("EXTERNAL ACCESS CONFIRMED. DOOR LOCKS ENGAGED.");
                 document.body.classList.remove('glitch-active');
+                
+                // TRIGGER DAD'S CALL AFTER 3 SECONDS
+                setTimeout(() => {
+                    triggerDadCall();
+                }, 3000);
             }, 1000);
         }
     }, 3000);
+};
+
+window.triggerDadCall = function() {
+    console.log("INCOMING CALL FROM DAD...");
+    currentContact = 'dad';
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const callName = document.getElementById('call-name');
+    const callAvatar = document.getElementById('call-avatar');
+    const ringtone = document.getElementById('ringtone-sound');
+    const bgMusic = document.getElementById('bg-music');
+
+    callName.innerText = contacts['dad'].name;
+    callAvatar.style.backgroundImage = `url('${contacts['dad'].avatar}')`;
+    callAvatar.innerText = "";
+    
+    callOverlay.style.display = 'flex';
+    isRinging = true;
+    if (bgMusic) bgMusic.pause();
+    if (ringtone) {
+        ringtone.currentTime = 0;
+        ringtone.play().catch(e => {});
+    }
+    callStatus.innerText = "INCOMING CALL...";
+    document.getElementById('accept-btn').style.display = 'flex';
 };
 
 window.showTopNotification = function(text) {
@@ -1269,6 +1299,56 @@ function handleCallAnswer(key) {
         return;
     }
 
+    if (key === 'dad') {
+        callStatus.innerText = "CONNECTED";
+        callStatus.style.color = "#4cd964";
+        document.getElementById('accept-btn').style.display = 'none';
+
+        // STAGE 1: PLAYER ASKS WHERE DAD IS
+        setTimeout(() => {
+            speakVoice("WHERE ARE YOU NOW DAD", 'player', 'crying');
+            callStatus.innerText = "YOU: WHERE ARE YOU NOW DAD";
+            
+            // STAGE 2: DAD REPLIES (Fearing tone)
+            setTimeout(() => {
+                speakVoice("why are you crying any problem in the house", 'dad', 'fearing');
+                callStatus.innerText = "DAD: why are you crying...";
+                
+                setTimeout(() => {
+                    showCallChoices([
+                        {
+                            text: "PLEASE COME TO HOME FAST",
+                            callback: () => {
+                                speakVoice("PLEASE COME TO HOME FAST", 'player', 'crying');
+                                callStatus.innerText = "YOU: PLEASE COME HOME FAST!";
+                                
+                                // STAGE 3: DAD IS ON THE WAY
+                                setTimeout(() => {
+                                    speakVoice("DONT WORRY I WAS ON THE WAY", 'dad');
+                                    callStatus.innerText = "DAD: DONT WORRY I AM ON THE WAY";
+                                    
+                                    setTimeout(() => {
+                                        showCallChoices([
+                                            {
+                                                text: "OK DAD",
+                                                callback: () => {
+                                                    speakVoice("OK DAD", 'player');
+                                                    callStatus.innerText = "YOU: OK DAD";
+                                                    setTimeout(endCall, 2000);
+                                                }
+                                            }
+                                        ]);
+                                    }, 2000);
+                                }, 3000);
+                            }
+                        }
+                    ]);
+                }, 2000);
+            }, 2000);
+        }, 1000);
+        return;
+    }
+
     // FOR OTHER CONTACTS: No answer or busy
     callStatus.innerText = "LINE BUSY";
     callStatus.style.color = "#ff3b30";
@@ -1333,24 +1413,23 @@ function endCall() {
 function speakVoice(text, character, tone = 'normal') {
     const utterance = new SpeechSynthesisUtterance(text);
     
-    if (character === 'mom') {
-        utterance.pitch = 1.2; // Feminine
-        utterance.rate = 1.0;
+    if (character === 'mom' || character === 'dad') {
+        utterance.pitch = character === 'mom' ? 1.2 : 0.8; 
+        utterance.rate = tone === 'fearing' ? 1.1 : 1.0;
     } else {
         // Player
-        if (tone === 'fearing') {
-            utterance.pitch = 1.4; // High pitch for fear
-            utterance.rate = 1.2;  // Faster for panic
+        if (tone === 'fearing' || tone === 'crying') {
+            utterance.pitch = 1.4; // High pitch
+            utterance.rate = tone === 'crying' ? 0.8 : 1.2; // Slower for crying/sobbing
         } else if (tone === 'fearless') {
-            utterance.pitch = 1.0; // Normal
+            utterance.pitch = 1.1;
             utterance.rate = 0.9;
         } else {
             utterance.pitch = 0.9;
-            utterance.rate = 0.9;
+            utterance.rate = 1.0;
         }
     }
     
-    // Ensure existing speech is cancelled for immediate flow
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
 }
