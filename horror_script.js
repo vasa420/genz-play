@@ -166,7 +166,9 @@ function switchChat(key) {
         });
         
         // Close the list and reveal the chat
-        closeChatList();
+        // closeChatList(); // Now handled by hideAllOverlays/openChat logic
+        hideAllOverlays();
+        document.getElementById('chat-active-overlay').style.display = 'flex';
         
         // Ensure choice container is cleared when switching chats
         if (choiceContainer) choiceContainer.innerHTML = "";
@@ -408,7 +410,8 @@ function openCamera() {
 function hideAllOverlays() {
     const overlays = [
         'home-screen', 
-        'chat-list-overlay', 
+        'chat-list-overlay',
+        'chat-active-overlay',
         'camera-system', 
         'phone-app-overlay', 
         'video-app-overlay'

@@ -23,45 +23,50 @@
             </div>
         </div>
 
-        <!-- Chat Header -->
-        <div class="chat-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="back-btn" onclick="openChatList()"
-                    style="cursor: pointer; padding: 10px; font-size: 24px; color: #007aff;">‹</div>
-                <div onclick="openHome()" style="color: #444; font-size: 18px; cursor: pointer; transition: 0.3s;"
-                    onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'">🏠</div>
-            </div>
-            <div class="contact-info">
-                <div class="avatar" id="contact-avatar">?</div>
-                <div class="details">
-                    <h2 class="contact-name" id="contact-name">Unknown Number</h2>
-                    <p class="status" id="contact-status">Online</p>
+        <div class="home-indicator" style="z-index: 2000;"></div>
+
+        <!-- Chat Active Overlay (The actual conversation) -->
+        <div id="chat-active-overlay" class="phone-overlay" style="display: none; background: #000; z-index: 100;">
+            <!-- Chat Header -->
+            <div class="chat-header" style="position: relative; z-index: 101;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="back-btn" onclick="openChatList()"
+                        style="cursor: pointer; padding: 10px; font-size: 24px; color: #007aff;">‹</div>
+                    <div onclick="openHome()" style="color: #444; font-size: 18px; cursor: pointer; transition: 0.3s;"
+                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'">🏠</div>
                 </div>
+                <div class="contact-info">
+                    <div class="avatar" id="contact-avatar">?</div>
+                    <div class="details">
+                        <h2 class="contact-name" id="contact-name">Unknown Number</h2>
+                        <p class="status" id="contact-status">Online</p>
+                    </div>
+                </div>
+                <div class="header-icons" id="call-icon" onclick="startCreepyCall()" style="cursor: pointer;">📞</div>
             </div>
-            <div class="header-icons" id="call-icon" onclick="startCreepyCall()" style="cursor: pointer;">📞</div>
-        </div>
 
-        <!-- Chat Area -->
-        <div class="chat-body" id="chat-body">
-            <!-- Messages will be injected here -->
-        </div>
+            <!-- Chat Area -->
+            <div class="chat-body" id="chat-body" style="flex: 1; overflow-y: auto;">
+                <!-- Messages will be injected here -->
+            </div>
 
-        <!-- Typing Indicator -->
-        <div class="typing-indicator" id="typing-indicator">
-            <span></span><span></span><span></span>
-        </div>
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
 
-        <!-- Choice Area -->
-        <div class="choice-container" id="choice-container">
-            <!-- Choices will be injected here -->
-        </div>
+            <!-- Choice Area -->
+            <div class="choice-container" id="choice-container">
+                <!-- Choices will be injected here -->
+            </div>
 
-        <!-- Input Area (Functional) -->
-        <div class="input-area">
-            <div class="plus-icon">+</div>
-            <input type="text" class="message-input" id="message-input" placeholder="Type a response..."
-                autocomplete="off">
-            <div class="send-btn" id="send-btn">➤</div>
+            <!-- Input Area (Functional) -->
+            <div class="input-area">
+                <div class="plus-icon">+</div>
+                <input type="text" class="message-input" id="message-input" placeholder="Type a response..."
+                    autocomplete="off">
+                <div class="send-btn" id="send-btn">➤</div>
+            </div>
         </div>
 
         <div class="home-indicator"></div>
@@ -436,7 +441,7 @@
         </div>
 
     <!-- Chat List Page (INSIDE PHONE) -->
-    <div id="chat-list-overlay" class="phone-overlay" style="background: #000; overflow: hidden;">
+    <div id="chat-list-overlay" class="phone-overlay" style="background: #000; display: none; overflow: hidden;">
         <div class="list-header"
             style="display: flex; justify-content: space-between; align-items: center; padding: 20px 25px;">
             <div onclick="openHome()" style="color: #666; font-size: 22px; cursor: pointer; transition: 0.3s;"
