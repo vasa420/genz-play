@@ -499,10 +499,38 @@ window.handleMailReply = function(text) {
                 scaryText.innerText = "HEY SHUT UP TELL YOUR ACCOUNT NUMBER IDIOT.";
             }
             
+            // SHOW SECOND PHASE CHOICES
+            setTimeout(() => {
+                const replyArea2 = document.getElementById('mail-reply-area-2');
+                if (replyArea2) replyArea2.style.display = 'block';
+            }, 2000);
+            
             document.body.classList.add('glitch-active');
             if (glitchSound) glitchSound.play().catch(e => {});
             setTimeout(() => document.body.classList.remove('glitch-active'), 500);
         }
+    }, 2000);
+};
+
+window.handleMailReply2 = function(text) {
+    console.log("Mail replied phase 2 with:", text);
+    const choiceContainer = document.getElementById('mail-choice-container-2');
+    const repliedText = document.getElementById('mail-replied-text-2');
+    const sentContent = document.getElementById('sent-mail-content-2');
+    
+    if (choiceContainer) choiceContainer.style.display = 'none';
+    if (repliedText) repliedText.style.display = 'block';
+    if (sentContent) sentContent.innerText = text;
+    
+    setTimeout(() => {
+        document.body.classList.add('glitch-active');
+        const glitchSound = document.getElementById('glitch-sound');
+        if (glitchSound) glitchSound.play().catch(e => {});
+        
+        // Final ominous action - system error
+        alert("SYSTEM ERROR: UNKNOWN PROTOCOL DETECTED. ENCRYPTING DRIVE C:...");
+        
+        setTimeout(() => document.body.classList.remove('glitch-active'), 500);
     }, 2000);
 };
 
