@@ -134,13 +134,13 @@ function switchChat(key) {
     try {
         console.log("Switching to chat:", key);
         if (!contacts[key]) {
-             console.error("Contact not found:", key);
-             return;
+            console.error("Contact not found:", key);
+            return;
         }
 
         currentContact = key;
         const contact = contacts[key];
-        
+
         // Update Header
         const nameEl = document.getElementById('contact-name');
         const avatarEl = document.getElementById('contact-avatar');
@@ -148,13 +148,13 @@ function switchChat(key) {
 
         if (nameEl) nameEl.innerText = contact.name;
         if (avatarEl) {
-            avatarEl.innerText = ""; 
+            avatarEl.innerText = "";
             avatarEl.style.background = `url('${contact.avatar}')`;
             avatarEl.style.backgroundSize = "cover";
             avatarEl.style.backgroundPosition = "center";
         }
         if (statusEl) statusEl.innerText = contact.status;
-        
+
         // Clear and reload body
         chatBody.innerHTML = "";
         const history = chatHistory[key] || [];
@@ -164,12 +164,12 @@ function switchChat(key) {
             div.innerText = msg.text;
             chatBody.appendChild(div);
         });
-        
+
         // Close the list and reveal the chat
         // closeChatList(); // Now handled by hideAllOverlays/openChat logic
         hideAllOverlays();
         document.getElementById('chat-active-overlay').style.display = 'flex';
-        
+
         // Ensure choice container is cleared when switching chats
         if (choiceContainer) choiceContainer.innerHTML = "";
 
@@ -186,12 +186,12 @@ function switchChat(key) {
                 vicky: "Pick up the phone. Stop playing around.",
                 anu: "I feel like someone is watching me... are you okay?"
             };
-            
+
             // If it's a NEW chat or we just switched back, show current suggestions
             if (history.length === 0) {
-                 setTimeout(() => receiveMessage(initialMsgs[key], 'left', key === 'unknown'), 800);
+                setTimeout(() => receiveMessage(initialMsgs[key], 'left', key === 'unknown'), 800);
             }
-            
+
             // ALWAYS show suggestions when opening a chat
             setTimeout(() => showFamilyChoices(getSuggestionsFor(key)), 1500);
         }
@@ -202,7 +202,7 @@ function switchChat(key) {
 
 function getSuggestionsFor(key) {
     const input = chatHistory[key].length > 0 ? chatHistory[key][chatHistory[key].length - 1].text.toLowerCase() : "";
-    
+
     if (key === 'mom') {
         if (input.includes("police") || input.includes("door")) {
             return [
@@ -228,7 +228,7 @@ function getSuggestionsFor(key) {
             { text: "Where are you right now?", type: "location" }
         ];
     }
-    
+
     const sets = {
         unknown: [
             { text: "Who is this?", next: "asking_who" },
@@ -270,19 +270,19 @@ function showFamilyChoices(choices) {
         btn.className = 'choice-btn';
         btn.innerText = choice.text;
         btn.onclick = () => {
-             // Add player message
-             const text = choice.text;
-             const msgDiv = document.createElement('div');
-             msgDiv.className = 'msg right';
-             msgDiv.innerText = text;
-             chatBody.appendChild(msgDiv);
-             chatBody.scrollTo(0, chatBody.scrollHeight);
-             chatHistory[currentContact].push({ text, class: 'msg right' });
-             
-             choiceContainer.innerHTML = ''; // Hide choices
-             
-             // AI Response based on type
-             setTimeout(() => playAIResponse(text), 1000);
+            // Add player message
+            const text = choice.text;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg right';
+            msgDiv.innerText = text;
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTo(0, chatBody.scrollHeight);
+            chatHistory[currentContact].push({ text, class: 'msg right' });
+
+            choiceContainer.innerHTML = ''; // Hide choices
+
+            // AI Response based on type
+            setTimeout(() => playAIResponse(text), 1000);
         };
         choiceContainer.appendChild(btn);
     });
@@ -294,10 +294,10 @@ async function receiveMessage(text, side, isUnknown = false) {
     msgDiv.innerText = text;
     chatBody.appendChild(msgDiv);
     chatBody.scrollTo(0, chatBody.scrollHeight);
-    
+
     // Save to history
     chatHistory[currentContact].push({ text, class: msgDiv.className });
-    
+
     // Update List Preview
     const contactElements = document.querySelectorAll('.chat-item');
     contactElements.forEach(el => {
@@ -307,7 +307,7 @@ async function receiveMessage(text, side, isUnknown = false) {
         }
     });
 
-    notifSound.play().catch(e => {});
+    notifSound.play().catch(e => { });
 }
 
 async function showWarning() {
@@ -319,7 +319,7 @@ async function showWarning() {
     const introVideo = document.getElementById('intro-video-bg');
 
     transition.style.opacity = '1';
-    
+
     // Fade video audio if necessary
     if (introVideo) {
         let fadeAudio = setInterval(() => {
@@ -350,11 +350,11 @@ function startGame() {
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         bgMusic.volume = 0.5;
-        bgMusic.play().catch(e => {});
+        bgMusic.play().catch(e => { });
     }
     updateTime();
     setInterval(updateTime, 60000);
-    
+
     // START ON HOME SCREEN
     openHome();
 }
@@ -363,7 +363,7 @@ function openHome() {
     console.log("Opening Home Screen...");
     hideAllOverlays();
     document.getElementById('home-screen').style.display = 'block';
-    
+
     // Pause video if playing
     const video = document.getElementById('game-video-player');
     if (video) video.pause();
@@ -377,15 +377,20 @@ function openPhoneApp() {
 }
 
 function initChatList() {
+    console.log("Initializing Chat List...");
     const listContainer = document.getElementById('chat-list-items');
-    if (!listContainer) return;
-    
+    if (!listContainer) {
+        console.error("Chat list container (#chat-list-items) NOT found in DOM!");
+        return;
+    }
+
     listContainer.innerHTML = "";
-    
+    console.log("Contact keys:", Object.keys(contacts));
+
     Object.keys(contacts).forEach(key => {
         const contact = contacts[key];
-        const lastMsg = chatHistory[key].length > 0 
-            ? chatHistory[key][chatHistory[key].length - 1].text 
+        const lastMsg = chatHistory[key].length > 0
+            ? chatHistory[key][chatHistory[key].length - 1].text
             : (key === 'unknown' ? "Hello?" : "Click to chat...");
 
         const item = document.createElement('div');
@@ -408,22 +413,32 @@ function initChatList() {
             </div>
             ${key === 'unknown' ? '<div style="width: 8px; height: 8px; background: #ff3b30; border-radius: 50%; margin-left: 10px;"></div>' : ''}
         `;
-        
+
         listContainer.appendChild(item);
     });
 }
 
 function openChatList() {
-    console.log("Opening Messages App...");
+    console.log("Request to open Messages App...");
     hideAllOverlays();
+
+    const notifDot = document.querySelector('.notif-dot');
+    if (notifDot) {
+        console.log("Hiding notification dot");
+        notifDot.style.display = 'none';
+    }
+
     const listOverlay = document.getElementById('chat-list-overlay');
     if (listOverlay) {
+        console.log("Showing Chat List Overlay");
         listOverlay.style.display = 'flex';
         listOverlay.style.opacity = '1';
+        listOverlay.style.visibility = 'visible';
+    } else {
+        console.error("Chat list overlay (#chat-list-overlay) NOT found!");
     }
-    
-    // Ensure the list is fresh
-    initChatList(); 
+
+    initChatList();
 }
 
 function openPhotos() {
@@ -438,17 +453,17 @@ function openCamera() {
     console.log("INITIALIZING SECURITY FEED...");
     hideAllOverlays();
     document.getElementById('camera-system').style.display = 'flex';
-    
+
     // Reset camera state
-    switchCamera(1); 
+    switchCamera(1);
 }
 
 function hideAllOverlays() {
     const overlays = [
-        'home-screen', 
+        'home-screen',
         'chat-list-overlay',
         'chat-active-overlay',
-        'camera-system', 
+        'camera-system',
         'phone-app-overlay'
     ];
     overlays.forEach(id => {
@@ -459,11 +474,11 @@ function hideAllOverlays() {
 
 let dialedNumber = "";
 
-window.switchPhoneTab = function(tab) {
+window.switchPhoneTab = function (tab) {
     const listContent = document.getElementById('phone-list-content');
     const keypadContent = document.getElementById('phone-keypad-content');
     const tabs = document.querySelectorAll('.phone-tab');
-    
+
     // UI Update
     tabs.forEach(t => {
         t.classList.remove('active');
@@ -485,13 +500,13 @@ window.switchPhoneTab = function(tab) {
 function populatePhoneLists(type) {
     const list = document.getElementById('phone-list-content');
     list.innerHTML = "";
-    
+
     // Use contacts object
     Object.keys(contacts).forEach(key => {
         const contact = contacts[key];
         const item = document.createElement('div');
         item.className = type === 'recents' ? 'recent-item' : 'contact-item';
-        
+
         const isMissed = type === 'recents' && Math.random() > 0.7 && key !== 'mom';
 
         item.innerHTML = `
@@ -502,7 +517,7 @@ function populatePhoneLists(type) {
             </div>
             <div style="color: #666; font-size: 12px;">${type === 'recents' ? 'Today' : ''}</div>
         `;
-        
+
         item.onclick = () => {
             if (key === 'unknown') {
                 startCreepyCall();
@@ -515,7 +530,7 @@ function populatePhoneLists(type) {
     });
 }
 
-window.dialDigit = function(n) {
+window.dialDigit = function (n) {
     if (dialedNumber.length < 11) {
         dialedNumber += n;
         document.getElementById('phone-display').innerText = dialedNumber;
@@ -523,14 +538,14 @@ window.dialDigit = function(n) {
     }
 };
 
-window.deleteDialDigit = function() {
+window.deleteDialDigit = function () {
     dialedNumber = dialedNumber.slice(0, -1);
     document.getElementById('phone-display').innerText = dialedNumber;
 };
 
-window.performCall = function() {
+window.performCall = function () {
     if (dialedNumber === "") return;
-    
+
     console.log("Calling:", dialedNumber);
     if (dialedNumber === "911") {
         alert("Emergency Services: The call lines in your area have been cut. We cannot reach you.");
@@ -542,7 +557,7 @@ window.performCall = function() {
     } else {
         alert("User Busy: The person you are trying to reach is currently unavailable.");
     }
-    
+
     dialedNumber = "";
     document.getElementById('phone-display').innerText = "";
     setTimeout(openHome, 1500);
@@ -553,7 +568,7 @@ let cam5Passkey = "";
 const correctPasskey = "7394"; // Narratively revealed by Dad
 let isCam5Unlocked = false;
 
-window.enterDigit = function(n) {
+window.enterDigit = function (n) {
     if (cam5Passkey.length < 4) {
         cam5Passkey += n;
         updatePasskeyUI();
@@ -564,7 +579,7 @@ window.enterDigit = function(n) {
     }
 };
 
-window.resetPasskey = function() {
+window.resetPasskey = function () {
     cam5Passkey = "";
     updatePasskeyUI();
 };
@@ -592,7 +607,7 @@ async function checkPasskey() {
     }
 }
 
-window.playBeep = function() {
+window.playBeep = function () {
     if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = window.audioCtx.createOscillator();
     const gain = window.audioCtx.createGain();
@@ -611,7 +626,7 @@ function switchCamera(id) {
     const location = document.getElementById('cam-location');
     const buttons = document.querySelectorAll('.cam-btn');
     const shadowPerson = document.getElementById('shadow-person');
-    
+
     // UI Button Update
     buttons.forEach((btn, idx) => {
         if (idx + 1 === id) {
@@ -624,15 +639,15 @@ function switchCamera(id) {
             btn.style.boxShadow = "none";
         }
     });
-    
+
     // Switch Effect
     glitch.style.opacity = '1';
-    glitchSound.play().catch(e => {});
-    
+    glitchSound.play().catch(e => { });
+
     setTimeout(() => {
         glitch.style.opacity = '0';
         label.innerText = `CAM ${id}`;
-        
+
         const timestamp = new Date().toLocaleTimeString();
         document.querySelector('.cctv-time').innerText = timestamp;
 
@@ -642,7 +657,7 @@ function switchCamera(id) {
         }
 
         if (id === 1) {
-            feed.src = "camera_man_at_door_1776605713116.png"; 
+            feed.src = "camera_man_at_door_1776605713116.png";
             location.innerText = "FRONT PORCH - LIVE";
             feed.style.filter = "none";
             feed.classList.add('breaking-active');
@@ -650,10 +665,10 @@ function switchCamera(id) {
             feed.classList.remove('breaking-active');
             feed.src = "camera_backyard_view_1776596617682.png"; // Moving swing
             location.innerText = "BACKYARD - NIGHT VISION";
-            feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8) contrast(1.2)"; 
+            feed.style.filter = "sepia(1) hue-rotate(90deg) brightness(0.8) contrast(1.2)";
         } else if (id === 3) {
             feed.classList.remove('breaking-active');
-            feed.src = "camera_living_room_view_1776607107820.png"; 
+            feed.src = "camera_living_room_view_1776607107820.png";
             location.innerText = "LIVING ROOM - CORNER CAM";
             feed.style.filter = "none";
             feed.style.backgroundColor = "transparent";
@@ -666,7 +681,7 @@ function switchCamera(id) {
             feed.classList.remove('breaking-active');
             if (!isCam5Unlocked) {
                 document.getElementById('cam5-lock-screen').style.display = 'flex';
-                feed.src = ""; 
+                feed.src = "";
                 feed.style.backgroundColor = "black";
             } else {
                 document.getElementById('cam5-lock-screen').style.display = 'none';
@@ -704,7 +719,7 @@ function closeChatList() {
 }
 
 // Global Listener for chat items to ensure they ALWAYS fire
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     const chatItem = e.target.closest('.chat-item');
     if (chatItem) {
         const onclickAttr = chatItem.getAttribute('onclick');
@@ -721,8 +736,8 @@ document.addEventListener('click', function(e) {
 
 function updateTime() {
     const now = new Date();
-    document.getElementById('current-time').innerText = 
-        now.getHours().toString().padStart(2, '0') + ":" + 
+    document.getElementById('current-time').innerText =
+        now.getHours().toString().padStart(2, '0') + ":" +
         now.getMinutes().toString().padStart(2, '0');
 }
 
@@ -735,9 +750,9 @@ interactionEvents.forEach(eventType => {
         const introOverlay = document.getElementById('intro-overlay');
         const isIntroActive = introOverlay && introOverlay.classList.contains('active');
         if (isIntroActive) {
-            if (introMusic && introMusic.paused) introMusic.play().catch(e => {});
+            if (introMusic && introMusic.paused) introMusic.play().catch(e => { });
         } else {
-            if (bgMusic && bgMusic.paused) bgMusic.play().catch(e => {});
+            if (bgMusic && bgMusic.paused) bgMusic.play().catch(e => { });
         }
     }, { once: false });
 });
@@ -754,7 +769,7 @@ async function playMessage(stateKey) {
     receiveMessage(node.text, 'left', node.sender === 'unknown');
     if (node.glitch) {
         document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => {});
+        glitchSound.play().catch(e => { });
         setTimeout(() => document.body.classList.remove('glitch-active'), 500);
     }
     if (node.death) setTimeout(() => endGame(node.death, false), 2000);
@@ -881,7 +896,7 @@ async function playAIResponse(userInput) {
     typingIndicator.style.display = 'none';
     contactStatus.innerText = contacts[currentContact].status;
     receiveMessage(response, 'left', currentContact === 'unknown' || isCreepy);
-    
+
     // RE-SHOW SUGGESTIONS AFTER RESPONSE
     setTimeout(() => {
         showFamilyChoices(getSuggestionsFor(currentContact));
@@ -889,7 +904,7 @@ async function playAIResponse(userInput) {
 
     if (isCreepy || (currentContact === 'unknown' && Math.random() > 0.7)) {
         document.body.classList.add('glitch-active');
-        glitchSound.play().catch(e => {});
+        glitchSound.play().catch(e => { });
         setTimeout(() => document.body.classList.remove('glitch-active'), 400);
     }
 }
@@ -912,7 +927,7 @@ function sendPhotoMessage(url) {
     img.onload = () => chatBody.scrollTo(0, chatBody.scrollHeight);
     msgDiv.appendChild(img);
     chatBody.appendChild(msgDiv);
-    notifSound.play().catch(e => {});
+    notifSound.play().catch(e => { });
 }
 
 if (messageInput) {
@@ -935,7 +950,7 @@ function startCreepyCall() {
     if (bgMusic) bgMusic.pause();
     if (ringtone) {
         ringtone.currentTime = 0;
-        ringtone.play().catch(e => {});
+        ringtone.play().catch(e => { });
     }
     callStatus.innerText = "INCOMING CALL...";
 }
@@ -950,7 +965,7 @@ function acceptCall() {
     callStatus.innerText = "CONNECTED";
     callStatus.style.color = "#4cd964";
     document.body.classList.add('glitch-active');
-    glitchSound.play().catch(e => {});
+    glitchSound.play().catch(e => { });
     const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
     msg.pitch = 0.1;
     msg.rate = 0.7;
@@ -979,7 +994,7 @@ function endCall() {
     }
     callOverlay.style.display = 'none';
     document.body.classList.remove('glitch-active');
-    if (bgMusic) bgMusic.play().catch(e => {});
+    if (bgMusic) bgMusic.play().catch(e => { });
     document.getElementById('call-status').innerText = "CALLING...";
     document.getElementById('call-status').style.color = "#888";
 }
