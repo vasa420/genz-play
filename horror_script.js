@@ -392,9 +392,7 @@ function openPhotos() {
     setTimeout(() => document.body.classList.remove('glitch-active'), 500);
 }
 
-function openVideos() {
-    // App Removed
-}
+
 
 function openCamera() {
     console.log("INITIALIZING SECURITY FEED...");
