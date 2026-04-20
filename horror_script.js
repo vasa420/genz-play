@@ -379,13 +379,14 @@ function openPhoneApp() {
 function openChatList() {
     console.log("Opening Messages App...");
     hideAllOverlays();
-    document.getElementById('chat-list-overlay').style.display = 'flex';
-    document.getElementById('chat-list-overlay').style.opacity = '1';
-    
-    // Set unknown as active if it's the first time
-    if (chatHistory['unknown'].length === 0) {
-        switchChat('unknown');
+    const listOverlay = document.getElementById('chat-list-overlay');
+    if (listOverlay) {
+        listOverlay.style.display = 'flex';
+        listOverlay.style.opacity = '1';
     }
+    
+    // Ensure the list is fresh
+    initChatList(); 
 }
 
 function openPhotos() {
