@@ -561,18 +561,39 @@
         <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 25px; background: linear-gradient(180deg, #1a1a1c, #000); border-bottom: 1px solid #333;">
             <div onclick="openHome()" style="color: #007aff; font-size: 18px; cursor: pointer;">Cancel</div>
             <h1 style="color: white; font-size: 20px; font-weight: 700; margin: 0;">Inbox</h1>
-            <div style="color: #007aff; font-size: 18px; font-weight: 500; cursor: pointer;">Edit</div>
+            <div style="width: 50px;"></div>
         </div>
-        
-        <div style="padding: 20px; flex: 1; overflow-y: auto;">
-            <div id="mail-item-unknown" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #007aff; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #007aff; font-weight: 700; font-size: 15px;">Unknown Sender</span>
-                    <span style="color: #888; font-size: 12px;">Just Now</span>
+
+        <div id="mail-inbox-list" style="padding: 10px; flex: 1; overflow-y: auto;">
+            <!-- Mail from Unknown Sender -->
+            <div id="mail-item-unknown" onclick="openMailThread('unknown')" style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid #ff3b30; cursor: pointer; display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: #ff3b30; font-weight: 700; font-size: 15px;">Unknown Sender</span>
+                    <span style="color: #888; font-size: 11px;">Just Now</span>
                 </div>
-                <h3 style="color: white; font-size: 16px; margin: 0 0 5px; font-weight: 700;">HEY YOU KNOW ME...</h3>
-                <p style="color: #aaa; margin: 0; font-size: 14px; line-height: 1.4;">HEY YOU KNOW ME I AM YOUR CHILD HOOD FRIEND</p>
-                
+                <h3 style="color: white; font-size: 14px; margin: 0 0 4px; font-weight: 700;">HEY YOU KNOW ME...</h3>
+                <p style="color: #888; margin: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">HEY YOU KNOW ME I AM YOUR CHILD HOOD FRIEND</p>
+            </div>
+
+            <!-- Mail from Mom -->
+            <div id="mail-item-mom" onclick="openMailThread('mom')" style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid #007aff; cursor: pointer; display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: #007aff; font-weight: 700; font-size: 15px;">Mom</span>
+                    <span style="color: #888; font-size: 11px;">Just Now</span>
+                </div>
+                <h3 style="color: white; font-size: 14px; margin: 0 0 4px; font-weight: 700;">SEE THIS...</h3>
+                <p style="color: #888; margin: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Attached video: Stranger_Filmed_Watching_House.mp4</p>
+            </div>
+
+            <div id="no-mail-text" style="color: #444; text-align: center; margin-top: 100px; font-size: 14px;">No Mail</div>
+        </div>
+
+        <!-- Thread View: Unknown -->
+        <div id="mail-thread-unknown" style="display: none; padding: 20px; flex: 1; overflow-y: auto;">
+            <div onclick="backToMailInbox()" style="color: #007aff; margin-bottom: 20px; cursor: pointer; font-size: 14px;">← Back to Inbox</div>
+            
+            <div id="mail-msg-1" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <p style="color: #fff; margin: 0; font-size: 14px;">HEY YOU KNOW ME I AM YOUR CHILD HOOD FRIEND</p>
                 <div id="mail-reply-area" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
                     <div id="mail-choice-container" style="display: flex; flex-direction: column; gap: 8px;">
                         <button onclick="handleMailReply('wrong message')" style="background: #007aff; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px;">wrong message</button>
@@ -583,75 +604,51 @@
                     </div>
                 </div>
             </div>
-            
-            <div id="mail-scary-reply" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #ff3b30; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #ff3b30; font-weight: 700; font-size: 15px;">Unknown Sender</span>
-                    <span style="color: #888; font-size: 12px;">Just Now</span>
-                </div>
-                <p id="mail-scary-text" style="color: #fff; margin: 0; font-size: 14px; line-height: 1.4;"></p>
-                
+
+            <div id="mail-scary-reply" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none;">
+                <p id="mail-scary-text" style="color: #fff; margin: 0; font-size: 14px;"></p>
                 <div id="mail-reply-area-2" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; display: none;">
                     <div id="mail-choice-container-2" style="display: flex; flex-direction: column; gap: 8px;">
                         <button onclick="handleMailReply2('CAN I CALL POLICE')" style="background: #ff3b30; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700;">CAN I CALL POLICE</button>
                         <button onclick="handleMailReply2('WHY I WANT TO TELL TO YOU')" style="background: transparent; color: #ff3b30; border: 1px solid #ff3b30; padding: 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700;">WHY I WANT TO TELL TO YOU</button>
                     </div>
                 </div>
-            </div>
-            
-            <div id="mail-replied-text-2" style="display: none; padding: 15px; color: #888; font-style: italic; font-size: 13px; margin-top: 10px; text-align: right;">
-                Sent: <span id="sent-mail-content-2" style="color: #ff3b30; font-weight: 700; font-style: normal;"></span>
+                <div id="mail-replied-text-2" style="display: none; padding: 5px; color: #888; font-style: italic; font-size: 13px; margin-top: 5px; text-align: right;">
+                    Sent: <span id="sent-mail-content-2" style="color: #ff3b30; font-weight: 700; font-style: normal;"></span>
+                </div>
             </div>
 
-            <div id="mail-scary-reply-3" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #ff3b30; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #ff3b30; font-weight: 700; font-size: 15px;">Unknown Sender</span>
-                    <span style="color: #888; font-size: 12px;">Just Now</span>
-                </div>
-                <p id="mail-scary-text-3" style="color: #fff; margin: 0; font-size: 14px; line-height: 1.4; font-weight: 800;"></p>
+            <div id="mail-scary-reply-3" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none;">
+                <p id="mail-scary-text-3" style="color: #fff; margin: 0; font-size: 14px; font-weight: 800;"></p>
             </div>
 
-            <div id="mail-scary-reply-4" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #ff3b30; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #ff3b30; font-weight: 700; font-size: 15px;">Unknown Sender</span>
-                    <span style="color: #888; font-size: 12px;">Just Now</span>
-                </div>
-                <p id="mail-scary-text-4" style="color: #fff; margin: 0; font-size: 14px; line-height: 1.4; font-weight: 900; letter-spacing: 1px;">SEND YOUR LIVE LOCATION</p>
-                
+            <div id="mail-scary-reply-4" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none;">
+                <p style="color: #fff; margin: 0; font-size: 14px; font-weight: 900;">SEND YOUR LIVE LOCATION</p>
                 <div id="mail-reply-area-3" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; display: none;">
                     <div id="mail-choice-container-3">
                         <button onclick="handleMailReply3('who are you man')" style="width: 100%; background: transparent; color: #ff3b30; border: 1px solid #ff3b30; padding: 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700;">who are you man</button>
                     </div>
                 </div>
-            </div>
-
-            <div id="mail-replied-text-3" style="display: none; padding: 15px; color: #888; font-style: italic; font-size: 13px; margin-top: 10px; text-align: right;">
-                Sent: <span id="sent-mail-content-3" style="color: #ff3b30; font-weight: 700; font-style: normal;"></span>
-            </div>
-
-            <div id="mail-scary-reply-5" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #ff3b30; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #ff3b30; font-weight: 700; font-size: 15px;">Unknown Sender</span>
-                    <span style="color: #888; font-size: 12px;">Just Now</span>
+                <div id="mail-replied-text-3" style="display: none; padding: 5px; color: #888; font-style: italic; font-size: 13px; margin-top: 5px; text-align: right;">
+                    Sent: <span id="sent-mail-content-3" style="color: #ff3b30; font-weight: 700; font-style: normal;"></span>
                 </div>
-                <p id="mail-scary-text-5" style="color: #fff; margin: 0; font-size: 14px; line-height: 1.4; font-weight: 800;">I AM YOUR BEST FRIEND I AM ON THE WAY TO YOUR HOME</p>
             </div>
 
-            <div id="mail-video-message" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #ff3b30; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #ff3b30; font-weight: 700; font-size: 15px;">Mom</span>
-                    <span style="color: #888; font-size: 12px;">Just Now</span>
-                </div>
-                <p style="color: #fff; margin: 0 0 10px 0; font-size: 13px; font-style: italic;">SEE THIS...</p>
-                <video id="mom-sent-video" style="width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);" controls>
+            <div id="mail-scary-reply-5" style="background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none;">
+                <p style="color: #fff; margin: 0; font-size: 14px; font-weight: 800;">I AM YOUR BEST FRIEND I AM ON THE WAY TO YOUR HOME</p>
+            </div>
+        </div>
+
+        <!-- Thread View: Mom -->
+        <div id="mail-thread-mom" style="display: none; padding: 20px; flex: 1; overflow-y: auto;">
+            <div onclick="backToMailInbox()" style="color: #007aff; margin-bottom: 20px; cursor: pointer; font-size: 14px;">← Back to Inbox</div>
+            
+            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; border-left: 4px solid #007aff;">
+                <video id="mom-sent-video" style="width: 100%; border-radius: 8px;" controls>
                     <source src="Stranger_Filmed_Watching_House.mp4" type="video/mp4">
                 </video>
             </div>
-            
-
-            
-            <div style="text-align: center; margin-top: 40px;">
-                <p id="no-mail-text" style="color: #444; font-size: 14px;">No other messages</p>
+        </div>t-size: 14px;">No other messages</p>
             </div>
         </div>
     </div>
