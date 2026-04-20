@@ -1012,10 +1012,10 @@ function handleCallAnswer(key) {
         return;
     }
 
-    callStatus.innerText = "CONNECTED";
-    callStatus.style.color = "#4cd964";
-
     if (key === 'mom') {
+        callStatus.innerText = "CONNECTED";
+        callStatus.style.color = "#4cd964";
+        
         // MOM'S BRANCHING DIALOGUE
         speakVoice("What are you doing, sweetie?", 'mom');
         callStatus.innerText = "MOM: What are you doing?";
@@ -1062,29 +1062,17 @@ function handleCallAnswer(key) {
         return;
     }
 
-    const response = contactResponses[key] || "Hello? Can you hear me? The signal is breaking up...";
-    speakVoice(response, 'mom');
+    // FOR OTHER CONTACTS: No answer or busy
+    callStatus.innerText = "USER BUSY";
+    callStatus.style.color = "#ff3b30";
+    
+    const failMsg = new SpeechSynthesisUtterance("The person you are trying to reach is currently unavailable.");
+    failMsg.rate = 1.1;
+    window.speechSynthesis.speak(failMsg);
 
-    // Visual text display during speech
     setTimeout(() => {
-        callStatus.innerText = response.substring(0, 30) + "...";
-    }, 1000);
-
-    setTimeout(() => {
-        if (key === 'anu' || key === 'sanjay') {
-            document.body.classList.add('glitch-active');
-            const glitchSound = document.getElementById('glitch-sound');
-            if (glitchSound) glitchSound.play().catch(e => { });
-            setTimeout(() => document.body.classList.remove('glitch-active'), 500);
-        }
-    }, 2000);
-
-    // End call automatically after speech if not mom
-    setTimeout(() => {
-        if (document.getElementById('call-overlay').style.display === 'flex') {
-            endCall();
-        }
-    }, 8000);
+        endCall();
+    }, 4000);
 }
 
 function acceptCall() {
