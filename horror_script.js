@@ -364,13 +364,13 @@ function startGame() {
         const dot = document.getElementById('mail-notif-dot');
         const mailItem = document.getElementById('mail-item-unknown');
         const noMailText = document.getElementById('no-mail-text');
-        
+
         if (dot) {
             dot.style.display = 'flex';
             const notifSound = document.getElementById('notif-sound');
-            if (notifSound) notifSound.play().catch(e => {});
+            if (notifSound) notifSound.play().catch(e => { });
         }
-        
+
         if (mailItem) mailItem.style.display = 'block';
         if (noMailText) noMailText.style.display = 'none';
     }, 10000);
@@ -475,22 +475,22 @@ function openMail() {
     if (dot) dot.style.display = 'none';
 }
 
-window.handleMailReply = function(text) {
+window.handleMailReply = function (text) {
     console.log("Mail replied with:", text);
     const choiceContainer = document.getElementById('mail-choice-container');
     const repliedText = document.getElementById('mail-replied-text');
     const sentContent = document.getElementById('sent-mail-content');
-    
+
     if (choiceContainer) choiceContainer.style.display = 'none';
     if (repliedText) repliedText.style.display = 'block';
     if (sentContent) sentContent.innerText = text;
-    
+
     // Scary Response after 2 seconds
     setTimeout(() => {
         const scaryDiv = document.getElementById('mail-scary-reply');
         const scaryText = document.getElementById('mail-scary-text');
         const glitchSound = document.getElementById('glitch-sound');
-        
+
         if (scaryDiv && scaryText) {
             scaryDiv.style.display = 'block';
             if (text === 'wrong message') {
@@ -498,44 +498,44 @@ window.handleMailReply = function(text) {
             } else {
                 scaryText.innerText = "HEY SHUT UP TELL YOUR ACCOUNT NUMBER IDIOT.";
             }
-            
+
             // SHOW SECOND PHASE CHOICES
             setTimeout(() => {
                 const replyArea2 = document.getElementById('mail-reply-area-2');
                 if (replyArea2) replyArea2.style.display = 'block';
             }, 2000);
-            
+
             document.body.classList.add('glitch-active');
-            if (glitchSound) glitchSound.play().catch(e => {});
+            if (glitchSound) glitchSound.play().catch(e => { });
             setTimeout(() => document.body.classList.remove('glitch-active'), 500);
         }
     }, 2000);
 };
 
-window.handleMailReply2 = function(text) {
+window.handleMailReply2 = function (text) {
     console.log("Mail replied phase 2 with:", text);
     const choiceArea = document.getElementById('mail-reply-area-2');
     const repliedText = document.getElementById('mail-replied-text-2');
     const sentContent = document.getElementById('sent-mail-content-2');
-    
+
     if (choiceArea) choiceArea.style.display = 'none';
     if (repliedText) repliedText.style.display = 'block';
     if (sentContent) sentContent.innerText = text;
-    
+
     // Phase 3 Scary Response after 3 seconds
     setTimeout(() => {
         const scaryDiv3 = document.getElementById('mail-scary-reply-3');
         const scaryText3 = document.getElementById('mail-scary-text-3');
         const glitchSound = document.getElementById('glitch-sound');
-        
+
         if (scaryDiv3 && scaryText3) {
             scaryDiv3.style.display = 'block';
             // Unified scary response for both choices
             scaryText3.innerText = "I WILL KILL YOUR MOM.";
-            
+
             document.body.classList.add('glitch-active');
-            if (glitchSound) glitchSound.play().catch(e => {});
-            
+            if (glitchSound) glitchSound.play().catch(e => { });
+
             // Final ominous system error
             setTimeout(() => {
                 alert("SYSTEM DETECTED: EMERGENCY CONTACTS UNLOCKED. CALL YOUR MOTHER IMMEDIATELY.");
@@ -546,11 +546,11 @@ window.handleMailReply2 = function(text) {
     }, 3000);
 };
 
-window.unlockPhoneApp = function() {
+window.unlockPhoneApp = function () {
     console.log("UNLOCKING PHONE APP...");
     const phoneAppGrid = document.querySelector('.app-icon-container[onclick*="Phone dialer locked"]');
     const phoneAppDock = document.querySelector('.dock div[onclick*="Phone dialer locked"]');
-    
+
     // Fallback: search by icon text or structure
     const icons = document.querySelectorAll('.app-icon-container');
     icons.forEach(icon => {
@@ -559,7 +559,7 @@ window.unlockPhoneApp = function() {
             icon.style.opacity = '1';
         }
     });
-    
+
     const dockIcons = document.querySelectorAll('.dock > div');
     dockIcons.forEach(icon => {
         if (icon.innerHTML.includes('📞')) {
@@ -1154,10 +1154,10 @@ window.endCall = function () {
             // Also update Mail logic in thread
             const mailReply4 = document.getElementById('mail-scary-reply-4');
             if (mailReply4) mailReply4.style.display = 'block';
-            
+
             const notifSound = document.getElementById('notif-sound');
-            if (notifSound) notifSound.play().catch(e => {});
-            
+            if (notifSound) notifSound.play().catch(e => { });
+
             // Show reply suggestion for live location after a delay
             setTimeout(() => {
                 const replyArea3 = document.getElementById('mail-reply-area-3');
@@ -1172,7 +1172,7 @@ window.endCall = function () {
     }
 };
 
-window.triggerMomCall = function() {
+window.triggerMomCall = function () {
     console.log("INCOMING CALL FROM MOM (PHASE 2)...");
     currentContact = 'mom';
     momPhase = 1;
@@ -1186,42 +1186,42 @@ window.triggerMomCall = function() {
     callName.innerText = contacts['mom'].name;
     callAvatar.style.backgroundImage = `url('${contacts['mom'].avatar}')`;
     callAvatar.innerText = "";
-    
+
     callOverlay.style.display = 'flex';
     isRinging = true;
     if (bgMusic) bgMusic.pause();
     if (ringtone) {
         ringtone.currentTime = 0;
-        ringtone.play().catch(e => {});
+        ringtone.play().catch(e => { });
     }
     callStatus.innerText = "INCOMING CALL...";
     document.getElementById('accept-btn').style.display = 'flex';
 };
 
-window.handleMailReply3 = function(text) {
+window.handleMailReply3 = function (text) {
     console.log("Mail replied phase 3 with:", text);
     const replyArea = document.getElementById('mail-reply-area-3');
     const repliedText = document.getElementById('mail-replied-text-3');
     const sentContent = document.getElementById('sent-mail-content-3');
-    
+
     if (replyArea) replyArea.style.display = 'none';
     if (repliedText) repliedText.style.display = 'block';
     if (sentContent) sentContent.innerText = text;
-    
+
     // Phase 4 Scary Response after 3 seconds
     setTimeout(() => {
         const scaryDiv5 = document.getElementById('mail-scary-reply-5');
         const glitchSound = document.getElementById('glitch-sound');
-        
+
         if (scaryDiv5) {
             scaryDiv5.style.display = 'block';
             document.body.classList.add('glitch-active');
-            if (glitchSound) glitchSound.play().catch(e => {});
-            
+            if (glitchSound) glitchSound.play().catch(e => { });
+
             setTimeout(() => {
                 alert("EXTERNAL ACCESS CONFIRMED. DOOR LOCKS ENGAGED.");
                 document.body.classList.remove('glitch-active');
-                
+
                 // TRIGGER DAD'S CALL AFTER 3 SECONDS
                 setTimeout(() => {
                     triggerDadCall();
@@ -1231,7 +1231,7 @@ window.handleMailReply3 = function(text) {
     }, 3000);
 };
 
-window.triggerDadCall = function() {
+window.triggerDadCall = function () {
     console.log("INCOMING CALL FROM DAD...");
     currentContact = 'dad';
     const callOverlay = document.getElementById('call-overlay');
@@ -1244,19 +1244,19 @@ window.triggerDadCall = function() {
     callName.innerText = contacts['dad'].name;
     callAvatar.style.backgroundImage = `url('${contacts['dad'].avatar}')`;
     callAvatar.innerText = "";
-    
+
     callOverlay.style.display = 'flex';
     isRinging = true;
     if (bgMusic) bgMusic.pause();
     if (ringtone) {
         ringtone.currentTime = 0;
-        ringtone.play().catch(e => {});
+        ringtone.play().catch(e => { });
     }
     callStatus.innerText = "INCOMING CALL...";
     document.getElementById('accept-btn').style.display = 'flex';
 };
 
-window.showTopNotification = function(text) {
+window.showTopNotification = function (text) {
     const banner = document.getElementById('notif-banner');
     const bannerText = document.getElementById('notif-banner-text');
     if (banner && bannerText) {
@@ -1268,12 +1268,12 @@ window.showTopNotification = function(text) {
     }
 };
 
-window.openMailThread = function(sender) {
+window.openMailThread = function (sender) {
     document.getElementById('mail-list-view').style.display = 'none';
     document.getElementById('mail-back-btn').style.display = 'block';
     document.getElementById('mail-cancel-btn').style.display = 'none';
     document.getElementById('mail-header-title').innerText = sender === 'unknown' ? "Unknown Sender" : "Mom";
-    
+
     if (sender === 'unknown') {
         document.getElementById('mail-thread-unknown').style.display = 'block';
         document.getElementById('mail-item-unknown-dot').style.display = 'none';
@@ -1283,7 +1283,7 @@ window.openMailThread = function(sender) {
     }
 }
 
-window.backToMailList = function() {
+window.backToMailList = function () {
     document.getElementById('mail-list-view').style.display = 'block';
     document.getElementById('mail-thread-unknown').style.display = 'none';
     document.getElementById('mail-thread-mom').style.display = 'none';
@@ -1306,12 +1306,12 @@ function handleCallAnswer(key) {
         if (!momCalledOnce) momCalledOnce = true;
         callStatus.innerText = "CONNECTED";
         callStatus.style.color = "#4cd964";
-        
+
         if (momPhase === 1) {
             // NEW PHASE 2 DIALOGUE
             speakVoice("HEY MY CHILD WHAT ARE YOU DOING", 'mom', 'fearing');
             callStatus.innerText = "MOM: WHAT ARE YOU DOING?";
-            
+
             setTimeout(() => {
                 showCallChoices([
                     {
@@ -1319,12 +1319,12 @@ function handleCallAnswer(key) {
                         callback: () => {
                             speakVoice("SIMPLY SITTING AND WATCHING TV MOM", 'player');
                             callStatus.innerText = "YOU: SIMPLY WATCHING TV...";
-                            
+
                             // 4s delay for Mom's panic
                             setTimeout(() => {
                                 speakVoice("HEY MY CHILD DONT COME OUTSIDE FROM THE HOUSE", 'mom', 'fearing');
                                 callStatus.innerText = "MOM: DONT COME OUTSIDE!!";
-                                
+
                                 setTimeout(() => {
                                     showCallChoices([
                                         {
@@ -1332,12 +1332,12 @@ function handleCallAnswer(key) {
                                             callback: () => {
                                                 speakVoice("WHY MOM ANY PROBLEM", 'player', 'fearing');
                                                 callStatus.innerText = "YOU: WHY MOM?";
-                                                
+
                                                 // 3s delay
                                                 setTimeout(() => {
                                                     speakVoice("SOMEONE WAS STANDIND OUTSIDE OF OUR HOME", 'mom', 'fearing');
                                                     callStatus.innerText = "MOM: SOMEONE IS OUTSIDE...";
-                                                    
+
                                                     setTimeout(() => {
                                                         showCallChoices([
                                                             {
@@ -1345,12 +1345,12 @@ function handleCallAnswer(key) {
                                                                 callback: () => {
                                                                     speakVoice("WHERE ARE YOU MOM", 'player', 'fearing');
                                                                     callStatus.innerText = "YOU: WHERE ARE YOU?";
-                                                                    
+
                                                                     // 3s delay
                                                                     setTimeout(() => {
                                                                         speakVoice("I WILL SEND ONE VEDIO SEE THAT", 'mom', 'fearing');
                                                                         callStatus.innerText = "MOM: I WILL SEND A VIDEO...";
-                                                                        
+
                                                                         setTimeout(() => {
                                                                             showCallChoices([
                                                                                 {
@@ -1358,7 +1358,7 @@ function handleCallAnswer(key) {
                                                                                     callback: () => {
                                                                                         speakVoice("SEND IT MOM", 'player');
                                                                                         callStatus.innerText = "YOU: SEND IT MOM";
-                                                                                        
+
                                                                                         // TRIGGER VIDEO MESSAGE EVENT
                                                                                         setTimeout(() => {
                                                                                             endCall();
@@ -1374,7 +1374,12 @@ function handleCallAnswer(key) {
                                                                                                 const mailVideo = document.getElementById('mail-video-message');
                                                                                                 if (mailVideo) mailVideo.style.display = 'block';
                                                                                                 const notifSound = document.getElementById('notif-sound');
-                                                                                                if (notifSound) notifSound.play().catch(e => {});
+                                                                                                if (notifSound) notifSound.play().catch(e => { });
+
+                                                                                                // TRIGGER ANU CALL AFTER 15 SECONDS
+                                                                                                setTimeout(() => {
+                                                                                                    triggerAnuCall();
+                                                                                                }, 15000);
                                                                                             }, 2000);
                                                                                         }, 2000);
                                                                                     }
@@ -1402,20 +1407,20 @@ function handleCallAnswer(key) {
         // STAGE 1: MOM ASKS WHAT YOU ARE DOING (PHASE 1)
         speakVoice("TELL MY CHILD WHAT ARE YOU DOING", 'mom');
         callStatus.innerText = "MOM: TELL MY CHILD WHAT ARE YOU DOING";
-        
+
         setTimeout(() => {
             showCallChoices([
-                { 
-                    text: "ARE YOU SAFE MOM", 
+                {
+                    text: "ARE YOU SAFE MOM",
                     callback: () => {
                         speakVoice("ARE YOU SAFE MOM", 'player', 'fearing');
                         callStatus.innerText = "YOU: ARE YOU SAFE MOM";
-                        
+
                         // STAGE 2: MOM REPLIES SHE IS SAFE
                         setTimeout(() => {
                             speakVoice("YA MY CHILD I AM SAFE WHY ANY PROBLEM", 'mom');
                             callStatus.innerText = "MOM: YA MY CHILD I AM SAFE WHY ANY PROBLEM";
-                            
+
                             setTimeout(() => {
                                 showCallChoices([
                                     {
@@ -1423,12 +1428,12 @@ function handleCallAnswer(key) {
                                         callback: () => {
                                             speakVoice("NOTHING MOM WHEN YOU WILL COME TO HOME", 'player', 'fearless');
                                             callStatus.innerText = "YOU: NOTHING MOM...";
-                                            
+
                                             // STAGE 3: MOM SAYS SHE WILL BE BACK SOON
                                             setTimeout(() => {
                                                 speakVoice("I WILL BE SOON YOU GO AND SLEEP I WILL BE BACK AS SOON", 'mom');
                                                 callStatus.innerText = "MOM: I WILL BE BACK SOON...";
-                                                
+
                                                 setTimeout(() => {
                                                     showCallChoices([
                                                         {
@@ -1463,12 +1468,12 @@ function handleCallAnswer(key) {
         setTimeout(() => {
             speakVoice("WHERE ARE YOU NOW DAD", 'player', 'crying');
             callStatus.innerText = "YOU: WHERE ARE YOU NOW DAD";
-            
+
             // STAGE 2: DAD REPLIES (Fearing tone)
             setTimeout(() => {
                 speakVoice("why are you crying any problem in the house", 'dad', 'fearing');
                 callStatus.innerText = "DAD: why are you crying...";
-                
+
                 setTimeout(() => {
                     showCallChoices([
                         {
@@ -1476,12 +1481,12 @@ function handleCallAnswer(key) {
                             callback: () => {
                                 speakVoice("PLEASE COME TO HOME FAST", 'player', 'crying');
                                 callStatus.innerText = "YOU: PLEASE COME HOME FAST!";
-                                
+
                                 // STAGE 3: DAD IS ON THE WAY
                                 setTimeout(() => {
                                     speakVoice("DONT WORRY I WAS ON THE WAY", 'dad');
                                     callStatus.innerText = "DAD: DONT WORRY I AM ON THE WAY";
-                                    
+
                                     setTimeout(() => {
                                         showCallChoices([
                                             {
@@ -1504,10 +1509,131 @@ function handleCallAnswer(key) {
         return;
     }
 
+    if (key === 'anu') {
+        callStatus.innerText = "CONNECTED";
+        callStatus.style.color = "#4cd964";
+        document.getElementById('accept-btn').style.display = 'none';
+
+        speakVoice("HEY PRIYA WHERE ARE YOU", 'anu', 'fearing');
+        callStatus.innerText = "ANU: HEY PRIYA WHERE ARE YOU";
+
+        setTimeout(() => {
+            showCallChoices([{
+                text: "WHY ARE YOU FEARED WHAT ANY PROBLEM",
+                callback: () => {
+                    speakVoice("WHY ARE YOU FEARED WHAT ANY PROBLEM", 'player', 'fearing');
+                    callStatus.innerText = "YOU: WHY ARE YOU FEARED?";
+
+                    // 4s delay
+                    setTimeout(() => {
+                        speakVoice("SOMEONE WAS BREAKING MY MAINDOOR", 'anu', 'crying'); // heavy crying
+                        callStatus.innerText = "ANU: SOMEONE IS BREAKING MY DOOR!!";
+
+                        setTimeout(() => {
+                            showCallChoices([{
+                                text: "GO AND HIDE ANY PLACE IN THE HOME",
+                                callback: () => {
+                                    speakVoice("GO AND HIDE ANY PLACE IN THE HOME", 'player', 'fearing');
+                                    callStatus.innerText = "YOU: GO AND HIDE ANYWHERE!";
+
+                                    // 4s delay
+                                    setTimeout(() => {
+                                        speakVoice("HE CAME INSIDE THE HOUSE", 'anu', 'fearing');
+                                        callStatus.innerText = "ANU: HE IS INSIDE THE HOUSE!!";
+
+                                        setTimeout(() => {
+                                            showCallChoices([{
+                                                text: "WHERE IS YOUR MOM AND DAD",
+                                                callback: () => {
+                                                    speakVoice("WHERE IS YOUR MOM AND DAD", 'player', 'fearing');
+                                                    callStatus.innerText = "YOU: WHERE IS YOUR MOM AND DAD?";
+
+                                                    // 3s delay
+                                                    setTimeout(() => {
+                                                        speakVoice("ALL ARE WENT TO MY RELATIVE HOUSE", 'anu', 'fearing');
+                                                        callStatus.innerText = "ANU: EVERYONE IS AT RELATIVE HOUSE...";
+
+                                                        setTimeout(() => {
+                                                            showCallChoices([{
+                                                                text: "WHERE IS THAT PERSON STILL HE WAS IN THE HOUSE",
+                                                                callback: () => {
+                                                                    speakVoice("WHERE IS THAT PERSON STILL HE WAS IN THE HOUSE", 'player', 'fearing');
+                                                                    callStatus.innerText = "YOU: IS HE STILL IN THE HOUSE?";
+
+                                                                    setTimeout(() => {
+                                                                        speakVoice("OOO HE SEED HE HE WAS COMING TO KILL ME PLEASE HELP ME", 'anu', 'crying');
+                                                                        callStatus.innerText = "ANU: HE IS COMING TO KILL ME!!";
+
+                                                                        setTimeout(() => {
+                                                                            showCallChoices([{
+                                                                                text: "PLAESE RUN ANY WAY I WILL CALL POLICE",
+                                                                                callback: () => {
+                                                                                    speakVoice("PLAESE RUN ANY WAY I WILL CALL POLICE", 'player');
+                                                                                    callStatus.innerText = "YOU: RUN! I'LL CALL POLICE!";
+
+                                                                                    // 5s delay
+                                                                                    setTimeout(() => {
+                                                                                        const impact = document.getElementById('creepy-impact-sound');
+                                                                                        if (impact) impact.play().catch(e => { });
+
+                                                                                        setTimeout(() => {
+                                                                                            showCallChoices([{
+                                                                                                text: "ANU ANU ANU ARE YOU THERE",
+                                                                                                callback: () => {
+                                                                                                    speakVoice("ANU ANU ANU ARE YOU THERE", 'player', 'fearing');
+                                                                                                    callStatus.innerText = "YOU: ANU? ANU ARE YOU THERE?";
+
+                                                                                                    setTimeout(() => {
+                                                                                                        // Creepy Man Voice
+                                                                                                        window.speechSynthesis.cancel();
+                                                                                                        const creepyMan = new SpeechSynthesisUtterance("NEXT TARGET IS YOU I AM ON THE WAY TO YOUR HOME");
+                                                                                                        creepyMan.pitch = 0.1;
+                                                                                                        creepyMan.rate = 0.6;
+                                                                                                        window.speechSynthesis.speak(creepyMan);
+                                                                                                        callStatus.innerText = "???: NEXT TARGET IS YOU.";
+
+                                                                                                        creepyMan.onend = () => {
+                                                                                                            const breath = document.getElementById('heavy-breathing-sound');
+                                                                                                            if (breath) {
+                                                                                                                breath.play().catch(e => { });
+                                                                                                                breath.onended = () => {
+                                                                                                                    setTimeout(endCall, 1000);
+                                                                                                                };
+                                                                                                            } else {
+                                                                                                                setTimeout(endCall, 4000);
+                                                                                                            }
+                                                                                                        };
+                                                                                                    }, 2000);
+                                                                                                }
+                                                                                            }]);
+                                                                                        }, 2500); // Delay for impact sound to breathe
+                                                                                    }, 5000);
+                                                                                }
+                                                                            }]);
+                                                                        }, 2000);
+                                                                    }, 2000);
+                                                                }
+                                                            }]);
+                                                        }, 2000);
+                                                    }, 3000);
+                                                }
+                                            }]);
+                                        }, 2000);
+                                    }, 4000);
+                                }
+                            }]);
+                        }, 2000);
+                    }, 4000);
+                }
+            }]);
+        }, 2000);
+        return;
+    }
+
     // FOR OTHER CONTACTS: No answer or busy
     callStatus.innerText = "LINE BUSY";
     callStatus.style.color = "#ff3b30";
-    
+
     const failMsg = new SpeechSynthesisUtterance("The person you are trying to reach is currently unavailable.");
     failMsg.rate = 1.1;
     window.speechSynthesis.speak(failMsg);
@@ -1532,24 +1658,24 @@ function acceptCall() {
     // UNKNOWN STALKER CALLER LOGIC
     const callStatus = document.getElementById('call-status');
     const glitchSound = document.getElementById('glitch-sound');
-    
+
     callStatus.innerText = "CONNECTED";
     callStatus.style.color = "#4cd964";
     document.body.classList.add('glitch-active');
     if (glitchSound) glitchSound.play().catch(e => { });
-    
+
     const msg = new SpeechSynthesisUtterance("Hey man... what is your name?");
     msg.pitch = 0.1;
     msg.rate = 0.7;
     window.speechSynthesis.speak(msg);
-    
+
     setTimeout(() => {
         callStatus.innerText = "HEY MAN...";
         setTimeout(() => {
             callStatus.innerText = "WHAT IS YOUR NAME?";
         }, 1500);
     }, 1000);
-    
+
     setTimeout(() => {
         endCall();
         // Fallback or next event trigger
@@ -1561,9 +1687,9 @@ function endCall() {
     const bgMusic = document.getElementById('bg-music');
     const ringtone = document.getElementById('ringtone-sound');
     const choiceContainer = document.getElementById('call-choice-container');
-    
+
     if (choiceContainer) choiceContainer.innerHTML = "";
-    
+
     isRinging = false;
     window.speechSynthesis.cancel();
     if (ringtone) {
@@ -1579,33 +1705,63 @@ function endCall() {
 
 function speakVoice(text, character, tone = 'normal') {
     const utterance = new SpeechSynthesisUtterance(text);
-    
+
     if (character === 'mom' || character === 'dad') {
-        utterance.pitch = character === 'mom' ? 1.1 : 0.7; 
+        utterance.pitch = character === 'mom' ? 1.1 : 0.7;
         utterance.rate = tone === 'fearing' ? 1.1 : 1.0;
+    } else if (character === 'anu') {
+        utterance.pitch = 1.35; // Distinct Anu voice
+        utterance.rate = tone === 'crying' ? 0.8 : 1.1;
     } else {
-        // Player (Female character)
+        // Player (Priya)
         if (tone === 'fearing' || tone === 'crying') {
             utterance.pitch = 1.6; // Higher feminine pitch for panic
-            utterance.rate = tone === 'crying' ? 0.85 : 1.2; 
+            utterance.rate = tone === 'crying' ? 0.85 : 1.2;
         } else if (tone === 'fearless') {
             utterance.pitch = 1.3; // Confident feminine pitch
             utterance.rate = 0.95;
         } else {
-            utterance.pitch = 1.2; // Standard feminine pitch
+            utterance.pitch = 1.25; // Standard feminine pitch
             utterance.rate = 1.0;
         }
     }
-    
+
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
 }
+
+window.triggerAnuCall = function () {
+    console.log("INCOMING CALL FROM ANU...");
+    currentContact = 'anu';
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const callName = document.getElementById('call-name');
+    const callAvatar = document.getElementById('call-avatar');
+    const ringtone = document.getElementById('ringtone-sound');
+    const bgMusic = document.getElementById('bg-music');
+
+    if (!contacts['anu']) return;
+
+    callName.innerText = contacts['anu'].name;
+    callAvatar.style.backgroundImage = `url('${contacts['anu'].avatar}')`;
+    callAvatar.innerText = "";
+
+    callOverlay.style.display = 'flex';
+    isRinging = true;
+    if (bgMusic) bgMusic.pause();
+    if (ringtone) {
+        ringtone.currentTime = 0;
+        ringtone.play().catch(e => { });
+    }
+    callStatus.innerText = "INCOMING CALL FROM ANU...";
+    document.getElementById('accept-btn').style.display = 'flex';
+};
 
 function showCallChoices(choices) {
     const container = document.getElementById('call-choice-container');
     if (!container) return;
     container.innerHTML = "";
-    
+
     choices.forEach(choice => {
         const btn = document.createElement('button');
         btn.innerText = choice.text;
