@@ -115,6 +115,7 @@ const story = {
 
 let currentGameState = 'start';
 let currentContact = 'unknown';
+let finalGamePhase = false;
 
 const contacts = {
     unknown: { name: "Unknown Number", avatar: "stalker_hero_selfie_1776590484686.png", status: "Online" },
@@ -1584,7 +1585,6 @@ function handleCallAnswer(key) {
                                                                                                     callStatus.innerText = "YOU: ANU? ANU ARE YOU THERE?";
 
                                                                                                     setTimeout(() => {
-                                                                                                        // Creepy Man Voice
                                                                                                         window.speechSynthesis.cancel();
                                                                                                         const creepyMan = new SpeechSynthesisUtterance("NEXT TARGET IS YOU I AM ON THE WAY TO YOUR HOME");
                                                                                                         creepyMan.pitch = 0.1;
@@ -1597,10 +1597,16 @@ function handleCallAnswer(key) {
                                                                                                             if (breath) {
                                                                                                                 breath.play().catch(e => { });
                                                                                                                 breath.onended = () => {
-                                                                                                                    setTimeout(endCall, 1000);
+                                                                                                                    setTimeout(() => {
+                                                                                                                        endCall();
+                                                                                                                        setTimeout(triggerFinalStalkerCall, 5000);
+                                                                                                                    }, 1000);
                                                                                                                 };
                                                                                                             } else {
-                                                                                                                setTimeout(endCall, 4000);
+                                                                                                                setTimeout(() => {
+                                                                                                                    endCall();
+                                                                                                                    setTimeout(triggerFinalStalkerCall, 5000);
+                                                                                                                }, 4000);
                                                                                                             }
                                                                                                         };
                                                                                                     }, 2000);
@@ -1652,6 +1658,11 @@ function acceptCall() {
     // ROUTE TO KNOWN DIALOGUE IF NOT UNKNOWN
     if (currentContact !== 'unknown') {
         handleCallAnswer(currentContact);
+        return;
+    }
+
+    if (finalGamePhase) {
+        handleFinalStalkerDialogue();
         return;
     }
 
@@ -1712,11 +1723,14 @@ function speakVoice(text, character, tone = 'normal') {
     } else if (character === 'anu') {
         utterance.pitch = 1.35; // Distinct Anu voice
         utterance.rate = tone === 'crying' ? 0.8 : 1.1;
+    } else if (character === 'stalker') {
+        utterance.pitch = 0.1;
+        utterance.rate = tone === 'angry' ? 0.9 : 0.7;
     } else {
         // Player (Priya)
-        if (tone === 'fearing' || tone === 'crying') {
-            utterance.pitch = 1.6; // Higher feminine pitch for panic
-            utterance.rate = tone === 'crying' ? 0.85 : 1.2;
+        if (tone === 'fearing' || tone === 'crying' || tone === 'angry') {
+            utterance.pitch = tone === 'angry' ? 1.4 : 1.6; 
+            utterance.rate = tone === 'crying' ? 0.85 : 1.2; 
         } else if (tone === 'fearless') {
             utterance.pitch = 1.3; // Confident feminine pitch
             utterance.rate = 0.95;
@@ -1756,6 +1770,141 @@ window.triggerAnuCall = function () {
     callStatus.innerText = "INCOMING CALL FROM ANU...";
     document.getElementById('accept-btn').style.display = 'flex';
 };
+
+window.triggerFinalStalkerCall = function() {
+    console.log("FINAL STALKER CALL TRIGGERED...");
+    finalGamePhase = true;
+    currentContact = 'unknown';
+    const callOverlay = document.getElementById('call-overlay');
+    const callStatus = document.getElementById('call-status');
+    const callName = document.getElementById('call-name');
+    const callAvatar = document.getElementById('call-avatar');
+    const ringtone = document.getElementById('ringtone-sound');
+    const bgMusic = document.getElementById('bg-music');
+
+    callName.innerText = "Unknown Number";
+    callAvatar.style.backgroundImage = `url('stalker_hero_selfie_1776590484686.png')`;
+    callAvatar.innerText = "";
+    
+    callOverlay.style.display = 'flex';
+    isRinging = true;
+    if (bgMusic) bgMusic.pause();
+    if (ringtone) {
+        ringtone.currentTime = 0;
+        ringtone.play().catch(e => {});
+    }
+    callStatus.innerText = "INCOMING CALL...";
+    document.getElementById('accept-btn').style.display = 'flex';
+};
+
+function handleFinalStalkerDialogue() {
+    const callStatus = document.getElementById('call-status');
+    
+    // Step 1: Stalker speaks
+    speakVoice("I AM OUTSIDE OF YOUR HOUSE", 'stalker', 'angry');
+    callStatus.innerText = "UNKNOWN: I AM OUTSIDE OF YOUR HOUSE";
+    
+    setTimeout(() => {
+        showCallChoices([{
+            text: "WHAT A FUCK PLEASE GO AWAY",
+            callback: () => {
+                speakVoice("WHAT A FUCK PLEASE GO AWAY", 'player', 'angry');
+                callStatus.innerText = "YOU: GO AWAY!!!";
+                
+                setTimeout(() => {
+                    speakVoice("OPEN THE DOOR ARE I WILL BREAK THE DOOR", 'stalker', 'angry');
+                    callStatus.innerText = "UNKNOWN: OPEN THE DOOR!!!";
+                    
+                    setTimeout(() => {
+                        showCallChoices([{
+                            text: "PLAESE DONT DO ANYTHING",
+                            callback: () => {
+                                speakVoice("PLAESE DONT DO ANYTHING", 'player', 'crying');
+                                callStatus.innerText = "YOU: PLEASE DON'T...";
+                                
+                                // Step 2: Siren Sound
+                                setTimeout(() => {
+                                    const siren = document.getElementById('police-siren-sound');
+                                    if (siren) siren.play().catch(e => {});
+                                    callStatus.innerText = "*POLICE SIRENS*";
+                                    
+                                    siren.onended = () => {
+                                        showCallChoices([{
+                                            text: "HA POLICE THANKYOU FOR SAFE LIFE",
+                                            callback: () => {
+                                                speakVoice("HA POLICE THANKYOU FOR SAFE LIFE", 'player');
+                                                callStatus.innerText = "YOU: THANK YOU POLICE!!";
+                                                
+                                                setTimeout(startFinalCinematic, 2000);
+                                            }
+                                        }]);
+                                    };
+                                    
+                                    // Fallback if siren doesn't end or is too long (sirens often loop or are long)
+                                    // Giving user 6 seconds of siren before showing thankful reply
+                                    setTimeout(() => {
+                                        if (callStatus.innerText === "*POLICE SIRENS*") {
+                                            showCallChoices([{
+                                                text: "HA POLICE THANKYOU FOR SAFE LIFE",
+                                                callback: () => {
+                                                    speakVoice("HA POLICE THANKYOU FOR SAFE LIFE", 'player');
+                                                    callStatus.innerText = "YOU: THANK YOU POLICE!!";
+                                                    if (siren) {
+                                                         siren.pause();
+                                                         siren.currentTime = 0;
+                                                    }
+                                                    setTimeout(startFinalCinematic, 2000);
+                                                }
+                                            }]);
+                                        }
+                                    }, 6000);
+                                }, 2000);
+                            }
+                        }]);
+                    }, 2000);
+                }, 2000);
+            }
+        }]);
+    }, 2000);
+}
+
+function startFinalCinematic() {
+    console.log("Starting final cinematic...");
+    endCall();
+    
+    // Slow fade to black then video
+    const videoOverlay = document.getElementById('ending-video-overlay');
+    const video = document.getElementById('final-cinematic-video');
+    const awarenessOverlay = document.getElementById('final-awareness-overlay');
+    
+    document.body.style.transition = "background 3s ease";
+    document.body.style.background = "black";
+    
+    setTimeout(() => {
+        videoOverlay.style.display = 'block';
+        videoOverlay.style.opacity = '1';
+        video.play().catch(e => {
+             console.error("Video play failed:", e);
+             showAwareness();
+        });
+        
+        video.onended = () => {
+            showAwareness();
+        };
+    }, 3000);
+    
+    function showAwareness() {
+        videoOverlay.style.display = 'none';
+        awarenessOverlay.style.display = 'flex';
+        
+        // Auto-return to lobby after 1 minute
+        setTimeout(() => {
+            if (window.location.pathname.includes('horror_game.html')) {
+                window.location.href = 'index.html';
+            }
+        }, 60000);
+    }
+}
 
 function showCallChoices(choices) {
     const container = document.getElementById('call-choice-container');
