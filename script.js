@@ -8226,7 +8226,6 @@ function runIntroSequence() {
         }, 50);
     }
 }
-}
 
 // Registration functionality
 let showRegBtn = document.getElementById('show-register-btn');
