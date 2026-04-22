@@ -8144,8 +8144,24 @@ function runIntroSequence() {
     let introFinished = false;
 
     const skipBtn = document.getElementById('intro-skip-btn');
+    const introVideo = document.getElementById('main-intro-video');
+    
+    // Hide original intro elements to let video shine
+    const scene3d = document.getElementById('intro-3d-scene');
+    if (scene3d) scene3d.style.display = 'none';
+    const particles = document.getElementById('intro-particles');
+    if (particles) particles.style.display = 'none';
+    const loader = document.getElementById('intro-loader');
+    if (loader) loader.style.bottom = '40px'; // Move loader up slightly
+
     if (skipBtn) {
+        skipBtn.style.zIndex = "10005"; // Ensure skip button is above video
         skipBtn.onclick = () => finishIntro(true);
+    }
+
+    if (introVideo) {
+        introVideo.play().catch(e => console.warn("Video play failed:", e));
+        introVideo.onended = () => finishIntro();
     }
 
     function finishIntro(isSkipped = false) {
@@ -8191,55 +8207,25 @@ function runIntroSequence() {
         }, 200);
     }
 
-    // Sequence for different reveal stages
-    // Stage 1: Studio Text (1s)
-    setTimeout(() => {
-        if (introFinished) return;
-        if (window.introEnergyBurst) window.introEnergyBurst(window.innerWidth / 2, window.innerHeight / 2);
-        window.playSound('reveal');
-    }, 1000);
-
-    // Stage 2: Master Dev (4s)
-    setTimeout(() => {
-        if (introFinished) return;
-        if (window.introEnergyBurst) window.introEnergyBurst(window.innerWidth / 2, window.innerHeight / 2);
-        window.playSound('reveal');
-    }, 4000);
-
-    // Stage 3: Game Title (7.5s)
-    setTimeout(() => {
-        if (introFinished) return;
-        if (window.introEnergyBurst) window.introEnergyBurst(window.innerWidth / 2, window.innerHeight * 0.45);
-        window.playSound('claim');
-    }, 7500);
-
-    // Stage 4: Feature Badges (9s)
-    setTimeout(() => {
-        if (introFinished) return;
-        window.playSound('beep');
-    }, 9000);
-
-    // Stage 5: Loading Bar & Percent (10s)
-    setTimeout(() => {
-        if (introFinished) return;
-        let percentEl = document.getElementById('intro-loader-percent');
-        let fillEl = document.getElementById('intro-loader-fill');
-        if (percentEl && fillEl) {
-            let start = Date.now();
-            let dur = 3000;
-            let itv = setInterval(() => {
-                let prog = Math.min((Date.now() - start) / dur, 1);
-                let eased = prog < 0.5 ? 2 * prog * prog : 1 - Math.pow(-2 * prog + 2, 2) / 2;
-                let pct = Math.round(eased * 100);
-                percentEl.textContent = pct + '%';
-                fillEl.style.width = pct + '%';
-                if (prog >= 1) {
-                    clearInterval(itv);
-                    setTimeout(() => finishIntro(), 500);
-                }
-            }, 30);
-        }
-    }, 10000);
+    // Still show the loading bar progression over the video
+    let percentEl = document.getElementById('intro-loader-percent');
+    let fillEl = document.getElementById('intro-loader-fill');
+    if (percentEl && fillEl) {
+        let start = Date.now();
+        let dur = 8000; // Average video length 
+        let itv = setInterval(() => {
+            if (introFinished) { clearInterval(itv); return; }
+            let prog = Math.min((Date.now() - start) / dur, 1);
+            let pct = Math.round(prog * 100);
+            percentEl.textContent = pct + '%';
+            fillEl.style.width = pct + '%';
+            if (prog >= 1) {
+                clearInterval(itv);
+                setTimeout(() => finishIntro(), 500);
+            }
+        }, 50);
+    }
+}
 }
 
 // Registration functionality
