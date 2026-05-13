@@ -8171,8 +8171,11 @@ function runIntroSequence() {
             introVideo.play().catch(e => { });
         }
 
-        // 3. Play Fallback Intro Music if SFX is on
+        // 3. Play Fallback Intro Music if SFX is on (Synced with video)
         if (window.isSfxEnabled && window.introMusic && window.introMusic.paused) {
+            if (introVideo) {
+                window.introMusic.currentTime = introVideo.currentTime;
+            }
             window.introMusic.play().catch(e => { });
         }
 
@@ -8213,6 +8216,11 @@ function runIntroSequence() {
     function finishIntro(isSkipped = false) {
         if (introFinished) return;
         introFinished = true;
+
+        if (window.introMusic) {
+            window.introMusic.pause();
+            window.introMusic = null;
+        }
 
         let flash = document.createElement('div');
         flash.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#FFF;z-index:10001;opacity:0;transition:opacity 0.15s ease-in;pointer-events:none;`;
