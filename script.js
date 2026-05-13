@@ -2,7 +2,7 @@
 // 1. AUDIO & SPEECH SYSTEM
 // ==========================================
 const AudioContext = window.AudioContext || window.webkitAudioContext;
-let audioCtx;
+window.audioCtx = null;
 
 // ==========================================
 // 1.5. NETWORK & SOCKET SYSTEM
@@ -20,6 +20,9 @@ window.bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13
 window.bgMusic.loop = true;
 window.bgMusic.volume = (window.masterVolume / 100) * 0.4; // Scaled by master volume
 window.isMusicEnabled = localStorage.getItem('carrom_bg_music') !== 'false';
+window.introMusic = new Audio('https://cdn.pixabay.com/audio/2021/11/25/audio_91b32e02d9.mp3'); // Cinematic intro music
+window.introMusic.volume = (window.masterVolume / 100);
+window.introMusic.loop = false;
 window.maxFps = localStorage.getItem('carrom_fps_limit') || 'Unlimited';
 window.lastFrameTime = performance.now();
 window.isSaveMatchHistoryEnabled = localStorage.getItem('carrom_save_match_history') !== 'false';
@@ -54,8 +57,8 @@ window.addEventListener('mousedown', function startMusicOnce() {
 
 window.playSound = function (type) {
     if (!window.isSfxEnabled) return;
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!window.audioCtx) window.audioCtx = new AudioContext();
+    if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
 
     // Attempt full screen safely on user interaction
     if (type === 'hit' || type === 'reveal' || type === 'beep') {
@@ -63,11 +66,11 @@ window.playSound = function (type) {
     }
 
     const volScale = (window.masterVolume || 70) / 100;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const osc = window.audioCtx.createOscillator();
+    const gain = window.audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const time = audioCtx.currentTime;
+    gain.connect(window.audioCtx.destination);
+    const time = window.audioCtx.currentTime;
 
     if (type === 'hit') {
         osc.type = 'triangle';
@@ -151,10 +154,16 @@ window.speakMessage = function (t, forceVoice = null) {
     if (!t) return;
     currentMessage = t; messageDisplayTime = Date.now();
     if ('speechSynthesis' in window) {
+        // Ensure voices are loaded
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = () => window.speakMessage(t, forceVoice);
+            return;
+        }
+        
         // Cancel any previous speech to clear queue immediately
         window.speechSynthesis.cancel();
 
-        let msg = new SpeechSynthesisUtterance(t);
+        const msg = new SpeechSynthesisUtterance(t);
         msg.volume = (window.masterVolume || 70) / 100;
         // Reduce rate slightly for better clarity
         msg.rate = 0.9;
@@ -8140,11 +8149,62 @@ window.stopLoginParticles = function () {
 // 13. BOOT SEQUENCE (Login & Intro Handler)
 // ==========================================
 function runIntroSequence() {
-    window.playSound('intro');
-    let introFinished = false;
-
     const skipBtn = document.getElementById('intro-skip-btn');
     const introVideo = document.getElementById('main-intro-video');
+    const audioOverlay = document.getElementById('intro-audio-overlay');
+
+    // Handle initial interaction for audio
+    if (audioOverlay) {
+        const handleUnmute = () => {
+            console.log("Unmuting intro sequence...");
+            
+            // 1. Initialize/Resume AudioContext
+            if (!window.audioCtx) {
+                window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (window.audioCtx.state === 'suspended') {
+                window.audioCtx.resume();
+            }
+
+            // 2. Unmute Video
+            if (introVideo) {
+                introVideo.muted = false;
+                introVideo.volume = 1.0;
+                introVideo.play().catch(e => {
+                    console.warn("Force play failed:", e);
+                });
+            }
+
+            // 3. Play Fallback Intro Music if SFX is on
+            if (window.isSfxEnabled && window.introMusic) {
+                window.introMusic.play().catch(e => { });
+            }
+
+            // 4. Play Intro SFX
+            window.playSound('intro');
+            
+            // 5. Hide Overlay
+            audioOverlay.style.opacity = '0';
+            setTimeout(() => {
+                audioOverlay.style.display = 'none';
+            }, 500);
+        };
+
+        ['click', 'touchstart', 'mousedown'].forEach(evt => {
+            audioOverlay.addEventListener(evt, handleUnmute, { once: true });
+        });
+        
+        // Also handle the skip button as an unmuting interaction
+        if (skipBtn) {
+            skipBtn.addEventListener('click', () => {
+                if (window.introMusic) window.introMusic.pause();
+                if (window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
+            }, { once: true });
+        }
+    }
+
+    // window.playSound('intro'); // Removed from here, moved to handleUnmute
+    let introFinished = false;
     
     // Hide original intro elements to let video shine
     const scene3d = document.getElementById('intro-3d-scene');

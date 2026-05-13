@@ -1175,7 +1175,37 @@
 
         socket.on('connect', () => {
             console.log("CONNECTED TO ARENA SERVER. ID:", socket.id);
+            playArenaSound('reveal');
         });
+
+        // Audio System for Chess Arena
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let arenaAudioCtx = null;
+
+        function playArenaSound(type) {
+            if (!arenaAudioCtx) arenaAudioCtx = new AudioContext();
+            if (arenaAudioCtx.state === 'suspended') arenaAudioCtx.resume();
+
+            const osc = arenaAudioCtx.createOscillator();
+            const gain = arenaAudioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(arenaAudioCtx.destination);
+            const time = arenaAudioCtx.currentTime;
+
+            if (type === 'reveal') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, time);
+                osc.frequency.exponentialRampToValueAtTime(800, time + 0.5);
+                gain.gain.setValueAtTime(0.3, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+                osc.start(); osc.stop(time + 0.5);
+            } else if (type === 'beep') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, time);
+                gain.gain.setValueAtTime(0.05, time);
+                osc.start(); osc.stop(time + 0.1);
+            }
+        }
 
         function updateRoleSystem() {
             const ksBtn = document.getElementById('kickstart-btn');
@@ -1347,8 +1377,9 @@
         let recognition;
         let isMicOn = false;
 
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
@@ -1367,6 +1398,21 @@
                         playerName: myName
                     });
                     showMyTranscription(finalTranscript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Recognition Error:", event.error);
+                if (event.error === 'not-allowed') {
+                    openModal("VOICE ERROR: MICROPHONE PERMISSION DENIED.");
+                    isMicOn = false;
+                    updateMicUI();
+                }
+            };
+
+            recognition.onend = () => {
+                if (isMicOn) {
+                    try { recognition.start(); } catch(e) {} // Keep it alive
                 }
             };
         }
@@ -1402,12 +1448,8 @@
         });
 
         async function toggleMic() {
-            const btn = document.getElementById('mic-btn');
-            const micToggle = btn.querySelector('.mic-toggle');
-
             if (!isMicOn) {
                 try {
-                    // Request high-fidelity audio with noise suppression
                     await navigator.mediaDevices.getUserMedia({ 
                         audio: {
                             echoCancellation: true,
@@ -1417,23 +1459,40 @@
                     });
                     
                     isMicOn = true;
-                    if (recognition) recognition.start();
+                    if (recognition) {
+                        try { recognition.start(); } catch(e) { console.log("Recognition already started"); }
+                    }
                     
-                    micToggle.style.display = 'none';
-                    btn.style.borderColor = "#00ffcc";
-                    btn.style.background = "rgba(0, 255, 204, 0.05)";
+                    updateMicUI();
                     openModal("VOICE LINK INITIALIZED.\n\nSPEECH-TO-TEXT MODULE IS ACTIVE. COMMUNICATE FREELY.");
                 } catch (err) {
+                    console.error("Mic Error:", err);
                     openModal("COMMUNICATION ERROR:\n\nMICROPHONE ACCESS WAS DENIED BY SYSTEM.");
                 }
             } else {
                 isMicOn = false;
-                if (recognition) recognition.stop();
+                if (recognition) {
+                    try { recognition.stop(); } catch(e) { }
+                }
                 
-                micToggle.style.display = 'inline';
+                updateMicUI();
+                openModal("VOICE LINK TERMINATED.\n\nMICROPHONE AND CAPTIONING SYSTEM DEACTIVATED.");
+            }
+        }
+
+        function updateMicUI() {
+            const btn = document.getElementById('mic-btn');
+            if (!btn) return;
+            const micToggle = btn.querySelector('.mic-toggle');
+            
+            if (isMicOn) {
+                if (micToggle) micToggle.style.display = 'none';
+                btn.style.borderColor = "#00ffcc";
+                btn.style.background = "rgba(0, 255, 204, 0.05)";
+            } else {
+                if (micToggle) micToggle.style.display = 'inline';
                 btn.style.borderColor = "#ff0066";
                 btn.style.background = "rgba(255, 0, 102, 0.05)";
-                openModal("VOICE LINK TERMINATED.\n\nMICROPHONE AND CAPTIONING SYSTEM DEACTIVATED.");
             }
         }
         function shareArenaLink() {
