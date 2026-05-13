@@ -1900,7 +1900,7 @@ function startFinalCinematic() {
         // Auto-return to lobby after 1 minute
         setTimeout(() => {
             if (window.location.pathname.includes('horror_game.html')) {
-                window.location.href = 'index.html';
+                window.location.href = 'arcade_hub.html';
             }
         }, 60000);
     }
