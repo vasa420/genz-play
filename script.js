@@ -8151,7 +8151,6 @@ window.stopLoginParticles = function () {
 function runIntroSequence() {
     const skipBtn = document.getElementById('intro-skip-btn');
     const introVideo = document.getElementById('main-intro-video');
-    const audioOverlay = document.getElementById('intro-audio-overlay');
 
     // Implementation of "Automatic" Sound (Seamless unmuting on first interaction)
     const handleGlobalUnmute = () => {
