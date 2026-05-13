@@ -8149,8 +8149,15 @@ window.stopLoginParticles = function () {
 // 13. BOOT SEQUENCE (Login & Intro Handler)
 // ==========================================
 function runIntroSequence() {
+    // Check if we are coming back from the hub
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('launch') === 'carrom') {
+        document.getElementById('intro-screen').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'block';
+        return;
+    }
+
     const skipBtn = document.getElementById('intro-skip-btn');
-    const introVideo = document.getElementById('main-intro-video');
 
     // Implementation of "Automatic" Sound (Seamless unmuting on first interaction)
     const handleGlobalUnmute = () => {
@@ -8228,12 +8235,9 @@ function runIntroSequence() {
         setTimeout(() => { flash.style.opacity = '1'; }, 10);
 
         setTimeout(() => {
-            flash.style.transition = 'opacity 0.8s ease-out';
-            flash.style.opacity = '0';
-            document.getElementById('intro-screen').style.display = 'none';
-            if (window.stopIntroParticles) window.stopIntroParticles();
-            document.getElementById('login-screen').style.display = 'flex';
-            window.playSound(isSkipped ? 'reveal' : 'beep');
+            window.location.href = 'arcade_hub.html';
+        }, 300);
+    }
 
             let savedName = localStorage.getItem('playerName');
             if (savedName && savedName !== "GUEST PLAYER") {
