@@ -8540,8 +8540,8 @@ function triggerLoginTransition() {
             }
 
             loginScreen.style.display = 'none';
-            mainGame.style.display = 'flex';
-            mainGame.style.opacity = "1";
+            document.getElementById('arcade-lobby').style.display = 'flex';
+            updateLobbyUI();
 
             // Start background music ONLY when intro completes (or is skipped)
             if (window.isMusicEnabled) {
@@ -8626,4 +8626,51 @@ window.autoJoinRoomId = new URLSearchParams(window.location.search).get('join');
 
 window.onload = function () {
     runIntroSequence();
+};
+
+// --- Arcade Lobby Logic ---
+function updateLobbyUI() {
+    const lobbyProfile = document.getElementById('lobby-profile-summary');
+    const lobbyWallet = document.getElementById('lobby-wallet');
+    const walletAmt = localStorage.getItem('playerMoney') || '900';
+    
+    if (lobbyWallet) lobbyWallet.textContent = `$${walletAmt}`;
+    
+    if (lobbyProfile) {
+        lobbyProfile.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #00FFFF; background: rgba(0,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px;">👤</div>
+                <div>
+                    <div style="font-size: 10px; color: #888; letter-spacing: 1px;">WELCOME BACK,</div>
+                    <div style="font-size: 16px; font-weight: 900; color: #FFF; letter-spacing: 1px;">${playerName || 'PLAYER'}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+window.launchGame = function(game) {
+    window.playSound('reveal');
+    const lobby = document.getElementById('arcade-lobby');
+    const mainGame = document.getElementById('main-game');
+    
+    if (game === 'carrom') {
+        lobby.style.display = 'none';
+        mainGame.style.display = 'flex';
+        mainGame.style.opacity = "1";
+        // Ensure background music is playing
+        if (window.isMusicEnabled && window.bgMusic.paused) {
+            window.bgMusic.play().catch(e => { });
+        }
+    } else if (game === 'chess') {
+        window.location.href = 'chess_login.html';
+    } else if (game === 'horror') {
+        window.location.href = 'horror_game.html';
+    } else if (game === 'ludo') {
+        window.location.href = 'ludo_login.html';
+    } else if (game === 'cricket') {
+        window.location.href = 'hand_cricket_login.html';
+    } else if (game === 'snake') {
+        window.location.href = 'snake_login.html';
+    }
 };
