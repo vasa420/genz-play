@@ -32,9 +32,9 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            z-index: -1;
-            opacity: 0.4;
-            filter: saturate(1.5) contrast(1.1);
+            z-index: -2;
+            opacity: 0.8; /* Increased opacity */
+            filter: brightness(0.7);
         }
 
         .overlay {
@@ -43,8 +43,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
-            z-index: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 100%);
+            z-index: -1;
+            pointer-events: none;
         }
 
         .container {
@@ -284,6 +285,15 @@
     </div>
 
     <script>
+        window.onload = function() {
+            const video = document.getElementById('bg-video');
+            if (video) {
+                video.play().catch(e => {
+                    console.warn("Autoplay blocked, waiting for interaction.");
+                });
+            }
+        };
+
         // Start sound on interaction
         document.body.addEventListener('click', () => {
             const video = document.getElementById('bg-video');
