@@ -8153,57 +8153,44 @@ function runIntroSequence() {
     const introVideo = document.getElementById('main-intro-video');
     const audioOverlay = document.getElementById('intro-audio-overlay');
 
-    // Handle initial interaction for audio
-    if (audioOverlay) {
-        const handleUnmute = () => {
-            console.log("Unmuting intro sequence...");
-            
-            // 1. Initialize/Resume AudioContext
-            if (!window.audioCtx) {
-                window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (window.audioCtx.state === 'suspended') {
-                window.audioCtx.resume();
-            }
-
-            // 2. Unmute Video
-            if (introVideo) {
-                introVideo.muted = false;
-                introVideo.volume = 1.0;
-                introVideo.play().catch(e => {
-                    console.warn("Force play failed:", e);
-                });
-            }
-
-            // 3. Play Fallback Intro Music if SFX is on
-            if (window.isSfxEnabled && window.introMusic) {
-                window.introMusic.play().catch(e => { });
-            }
-
-            // 4. Play Intro SFX
-            window.playSound('intro');
-            
-            // 5. Hide Overlay
-            audioOverlay.style.opacity = '0';
-            setTimeout(() => {
-                audioOverlay.style.display = 'none';
-            }, 500);
-        };
-
-        ['click', 'touchstart', 'mousedown'].forEach(evt => {
-            audioOverlay.addEventListener(evt, handleUnmute, { once: true });
-        });
+    // Implementation of "Automatic" Sound (Seamless unmuting on first interaction)
+    const handleGlobalUnmute = () => {
+        console.log("Global interaction detected. Unmuting intro...");
         
-        // Also handle the skip button as an unmuting interaction
-        if (skipBtn) {
-            skipBtn.addEventListener('click', () => {
-                if (window.introMusic) window.introMusic.pause();
-                if (window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
-            }, { once: true });
+        // 1. Initialize/Resume AudioContext
+        if (!window.audioCtx) {
+            window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-    }
+        if (window.audioCtx.state === 'suspended') {
+            window.audioCtx.resume();
+        }
 
-    // window.playSound('intro'); // Removed from here, moved to handleUnmute
+        // 2. Unmute Intro Video
+        if (introVideo) {
+            introVideo.muted = false;
+            introVideo.volume = 1.0;
+            introVideo.play().catch(e => { });
+        }
+
+        // 3. Play Fallback Intro Music if SFX is on
+        if (window.isSfxEnabled && window.introMusic && window.introMusic.paused) {
+            window.introMusic.play().catch(e => { });
+        }
+
+        // 4. Play Intro SFX (Subtle sweep)
+        window.playSound('intro');
+        
+        // Remove listeners after first interaction
+        ['click', 'touchstart', 'mousedown', 'keydown'].forEach(evt => {
+            window.removeEventListener(evt, handleGlobalUnmute);
+        });
+    };
+
+    // Attach global listeners for any user interaction
+    ['click', 'touchstart', 'mousedown', 'keydown'].forEach(evt => {
+        window.addEventListener(evt, handleGlobalUnmute, { once: true });
+    });
+
     let introFinished = false;
     
     // Hide original intro elements to let video shine
