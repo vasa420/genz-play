@@ -8239,32 +8239,6 @@ function runIntroSequence() {
         }, 300);
     }
 
-            let savedName = localStorage.getItem('playerName');
-            if (savedName && savedName !== "GUEST PLAYER") {
-                document.getElementById('player-name-input').value = savedName;
-            }
-
-            // Initialize interactive water ripples on login screen
-            if (typeof jQuery !== 'undefined' && typeof $.fn.ripples === 'function') {
-                let $login = $('#login-screen');
-                if (!$login.data('ripples')) {
-                    $login.css({
-                        'background-image': "url('login_bg.png')",
-                        'background-size': 'cover',
-                        'background-position': 'center',
-                        'background-repeat': 'no-repeat'
-                    }).ripples({
-                        resolution: 512,
-                        dropRadius: 20,
-                        perturbance: 0.04
-                    });
-                }
-            }
-
-            setTimeout(() => { flash.remove(); }, 800);
-        }, 200);
-    }
-
     // Still show the loading bar progression over the video
     let percentEl = document.getElementById('intro-loader-percent');
     let fillEl = document.getElementById('intro-loader-fill');
