@@ -178,6 +178,12 @@ window.showWarning = function() {
     requestFullScreen();
     document.getElementById('intro-overlay').style.display = 'none';
     
+    // Pause the background video to silence the intro screen audio
+    const introVideo = document.getElementById('intro-video-bg');
+    if (introVideo) {
+        introVideo.pause();
+    }
+    
     // Play rain sound immediately
     if (thunderSound) {
         thunderSound.volume = 0.3;
