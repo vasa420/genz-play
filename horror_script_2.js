@@ -125,7 +125,9 @@ function verifyMockPin() {
             }
         }
         
-        proceedToGameFromCinematic();
+        setTimeout(() => {
+            proceedToGameFromCinematic();
+        }, 1000);
     } else {
         // Shakes red on wrong PIN
         const mockStatus = document.getElementById('mock-lock-status');
@@ -256,7 +258,20 @@ function cutMockCall() {
     
     setTimeout(() => {
         clearInterval(mockCallTimerInterval);
-        proceedToGameFromCinematic();
+        
+        // Hide connecting UI
+        const connectingUI = document.getElementById('mock-connecting-ui');
+        if (connectingUI) connectingUI.style.display = 'none';
+        
+        // Show caller screen UI housing the lock screen
+        const callerUI = document.getElementById('mock-caller-screen-ui');
+        if (callerUI) callerUI.style.display = 'flex';
+        
+        // Hide call actions UI
+        document.getElementById('mock-call-actions-ui').style.display = 'none';
+        
+        // Show passcode input lock screen UI
+        document.getElementById('mock-lock-screen-ui').style.display = 'flex';
     }, 1200);
 }
 

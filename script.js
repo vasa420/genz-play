@@ -187,7 +187,7 @@ window.switchToHorrorGame = function() {
     currentMessage = "⚠️ WARNING: ENTERING HORROR REALM...";
     messageDisplayTime = Date.now() + 2000;
     setTimeout(() => {
-        window.location.href = 'horror_game.html';
+        window.location.href = 'arcade_hub.html';
     }, 1500);
 };
 
@@ -8643,7 +8643,7 @@ window.launchGame = function(game) {
     } else if (game === 'chess') {
         window.location.href = 'chess_login.html';
     } else if (game === 'horror') {
-        window.location.href = 'horror_game.html';
+        window.location.href = 'arcade_hub.html';
     } else if (game === 'ludo') {
         window.location.href = 'ludo_login.html';
     } else if (game === 'cricket') {
