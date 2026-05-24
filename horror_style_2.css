@@ -1169,3 +1169,308 @@ body {
 .cctv-feed-effect {
     pointer-events: none;
 }
+
+/* Cinematic Intro Cabin Room & Table Phone Styling */
+#cinematic-intro-container {
+    perspective: 1200px;
+    background: #020205;
+    overflow: hidden;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1.5s ease-out;
+}
+
+#cinematic-intro-container.active {
+    display: flex;
+}
+
+.window-pane {
+    position: absolute;
+    top: 5%;
+    left: 10%;
+    width: 220px;
+    height: 380px;
+    background: transparent;
+    border: 8px solid rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    box-shadow: 0 0 100px rgba(0,0,0,0.95) inset;
+    animation: lightningFlash 8s infinite ease-out;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.window-pane::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.window-pane::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+@keyframes lightningFlash {
+    0%, 93%, 95%, 98%, 100% {
+        box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+        background: transparent;
+    }
+    94%, 97% {
+        box-shadow: 0 0 80px rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.12);
+        filter: brightness(2);
+    }
+    96% {
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+    }
+}
+
+.room-table-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: scale(0.65) translateY(120px) rotateX(15deg);
+    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+}
+
+.room-table-scene.zoomed {
+    transform: scale(1) translateY(-30px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+
+.table-surface {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background: repeating-linear-gradient(90deg, #180c05, #180c05 15px, #201108 15px, #201108 30px, #140a04 30px, #140a04 45px);
+    border-radius: 12px;
+    box-shadow: inset 0 0 200px rgba(0,0,0,0.95), 0 50px 100px rgba(0,0,0,0.9);
+    transform: rotateX(55deg) rotateZ(-20deg) translateZ(-150px);
+    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+}
+
+.room-table-scene.zoomed .table-surface {
+    transform: rotateX(0deg) rotateZ(0deg) translateZ(120px) translateY(80px);
+}
+
+.sticky-note {
+    position: absolute;
+    left: 200px;
+    top: 150px;
+    width: 110px;
+    height: 110px;
+    background: #ffeb3b;
+    color: #424242;
+    padding: 12px;
+    box-sizing: border-box;
+    box-shadow: 2px 5px 15px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.05);
+    border-radius: 2px;
+    font-family: 'Outfit', sans-serif;
+    transform: translateZ(2px) rotate(-8deg);
+    transition: opacity 1.5s ease-in-out;
+}
+
+.sticky-note::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 15px;
+    height: 15px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%);
+}
+
+.note-label {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #795548;
+    margin: 0 0 8px 0;
+    text-align: center;
+    border-bottom: 1.5px dashed rgba(121, 85, 72, 0.3);
+    padding-bottom: 4px;
+}
+
+.note-code {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin: 5px 0 0 0;
+    text-align: center;
+    color: #1a1a1a;
+    font-family: 'JetBrains Mono', monospace;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+}
+
+.mock-phone {
+    position: absolute;
+    left: 360px;
+    top: 160px;
+    width: 160px;
+    height: 310px;
+    background: #08080f;
+    border: 5px solid #1c1c24;
+    border-radius: 20px;
+    box-shadow: 5px 15px 35px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    transform: translateZ(5px);
+    transition: width 4.5s, height 4.5s, left 4.5s, top 4.5s, transform 4.5s, border-radius 4.5s, border-width 4.5s, border-color 4.5s;
+    transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+    overflow: hidden;
+}
+
+.room-table-scene.zoomed .mock-phone {
+    width: 320px;
+    height: 650px;
+    left: 240px;
+    top: -25px;
+    border-radius: 40px;
+    border-width: 12px;
+    border-color: #0d0d0f;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.15);
+    transform: translateZ(30px);
+}
+
+.mock-phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    position: relative;
+    transition: background 1.5s ease;
+}
+
+.room-table-scene.zoomed .mock-phone-screen.screen-on {
+    background: radial-gradient(circle at center, #1b1b26 0%, #050508 100%);
+}
+
+/* Mock Phone Lock Screen Overlay */
+.mock-lock-screen {
+    position: absolute;
+    inset: 0;
+    padding: 40px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    animation: fadeInLock 1.5s ease-out;
+}
+
+@keyframes fadeInLock {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.lock-time {
+    font-size: 54px;
+    font-weight: 100;
+    color: white;
+    margin-top: 20px;
+    letter-spacing: -1px;
+}
+
+.lock-date {
+    font-size: 13px;
+    color: #e5e5ea;
+    margin-top: 6px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+.lock-status {
+    font-size: 11px;
+    color: #ff3e3e;
+    margin-top: 50px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(255, 62, 62, 0.3);
+}
+
+.lock-dots {
+    display: flex;
+    gap: 16px;
+    margin-top: 25px;
+}
+
+.lock-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.lock-dot.active {
+    background: white;
+    border-color: white;
+    box-shadow: 0 0 8px white;
+    transform: scale(1.15);
+}
+
+.lock-dot.error {
+    background: #ff3e3e;
+    border-color: #ff3e3e;
+    box-shadow: 0 0 10px #ff3e3e;
+    animation: shakeDot 0.15s ease-in-out infinite alternate;
+}
+
+@keyframes shakeDot {
+    0% { transform: translateX(-3px); }
+    100% { transform: translateX(3px); }
+}
+
+.lock-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px 22px;
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
+.lock-keypad button {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: white;
+    font-size: 22px;
+    font-weight: 300;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+    box-sizing: border-box;
+}
+
+.lock-keypad button:active {
+    background: rgba(255,255,255,0.15);
+    transform: scale(0.95);
+}
+
+.lock-keypad button.key-clear {
+    color: #ff3e3e;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.lock-keypad button.key-back {
+    color: #a1a1a8;
+    font-size: 14px;
+}

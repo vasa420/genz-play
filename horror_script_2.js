@@ -54,18 +54,129 @@ function updateTime() {
     const timeDisplay = document.getElementById('current-time');
     if (timeDisplay) timeDisplay.innerText = `${hrs}:${mins}`;
     
+    const mockTimeDisplay = document.getElementById('mock-lock-time');
+    if (mockTimeDisplay) mockTimeDisplay.innerText = `${hrs}:${mins}`;
+    
     const hudTime = document.getElementById('hud-cam-time');
     if (hudTime) hudTime.innerText = `${hrs}:${mins}:${secs}`;
 }
 setInterval(updateTime, 1000);
 updateTime();
 
-// Show warning screen
+// // Cinematic Lock Screen Pin State
+let mockPinEntered = '';
+const correctMockPin = '1031';
+
+window.pressMockKey = function(digit) {
+    if (mockPinEntered.length < 4) {
+        mockPinEntered += digit;
+        playBeepSound();
+        updateMockDots();
+        
+        if (mockPinEntered.length === 4) {
+            setTimeout(verifyMockPin, 400);
+        }
+    }
+};
+
+window.clearMockKeys = function() {
+    mockPinEntered = '';
+    updateMockDots();
+};
+
+window.backspaceMockKeys = function() {
+    mockPinEntered = mockPinEntered.slice(0, -1);
+    updateMockDots();
+};
+
+function updateMockDots() {
+    for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`mock-dot-${i}`);
+        if (dot) {
+            dot.className = 'lock-dot';
+            if (i < mockPinEntered.length) {
+                dot.classList.add('active');
+            }
+        }
+    }
+}
+
+function verifyMockPin() {
+    if (mockPinEntered === correctMockPin) {
+        // Unlock Mock Phone!
+        const mockStatus = document.getElementById('mock-lock-status');
+        if (mockStatus) {
+            mockStatus.innerText = "🔓 UNLOCKED";
+            mockStatus.style.color = "#00ff88";
+        }
+        
+        // Play success chime
+        if (notifSound) notifSound.play().catch(e => {});
+        
+        // Glow dots green
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById(`mock-dot-${i}`);
+            if (dot) {
+                dot.className = 'lock-dot active';
+                dot.style.background = '#00ff88';
+                dot.style.borderColor = '#00ff88';
+                dot.style.boxShadow = '0 0 10px #00ff88';
+            }
+        }
+        
+        setTimeout(() => {
+            // Fade out the cinematic container
+            const container = document.getElementById('cinematic-intro-container');
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                container.classList.remove('active');
+                
+                // Show headphones warning
+                const warningScreen = document.getElementById('headphones-warning');
+                warningScreen.style.display = 'flex';
+                
+                const progressBar = document.getElementById('loading-progress');
+                if (progressBar) progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    warningScreen.style.display = 'none';
+                    startGame();
+                }, 4600);
+            }, 1500);
+        }, 1000);
+    } else {
+        // Shakes red on wrong PIN
+        const mockStatus = document.getElementById('mock-lock-status');
+        if (mockStatus) {
+            mockStatus.innerText = "❌ ACCESS DENIED";
+            mockStatus.style.color = "#ff3e3e";
+        }
+        
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById(`mock-dot-${i}`);
+            if (dot) {
+                dot.classList.add('error');
+            }
+        }
+        
+        if (creepyImpact) creepyImpact.play().catch(e => {});
+        
+        setTimeout(() => {
+            mockPinEntered = '';
+            if (mockStatus) {
+                mockStatus.innerText = "🔒 ENTER PASSCODE";
+                mockStatus.style.color = "#ff3e3e";
+            }
+            updateMockDots();
+        }, 1200);
+    }
+}
+
+// Show warning screen & start cinematic desk zoom sequence
 window.showWarning = function() {
     requestFullScreen();
     document.getElementById('intro-overlay').style.display = 'none';
-    const warningScreen = document.getElementById('headphones-warning');
-    warningScreen.style.display = 'flex';
     
     // Play rain sound immediately
     if (thunderSound) {
@@ -73,14 +184,30 @@ window.showWarning = function() {
         thunderSound.loop = true;
         thunderSound.play().catch(e => console.log("Storm sound waiting for interaction"));
     }
-
-    const progressBar = document.getElementById('loading-progress');
-    progressBar.style.width = '100%';
-
+    
+    const cinematicContainer = document.getElementById('cinematic-intro-container');
+    cinematicContainer.classList.add('active');
+    cinematicContainer.style.opacity = '1';
+    
+    const tableScene = document.getElementById('cabin-room-table');
+    
+    // Trigger the slow zoom camera pan
     setTimeout(() => {
-        warningScreen.style.display = 'none';
-        startGame();
-    }, 4600);
+        tableScene.classList.add('zoomed');
+    }, 100);
+    
+    // After 2.5 seconds, turn the phone screen on
+    setTimeout(() => {
+        const phoneScreen = document.getElementById('mock-phone-screen');
+        if (phoneScreen) phoneScreen.classList.add('screen-on');
+        
+        if (glitchSound) glitchSound.play().catch(e => {});
+        
+        setTimeout(() => {
+            const lockUI = document.getElementById('mock-lock-screen-ui');
+            if (lockUI) lockUI.style.display = 'flex';
+        }, 300);
+    }, 2500);
 };
 
 // Start game loop
