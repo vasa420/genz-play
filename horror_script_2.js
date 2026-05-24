@@ -276,9 +276,13 @@ function cutMockCall() {
 }
 
 function proceedToGameFromCinematic() {
-    // Fade out the cinematic container
-    const container = document.getElementById('cinematic-intro-container');
-    container.style.opacity = '0';
+    // Hide the mock phone lock/caller/connecting screens
+    const lockScreen = document.getElementById('mock-lock-screen-ui');
+    if (lockScreen) lockScreen.style.display = 'none';
+    const callerScreen = document.getElementById('mock-caller-screen-ui');
+    if (callerScreen) callerScreen.style.display = 'none';
+    const connectingScreen = document.getElementById('mock-connecting-ui');
+    if (connectingScreen) connectingScreen.style.display = 'none';
     
     // Cancel any active TTS speech
     window.speechSynthesis.cancel();
@@ -289,10 +293,7 @@ function proceedToGameFromCinematic() {
         ringtone.currentTime = 0;
     }
     
-    setTimeout(() => {
-        container.classList.remove('active');
-        startGame();
-    }, 1500);
+    startGame();
 }
 
 // Show warning screen & start cinematic bedroom door entry / desk zoom sequence
