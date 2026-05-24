@@ -389,11 +389,8 @@ window.showWarning = function() {
 function startGame() {
     console.log("Game started.");
     
-    // Start background ambient music
-    if (bgMusic) {
-        bgMusic.volume = 0.4;
-        bgMusic.play().catch(e => console.log("Ambient music waiting"));
-    }
+    // Background ambient music from Part 1 is disabled to prevent mingling
+
     
     // Switch to Home screen
     openHome();
@@ -1166,8 +1163,7 @@ window.endCall = function() {
     window.speechSynthesis.cancel();
     document.getElementById('call-overlay').style.display = 'none';
     document.getElementById('call-choice-container').innerHTML = '';
-    
-    if (bgMusic) bgMusic.play().catch(e => {});
+
 };
 
 // Text to speech API wrapper
