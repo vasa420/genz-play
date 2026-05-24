@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Unknown 2 | Shadow in the Storm</title>
+    <link rel="stylesheet" href="horror_style_2.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="screen-static"></div>
+    <div class="phone-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="time" id="current-time">23:45</div>
+            <div class="status-icons">
+                <span class="signal">📶 <span>POOR</span></span>
+                <span class="battery" id="battery-pct">🪫 15%</span>
+            </div>
+        </div>
+
+        <!-- Notification Banner -->
+        <div id="notif-banner">
+            <div class="notif-avatar" id="notif-avatar"></div>
+            <div style="flex: 1;">
+                <h4 id="notif-title">System Alert</h4>
+                <p id="notif-text">Front door unlocked.</p>
+            </div>
+        </div>
+
+        <!-- Phone UI Indicator -->
+        <div class="home-indicator" style="z-index: 2000;"></div>
+
+        <!-- Home Screen Overlay -->
+        <div id="home-screen" class="phone-overlay" style="display: block;">
+            <div class="app-grid">
+                <!-- SmartCabin App -->
+                <div class="app-icon-container" onclick="openSmartCabin()">
+                    <div class="app-icon smart-cabin-icon">
+                        <span class="icon-glyph">🏠</span>
+                        <div id="cabin-alert-dot" class="alert-dot">!</div>
+                    </div>
+                    <span class="app-label">SmartCabin</span>
+                </div>
+
+                <!-- Messages App -->
+                <div class="app-icon-container" onclick="openMessagesList()">
+                    <div class="app-icon messages-icon">
+                        <span class="icon-glyph">💬</span>
+                        <div id="msg-notif-dot" class="notif-count">1</div>
+                    </div>
+                    <span class="app-label">Messages</span>
+                </div>
+
+                <!-- CCTV App -->
+                <div class="app-icon-container" onclick="openCCTV()">
+                    <div class="app-icon cctv-icon">
+                        <span class="icon-glyph">📹</span>
+                    </div>
+                    <span class="app-label">CCTV</span>
+                </div>
+
+                <!-- Phone App -->
+                <div class="app-icon-container" onclick="openPhoneDialer()">
+                    <div class="app-icon phone-icon">
+                        <span class="icon-glyph">📞</span>
+                    </div>
+                    <span class="app-label">Phone</span>
+                </div>
+
+                <!-- Music App -->
+                <div class="app-icon-container" onclick="playMysticalMusic()">
+                    <div class="app-icon music-icon">
+                        <span class="icon-glyph">🎵</span>
+                    </div>
+                    <span class="app-label">Music Box</span>
+                </div>
+
+                <!-- Settings App -->
+                <div class="app-icon-container" onclick="alert('System: Settings are locked under administrator override.')">
+                    <div class="app-icon settings-icon">
+                        <span class="icon-glyph">⚙️</span>
+                    </div>
+                    <span class="app-label">Settings</span>
+                </div>
+            </div>
+
+            <!-- Dock -->
+            <div class="dock">
+                <div onclick="openPhoneDialer()" class="dock-icon phone-dock">📞</div>
+                <div onclick="openMessagesList()" class="dock-icon messages-dock">💬</div>
+                <div onclick="openSmartCabin()" class="dock-icon cabin-dock">🏠</div>
+            </div>
+        </div>
+
+        <!-- SmartCabin App Screen -->
+        <div id="smart-cabin-overlay" class="phone-overlay">
+            <div class="app-header">
+                <div class="back-btn" onclick="openHome()">‹</div>
+                <h2>SmartCabin v4.1</h2>
+                <div class="home-btn" onclick="openHome()">🏠</div>
+            </div>
+            <div class="app-content-scroll">
+                <!-- Connection Status -->
+                <div class="cabin-card status-card">
+                    <div class="status-header">
+                        <span>CABIN NETWORK</span>
+                        <span class="status-badge secure" id="network-status">SECURE</span>
+                    </div>
+                    <p class="status-desc" id="network-desc">All smart relays online. Backup battery connected.</p>
+                </div>
+
+                <!-- Locks Control Section -->
+                <div class="cabin-section-title">SECURITY RELAYS</div>
+
+                <!-- Front Door Relay -->
+                <div class="cabin-card relay-card" id="front-door-card">
+                    <div class="relay-info">
+                        <span class="relay-name">Front Entry Door</span>
+                        <span class="relay-status unlocked" id="front-door-status">UNLOCKED</span>
+                    </div>
+                    <button class="lock-toggle-btn unlock-mode" id="front-door-btn" onclick="toggleFrontDoor()">LOCK</button>
+                </div>
+
+                <!-- Back Patio Relay -->
+                <div class="cabin-card relay-card" id="back-patio-card">
+                    <div class="relay-info">
+                        <span class="relay-name">Back Patio Slider</span>
+                        <span class="relay-status locked" id="back-patio-status">LOCKED</span>
+                    </div>
+                    <button class="lock-toggle-btn" id="back-patio-btn" onclick="toggleBackPatio()">UNLOCK</button>
+                </div>
+
+                <!-- Shutter Relay -->
+                <div class="cabin-card relay-card" id="shutters-card">
+                    <div class="relay-info">
+                        <span class="relay-name">Living Room Window Shutters</span>
+                        <span class="relay-status locked" id="shutters-status">CLOSED</span>
+                    </div>
+                    <button class="lock-toggle-btn" id="shutters-btn" onclick="toggleShutters()">OPEN</button>
+                </div>
+
+                <!-- Power Grid Section -->
+                <div class="cabin-section-title">POWER & UTILITIES</div>
+                <div class="cabin-card utility-card">
+                    <div class="utility-info">
+                        <div class="utility-row">
+                            <span>Main Grid Power</span>
+                            <span class="utility-val active" id="main-power-status">ONLINE</span>
+                        </div>
+                        <div class="utility-row">
+                            <span>Backup Generator Fuel</span>
+                            <span class="utility-val warning" id="gen-fuel-pct">100%</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="fuel-progress" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Panic Alarm -->
+                <div class="cabin-section-title">EMERGENCY PROTOCOLS</div>
+                <div class="cabin-card panic-card" id="panic-card">
+                    <button class="panic-btn disabled" id="panic-btn" onclick="triggerPanicSiren()" disabled>ACTIVATE PANIC SIREN</button>
+                    <p class="panic-warning">Warning: Backup generator must be online to trigger warning sirens.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages App Screen -->
+        <div id="messages-list-overlay" class="phone-overlay">
+            <div class="app-header">
+                <div class="back-btn" onclick="openHome()">‹</div>
+                <h2>Messages</h2>
+                <div class="edit-btn">Edit</div>
+            </div>
+            <div class="chat-items-list" id="chat-list-items">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Active Chat Screen -->
+        <div id="chat-active-overlay" class="phone-overlay">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="back-btn" onclick="openMessagesList()">‹</div>
+                    <div onclick="openHome()" style="color: #666; font-size: 18px; cursor: pointer;">🏠</div>
+                </div>
+                <div class="contact-info">
+                    <div class="avatar" id="contact-avatar">?</div>
+                    <div class="details">
+                        <h2 class="contact-name" id="contact-name">Unknown Number</h2>
+                        <p class="status" id="contact-status">Online</p>
+                    </div>
+                </div>
+                <div class="header-icons" id="call-icon" onclick="startCreepyCall()" style="cursor: pointer;">📞</div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="chat-body" id="chat-body">
+                <!-- Messages will be injected here -->
+            </div>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+
+            <!-- Choices Area -->
+            <div class="choice-container" id="choice-container">
+                <!-- Choice buttons injected here -->
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="input-area">
+                <div class="plus-icon">+</div>
+                <input type="text" class="message-input" id="message-input" placeholder="Replies locked..." disabled>
+                <div class="send-btn" id="send-btn">➤</div>
+            </div>
+        </div>
+
+        <!-- CCTV Cameras Screen -->
+        <div id="cctv-overlay" class="phone-overlay">
+            <div class="app-header">
+                <div class="back-btn" onclick="openHome()">‹</div>
+                <h2>CCTV System</h2>
+                <div style="color: #ff3e3e; font-weight: bold; font-size: 10px; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 4px;">
+                    <span style="color: #ff3b30; animation: blink 1s infinite;">●</span> REC
+                </div>
+            </div>
+            
+            <!-- Monitor view -->
+            <div id="cctv-monitor">
+                <!-- Static static gif overlay -->
+                <div id="cctv-glitch"></div>
+                
+                <!-- Active feed content -->
+                <img id="cctv-feed-img" src="horror_intro_2.png" class="cctv-feed-effect">
+                <video id="cctv-feed-video" class="cctv-feed-effect" loop muted playsinline style="display: none; width:100%; height:100%; object-fit: cover;">
+                    <source src="Stranger_Filmed_Watching_House.mp4" type="video/mp4">
+                </video>
+
+                <!-- Passkey screen for CAM 4 -->
+                <div id="cam-lock-screen">
+                    <div class="lock-shield">🔒</div>
+                    <h3>GENERATOR ROOM CONTROL</h3>
+                    <p class="lock-error-text">ENTER SECURITY PIN CODE</p>
+                    <div class="pin-display">
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                    </div>
+                    <div class="pin-keypad">
+                        <button onclick="enterPinDigit('1')">1</button>
+                        <button onclick="enterPinDigit('2')">2</button>
+                        <button onclick="enterPinDigit('3')">3</button>
+                        <button onclick="enterPinDigit('4')">4</button>
+                        <button onclick="enterPinDigit('5')">5</button>
+                        <button onclick="enterPinDigit('6')">6</button>
+                        <button onclick="enterPinDigit('7')">7</button>
+                        <button onclick="enterPinDigit('8')">8</button>
+                        <button onclick="enterPinDigit('9')">9</button>
+                        <button class="pin-clear" onclick="clearPin()">C</button>
+                        <button onclick="enterPinDigit('0')">0</button>
+                        <button class="pin-back" onclick="backspacePin()">⌫</button>
+                    </div>
+                </div>
+
+                <!-- Generator Reboot Screen (after unlocking CAM 4) -->
+                <div id="generator-reboot-screen">
+                    <h3 style="color: #ffaa00; margin-bottom: 10px;">⚡ EMERGENCY REBOOT</h3>
+                    <p style="font-size: 11px; margin-bottom: 20px;">MAIN POWER LINE SEVERED. BOOT BACKUP GENERATOR?</p>
+                    <div class="reboot-status" id="reboot-status-text">GENERATOR STANDBY</div>
+                    <div class="reboot-progress-bar">
+                        <div class="reboot-progress-fill" id="reboot-progress-fill"></div>
+                    </div>
+                    <button class="reboot-action-btn" id="reboot-action-btn" onclick="startGeneratorReboot()">START GENERATOR</button>
+                </div>
+
+                <!-- On-Screen CCTV Text overlay -->
+                <div class="cctv-hud">
+                    <div>CAM <span id="hud-cam-num">1</span>: <span id="hud-cam-name">FRONT PORCH</span></div>
+                    <div id="hud-cam-time">23:45:00</div>
+                </div>
+            </div>
+
+            <!-- Controller panel -->
+            <div class="cctv-controls">
+                <button onclick="switchCCTV(1)" class="cctv-btn active-cctv" id="cctv-btn-1">CAM 1</button>
+                <button onclick="switchCCTV(2)" class="cctv-btn" id="cctv-btn-2">CAM 2</button>
+                <button onclick="switchCCTV(3)" class="cctv-btn" id="cctv-btn-3">CAM 3</button>
+                <button onclick="switchCCTV(4)" class="cctv-btn" id="cctv-btn-4" style="border: 1px dashed #ff3e3e;">CAM 4</button>
+            </div>
+        </div>
+
+        <!-- Phone App Dialer Screen -->
+        <div id="phone-app-overlay" class="phone-overlay">
+            <div class="app-header">
+                <div class="back-btn" onclick="openHome()">‹</div>
+                <h2>Phone</h2>
+                <div style="color: #4cd964; font-size: 13px;">Online</div>
+            </div>
+            
+            <div class="phone-tabs">
+                <div onclick="switchPhoneTab('recents')" id="tab-recents" class="phone-tab active">Recents</div>
+                <div onclick="switchPhoneTab('contacts')" id="tab-contacts" class="phone-tab">Contacts</div>
+                <div onclick="switchPhoneTab('keypad')" id="tab-keypad" class="phone-tab">Keypad</div>
+            </div>
+
+            <!-- Phone Lists Content -->
+            <div id="phone-list-content" style="flex: 1; overflow-y: auto;">
+                <!-- Recents / Contacts list injected here -->
+            </div>
+
+            <!-- Phone Keypad Dialer -->
+            <div id="phone-keypad-content" style="display: none; flex-direction: column; align-items: center; padding-top: 20px;">
+                <div id="phone-display"></div>
+                <div class="dialer-keypad">
+                    <button class="dial-btn" onclick="dialDigit('1')">1</button>
+                    <button class="dial-btn" onclick="dialDigit('2')">2</button>
+                    <button class="dial-btn" onclick="dialDigit('3')">3</button>
+                    <button class="dial-btn" onclick="dialDigit('4')">4</button>
+                    <button class="dial-btn" onclick="dialDigit('5')">5</button>
+                    <button class="dial-btn" onclick="dialDigit('6')">6</button>
+                    <button class="dial-btn" onclick="dialDigit('7')">7</button>
+                    <button class="dial-btn" onclick="dialDigit('8')">8</button>
+                    <button class="dial-btn" onclick="dialDigit('9')">9</button>
+                    <button class="dial-btn" onclick="dialDigit('*')">*</button>
+                    <button class="dial-btn" onclick="dialDigit('0')">0</button>
+                    <button class="dial-btn" onclick="dialDigit('#')">#</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 40px; margin-top: 30px; width: 100%; justify-content: center;">
+                    <div style="width: 70px;"></div>
+                    <div onclick="performCall()" class="call-action-ring">📞</div>
+                    <div onclick="deleteDialDigit()" style="width: 70px; color: #666; font-size: 25px; cursor: pointer; text-align: center;">⌫</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Calling Overlay -->
+        <div id="call-overlay" class="phone-overlay" style="z-index: 10000; background: rgba(0,0,0,0.98); justify-content: center; align-items: center;">
+            <div class="call-content" style="text-align: center;">
+                <div id="call-avatar" class="call-avatar">?</div>
+                <h2 id="call-name" style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">Unknown Number</h2>
+                <p id="call-status" style="color: #ff3e3e; letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;">INCOMING CALL...</p>
+
+                <!-- Call Buttons -->
+                <div class="call-actions" style="margin-top: 80px; display: flex; gap: 40px; justify-content: center;">
+                    <div class="call-btn decline" onclick="endCall()">decline</div>
+                    <div id="accept-btn" class="call-btn accept" onclick="acceptCall()">accept</div>
+                </div>
+                
+                <!-- Call Dialogue Options -->
+                <div id="call-choice-container" style="margin-top: 40px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                    <!-- Choices injected during active call -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intro Game Start Screen Overlay (Covers viewport) -->
+    <div id="intro-overlay" class="overlay active">
+        <div class="intro-content">
+            <video id="intro-video-bg" autoplay muted loop playsinline>
+                <source src="Video_Regeneration_With_Rainy_Climate (1).mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-gradient"></div>
+            
+            <div class="intro-hud" style="z-index: 10;">
+                <h1 class="glitch-title">THE UNKNOWN II</h1>
+                <p class="intro-subtitle">SHADOW IN THE STORM</p>
+                <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 30px;">
+                    <button class="start-btn" onclick="showWarning()">ENTER THE CABIN</button>
+                    <button class="quit-btn" onclick="window.location.href='arcade_hub.html'">RETURN TO ARENA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Headphones Warning Screen Overlay -->
+    <div id="headphones-warning" class="overlay">
+        <div style="text-align: center; max-width: 340px;">
+            <div style="font-size: 60px; margin-bottom: 20px;">⛈️</div>
+            <h2 style="color: #fff; letter-spacing: 2px; font-weight: 400; font-size: 18px;">HEADPHONES SUGGESTED</h2>
+            <h1 style="color: #ff3e3e; letter-spacing: 4px; margin-top: 10px; font-size: 20px; font-weight: 900;">SURVIVAL EXPERIENCE</h1>
+            <p style="color: #666; font-size: 12px; margin-top: 15px; line-height: 1.5;">This game uses real-time 3D audio, text-to-speech rendering, and sudden loud elements.</p>
+            <div class="loading-bar-container" style="width: 220px; height: 3px; background: #111; margin: 30px auto; border-radius: 2px; overflow: hidden;">
+                <div id="loading-progress" style="width: 0%; height: 100%; background: #ff3e3e; transition: width 4.5s linear;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Death/Game Over Screen Overlay -->
+    <div id="game-over" class="overlay" style="background: black;">
+        <video id="death-scary-video" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index: -1;" muted playsinline>
+            <source src="Man_Enters_House_With_Gun.mp4" type="video/mp4">
+        </video>
+        <div class="death-grad" style="position: absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 70%); z-index: 0;"></div>
+        
+        <div style="z-index: 10;">
+            <h1 class="death-title" style="color: #ff3e3e; font-size: 36px; font-weight: 900; letter-spacing: 6px;">SIGNAL LOST</h1>
+            <p id="death-reason" style="color: #aaa; font-size: 14px; margin: 20px 0 40px; font-family: 'JetBrains Mono', monospace; font-style: italic;">The lock remained open. He found you.</p>
+            <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                <button class="retry-btn" onclick="location.reload()" style="border: 1px solid #ff3e3e; color: #ff3e3e; width: 220px;">RECONNECT</button>
+                <button class="quit-lobby-btn" onclick="window.location.href='arcade_hub.html'" style="background: transparent; border: 1px solid #444; color: #666; width: 220px; padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 14px; letter-spacing: 2px;">QUIT TO ARENA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Awareness Screen Overlay -->
+    <div id="final-awareness-overlay" class="overlay" style="background: black; padding: 40px 20px; overflow-y: auto;">
+        <h1 style="color: #00ff88; font-size: 26px; text-align: center; margin-bottom: 20px; letter-spacing: 1px;">SURVIVED THE STORM</h1>
+        <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 15px; border: 1px solid #333; max-width: 500px;">
+            <h2 style="color: #ff3e3e; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;">🛡️ Smart Home & Digital Safety Rules</h2>
+            <ul style="color: #ccc; font-family: 'Outfit', sans-serif; line-height: 1.6; list-style: none; padding: 0; text-align: left; font-size: 13px;">
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">1. Keep Smart Codes Private:</strong> Never share passcodes for locks, gates, or garage doors with anyone online or on public forums.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">2. Two-Factor Authentication:</strong> Always enable Two-Factor Authentication (2FA) for your smart home accounts to prevent hacker access.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">3. Emergency Physical Override:</strong> Know where the physical keys to doors are kept inside the house in case of power or network outages.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">4. The "Check the Cameras" Rule:</strong> If you hear unusual noises outside, check your security cameras from a safe, central room first. Do not go outside.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">5. Verify Unexpected Contacts:</strong> If someone calls claiming to be a technician or service worker, verify their identity before responding.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">6. Emergency Siren Drills:</strong> Familiarize yourself with home alarms. Make sure children know what the sound means and what room to retreat to.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">7. Secure Wi-Fi Networks:</strong> Keep your home router secured with strong, complex passwords. Never use the default factory-set passwords.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">8. Trust Your Instincts:</strong> If you feel a smart home account has been compromised, lock the physical deadbolts and notify your parents immediately.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">9. Keep Software Updated:</strong> Regularly update smart home apps and devices. Updates often patch security vulnerabilities.</li>
+                <li style="margin-bottom: 12px;"><strong style="color: #fff;">10. Emergency Contacts:</strong> Keep emergency phone numbers written down physically in case your phone battery dies or the internet cuts out.</li>
+            </ul>
+        </div>
+        <button onclick="window.location.href='horror_game_2.html'" style="margin-top: 30px; background: #007aff; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Outfit', sans-serif; width: 240px;">RETURN TO LOBBY</button>
+    </div>
+
+    <!-- Background Audio Assets -->
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
+    <audio id="glitch-sound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="bg-music" src="atlasaudio-horror-ambience-512255.mp3" loop></audio>
+    <audio id="ringtone-sound" src="noahbroah-anonymous-call-461341 (1).mp3" loop></audio>
+    <audio id="creepy-impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3"></audio>
+    <audio id="police-siren-sound" src="11325622-police-siren-sound-effect-240674.mp3"></audio>
+    <audio id="heavy-breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
+    <audio id="thunder-sound" src="johnbritton-thunder-156423 (1).mp3"></audio>
+    <audio id="mystical-music-box" src="universfield-mystical-music-box-175971.mp3"></audio>
+
+    <script src="horror_script_2.js"></script>
+</body>
+
+</html>
