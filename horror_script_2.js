@@ -163,6 +163,30 @@ window.declineCinematicCall = function() {
     document.getElementById('mock-lock-screen-ui').style.display = 'flex';
 };
 
+function speakCustomVoice(text, isMale) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    if (isMale) {
+        const maleVoice = voices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('google uk english male') || v.name.toLowerCase().includes('david'));
+        if (maleVoice) {
+            utterance.voice = maleVoice;
+        } else {
+            utterance.pitch = 0.85; // Lower pitch to sound masculine
+        }
+        utterance.rate = 0.95;
+    } else {
+        const femaleVoice = voices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('google us english'));
+        if (femaleVoice) {
+            utterance.voice = femaleVoice;
+        } else {
+            utterance.pitch = 1.25; // Higher pitch for female voice
+        }
+        utterance.rate = 1.05;
+    }
+    return utterance;
+}
+
 window.acceptCinematicCall = function() {
     playBeepSound();
     
@@ -175,6 +199,7 @@ window.acceptCinematicCall = function() {
     // Switch mock UI to connected
     document.getElementById('mock-call-actions-ui').style.display = 'none';
     document.getElementById('mock-connecting-ui').style.display = 'flex';
+    document.getElementById('mock-reply-suggestion').style.display = 'none';
     
     let seconds = 0;
     const timerDisplay = document.getElementById('mock-call-timer');
@@ -189,17 +214,51 @@ window.acceptCinematicCall = function() {
         if (timerDisplay) timerDisplay.innerText = `${minsStr}:${secsStr}`;
     }, 1000);
     
-    // Play Dad's warning voice over TTS
+    // Play Dad's warning in a male voice
     setTimeout(() => {
-        speakVoice("Priya! Thank goodness you picked up! Please lock the doors now! The storm is getting severe, and the security grid is acting weird.");
-    }, 1200);
+        const dadText = "Hey Priya, please be safe, lock all the doors, I will be there soon.";
+        const dadUtterance = speakCustomVoice(dadText, true);
+        
+        dadUtterance.onend = function() {
+            // Show reply suggestion once Dad finishes talking
+            const replyBtn = document.getElementById('mock-reply-suggestion');
+            if (replyBtn) {
+                replyBtn.style.display = 'block';
+            }
+        };
+        
+        window.speechSynthesis.speak(dadUtterance);
+    }, 1000);
+};
+
+window.triggerPlayerSpeechReply = function() {
+    // Hide the reply suggestion button once clicked
+    const replyBtn = document.getElementById('mock-reply-suggestion');
+    if (replyBtn) replyBtn.style.display = 'none';
     
-    // Proceed to game loading after Dad warns Priya (approx 6 seconds total call time)
+    // Speak Priya's reply in a female voice
+    const replyText = "Ok Dad, come fast";
+    const priyaUtterance = speakCustomVoice(replyText, false);
+    
+    priyaUtterance.onend = function() {
+        // Automatically hang up the call
+        cutMockCall();
+    };
+    
+    window.speechSynthesis.speak(priyaUtterance);
+};
+
+function cutMockCall() {
+    playBeepSound();
+    
+    const connectStatusText = document.getElementById('mock-connect-status');
+    if (connectStatusText) connectStatusText.innerText = "Call Ended";
+    
     setTimeout(() => {
         clearInterval(mockCallTimerInterval);
         proceedToGameFromCinematic();
-    }, 6000);
-};
+    }, 1200);
+}
 
 function proceedToGameFromCinematic() {
     // Fade out the cinematic container
