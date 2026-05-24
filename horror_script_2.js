@@ -8,6 +8,7 @@ const policeSiren = document.getElementById('police-siren-sound');
 const heavyBreathing = document.getElementById('heavy-breathing-sound');
 const thunderSound = document.getElementById('thunder-sound');
 const musicBox = document.getElementById('mystical-music-box');
+const doorBlockSound = document.getElementById('door-block-sound');
 
 // Game state variables
 let currentGameState = 'start';
@@ -394,6 +395,14 @@ function startGame() {
     
     // Switch to Home screen
     openHome();
+
+    // Play door blocking/opening sound after 4 seconds
+    setTimeout(() => {
+        if (doorBlockSound) {
+            doorBlockSound.volume = 0.8;
+            doorBlockSound.play().catch(e => console.log("Door block sound blocked:", e));
+        }
+    }, 4000);
 
     // Trigger Dad's first message after 5 seconds
     setTimeout(() => {
