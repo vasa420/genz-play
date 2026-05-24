@@ -1552,7 +1552,7 @@ function triggerGoCheckItSuggestion() {
         }
     }, 5600); // 1.5s transition + 4.1s walking down hallway
     
-    // Suggest returning after checking is completed
+    // Automatically return after checking is completed
     setTimeout(() => {
         if (heavyBreathing) {
             heavyBreathing.pause();
@@ -1562,9 +1562,15 @@ function triggerGoCheckItSuggestion() {
         const text = document.getElementById('narrative-suggestion-text');
         if (banner && text) {
             banner.style.display = 'block';
-            text.innerText = "💬 No one is there. Return to the bedroom";
-            banner.onclick = window.triggerReturnToBedroomSuggestion;
+            text.innerText = "💬 No one is here. Returning to the bedroom...";
+            banner.onclick = null;
         }
+        
+        // Return automatically after 1.5 seconds of displaying the message
+        setTimeout(() => {
+            if (banner) banner.style.display = 'none';
+            triggerReturnToBedroomSuggestion();
+        }, 1500);
     }, 9600);
 }
 window.triggerGoCheckItSuggestion = triggerGoCheckItSuggestion;
