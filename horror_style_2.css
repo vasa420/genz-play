@@ -1170,10 +1170,10 @@ body {
     pointer-events: none;
 }
 
-/* Cinematic Intro Cabin Room & Table Phone Styling */
+/* Cinematic Intro Cabin Bedroom Door & Call Pickup Sequence Styling */
 #cinematic-intro-container {
     perspective: 1200px;
-    background: #020205;
+    background: #010103;
     overflow: hidden;
     display: none;
     align-items: center;
@@ -1192,12 +1192,12 @@ body {
     width: 220px;
     height: 380px;
     background: transparent;
-    border: 8px solid rgba(255, 255, 255, 0.02);
+    border: 8px solid rgba(255, 255, 255, 0.015);
     border-radius: 4px;
-    box-shadow: 0 0 100px rgba(0,0,0,0.95) inset;
+    box-shadow: 0 0 100px rgba(0,0,0,0.96) inset;
     animation: lightningFlash 8s infinite ease-out;
     pointer-events: none;
-    z-index: 1;
+    z-index: 15;
 }
 
 .window-pane::before {
@@ -1207,7 +1207,7 @@ body {
     left: 0;
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.015);
 }
 
 .window-pane::after {
@@ -1217,7 +1217,7 @@ body {
     top: 0;
     width: 4px;
     height: 100%;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.015);
 }
 
 @keyframes lightningFlash {
@@ -1236,85 +1236,167 @@ body {
     }
 }
 
-.room-table-scene {
-    position: relative;
-    width: 100%;
-    height: 100%;
+/* Bedroom door entrance stage styling */
+.door-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
     display: flex;
     justify-content: center;
     align-items: center;
-    transform: scale(0.65) translateY(120px) rotateX(15deg);
-    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
-    transform-style: preserve-3d;
+    background: #020205;
+    perspective: 1200px;
+    transition: opacity 1.5s ease-in-out, transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.room-table-scene.zoomed {
-    transform: scale(1) translateY(-30px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+.door-stage.zoomed-through {
+    transform: scale(2.2) translateZ(300px);
+    opacity: 0;
+    pointer-events: none;
 }
 
-.table-surface {
-    position: relative;
-    width: 800px;
-    height: 600px;
-    background: repeating-linear-gradient(90deg, #180c05, #180c05 15px, #201108 15px, #201108 30px, #140a04 30px, #140a04 45px);
-    border-radius: 12px;
-    box-shadow: inset 0 0 200px rgba(0,0,0,0.95), 0 50px 100px rgba(0,0,0,0.9);
-    transform: rotateX(55deg) rotateZ(-20deg) translateZ(-150px);
-    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
-    transform-style: preserve-3d;
-}
-
-.room-table-scene.zoomed .table-surface {
-    transform: rotateX(0deg) rotateZ(0deg) translateZ(120px) translateY(80px);
-}
-
-.sticky-note {
+.hallway-shadows {
     position: absolute;
-    left: 200px;
-    top: 150px;
-    width: 110px;
-    height: 110px;
-    background: #ffeb3b;
-    color: #424242;
-    padding: 12px;
-    box-sizing: border-box;
-    box-shadow: 2px 5px 15px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.05);
-    border-radius: 2px;
-    font-family: 'Outfit', sans-serif;
-    transform: translateZ(2px) rotate(-8deg);
-    transition: opacity 1.5s ease-in-out;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.92) 100%);
+    pointer-events: none;
 }
 
-.sticky-note::after {
+.door-frame {
+    width: 200px;
+    height: 380px;
+    border: 10px solid #140d0a;
+    border-bottom: none;
+    position: relative;
+    box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.9);
+    perspective: 1000px;
+}
+
+.door-leaf {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2b1d16 0%, #170f0b 100%);
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    transform-origin: left center;
+    transition: transform 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    padding-right: 15px;
+    box-sizing: border-box;
+}
+
+.door-leaf.open {
+    transform: rotateY(-115deg);
+    box-shadow: none;
+}
+
+.door-handle {
+    width: 12px;
+    height: 24px;
+    background: linear-gradient(to right, #b8860b, #d4af37, #aa7c11);
+    border-radius: 2px;
+    box-shadow: 1px 2px 5px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+.door-handle::after {
     content: '';
     position: absolute;
     right: 0;
-    bottom: 0;
-    width: 15px;
-    height: 15px;
-    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 6px;
+    background: #d4af37;
 }
 
-.note-label {
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: #795548;
-    margin: 0 0 8px 0;
-    text-align: center;
-    border-bottom: 1.5px dashed rgba(121, 85, 72, 0.3);
-    padding-bottom: 4px;
+.door-panel-top, .door-panel-bottom {
+    border: 4px solid #170f0b;
+    width: 80%;
+    margin: 15px auto;
+    background: rgba(0,0,0,0.15);
+    box-shadow: inset 1px 1px 5px rgba(0,0,0,0.5);
 }
 
-.note-code {
-    font-size: 26px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    margin: 5px 0 0 0;
-    text-align: center;
-    color: #1a1a1a;
-    font-family: 'JetBrains Mono', monospace;
-    text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+.door-panel-top { height: 120px; }
+.door-panel-bottom { height: 160px; }
+
+/* Bedroom Room desk and camera zoom stage */
+.room-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: #020206;
+    perspective: 1200px;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+.room-stage.active {
+    display: flex;
+    opacity: 1;
+}
+
+.bedroom-desk {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background: repeating-linear-gradient(90deg, #1f130b, #1f130b 15px, #26170d 15px, #26170d 30px, #180e07 30px, #180e07 45px);
+    border-radius: 8px;
+    box-shadow: inset 0 0 180px rgba(0,0,0,0.96), 0 40px 80px rgba(0,0,0,0.85);
+    transform: rotateX(58deg) rotateZ(-18deg) translateZ(-160px) scale(0.7);
+    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+}
+
+.room-stage.zoomed-in .bedroom-desk {
+    transform: rotateX(0deg) rotateZ(0deg) translateZ(150px) translateY(80px) scale(1.05);
+}
+
+.wood-grain-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.01), rgba(0,0,0,0.3));
+    pointer-events: none;
+}
+
+.desk-mug {
+    position: absolute;
+    right: 200px;
+    top: 150px;
+    width: 45px;
+    height: 55px;
+    background: linear-gradient(to right, #333, #555, #222);
+    border-radius: 4px;
+    box-shadow: 2px 5px 10px rgba(0,0,0,0.6);
+    transform: translateZ(5px);
+}
+
+.desk-mug::after {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 10px;
+    width: 14px;
+    height: 30px;
+    border: 4px solid #333;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+}
+
+.sticky-note.cinematic-note {
+    left: 200px;
+    top: 260px;
+    transform: translateZ(2px) rotate(12deg);
 }
 
 .mock-phone {
@@ -1333,16 +1415,16 @@ body {
     overflow: hidden;
 }
 
-.room-table-scene.zoomed .mock-phone {
-    width: 320px;
-    height: 650px;
-    left: 240px;
-    top: -25px;
+.room-stage.zoomed-in .mock-phone {
+    width: 325px;
+    height: 660px;
+    left: 238px;
+    top: -30px;
     border-radius: 40px;
     border-width: 12px;
-    border-color: #0d0d0f;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.15);
-    transform: translateZ(30px);
+    border-color: #0c0c0e;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.18);
+    transform: translateZ(35px);
 }
 
 .mock-phone-screen {
@@ -1353,8 +1435,159 @@ body {
     transition: background 1.5s ease;
 }
 
-.room-table-scene.zoomed .mock-phone-screen.screen-on {
-    background: radial-gradient(circle at center, #1b1b26 0%, #050508 100%);
+.room-stage.zoomed-in .mock-phone-screen {
+    background: radial-gradient(circle at center, #1c1c24 0%, #08080c 100%);
+}
+
+/* Call Interface on Mock phone */
+.mock-caller-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, #1b1b24 0%, #050508 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px;
+    box-sizing: border-box;
+    animation: fadeInLock 1s ease-out;
+}
+
+.mock-caller-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
+}
+
+.mock-caller-sub {
+    font-size: 13px;
+    color: #8e8e93;
+    margin-top: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.mock-caller-avatar {
+    width: 100px;
+    height: 100px;
+    background: #2c2c35;
+    border-radius: 50%;
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 42px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.05);
+}
+
+.mock-caller-avatar.pulsing {
+    animation: pulseRing 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseRing {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.15); }
+    70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.mock-call-actions {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
+.mock-call-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+}
+
+.mock-call-btn span {
+    font-size: 12px;
+    color: #8e8e93;
+    font-weight: 500;
+}
+
+.mock-call-btn .btn-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    transition: transform 0.1s, background 0.2s;
+}
+
+.mock-call-btn.decline .btn-icon {
+    background: #ff3b30;
+    transform: rotate(135deg);
+}
+
+.mock-call-btn.accept .btn-icon {
+    background: #34c759;
+    animation: pulseGreen 1.4s infinite alternate;
+}
+
+.mock-call-btn:active .btn-icon {
+    transform: scale(0.9) !important;
+}
+
+@keyframes pulseGreen {
+    from { box-shadow: 0 0 5px rgba(52, 199, 89, 0.5); }
+    to { box-shadow: 0 0 20px rgba(52, 199, 89, 0.9); }
+}
+
+/* Screen lighting glow from incoming call */
+.ring-glow {
+    animation: screenRingGlow 1.6s infinite alternate;
+}
+
+@keyframes screenRingGlow {
+    from {
+        box-shadow: 5px 15px 35px rgba(0,0,0,0.6), 0 0 5px rgba(52, 199, 89, 0.1);
+    }
+    to {
+        box-shadow: 5px 15px 35px rgba(0,0,0,0.6), 0 0 25px rgba(52, 199, 89, 0.4);
+    }
+}
+
+/* Connected screen */
+.mock-connecting-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, #131318 0%, #050508 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px;
+    box-sizing: border-box;
+    animation: fadeInLock 0.5s ease-out;
+}
+
+.mock-caller-status {
+    font-size: 14px;
+    color: #34c759;
+    margin-top: 6px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.call-timer {
+    font-size: 13px;
+    color: #8e8e93;
+    margin-top: 15px;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 /* Mock Phone Lock Screen Overlay */
@@ -1368,6 +1601,7 @@ body {
     align-items: center;
     justify-content: flex-start;
     animation: fadeInLock 1.5s ease-out;
+    background: radial-gradient(circle at center, #1b1b24 0%, #050508 100%);
 }
 
 @keyframes fadeInLock {

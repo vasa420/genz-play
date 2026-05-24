@@ -63,9 +63,10 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
-// // Cinematic Lock Screen Pin State
+// Cinematic Lock Screen Pin State
 let mockPinEntered = '';
 const correctMockPin = '1031';
+let mockCallTimerInterval = null;
 
 window.pressMockKey = function(digit) {
     if (mockPinEntered.length < 4) {
@@ -124,27 +125,7 @@ function verifyMockPin() {
             }
         }
         
-        setTimeout(() => {
-            // Fade out the cinematic container
-            const container = document.getElementById('cinematic-intro-container');
-            container.style.opacity = '0';
-            
-            setTimeout(() => {
-                container.classList.remove('active');
-                
-                // Show headphones warning
-                const warningScreen = document.getElementById('headphones-warning');
-                warningScreen.style.display = 'flex';
-                
-                const progressBar = document.getElementById('loading-progress');
-                if (progressBar) progressBar.style.width = '100%';
-                
-                setTimeout(() => {
-                    warningScreen.style.display = 'none';
-                    startGame();
-                }, 4600);
-            }, 1500);
-        }, 1000);
+        proceedToGameFromCinematic();
     } else {
         // Shakes red on wrong PIN
         const mockStatus = document.getElementById('mock-lock-status');
@@ -173,7 +154,85 @@ function verifyMockPin() {
     }
 }
 
-// Show warning screen & start cinematic desk zoom sequence
+// Cinematic Call actions
+window.declineCinematicCall = function() {
+    playBeepSound();
+    
+    // Hide call controls and show passcode input UI instead
+    document.getElementById('mock-call-actions-ui').style.display = 'none';
+    document.getElementById('mock-lock-screen-ui').style.display = 'flex';
+};
+
+window.acceptCinematicCall = function() {
+    playBeepSound();
+    
+    // Stop the caller screen ringtone
+    if (ringtone) {
+        ringtone.pause();
+        ringtone.currentTime = 0;
+    }
+    
+    // Switch mock UI to connected
+    document.getElementById('mock-call-actions-ui').style.display = 'none';
+    document.getElementById('mock-connecting-ui').style.display = 'flex';
+    
+    let seconds = 0;
+    const timerDisplay = document.getElementById('mock-call-timer');
+    const connectStatusText = document.getElementById('mock-connect-status');
+    connectStatusText.innerText = "Connected";
+    
+    // Start ticking call timer
+    mockCallTimerInterval = setInterval(() => {
+        seconds++;
+        const minsStr = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const secsStr = String(seconds % 60).padStart(2, '0');
+        if (timerDisplay) timerDisplay.innerText = `${minsStr}:${secsStr}`;
+    }, 1000);
+    
+    // Play Dad's warning voice over TTS
+    setTimeout(() => {
+        speakVoice("Priya! Thank goodness you picked up! Please lock the doors now! The storm is getting severe, and the security grid is acting weird.");
+    }, 1200);
+    
+    // Proceed to game loading after Dad warns Priya (approx 6 seconds total call time)
+    setTimeout(() => {
+        clearInterval(mockCallTimerInterval);
+        proceedToGameFromCinematic();
+    }, 6000);
+};
+
+function proceedToGameFromCinematic() {
+    // Fade out the cinematic container
+    const container = document.getElementById('cinematic-intro-container');
+    container.style.opacity = '0';
+    
+    // Cancel any active TTS speech
+    window.speechSynthesis.cancel();
+    
+    // Stop loop if they accepted or bypassed call
+    if (ringtone) {
+        ringtone.pause();
+        ringtone.currentTime = 0;
+    }
+    
+    setTimeout(() => {
+        container.classList.remove('active');
+        
+        // Show headphones warning
+        const warningScreen = document.getElementById('headphones-warning');
+        warningScreen.style.display = 'flex';
+        
+        const progressBar = document.getElementById('loading-progress');
+        if (progressBar) progressBar.style.width = '100%';
+        
+        setTimeout(() => {
+            warningScreen.style.display = 'none';
+            startGame();
+        }, 4600);
+    }, 1500);
+}
+
+// Show warning screen & start cinematic bedroom door entry / desk zoom sequence
 window.showWarning = function() {
     requestFullScreen();
     document.getElementById('intro-overlay').style.display = 'none';
@@ -184,36 +243,64 @@ window.showWarning = function() {
         introVideo.pause();
     }
     
-    // Play rain sound immediately
+    // Play storm rain sound immediately
     if (thunderSound) {
         thunderSound.volume = 0.3;
         thunderSound.loop = true;
         thunderSound.play().catch(e => console.log("Storm sound waiting for interaction"));
     }
     
+    // Activate cinematic intro layout
     const cinematicContainer = document.getElementById('cinematic-intro-container');
     cinematicContainer.classList.add('active');
     cinematicContainer.style.opacity = '1';
     
-    const tableScene = document.getElementById('cabin-room-table');
-    
-    // Trigger the slow zoom camera pan
+    // Stage 1: Wait 1.5 seconds, then open the bedroom door
     setTimeout(() => {
-        tableScene.classList.add('zoomed');
-    }, 100);
-    
-    // After 2.5 seconds, turn the phone screen on
-    setTimeout(() => {
-        const phoneScreen = document.getElementById('mock-phone-screen');
-        if (phoneScreen) phoneScreen.classList.add('screen-on');
+        const doorLeaf = document.getElementById('door-leaf');
+        if (doorLeaf) doorLeaf.classList.add('open');
         
-        if (glitchSound) glitchSound.play().catch(e => {});
+        // Play door squeak / ambient sound
+        if (creepyImpact) {
+            creepyImpact.volume = 0.4;
+            creepyImpact.play().catch(e => {});
+        }
         
+        // Stage 2: Camera pans/flies through doorway
         setTimeout(() => {
-            const lockUI = document.getElementById('mock-lock-screen-ui');
-            if (lockUI) lockUI.style.display = 'flex';
-        }, 300);
-    }, 2500);
+            const doorStage = document.getElementById('cinematic-door-stage');
+            if (doorStage) doorStage.classList.add('zoomed-through');
+            
+            const roomStage = document.getElementById('cinematic-room-stage');
+            if (roomStage) roomStage.classList.add('active');
+            
+            // Start phone ringtone audio
+            if (ringtone) {
+                ringtone.volume = 0.6;
+                ringtone.loop = true;
+                ringtone.play().catch(e => {});
+            }
+            
+            // Slow zoom camera pan onto desk
+            setTimeout(() => {
+                roomStage.classList.add('zoomed-in');
+            }, 100);
+            
+            // Stage 3: After the camera pan settles (4.5s), boot mock phone caller UI
+            setTimeout(() => {
+                const phoneScreen = document.getElementById('mock-phone-screen');
+                if (phoneScreen) phoneScreen.classList.remove('ring-glow'); // stop low glow, open screen
+                
+                const callerUI = document.getElementById('mock-caller-screen-ui');
+                if (callerUI) callerUI.style.display = 'flex';
+                
+                const callActionsUI = document.getElementById('mock-call-actions-ui');
+                if (callActionsUI) callActionsUI.style.display = 'flex';
+            }, 4500);
+            
+        }, 1200); // Pan through door shortly after creak starts
+        
+    }, 1500); // 1.5 seconds dark hallway suspense
 };
 
 // Start game loop

@@ -382,42 +382,88 @@
 
     <!-- Cinematic Cabin Room & Table Phone Intro Scene -->
     <div id="cinematic-intro-container" class="overlay">
+        <!-- Storm window pane lightning effect -->
         <div class="window-pane"></div>
-        <div id="cabin-room-table" class="room-table-scene">
-            <div class="table-surface">
+        
+        <!-- STAGE 1: Bedroom Doorway Entrance -->
+        <div id="cinematic-door-stage" class="door-stage">
+            <div class="hallway-shadows"></div>
+            <div class="door-frame">
+                <div class="door-leaf" id="door-leaf">
+                    <div class="door-handle"></div>
+                    <div class="door-panel-top"></div>
+                    <div class="door-panel-bottom"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 2: Bedroom Desk & Phone Zoom -->
+        <div id="cinematic-room-stage" class="room-stage">
+            <div class="bedroom-desk">
+                <div class="wood-grain-overlay"></div>
+                
+                <!-- Coffee mug for realism -->
+                <div class="desk-mug"></div>
+                
                 <!-- Yellow Sticky Note -->
-                <div class="sticky-note" id="cinematic-sticky-note">
-                    <p class="note-label">REBOOT PIN</p>
+                <div class="sticky-note cinematic-note" id="cinematic-sticky-note">
+                    <p class="note-label">DESK PIN</p>
                     <h3 class="note-code">1031</h3>
                 </div>
-                <!-- Mock lying phone -->
-                <div id="mock-lying-phone" class="mock-phone">
+                
+                <!-- Mock smartphone lying/ringing on the desk -->
+                <div id="mock-lying-phone" class="mock-phone ring-glow">
                     <div class="mock-phone-screen" id="mock-phone-screen">
-                        <!-- Lock Screen Contents -->
-                        <div class="mock-lock-screen" id="mock-lock-screen-ui" style="display: none;">
-                            <div class="lock-time" id="mock-lock-time">23:45</div>
-                            <div class="lock-date">Friday, October 31</div>
-                            <div class="lock-status" id="mock-lock-status">🔒 ENTER PASSCODE</div>
-                            <div class="lock-dots">
-                                <div class="lock-dot" id="mock-dot-0"></div>
-                                <div class="lock-dot" id="mock-dot-1"></div>
-                                <div class="lock-dot" id="mock-dot-2"></div>
-                                <div class="lock-dot" id="mock-dot-3"></div>
+                        <!-- Caller Screen UI -->
+                        <div class="mock-caller-screen" id="mock-caller-screen-ui" style="display: none;">
+                            <div class="mock-caller-name">Dad</div>
+                            <div class="mock-caller-sub">Mobile</div>
+                            <div class="mock-caller-avatar pulsing">👨</div>
+                            
+                            <!-- Keypad for Lock Passcode if they choose to decline or bypass call -->
+                            <div class="mock-lock-screen" id="mock-lock-screen-ui" style="display: none;">
+                                <div class="lock-status" id="mock-lock-status">🔒 ENTER PASSCODE</div>
+                                <div class="lock-dots">
+                                    <div class="lock-dot" id="mock-dot-0"></div>
+                                    <div class="lock-dot" id="mock-dot-1"></div>
+                                    <div class="lock-dot" id="mock-dot-2"></div>
+                                    <div class="lock-dot" id="mock-dot-3"></div>
+                                </div>
+                                <div class="lock-keypad">
+                                    <button onclick="pressMockKey('1')">1</button>
+                                    <button onclick="pressMockKey('2')">2</button>
+                                    <button onclick="pressMockKey('3')">3</button>
+                                    <button onclick="pressMockKey('4')">4</button>
+                                    <button onclick="pressMockKey('5')">5</button>
+                                    <button onclick="pressMockKey('6')">6</button>
+                                    <button onclick="pressMockKey('7')">7</button>
+                                    <button onclick="pressMockKey('8')">8</button>
+                                    <button onclick="pressMockKey('9')">9</button>
+                                    <button class="key-clear" onclick="clearMockKeys()">C</button>
+                                    <button onclick="pressMockKey('0')">0</button>
+                                    <button class="key-back" onclick="backspaceMockKeys()">⌫</button>
+                                </div>
                             </div>
-                            <div class="lock-keypad">
-                                <button onclick="pressMockKey('1')">1</button>
-                                <button onclick="pressMockKey('2')">2</button>
-                                <button onclick="pressMockKey('3')">3</button>
-                                <button onclick="pressMockKey('4')">4</button>
-                                <button onclick="pressMockKey('5')">5</button>
-                                <button onclick="pressMockKey('6')">6</button>
-                                <button onclick="pressMockKey('7')">7</button>
-                                <button onclick="pressMockKey('8')">8</button>
-                                <button onclick="pressMockKey('9')">9</button>
-                                <button class="key-clear" onclick="clearMockKeys()">C</button>
-                                <button onclick="pressMockKey('0')">0</button>
-                                <button class="key-back" onclick="backspaceMockKeys()">⌫</button>
+                            
+                            <!-- Call Actions: Accept / Decline -->
+                            <div class="mock-call-actions" id="mock-call-actions-ui">
+                                <div class="mock-call-btn decline" onclick="declineCinematicCall()">
+                                    <div class="btn-icon">📞</div>
+                                    <span>Decline</span>
+                                </div>
+                                <div class="mock-call-btn accept" onclick="acceptCinematicCall()">
+                                    <div class="btn-icon">📞</div>
+                                    <span>Accept</span>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <!-- Call Connecting Screen -->
+                        <div class="mock-connecting-screen" id="mock-connecting-ui" style="display: none;">
+                            <div class="mock-caller-name">Dad</div>
+                            <div class="mock-caller-status" id="mock-connect-status">Connecting...</div>
+                            <div class="call-timer" id="mock-call-timer">00:00</div>
+                            <div class="mock-caller-avatar pulsing">👨</div>
                         </div>
                     </div>
                 </div>
