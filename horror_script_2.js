@@ -425,7 +425,7 @@ function startGame() {
             if (banner && text) {
                 banner.style.display = 'block';
                 text.innerText = "💬 Who's that was opening the door?";
-                banner.onclick = triggerWhoIsOpenDoorSuggestion;
+                banner.onclick = window.triggerWhoIsOpenDoorSuggestion;
             }
         }, 1500);
     }, 4000);
@@ -1468,24 +1468,38 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Narrative Transitions for Door Check Sequence
-window.triggerWhoIsOpenDoorSuggestion = function() {
+function triggerWhoIsOpenDoorSuggestion() {
     const banner = document.getElementById('narrative-suggestion-banner');
     const text = document.getElementById('narrative-suggestion-text');
     if (banner) banner.style.display = 'none';
     
     // Speak in female voice
     const utterance = speakCustomVoice("Who was opening the door?", false);
+    window.activeUtterance = utterance; // Prevent GC
+    
+    let voiceFired = false;
     utterance.onend = function() {
+        if (voiceFired) return;
+        voiceFired = true;
         if (banner && text) {
             banner.style.display = 'block';
             text.innerText = "💬 Go and check it";
-            banner.onclick = triggerGoCheckItSuggestion;
+            banner.onclick = window.triggerGoCheckItSuggestion;
         }
     };
+    
+    // Fallback timer (4s) to ensure progression even if TTS is blocked
+    setTimeout(() => {
+        if (!voiceFired) {
+            utterance.onend();
+        }
+    }, 4000);
+    
     window.speechSynthesis.speak(utterance);
-};
+}
+window.triggerWhoIsOpenDoorSuggestion = triggerWhoIsOpenDoorSuggestion;
 
-window.triggerGoCheckItSuggestion = function() {
+function triggerGoCheckItSuggestion() {
     const banner = document.getElementById('narrative-suggestion-banner');
     if (banner) banner.style.display = 'none';
     
@@ -1549,12 +1563,13 @@ window.triggerGoCheckItSuggestion = function() {
         if (banner && text) {
             banner.style.display = 'block';
             text.innerText = "💬 No one is there. Return to the bedroom";
-            banner.onclick = triggerReturnToBedroomSuggestion;
+            banner.onclick = window.triggerReturnToBedroomSuggestion;
         }
     }, 9600);
-};
+}
+window.triggerGoCheckItSuggestion = triggerGoCheckItSuggestion;
 
-window.triggerReturnToBedroomSuggestion = function() {
+function triggerReturnToBedroomSuggestion() {
     const banner = document.getElementById('narrative-suggestion-banner');
     if (banner) banner.style.display = 'none';
     
@@ -1599,4 +1614,5 @@ window.triggerReturnToBedroomSuggestion = function() {
             showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
         }, 2500);
     }, 6500);
-};
+}
+window.triggerReturnToBedroomSuggestion = triggerReturnToBedroomSuggestion;
