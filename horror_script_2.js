@@ -386,7 +386,7 @@ window.showWarning = function() {
     }, 4100); // Walk down hallway duration
 };
 
-// Start game loop
+// Start game sequence
 function startGame() {
     console.log("Game started.");
     
@@ -402,12 +402,32 @@ function startGame() {
             doorBlockSound.volume = 0.8;
             doorBlockSound.play().catch(e => console.log("Door block sound blocked:", e));
         }
-    }, 4000);
 
-    // Trigger Dad's first message after 5 seconds
-    setTimeout(() => {
-        receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
-        showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+        // Trigger sudden lightning flash
+        const flash = document.createElement('div');
+        flash.className = 'sudden-lightning-active';
+        const container = document.getElementById('cinematic-intro-container');
+        if (container) {
+            container.appendChild(flash);
+            setTimeout(() => flash.remove(), 1200);
+        }
+
+        // Trigger thunder sound
+        if (thunderSound) {
+            thunderSound.volume = 1.0;
+            thunderSound.play().catch(e => {});
+        }
+
+        // Show suggestion after 1.5 seconds from sound start
+        setTimeout(() => {
+            const banner = document.getElementById('narrative-suggestion-banner');
+            const text = document.getElementById('narrative-suggestion-text');
+            if (banner && text) {
+                banner.style.display = 'block';
+                text.innerText = "💬 Who's that was opening the door?";
+                banner.onclick = triggerWhoIsOpenDoorSuggestion;
+            }
+        }, 1500);
     }, 4000);
 }
 
@@ -1446,3 +1466,110 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Narrative Transitions for Door Check Sequence
+window.triggerWhoIsOpenDoorSuggestion = function() {
+    const banner = document.getElementById('narrative-suggestion-banner');
+    const text = document.getElementById('narrative-suggestion-text');
+    if (banner) banner.style.display = 'none';
+    
+    // Speak in female voice
+    const utterance = speakCustomVoice("Who was opening the door?", false);
+    utterance.onend = function() {
+        if (banner && text) {
+            banner.style.display = 'block';
+            text.innerText = "💬 Go and check it";
+            banner.onclick = triggerGoCheckItSuggestion;
+        }
+    };
+    window.speechSynthesis.speak(utterance);
+};
+
+window.triggerGoCheckItSuggestion = function() {
+    const banner = document.getElementById('narrative-suggestion-banner');
+    if (banner) banner.style.display = 'none';
+    
+    const doorStage = document.getElementById('cinematic-door-stage');
+    const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
+    const roomStage = document.getElementById('cinematic-room-stage');
+    
+    // Zoom out of desk phone
+    if (roomStage) roomStage.classList.remove('zoomed-in');
+    if (doorFrame) doorFrame.classList.add('bobbing');
+    
+    // Transition back to hallway doorway
+    setTimeout(() => {
+        if (roomStage) roomStage.classList.remove('active');
+        if (doorStage) doorStage.classList.remove('zoomed-through');
+        
+        if (creepyImpact) {
+            creepyImpact.volume = 0.25;
+            creepyImpact.play().catch(e => {});
+        }
+    }, 1500);
+    
+    // Arrive at door frame and check left/right
+    setTimeout(() => {
+        if (doorFrame) {
+            doorFrame.classList.remove('bobbing');
+            doorFrame.classList.add('checking');
+        }
+        
+        if (heavyBreathing) {
+            heavyBreathing.volume = 0.5;
+            heavyBreathing.loop = true;
+            heavyBreathing.play().catch(e => {});
+        }
+    }, 4500);
+    
+    // Suggest returning after checking is completed
+    setTimeout(() => {
+        if (heavyBreathing) {
+            heavyBreathing.pause();
+            heavyBreathing.loop = false;
+        }
+        
+        const text = document.getElementById('narrative-suggestion-text');
+        if (banner && text) {
+            banner.style.display = 'block';
+            text.innerText = "💬 No one is there. Return to the bedroom";
+            banner.onclick = triggerReturnToBedroomSuggestion;
+        }
+    }, 9000);
+};
+
+window.triggerReturnToBedroomSuggestion = function() {
+    const banner = document.getElementById('narrative-suggestion-banner');
+    if (banner) banner.style.display = 'none';
+    
+    const doorStage = document.getElementById('cinematic-door-stage');
+    const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
+    const roomStage = document.getElementById('cinematic-room-stage');
+    
+    if (doorFrame) {
+        doorFrame.classList.remove('checking');
+        doorFrame.classList.add('bobbing');
+    }
+    if (doorStage) doorStage.classList.add('zoomed-through');
+    
+    // Walk back to bedroom and zoom in
+    setTimeout(() => {
+        if (roomStage) {
+            roomStage.classList.add('active');
+            setTimeout(() => {
+                roomStage.classList.add('zoomed-in');
+            }, 100);
+        }
+    }, 2000);
+    
+    // Settle camera back on phone
+    setTimeout(() => {
+        if (doorFrame) doorFrame.classList.remove('bobbing');
+        
+        // Trigger Dad's first message 2.5s after settling down
+        setTimeout(() => {
+            receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+            showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+        }, 2500);
+    }, 4500);
+};
