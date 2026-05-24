@@ -1491,24 +1491,40 @@ window.triggerGoCheckItSuggestion = function() {
     
     const doorStage = document.getElementById('cinematic-door-stage');
     const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
+    const doorLeaf = document.getElementById('door-leaf');
     const roomStage = document.getElementById('cinematic-room-stage');
     
-    // Zoom out of desk phone
+    // Step 1: Zoom out of desk phone
     if (roomStage) roomStage.classList.remove('zoomed-in');
-    if (doorFrame) doorFrame.classList.add('bobbing');
     
-    // Transition back to hallway doorway
+    // Step 2: Transition back to hallway doorway and reset door stage to walk-in position
     setTimeout(() => {
         if (roomStage) roomStage.classList.remove('active');
-        if (doorStage) doorStage.classList.remove('zoomed-through');
-        
-        if (creepyImpact) {
-            creepyImpact.volume = 0.25;
-            creepyImpact.play().catch(e => {});
+        if (doorStage) {
+            doorStage.classList.remove('walk-to-door');
+            doorStage.classList.remove('zoomed-through');
         }
+        if (doorLeaf) doorLeaf.classList.remove('open');
+        
+        // Force layout reflow
+        if (doorStage) doorStage.offsetHeight;
+        
+        // Step 3: Walk FORWARD to the closed door frame
+        setTimeout(() => {
+            if (doorStage) doorStage.classList.add('walk-to-door');
+            if (doorFrame) {
+                doorFrame.classList.remove('checking');
+                doorFrame.classList.add('bobbing');
+            }
+            
+            if (creepyImpact) {
+                creepyImpact.volume = 0.25;
+                creepyImpact.play().catch(e => {});
+            }
+        }, 50);
     }, 1500);
     
-    // Arrive at door frame and check left/right
+    // Step 4: Arrive at door frame and check left/right
     setTimeout(() => {
         if (doorFrame) {
             doorFrame.classList.remove('bobbing');
@@ -1520,7 +1536,7 @@ window.triggerGoCheckItSuggestion = function() {
             heavyBreathing.loop = true;
             heavyBreathing.play().catch(e => {});
         }
-    }, 4500);
+    }, 5600); // 1.5s transition + 4.1s walking down hallway
     
     // Suggest returning after checking is completed
     setTimeout(() => {
@@ -1535,7 +1551,7 @@ window.triggerGoCheckItSuggestion = function() {
             text.innerText = "💬 No one is there. Return to the bedroom";
             banner.onclick = triggerReturnToBedroomSuggestion;
         }
-    }, 9000);
+    }, 9600);
 };
 
 window.triggerReturnToBedroomSuggestion = function() {
@@ -1544,15 +1560,26 @@ window.triggerReturnToBedroomSuggestion = function() {
     
     const doorStage = document.getElementById('cinematic-door-stage');
     const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
+    const doorLeaf = document.getElementById('door-leaf');
     const roomStage = document.getElementById('cinematic-room-stage');
     
+    // Step 1: Open door leaf and walk forward
     if (doorFrame) {
         doorFrame.classList.remove('checking');
         doorFrame.classList.add('bobbing');
     }
-    if (doorStage) doorStage.classList.add('zoomed-through');
+    if (doorLeaf) doorLeaf.classList.add('open');
     
-    // Walk back to bedroom and zoom in
+    if (creepyImpact) {
+        creepyImpact.volume = 0.4;
+        creepyImpact.play().catch(e => {});
+    }
+    
+    setTimeout(() => {
+        if (doorStage) doorStage.classList.add('zoomed-through');
+    }, 500);
+    
+    // Step 2: Walk back to bedroom and zoom in
     setTimeout(() => {
         if (roomStage) {
             roomStage.classList.add('active');
@@ -1562,7 +1589,7 @@ window.triggerReturnToBedroomSuggestion = function() {
         }
     }, 2000);
     
-    // Settle camera back on phone
+    // Step 3: Settle camera back on phone
     setTimeout(() => {
         if (doorFrame) doorFrame.classList.remove('bobbing');
         
@@ -1571,5 +1598,5 @@ window.triggerReturnToBedroomSuggestion = function() {
             receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
             showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
         }, 2500);
-    }, 4500);
+    }, 6500);
 };
