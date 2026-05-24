@@ -255,21 +255,31 @@ window.showWarning = function() {
     cinematicContainer.classList.add('active');
     cinematicContainer.style.opacity = '1';
     
-    // Stage 1: Wait 1.5 seconds, then open the bedroom door
+    const doorStage = document.getElementById('cinematic-door-stage');
+    const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
+    const doorLeaf = document.getElementById('door-leaf');
+    
+    // Phase 1: Start walking slowly towards the bedroom door down the hallway
     setTimeout(() => {
-        const doorLeaf = document.getElementById('door-leaf');
+        if (doorStage) doorStage.classList.add('walk-to-door');
+        if (doorFrame) doorFrame.classList.add('bobbing'); // head-bob footfalls sway
+    }, 100);
+    
+    // Phase 2: Arrive at door at 4.0 seconds, stop walking, and open the bedroom door
+    setTimeout(() => {
+        if (doorFrame) doorFrame.classList.remove('bobbing'); // stand still
         if (doorLeaf) doorLeaf.classList.add('open');
         
-        // Play door squeak / ambient sound
+        // Play door squeak/creepy audio
         if (creepyImpact) {
             creepyImpact.volume = 0.4;
             creepyImpact.play().catch(e => {});
         }
         
-        // Stage 2: Camera pans/flies through doorway
+        // Phase 3: Walk through the open bedroom door at 6.0 seconds
         setTimeout(() => {
-            const doorStage = document.getElementById('cinematic-door-stage');
             if (doorStage) doorStage.classList.add('zoomed-through');
+            if (doorFrame) doorFrame.classList.add('bobbing'); // start bobbing again as we step through
             
             const roomStage = document.getElementById('cinematic-room-stage');
             if (roomStage) roomStage.classList.add('active');
@@ -281,15 +291,17 @@ window.showWarning = function() {
                 ringtone.play().catch(e => {});
             }
             
-            // Slow zoom camera pan onto desk
+            // Camera slow zooms in on the desk
             setTimeout(() => {
                 roomStage.classList.add('zoomed-in');
             }, 100);
             
-            // Stage 3: After the camera pan settles (4.5s), boot mock phone caller UI
+            // Phase 4: Settle camera zoom on phone at 10.5 seconds and display Dad call screen
             setTimeout(() => {
+                if (doorFrame) doorFrame.classList.remove('bobbing');
+                
                 const phoneScreen = document.getElementById('mock-phone-screen');
-                if (phoneScreen) phoneScreen.classList.remove('ring-glow'); // stop low glow, open screen
+                if (phoneScreen) phoneScreen.classList.remove('ring-glow'); // settle screen display
                 
                 const callerUI = document.getElementById('mock-caller-screen-ui');
                 if (callerUI) callerUI.style.display = 'flex';
@@ -298,9 +310,9 @@ window.showWarning = function() {
                 if (callActionsUI) callActionsUI.style.display = 'flex';
             }, 4500);
             
-        }, 1200); // Pan through door shortly after creak starts
+        }, 2000); // 2 seconds for door swing to reveal bedroom
         
-    }, 1500); // 1.5 seconds dark hallway suspense
+    }, 4100); // Walk down hallway duration
 };
 
 // Start game loop

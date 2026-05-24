@@ -1237,6 +1237,13 @@ body {
 }
 
 /* Bedroom door entrance stage styling */
+@keyframes headBob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(-0.8deg) translateX(-2px); }
+    50% { transform: translateY(0) rotate(0deg); }
+    75% { transform: translateY(-8px) rotate(0.8deg) translateX(2px); }
+}
+
 .door-stage {
     position: absolute;
     inset: 0;
@@ -1246,11 +1253,16 @@ body {
     align-items: center;
     background: #020205;
     perspective: 1200px;
-    transition: opacity 1.5s ease-in-out, transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.55) translateZ(-400px); /* Start far down the hallway */
+    transition: opacity 1.5s ease-in-out, transform 4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.door-stage.walk-to-door {
+    transform: scale(1.05) translateZ(0); /* Approach door */
 }
 
 .door-stage.zoomed-through {
-    transform: scale(2.2) translateZ(300px);
+    transform: scale(3.2) translateZ(500px); /* Walk through open door */
     opacity: 0;
     pointer-events: none;
 }
@@ -1271,6 +1283,11 @@ body {
     box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
     background: rgba(0,0,0,0.9);
     perspective: 1000px;
+    transition: transform 0.5s ease-in-out;
+}
+
+.door-frame.bobbing {
+    animation: headBob 1.4s infinite ease-in-out;
 }
 
 .door-leaf {
