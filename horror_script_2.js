@@ -276,18 +276,7 @@ function proceedToGameFromCinematic() {
     
     setTimeout(() => {
         container.classList.remove('active');
-        
-        // Show headphones warning
-        const warningScreen = document.getElementById('headphones-warning');
-        warningScreen.style.display = 'flex';
-        
-        const progressBar = document.getElementById('loading-progress');
-        if (progressBar) progressBar.style.width = '100%';
-        
-        setTimeout(() => {
-            warningScreen.style.display = 'none';
-            startGame();
-        }, 4600);
+        startGame();
     }, 1500);
 }
 
@@ -296,10 +285,16 @@ window.showWarning = function() {
     requestFullScreen();
     document.getElementById('intro-overlay').style.display = 'none';
     
-    // Pause the background video to silence the intro screen audio
+    // Completely terminate and remove the background video to prevent audio leakage
     const introVideo = document.getElementById('intro-video-bg');
     if (introVideo) {
         introVideo.pause();
+        introVideo.muted = true;
+        introVideo.src = "";
+        try {
+            introVideo.load();
+        } catch(e) {}
+        introVideo.remove();
     }
     
     // Play storm rain sound immediately
@@ -1415,12 +1410,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Unmute intro video on click
     const introVideo = document.getElementById('intro-video-bg');
     if (introVideo) {
+        const events = ['click', 'touchstart', 'mousedown'];
         const unmute = () => {
-            introVideo.muted = false;
-            introVideo.play().catch(e => {});
+            if (introVideo && introVideo.parentNode) {
+                introVideo.muted = false;
+                introVideo.play().catch(e => {});
+            }
+            events.forEach(evt => {
+                window.removeEventListener(evt, unmute);
+            });
         };
-        ['click', 'touchstart', 'mousedown'].forEach(evt => {
-            window.addEventListener(evt, unmute, { once: true });
+        events.forEach(evt => {
+            window.addEventListener(evt, unmute);
         });
     }
 });
