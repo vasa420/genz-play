@@ -68,6 +68,7 @@ updateTime();
 let mockPinEntered = '';
 const correctMockPin = '1031';
 let mockCallTimerInterval = null;
+let activeCallContact = 'dad';
 
 window.pressMockKey = function(digit) {
     if (mockPinEntered.length < 4) {
@@ -158,12 +159,29 @@ function verifyMockPin() {
 }
 
 // Cinematic Call actions
+// Cinematic Call actions
 window.declineCinematicCall = function() {
     playBeepSound();
     
-    // Hide call controls and show passcode input UI instead
-    document.getElementById('mock-call-actions-ui').style.display = 'none';
-    document.getElementById('mock-lock-screen-ui').style.display = 'flex';
+    if (ringtone) {
+        ringtone.pause();
+        ringtone.currentTime = 0;
+    }
+    
+    if (activeCallContact === 'mom') {
+        // Hide caller screen entirely
+        document.getElementById('mock-caller-screen-ui').style.display = 'none';
+        
+        // Trigger Dad's message 2.5 seconds later
+        setTimeout(() => {
+            receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+            showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+        }, 2500);
+    } else {
+        // Hide call controls and show passcode input UI instead
+        document.getElementById('mock-call-actions-ui').style.display = 'none';
+        document.getElementById('mock-lock-screen-ui').style.display = 'flex';
+    }
 };
 
 function speakCustomVoice(text, isMale) {
@@ -217,21 +235,64 @@ window.acceptCinematicCall = function() {
         if (timerDisplay) timerDisplay.innerText = `${minsStr}:${secsStr}`;
     }, 1000);
     
-    // Play Dad's warning in a male voice
-    setTimeout(() => {
-        const dadText = "Hey Priya, please be safe, lock all the doors, I will be there soon.";
-        const dadUtterance = speakCustomVoice(dadText, true);
-        
-        dadUtterance.onend = function() {
-            // Show reply suggestion once Dad finishes talking
-            const replyBtn = document.getElementById('mock-reply-suggestion');
-            if (replyBtn) {
-                replyBtn.style.display = 'block';
-            }
-        };
-        
-        window.speechSynthesis.speak(dadUtterance);
-    }, 1000);
+    // Dynamic logic based on who is calling
+    if (activeCallContact === 'mom') {
+        // Mom's call
+        setTimeout(() => {
+            const momText = "Hey Priya, I will come soon, you go and eat first.";
+            const momUtterance = speakCustomVoice(momText, false); // female voice
+            window.activeUtterance = momUtterance; // Prevent GC
+            
+            let voiceFired = false;
+            momUtterance.onend = function() {
+                if (voiceFired) return;
+                voiceFired = true;
+                const replyBtn = document.getElementById('mock-reply-suggestion');
+                const replySpan = replyBtn ? replyBtn.querySelector('span') : null;
+                if (replyBtn && replySpan) {
+                    replySpan.innerText = "💬 Say: \"Ok Mom\"";
+                    replyBtn.style.display = 'block';
+                }
+            };
+            
+            // Fallback for voice end
+            setTimeout(() => {
+                if (!voiceFired) {
+                    momUtterance.onend();
+                }
+            }, 5000);
+            
+            window.speechSynthesis.speak(momUtterance);
+        }, 1000);
+    } else {
+        // Dad's call
+        setTimeout(() => {
+            const dadText = "Hey Priya, please be safe, lock all the doors, I will be there soon.";
+            const dadUtterance = speakCustomVoice(dadText, true); // male voice
+            window.activeUtterance = dadUtterance; // Prevent GC
+            
+            let voiceFired = false;
+            dadUtterance.onend = function() {
+                if (voiceFired) return;
+                voiceFired = true;
+                const replyBtn = document.getElementById('mock-reply-suggestion');
+                const replySpan = replyBtn ? replyBtn.querySelector('span') : null;
+                if (replyBtn && replySpan) {
+                    replySpan.innerText = "💬 Say: \"Ok Dad, come fast\"";
+                    replyBtn.style.display = 'block';
+                }
+            };
+            
+            // Fallback
+            setTimeout(() => {
+                if (!voiceFired) {
+                    dadUtterance.onend();
+                }
+            }, 5000);
+            
+            window.speechSynthesis.speak(dadUtterance);
+        }, 1000);
+    }
 };
 
 window.triggerPlayerSpeechReply = function() {
@@ -239,16 +300,47 @@ window.triggerPlayerSpeechReply = function() {
     const replyBtn = document.getElementById('mock-reply-suggestion');
     if (replyBtn) replyBtn.style.display = 'none';
     
-    // Speak Priya's reply in a female voice
-    const replyText = "Ok Dad, come fast";
-    const priyaUtterance = speakCustomVoice(replyText, false);
-    
-    priyaUtterance.onend = function() {
-        // Automatically hang up the call
-        cutMockCall();
-    };
-    
-    window.speechSynthesis.speak(priyaUtterance);
+    if (activeCallContact === 'mom') {
+        const replyText = "Ok Mom";
+        const priyaUtterance = speakCustomVoice(replyText, false);
+        window.activeUtterance = priyaUtterance; // Prevent GC
+        
+        let voiceFired = false;
+        priyaUtterance.onend = function() {
+            if (voiceFired) return;
+            voiceFired = true;
+            cutMockCall();
+        };
+        
+        // Fallback
+        setTimeout(() => {
+            if (!voiceFired) {
+                priyaUtterance.onend();
+            }
+        }, 3000);
+        
+        window.speechSynthesis.speak(priyaUtterance);
+    } else {
+        const replyText = "Ok Dad, come fast";
+        const priyaUtterance = speakCustomVoice(replyText, false);
+        window.activeUtterance = priyaUtterance; // Prevent GC
+        
+        let voiceFired = false;
+        priyaUtterance.onend = function() {
+            if (voiceFired) return;
+            voiceFired = true;
+            cutMockCall();
+        };
+        
+        // Fallback
+        setTimeout(() => {
+            if (!voiceFired) {
+                priyaUtterance.onend();
+            }
+        }, 3000);
+        
+        window.speechSynthesis.speak(priyaUtterance);
+    }
 };
 
 function cutMockCall() {
@@ -264,15 +356,22 @@ function cutMockCall() {
         const connectingUI = document.getElementById('mock-connecting-ui');
         if (connectingUI) connectingUI.style.display = 'none';
         
-        // Show caller screen UI housing the lock screen
+        // Hide caller screen UI housing the lock screen
         const callerUI = document.getElementById('mock-caller-screen-ui');
-        if (callerUI) callerUI.style.display = 'flex';
+        if (callerUI) callerUI.style.display = 'none';
         
-        // Hide call actions UI
-        document.getElementById('mock-call-actions-ui').style.display = 'none';
-        
-        // Show passcode input lock screen UI
-        document.getElementById('mock-lock-screen-ui').style.display = 'flex';
+        if (activeCallContact === 'mom') {
+            // Unlocked state after Mom's call, trigger Dad's chat message after 2.5 seconds
+            setTimeout(() => {
+                receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+                showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+            }, 2500);
+        } else {
+            // Keep phone on lock screen passcode input UI for Dad's call
+            if (callerUI) callerUI.style.display = 'flex';
+            document.getElementById('mock-call-actions-ui').style.display = 'none';
+            document.getElementById('mock-lock-screen-ui').style.display = 'flex';
+        }
     }, 1200);
 }
 
@@ -1614,11 +1713,46 @@ function triggerReturnToBedroomSuggestion() {
     setTimeout(() => {
         if (doorFrame) doorFrame.classList.remove('bobbing');
         
-        // Trigger Dad's first message 2.5s after settling down
+        // Trigger Mom's call 2.5 seconds after camera settles down
         setTimeout(() => {
-            receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
-            showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+            triggerMomCall();
         }, 2500);
     }, 6500);
 }
 window.triggerReturnToBedroomSuggestion = triggerReturnToBedroomSuggestion;
+
+function triggerMomCall() {
+    activeCallContact = 'mom';
+    
+    // Change label and avatar dynamically
+    const nameLabel = document.getElementById('mock-caller-name-label');
+    const avatarImg = document.getElementById('mock-caller-avatar-img');
+    const statusText = document.getElementById('mock-connect-status');
+    const timerDisplay = document.getElementById('mock-call-timer');
+    
+    if (nameLabel) nameLabel.innerText = "Mom";
+    if (avatarImg) {
+        avatarImg.innerText = "👩";
+        avatarImg.className = "mock-caller-avatar pulsing";
+    }
+    if (statusText) statusText.innerText = "Incoming Call...";
+    if (timerDisplay) timerDisplay.innerText = "00:00";
+    
+    // Show call controls and hide the lockscreen container (since we don't want it to show up on decline)
+    const lockScreenUI = document.getElementById('mock-lock-screen-ui');
+    if (lockScreenUI) lockScreenUI.style.display = 'none';
+    
+    const callActionsUI = document.getElementById('mock-call-actions-ui');
+    if (callActionsUI) callActionsUI.style.display = 'flex';
+    
+    // Show caller screen UI overlay
+    const callerScreenUI = document.getElementById('mock-caller-screen-ui');
+    if (callerScreenUI) callerScreenUI.style.display = 'block';
+    
+    // Play ringtone
+    if (ringtone) {
+        ringtone.loop = true;
+        ringtone.volume = 0.6;
+        ringtone.play().catch(e => console.log("Ringtone error:", e));
+    }
+}
