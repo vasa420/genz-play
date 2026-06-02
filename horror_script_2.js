@@ -361,11 +361,16 @@ function cutMockCall() {
         if (callerUI) callerUI.style.display = 'none';
         
         if (activeCallContact === 'mom') {
-            // Unlocked state after Mom's call, trigger Dad's chat message after 2.5 seconds
+            // Suggest she goes and eats now
             setTimeout(() => {
-                receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
-                showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
-            }, 2500);
+                const banner = document.getElementById('narrative-suggestion-banner');
+                const text = document.getElementById('narrative-suggestion-text');
+                if (banner && text) {
+                    text.innerText = "💬 I was hungry, I want to eat now";
+                    banner.style.display = 'block';
+                    banner.onclick = window.triggerEnterKitchen;
+                }
+            }, 2000);
         } else {
             // Keep phone on lock screen passcode input UI for Dad's call
             if (callerUI) callerUI.style.display = 'flex';
@@ -1547,13 +1552,13 @@ window.performCall = function() {
 
 // Initial triggers on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Unmute intro video on click
+    // Keep intro video muted on click to prevent background music mixing
     const introVideo = document.getElementById('intro-video-bg');
     if (introVideo) {
         const events = ['click', 'touchstart', 'mousedown'];
         const unmute = () => {
             if (introVideo && introVideo.parentNode) {
-                introVideo.muted = false;
+                introVideo.muted = true;
                 introVideo.play().catch(e => {});
             }
             events.forEach(evt => {
@@ -1755,4 +1760,259 @@ function triggerMomCall() {
         ringtone.volume = 0.6;
         ringtone.play().catch(e => console.log("Ringtone error:", e));
     }
+}
+
+// ==========================================================================
+// Kitchen Transition and Animations Implementation
+// ==========================================================================
+
+function showKitchenCaption(text) {
+    const captionOverlay = document.getElementById('kitchen-caption-overlay');
+    const captionText = document.getElementById('kitchen-caption-text');
+    if (captionOverlay && captionText) {
+        captionText.innerText = text;
+        captionOverlay.style.display = 'block';
+    }
+}
+
+function hideKitchenCaption() {
+    const captionOverlay = document.getElementById('kitchen-caption-overlay');
+    if (captionOverlay) {
+        captionOverlay.style.display = 'none';
+    }
+}
+
+window.triggerEnterKitchen = function() {
+    console.log("Entering kitchen scene...");
+    
+    // Hide suggestion banner
+    const banner = document.getElementById('narrative-suggestion-banner');
+    if (banner) banner.style.display = 'none';
+    
+    const roomStage = document.getElementById('cinematic-room-stage');
+    const kitchenStage = document.getElementById('cinematic-kitchen-stage');
+    
+    // Step 1: Zoom out of bedroom desk phone
+    if (roomStage) {
+        roomStage.classList.remove('zoomed-in');
+        roomStage.style.opacity = '0';
+    }
+    
+    // Play a subtle suspenseful/creepy transition impact sound if available
+    if (creepyImpact) {
+        creepyImpact.volume = 0.3;
+        creepyImpact.play().catch(e => {});
+    }
+    
+    setTimeout(() => {
+        // Hide bedroom stage, display kitchen stage
+        if (roomStage) roomStage.classList.remove('active');
+        
+        if (kitchenStage) {
+            kitchenStage.style.display = 'flex';
+            // Force layout reflow
+            kitchenStage.offsetHeight;
+            kitchenStage.classList.add('active');
+        }
+        
+        // Wait 500ms to start Priya's entrance
+        setTimeout(() => {
+            startPriyaKitchenSequence();
+        }, 500);
+        
+    }, 1500); // 1.5 seconds for zoom-out & fade transitions
+};
+
+function startPriyaKitchenSequence() {
+    const priya = document.getElementById('kitchen-priya');
+    const fridge = document.getElementById('kitchen-refrigerator');
+    const sandwich = document.getElementById('kitchen-sandwich');
+    const armRight = document.getElementById('priya-avatar-arm-right');
+    const mouth = document.getElementById('priya-avatar-mouth');
+    
+    // Reset states
+    if (priya) {
+        priya.style.left = '-150px';
+        priya.classList.remove('walking');
+    }
+    if (fridge) fridge.classList.remove('open');
+    if (sandwich) {
+        sandwich.className = 'sandwich-food'; // reset bites
+        sandwich.style.display = 'none'; // hide sandwich until fridge opened
+    }
+    if (armRight) armRight.className = 'priya-arm-right';
+    if (mouth) mouth.className = 'priya-mouth';
+    
+    // 1. Voice line: "I was so hungry... let me grab something from the fridge."
+    const enterUtterance = speakCustomVoice("I was so hungry... let me grab a quick bite.", false);
+    window.activeUtterance = enterUtterance;
+    showKitchenCaption("Priya: I was so hungry... let me grab a quick bite.");
+    
+    // Make Priya walk in
+    setTimeout(() => {
+        if (priya) {
+            priya.classList.add('walking');
+            priya.style.left = '320px'; // move to center of kitchen
+        }
+    }, 500);
+    
+    // 3.5 seconds for walking animation
+    setTimeout(() => {
+        if (priya) priya.classList.remove('walking');
+        hideKitchenCaption();
+        
+        // 2. Open refrigerator
+        showKitchenCaption("Priya: Let's see what we have here...");
+        if (fridge) fridge.classList.add('open');
+        
+        // Let the light glow inside fridge, then simulate grabbing ingredients
+        setTimeout(() => {
+            // Refrigerator closes, sandwich appears on counter plate
+            if (fridge) fridge.classList.remove('open');
+            if (sandwich) {
+                sandwich.style.display = 'flex';
+                // Pop scale animation
+                sandwich.style.transform = 'scale(0) rotateX(10deg)';
+                setTimeout(() => {
+                    sandwich.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    sandwich.style.transform = 'scale(1) rotateX(10deg)';
+                }, 50);
+            }
+            hideKitchenCaption();
+            
+            // Start eating bites sequentially
+            setTimeout(triggerEatingLoop, 1500);
+            
+        }, 2200);
+        
+    }, 3500);
+}
+
+function triggerEatingLoop() {
+    const sandwich = document.getElementById('kitchen-sandwich');
+    const armRight = document.getElementById('priya-avatar-arm-right');
+    const mouth = document.getElementById('priya-avatar-mouth');
+    
+    // Bite 1
+    showKitchenCaption("*taking a bite*");
+    if (armRight) armRight.classList.add('eating');
+    if (mouth) mouth.classList.add('chewing');
+    
+    // Chewing sound effect synthesized or voice chewing text
+    speakCustomVoice("Mmm", false);
+    
+    setTimeout(() => {
+        // Midpoint of animation: sandwich is bitten
+        if (sandwich) sandwich.classList.add('bite-1');
+    }, 1000);
+    
+    setTimeout(() => {
+        // Bite 1 complete, reset arm for a brief moment
+        if (armRight) armRight.className = 'priya-arm-right';
+        if (mouth) mouth.className = 'priya-mouth';
+        hideKitchenCaption();
+        
+        // Bite 2 after 1 second pause
+        setTimeout(() => {
+            showKitchenCaption("*munch munch*");
+            if (armRight) armRight.classList.add('eating');
+            if (mouth) mouth.classList.add('chewing');
+            
+            setTimeout(() => {
+                if (sandwich) sandwich.classList.add('bite-2');
+            }, 1000);
+            
+            setTimeout(() => {
+                if (armRight) armRight.className = 'priya-arm-right';
+                if (mouth) mouth.className = 'priya-mouth';
+                hideKitchenCaption();
+                
+                // Bite 3 after 1 second pause
+                setTimeout(() => {
+                    showKitchenCaption("*munch... gulp*");
+                    if (armRight) armRight.classList.add('eating');
+                    if (mouth) mouth.classList.add('chewing');
+                    
+                    setTimeout(() => {
+                        if (sandwich) sandwich.classList.add('bite-3');
+                    }, 1000);
+                    
+                    setTimeout(() => {
+                        if (armRight) armRight.className = 'priya-arm-right';
+                        if (mouth) mouth.className = 'priya-mouth';
+                        hideKitchenCaption();
+                        
+                        // Finish eating sequence
+                        triggerKitchenExit();
+                        
+                    }, 2000);
+                }, 1000);
+                
+            }, 2000);
+        }, 1000);
+        
+    }, 2000);
+}
+
+function triggerKitchenExit() {
+    const priya = document.getElementById('kitchen-priya');
+    const kitchenStage = document.getElementById('cinematic-kitchen-stage');
+    const roomStage = document.getElementById('cinematic-room-stage');
+    
+    const exitUtterance = speakCustomVoice("Much better... Now I should get back to the bedroom.", false);
+    window.activeUtterance = exitUtterance;
+    showKitchenCaption("Priya: Much better... Now I should get back to the bedroom.");
+    
+    setTimeout(() => {
+        // Walk Priya back off-screen left
+        if (priya) {
+            priya.classList.add('walking');
+            priya.style.left = '-150px';
+        }
+        
+        setTimeout(() => {
+            if (priya) priya.classList.remove('walking');
+            hideKitchenCaption();
+            
+            // Fade out kitchen stage
+            if (kitchenStage) {
+                kitchenStage.classList.remove('active');
+                kitchenStage.style.opacity = '0';
+            }
+            
+            // Fade back in bedroom stage and zoom back in to phone
+            setTimeout(() => {
+                if (kitchenStage) kitchenStage.style.display = 'none';
+                
+                if (roomStage) {
+                    roomStage.style.display = 'flex';
+                    // Reflow
+                    roomStage.offsetHeight;
+                    roomStage.classList.add('active');
+                    roomStage.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        roomStage.classList.add('zoomed-in');
+                    }, 100);
+                }
+                
+                // Let camera settle and then trigger Dad's message
+                setTimeout(() => {
+                    console.log("Triggering Dad's storm message after kitchen sequence.");
+                    receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+                    showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+                    
+                    // Enable smart lock alert dot on screen
+                    const alertDot = document.getElementById('cabin-alert-dot');
+                    if (alertDot) alertDot.style.display = 'flex';
+                    
+                    // Trigger loading choices
+                    loadChatChoices();
+                }, 2500);
+                
+            }, 1500); // Wait for kitchen fadeout transition
+            
+        }, 2500); // Priya walking duration
+        
+    }, 2000); // 2s after voicing exit line
 }
