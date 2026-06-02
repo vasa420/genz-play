@@ -1785,13 +1785,78 @@ body {
 }
 
 /* ==========================================================================
-   STAGE 3: Kitchen Room & Priya Eating Animations CSS Setup
+   STAGE 2.5 & 3: Kitchen Walk Transition & Stage Setup CSS
    ========================================================================== */
+
+.walk-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: #020205;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.walk-stage.active {
+    display: flex;
+    opacity: 1;
+}
+
+.hallway-walk-view {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background: linear-gradient(180deg, #0f0b09 0%, #050403 100%);
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.95);
+    overflow: hidden;
+}
+
+@keyframes walkCameraBob {
+    0%, 100% { transform: scale(1) translateY(0) rotate(0deg); }
+    25% { transform: scale(1.02) translateY(-10px) rotate(-0.5deg); }
+    50% { transform: scale(1.04) translateY(0) rotate(0deg); }
+    75% { transform: scale(1.02) translateY(-10px) rotate(0.5deg); }
+}
+
+.hallway-walk-view.bobbing {
+    animation: walkCameraBob 1.2s infinite ease-in-out;
+}
+
+.hallway-lines {
+    position: absolute;
+    inset: 0;
+    background: 
+        linear-gradient(28deg, transparent 42%, rgba(255,255,255,0.015) 45%, transparent 48%),
+        linear-gradient(-28deg, transparent 42%, rgba(255,255,255,0.015) 45%, transparent 48%);
+    opacity: 0.7;
+}
+
+.hallway-door-target {
+    position: absolute;
+    top: 170px;
+    left: 330px;
+    width: 140px;
+    height: 260px;
+    border: 5px solid #140d0a;
+    background: rgba(255, 220, 150, 0.02);
+    box-shadow: 0 0 30px rgba(255, 200, 100, 0.03);
+    transform: scale(0.65);
+    transition: transform 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 3.5s ease-in, box-shadow 3.5s ease-in;
+}
+
+.hallway-walk-view.bobbing .hallway-door-target {
+    transform: scale(1.6);
+    background: rgba(255, 245, 200, 0.35);
+    box-shadow: 0 0 120px rgba(255, 210, 120, 0.45);
+}
 
 .kitchen-stage {
     position: absolute;
     inset: 0;
-    z-index: 8;
+    z-index: 20;
     display: none;
     justify-content: center;
     align-items: center;

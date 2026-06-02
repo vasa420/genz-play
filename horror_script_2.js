@@ -1782,13 +1782,15 @@ function hideKitchenCaption() {
 }
 
 window.triggerEnterKitchen = function() {
-    console.log("Entering kitchen scene...");
+    console.log("Entering hallway walk transition...");
     
     // Hide suggestion banner
     const banner = document.getElementById('narrative-suggestion-banner');
     if (banner) banner.style.display = 'none';
     
     const roomStage = document.getElementById('cinematic-room-stage');
+    const walkStage = document.getElementById('cinematic-walk-stage');
+    const walkView = document.getElementById('hallway-walk-view');
     const kitchenStage = document.getElementById('cinematic-kitchen-stage');
     
     // Step 1: Zoom out of bedroom desk phone
@@ -1797,29 +1799,62 @@ window.triggerEnterKitchen = function() {
         roomStage.style.opacity = '0';
     }
     
-    // Play a subtle suspenseful/creepy transition impact sound if available
+    // Play transition sound
     if (creepyImpact) {
         creepyImpact.volume = 0.3;
         creepyImpact.play().catch(e => {});
     }
     
     setTimeout(() => {
-        // Hide bedroom stage, display kitchen stage
+        // Hide room stage
         if (roomStage) roomStage.classList.remove('active');
         
-        if (kitchenStage) {
-            kitchenStage.style.display = 'flex';
-            // Force layout reflow
-            kitchenStage.offsetHeight;
-            kitchenStage.classList.add('active');
+        // Show walk stage
+        if (walkStage) {
+            walkStage.style.display = 'flex';
+            // Reflow
+            walkStage.offsetHeight;
+            walkStage.classList.add('active');
         }
         
-        // Wait 500ms to start Priya's entrance
-        setTimeout(() => {
-            startPriyaKitchenSequence();
-        }, 500);
+        // Start camera bobbing walk animation
+        if (walkView) {
+            walkView.classList.add('bobbing');
+        }
         
-    }, 1500); // 1.5 seconds for zoom-out & fade transitions
+        // Voice walk line
+        const walkUtterance = speakCustomVoice("I should go check the kitchen. I'm starving.", false);
+        window.activeUtterance = walkUtterance;
+        
+        // Walk down hallway duration: 3.5 seconds
+        setTimeout(() => {
+            // Hide walk stage and bobbing
+            if (walkView) walkView.classList.remove('bobbing');
+            if (walkStage) {
+                walkStage.classList.remove('active');
+                walkStage.style.opacity = '0';
+            }
+            
+            // Wait for walk stage fadeout (1s), then show kitchen
+            setTimeout(() => {
+                if (walkStage) walkStage.style.display = 'none';
+                
+                if (kitchenStage) {
+                    kitchenStage.style.display = 'flex';
+                    kitchenStage.offsetHeight;
+                    kitchenStage.classList.add('active');
+                }
+                
+                // Wait 500ms to start Priya's entrance
+                setTimeout(() => {
+                    startPriyaKitchenSequence();
+                }, 500);
+                
+            }, 1000);
+            
+        }, 3500);
+        
+    }, 1500); // Wait 1.5s for bedroom phone zoom-out
 };
 
 function startPriyaKitchenSequence() {
