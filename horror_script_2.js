@@ -9,6 +9,7 @@ const heavyBreathing = document.getElementById('heavy-breathing-sound');
 const thunderSound = document.getElementById('thunder-sound');
 const musicBox = document.getElementById('mystical-music-box');
 const doorBlockSound = document.getElementById('door-block-sound');
+const footstepsSound = document.getElementById('footsteps-sound');
 
 // Game state variables
 let currentGameState = 'start';
@@ -438,12 +439,20 @@ window.showWarning = function() {
     setTimeout(() => {
         if (doorStage) doorStage.classList.add('walk-to-door');
         if (doorFrame) doorFrame.classList.add('bobbing'); // head-bob footfalls sway
+        if (footstepsSound) {
+            footstepsSound.volume = 0.5;
+            footstepsSound.play().catch(e => {});
+        }
     }, 100);
     
     // Phase 2: Arrive at door at 4.0 seconds, stop walking, and open the bedroom door
     setTimeout(() => {
         if (doorFrame) doorFrame.classList.remove('bobbing'); // stand still
         if (doorLeaf) doorLeaf.classList.add('open');
+        if (footstepsSound) {
+            footstepsSound.pause();
+            footstepsSound.currentTime = 0;
+        }
         
         // Play door squeak/creepy audio
         if (creepyImpact) {
@@ -455,6 +464,10 @@ window.showWarning = function() {
         setTimeout(() => {
             if (doorStage) doorStage.classList.add('zoomed-through');
             if (doorFrame) doorFrame.classList.add('bobbing'); // start bobbing again as we step through
+            if (footstepsSound) {
+                footstepsSound.volume = 0.5;
+                footstepsSound.play().catch(e => {});
+            }
             
             const roomStage = document.getElementById('cinematic-room-stage');
             if (roomStage) roomStage.classList.add('active');
@@ -474,6 +487,10 @@ window.showWarning = function() {
             // Phase 4: Settle camera zoom on phone at 10.5 seconds and display Dad call screen
             setTimeout(() => {
                 if (doorFrame) doorFrame.classList.remove('bobbing');
+                if (footstepsSound) {
+                    footstepsSound.pause();
+                    footstepsSound.currentTime = 0;
+                }
                 
                 const phoneScreen = document.getElementById('mock-phone-screen');
                 if (phoneScreen) phoneScreen.classList.remove('ring-glow'); // settle screen display
@@ -1634,6 +1651,10 @@ function triggerGoCheckItSuggestion() {
                 doorFrame.classList.remove('checking');
                 doorFrame.classList.add('bobbing');
             }
+            if (footstepsSound) {
+                footstepsSound.volume = 0.5;
+                footstepsSound.play().catch(e => {});
+            }
             
             if (creepyImpact) {
                 creepyImpact.volume = 0.25;
@@ -1647,6 +1668,10 @@ function triggerGoCheckItSuggestion() {
         if (doorFrame) {
             doorFrame.classList.remove('bobbing');
             doorFrame.classList.add('checking');
+        }
+        if (footstepsSound) {
+            footstepsSound.pause();
+            footstepsSound.currentTime = 0;
         }
         
         if (heavyBreathing) {
@@ -1694,6 +1719,10 @@ function triggerReturnToBedroomSuggestion() {
         doorFrame.classList.add('bobbing');
     }
     if (doorLeaf) doorLeaf.classList.add('open');
+    if (footstepsSound) {
+        footstepsSound.volume = 0.5;
+        footstepsSound.play().catch(e => {});
+    }
     
     if (creepyImpact) {
         creepyImpact.volume = 0.4;
@@ -1707,7 +1736,10 @@ function triggerReturnToBedroomSuggestion() {
     // Step 2: Walk back to bedroom and zoom in
     setTimeout(() => {
         if (roomStage) {
+            roomStage.style.display = 'flex';
+            roomStage.offsetHeight;
             roomStage.classList.add('active');
+            roomStage.style.opacity = '1';
             setTimeout(() => {
                 roomStage.classList.add('zoomed-in');
             }, 100);
@@ -1717,6 +1749,10 @@ function triggerReturnToBedroomSuggestion() {
     // Step 3: Settle camera back on phone
     setTimeout(() => {
         if (doorFrame) doorFrame.classList.remove('bobbing');
+        if (footstepsSound) {
+            footstepsSound.pause();
+            footstepsSound.currentTime = 0;
+        }
         // Trigger Mom's call 0.5 seconds after camera settles down
         setTimeout(() => {
             triggerMomCall();
@@ -1798,6 +1834,10 @@ window.triggerEnterKitchen = function() {
         // Keep zoomed-in active so the desk is flat and matches the walk out perspective
         roomStage.classList.add('walking-out');
     }
+    if (footstepsSound) {
+        footstepsSound.volume = 0.5;
+        footstepsSound.play().catch(e => {});
+    }
     
     // Play transition sound
     if (creepyImpact) {
@@ -1837,6 +1877,10 @@ window.triggerEnterKitchen = function() {
             if (walkStage) {
                 walkStage.classList.remove('active');
                 walkStage.style.opacity = '0';
+            }
+            if (footstepsSound) {
+                footstepsSound.pause();
+                footstepsSound.currentTime = 0;
             }
             
             // Wait for walk stage fadeout (1s), then show kitchen
@@ -2071,6 +2115,10 @@ window.triggerExitKitchenInteractive = function() {
                     walkStage.offsetHeight;
                     walkStage.classList.add('active');
                 }
+                if (footstepsSound) {
+                    footstepsSound.volume = 0.5;
+                    footstepsSound.play().catch(e => {});
+                }
                 
                 if (walkView) {
                     walkView.classList.add('bobbing');
@@ -2102,6 +2150,10 @@ window.triggerExitKitchenInteractive = function() {
                             if (roomStage) {
                                 roomStage.classList.remove('walking-in');
                                 roomStage.classList.add('zoomed-in');
+                            }
+                            if (footstepsSound) {
+                                footstepsSound.pause();
+                                footstepsSound.currentTime = 0;
                             }
                             
                             // Let camera settle and then trigger Dad's message

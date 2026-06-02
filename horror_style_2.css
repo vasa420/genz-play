@@ -2468,3 +2468,79 @@ body {
     transform: translateX(-50%) scale(0.97) !important;
 }
 
+/* Flashlight & Room / Hallway Light Effects */
+@keyframes flashlightScan {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-40px, -30px) scale(1.05); }
+    50% { transform: translate(50px, 40px) scale(0.95); }
+    75% { transform: translate(-30px, 50px) scale(1.02); }
+}
+
+.room-flashlight-overlay {
+    position: absolute;
+    inset: -100px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    z-index: 15;
+    background: radial-gradient(circle 240px at center, transparent 15%, rgba(0, 0, 0, 0.94) 75%);
+    animation: flashlightScan 5s infinite ease-in-out;
+}
+
+.room-stage.walking-out .room-flashlight-overlay,
+.room-stage.walking-in .room-flashlight-overlay {
+    opacity: 1;
+}
+
+/* Hallway Flashlight Overlay */
+.hallway-flashlight-overlay {
+    position: absolute;
+    inset: -100px;
+    pointer-events: none;
+    z-index: 10;
+    background: radial-gradient(circle 250px at center, transparent 15%, rgba(0, 0, 0, 0.96) 75%);
+    animation: flashlightScan 4s infinite ease-in-out;
+}
+
+/* Handheld Torch & Glow Cone styling for Priya in Kitchen */
+.priya-character .priya-arm-left {
+    transform: rotate(35deg) !important;
+}
+
+.priya-torch {
+    position: absolute;
+    bottom: -15px;
+    left: -2px;
+    width: 16px;
+    height: 25px;
+    background: linear-gradient(to right, #2a2a2a, #444, #1a1a1a);
+    border-radius: 3px;
+    transform: rotate(-35deg);
+    border: 1px solid #111;
+}
+
+.torch-lens {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: #ffeb3b;
+    border-radius: 1px 1px 3px 3px;
+    box-shadow: 0 0 15px #ffeb3b, 0 0 30px #ffeb3b;
+}
+
+.torch-glow-cone {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 380px;
+    background: linear-gradient(to bottom, rgba(255, 235, 59, 0.42) 0%, rgba(255, 235, 59, 0.08) 40%, transparent 100%);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    transform-origin: top center;
+    pointer-events: none;
+    z-index: 10;
+}
+
