@@ -1908,22 +1908,22 @@ window.triggerEnterKitchen = function() {
 function startPriyaKitchenSequence() {
     const priya = document.getElementById('kitchen-priya');
     const fridge = document.getElementById('kitchen-refrigerator');
-    const heldSandwich = document.getElementById('kitchen-held-sandwich');
+    const heldFruit = document.getElementById('kitchen-held-fruit');
     const armRight = document.getElementById('priya-avatar-arm-right');
     const mouth = document.getElementById('priya-avatar-mouth');
     
-    // Reset all 3 sandwiches inside refrigerator
+    // Reset all 3 fruits inside refrigerator
     for (let i = 1; i <= 3; i++) {
-        const s = document.getElementById(`fridge-sandwich-${i}`);
-        if (s) {
-            s.style.display = 'block';
-            s.className = 'sandwich-food small';
+        const f = document.getElementById(`fridge-fruit-${i}`);
+        if (f) {
+            f.style.display = 'block';
+            f.className = 'kitchen-fruit small';
         }
     }
     
-    if (heldSandwich) {
-        heldSandwich.style.display = 'none';
-        heldSandwich.className = 'sandwich-food held';
+    if (heldFruit) {
+        heldFruit.style.display = 'none';
+        heldFruit.className = 'kitchen-fruit held';
     }
     if (priya) {
         priya.style.left = '-150px';
@@ -1954,7 +1954,7 @@ function startPriyaKitchenSequence() {
         if (priya) priya.classList.remove('walking');
         hideKitchenCaption();
         
-        // Start eating the 3 sandwiches one-by-one!
+        // Start eating the 3 fruits one-by-one!
         eatSandwichSequence(1);
         
     }, 4000);
@@ -1962,7 +1962,7 @@ function startPriyaKitchenSequence() {
 
 function eatSandwichSequence(num) {
     if (num > 3) {
-        // Finished all 3 sandwiches! Show return suggestion banner inside the kitchen
+        // Finished all 3 fruits! Show return suggestion banner inside the kitchen
         const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
         if (kitchenBanner) {
             kitchenBanner.style.display = 'block';
@@ -1975,27 +1975,33 @@ function eatSandwichSequence(num) {
     }
     
     const fridge = document.getElementById('kitchen-refrigerator');
-    const heldSandwich = document.getElementById('kitchen-held-sandwich');
-    const fridgeSandwich = document.getElementById(`fridge-sandwich-${num}`);
+    const heldFruit = document.getElementById('kitchen-held-fruit');
+    const fridgeFruit = document.getElementById(`fridge-fruit-${num}`);
     const armRight = document.getElementById('priya-avatar-arm-right');
     const mouth = document.getElementById('priya-avatar-mouth');
     
+    const fruitNames = ["", "Apple", "Orange", "Banana"];
+    const fruitEmojis = ["", "🍎", "🍊", "🍌"];
+    const fruitName = fruitNames[num];
+    const fruitEmoji = fruitEmojis[num];
+    
     // Step 1: Open refrigerator
-    showKitchenCaption(`Priya: Grabbing sandwich ${num} from the refrigerator...`);
+    showKitchenCaption(`Priya: Grabbing ${fruitName} from the refrigerator...`);
     if (fridge) fridge.classList.add('open');
     
     // Wait 1.5s for fridge door to open fully
     setTimeout(() => {
-        // Priya reaches in to grab the sandwich
+        // Priya reaches in to grab the fruit
         if (armRight) armRight.style.transform = 'rotate(-120deg) translateY(-10px) translateX(-5px)';
         
         // Wait 1s for grab
         setTimeout(() => {
-            // Refrigerator sandwich disappears, held sandwich appears in hand
-            if (fridgeSandwich) fridgeSandwich.style.display = 'none';
-            if (heldSandwich) {
-                heldSandwich.style.display = 'block';
-                heldSandwich.className = 'sandwich-food held'; // reset bites
+            // Refrigerator fruit disappears, held fruit appears in hand
+            if (fridgeFruit) fridgeFruit.style.display = 'none';
+            if (heldFruit) {
+                heldFruit.innerText = fruitEmoji;
+                heldFruit.style.display = 'block';
+                heldFruit.className = 'kitchen-fruit held'; // reset bites
             }
             // Hand goes back down
             if (armRight) armRight.style.transform = '';
@@ -2006,8 +2012,8 @@ function eatSandwichSequence(num) {
             
             // Wait 1s after closing before eating
             setTimeout(() => {
-                // Step 2: Eat this sandwich (3 bites)
-                showKitchenCaption(`Priya: Munching sandwich ${num}...`);
+                // Step 2: Eat this fruit (3 bites)
+                showKitchenCaption(`Priya: Munching ${fruitName}...`);
                 
                 // Bite 1
                 if (armRight) armRight.classList.add('eating');
@@ -2015,7 +2021,7 @@ function eatSandwichSequence(num) {
                 speakCustomVoice("Mmm", false);
                 
                 setTimeout(() => {
-                    if (heldSandwich) heldSandwich.classList.add('bite-1');
+                    if (heldFruit) heldFruit.classList.add('bite-1');
                 }, 1000);
                 
                 setTimeout(() => {
@@ -2028,7 +2034,7 @@ function eatSandwichSequence(num) {
                         if (mouth) mouth.classList.add('chewing');
                         
                         setTimeout(() => {
-                            if (heldSandwich) heldSandwich.classList.add('bite-2');
+                            if (heldFruit) heldFruit.classList.add('bite-2');
                         }, 1000);
                         
                         setTimeout(() => {
@@ -2041,16 +2047,16 @@ function eatSandwichSequence(num) {
                                 if (mouth) mouth.classList.add('chewing');
                                 
                                 setTimeout(() => {
-                                    if (heldSandwich) heldSandwich.classList.add('bite-3');
+                                    if (heldFruit) heldFruit.classList.add('bite-3');
                                 }, 1000);
                                 
                                 setTimeout(() => {
                                     if (armRight) armRight.className = 'priya-arm-right';
                                     if (mouth) mouth.className = 'priya-mouth';
-                                    if (heldSandwich) heldSandwich.style.display = 'none';
+                                    if (heldFruit) heldFruit.style.display = 'none';
                                     hideKitchenCaption();
                                     
-                                    // Move to next sandwich!
+                                    // Move to next fruit!
                                     setTimeout(() => {
                                         eatSandwichSequence(num + 1);
                                     }, 1000);
