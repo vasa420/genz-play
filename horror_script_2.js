@@ -1717,11 +1717,10 @@ function triggerReturnToBedroomSuggestion() {
     // Step 3: Settle camera back on phone
     setTimeout(() => {
         if (doorFrame) doorFrame.classList.remove('bobbing');
-        
-        // Trigger Mom's call 2.5 seconds after camera settles down
+        // Trigger Mom's call 0.5 seconds after camera settles down
         setTimeout(() => {
             triggerMomCall();
-        }, 2500);
+        }, 500);
     }, 6500);
 }
 window.triggerReturnToBedroomSuggestion = triggerReturnToBedroomSuggestion;
