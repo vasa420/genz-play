@@ -1793,10 +1793,10 @@ window.triggerEnterKitchen = function() {
     const walkView = document.getElementById('hallway-walk-view');
     const kitchenStage = document.getElementById('cinematic-kitchen-stage');
     
-    // Step 1: Zoom out of bedroom desk phone
+    // Step 1: Animate camera walking out of bedroom (bobbing and zooming forward past desk)
     if (roomStage) {
-        roomStage.classList.remove('zoomed-in');
-        roomStage.style.opacity = '0';
+        // Keep zoomed-in active so the desk is flat and matches the walk out perspective
+        roomStage.classList.add('walking-out');
     }
     
     // Play transition sound
@@ -1807,9 +1807,13 @@ window.triggerEnterKitchen = function() {
     
     setTimeout(() => {
         // Hide room stage
-        if (roomStage) roomStage.classList.remove('active');
+        if (roomStage) {
+            roomStage.classList.remove('active');
+            roomStage.classList.remove('walking-out');
+            roomStage.classList.remove('zoomed-in'); // Reset zoomed-in state for return
+        }
         
-        // Show walk stage
+        // Show walk stage (hallway)
         if (walkStage) {
             walkStage.style.display = 'flex';
             // Reflow
@@ -1854,7 +1858,7 @@ window.triggerEnterKitchen = function() {
             
         }, 3500);
         
-    }, 1500); // Wait 1.5s for bedroom phone zoom-out
+    }, 2500); // 2.5s bedroom walking animation
 };
 
 function startPriyaKitchenSequence() {
@@ -1914,8 +1918,15 @@ function startPriyaKitchenSequence() {
 
 function eatSandwichSequence(num) {
     if (num > 3) {
-        // Finished all 3 sandwiches!
-        triggerKitchenExit();
+        // Finished all 3 sandwiches! Show return suggestion banner inside the kitchen
+        const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
+        if (kitchenBanner) {
+            kitchenBanner.style.display = 'block';
+            kitchenBanner.onclick = window.triggerExitKitchenInteractive;
+        } else {
+            // Fallback if element not found
+            window.triggerExitKitchenInteractive();
+        }
         return;
     }
     
@@ -2015,9 +2026,17 @@ function eatSandwichSequence(num) {
     }, 1500);
 }
 
-function triggerKitchenExit() {
+window.triggerExitKitchenInteractive = function() {
+    console.log("User clicked return to bedroom suggestion.");
+    
+    // Hide the kitchen suggestion banner
+    const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
+    if (kitchenBanner) kitchenBanner.style.display = 'none';
+    
     const priya = document.getElementById('kitchen-priya');
     const kitchenStage = document.getElementById('cinematic-kitchen-stage');
+    const walkStage = document.getElementById('cinematic-walk-stage');
+    const walkView = document.getElementById('hallway-walk-view');
     const roomStage = document.getElementById('cinematic-room-stage');
     
     const exitUtterance = speakCustomVoice("Much better... Now I should get back to the bedroom.", false);
@@ -2041,39 +2060,73 @@ function triggerKitchenExit() {
                 kitchenStage.style.opacity = '0';
             }
             
-            // Fade back in bedroom stage and zoom back in to phone
+            // Fade back in hallway walk stage
             setTimeout(() => {
                 if (kitchenStage) kitchenStage.style.display = 'none';
                 
-                if (roomStage) {
-                    roomStage.style.display = 'flex';
+                if (walkStage) {
+                    walkStage.style.opacity = '1';
+                    walkStage.style.display = 'flex';
                     // Reflow
-                    roomStage.offsetHeight;
-                    roomStage.classList.add('active');
-                    roomStage.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        roomStage.classList.add('zoomed-in');
-                    }, 100);
+                    walkStage.offsetHeight;
+                    walkStage.classList.add('active');
                 }
                 
-                // Let camera settle and then trigger Dad's message
+                if (walkView) {
+                    walkView.classList.add('bobbing');
+                }
+                
+                // Walk back down hallway duration: 2.5 seconds
                 setTimeout(() => {
-                    console.log("Triggering Dad's storm message after kitchen sequence.");
-                    receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
-                    showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+                    if (walkView) walkView.classList.remove('bobbing');
+                    if (walkStage) {
+                        walkStage.classList.remove('active');
+                        walkStage.style.opacity = '0';
+                    }
                     
-                    // Enable smart lock alert dot on screen
-                    const alertDot = document.getElementById('cabin-alert-dot');
-                    if (alertDot) alertDot.style.display = 'flex';
+                    // Wait for walk stage fadeout (1s), then show bedroom
+                    setTimeout(() => {
+                        if (walkStage) walkStage.style.display = 'none';
+                        
+                        if (roomStage) {
+                            roomStage.style.display = 'flex';
+                            // Reflow
+                            roomStage.offsetHeight;
+                            roomStage.classList.add('active');
+                            roomStage.style.opacity = '1';
+                            roomStage.classList.add('walking-in');
+                        }
+                        
+                        // Wait for walking-in animation (2.5s)
+                        setTimeout(() => {
+                            if (roomStage) {
+                                roomStage.classList.remove('walking-in');
+                                roomStage.classList.add('zoomed-in');
+                            }
+                            
+                            // Let camera settle and then trigger Dad's message
+                            setTimeout(() => {
+                                console.log("Triggering Dad's storm message after kitchen sequence.");
+                                receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+                                showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+                                
+                                // Enable smart lock alert dot on screen
+                                const alertDot = document.getElementById('cabin-alert-dot');
+                                if (alertDot) alertDot.style.display = 'flex';
+                                
+                                // Trigger loading choices
+                                loadChatChoices();
+                            }, 1000);
+                            
+                        }, 2500);
+                        
+                    }, 1000);
                     
-                    // Trigger loading choices
-                    loadChatChoices();
                 }, 2500);
                 
-            }, 1500); // Wait for kitchen fadeout transition
+            }, 1000); // Wait for kitchen fadeout transition
             
         }, 2500); // Priya walking duration
         
     }, 2000); // 2s after voicing exit line
-}
+};
