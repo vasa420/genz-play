@@ -1825,27 +1825,38 @@ window.triggerEnterKitchen = function() {
 function startPriyaKitchenSequence() {
     const priya = document.getElementById('kitchen-priya');
     const fridge = document.getElementById('kitchen-refrigerator');
-    const sandwich = document.getElementById('kitchen-sandwich');
+    const heldSandwich = document.getElementById('kitchen-held-sandwich');
     const armRight = document.getElementById('priya-avatar-arm-right');
     const mouth = document.getElementById('priya-avatar-mouth');
     
-    // Reset states
+    // Reset all 3 sandwiches inside refrigerator
+    for (let i = 1; i <= 3; i++) {
+        const s = document.getElementById(`fridge-sandwich-${i}`);
+        if (s) {
+            s.style.display = 'block';
+            s.className = 'sandwich-food small';
+        }
+    }
+    
+    if (heldSandwich) {
+        heldSandwich.style.display = 'none';
+        heldSandwich.className = 'sandwich-food held';
+    }
     if (priya) {
         priya.style.left = '-150px';
         priya.classList.remove('walking');
     }
     if (fridge) fridge.classList.remove('open');
-    if (sandwich) {
-        sandwich.className = 'sandwich-food'; // reset bites
-        sandwich.style.display = 'none'; // hide sandwich until fridge opened
+    if (armRight) {
+        armRight.className = 'priya-arm-right';
+        armRight.style.transform = '';
     }
-    if (armRight) armRight.className = 'priya-arm-right';
     if (mouth) mouth.className = 'priya-mouth';
     
     // 1. Voice line: "I was so hungry... let me grab something from the fridge."
-    const enterUtterance = speakCustomVoice("I was so hungry... let me grab a quick bite.", false);
+    const enterUtterance = speakCustomVoice("I was so hungry... let me grab something from the fridge.", false);
     window.activeUtterance = enterUtterance;
-    showKitchenCaption("Priya: I was so hungry... let me grab a quick bite.");
+    showKitchenCaption("Priya: I was so hungry... let me grab something from the fridge.");
     
     // Make Priya walk in
     setTimeout(() => {
@@ -1860,97 +1871,113 @@ function startPriyaKitchenSequence() {
         if (priya) priya.classList.remove('walking');
         hideKitchenCaption();
         
-        // 2. Open refrigerator
-        showKitchenCaption("Priya: Let's see what we have here...");
-        if (fridge) fridge.classList.add('open');
+        // Start eating the 3 sandwiches one-by-one!
+        eatSandwichSequence(1);
         
-        // Let the light glow inside fridge, then simulate grabbing ingredients
-        setTimeout(() => {
-            // Refrigerator closes, sandwich appears on counter plate
-            if (fridge) fridge.classList.remove('open');
-            if (sandwich) {
-                sandwich.style.display = 'flex';
-                // Pop scale animation
-                sandwich.style.transform = 'scale(0) rotateX(10deg)';
-                setTimeout(() => {
-                    sandwich.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                    sandwich.style.transform = 'scale(1) rotateX(10deg)';
-                }, 50);
-            }
-            hideKitchenCaption();
-            
-            // Start eating bites sequentially
-            setTimeout(triggerEatingLoop, 1500);
-            
-        }, 2200);
-        
-    }, 3500);
+    }, 4000);
 }
 
-function triggerEatingLoop() {
-    const sandwich = document.getElementById('kitchen-sandwich');
+function eatSandwichSequence(num) {
+    if (num > 3) {
+        // Finished all 3 sandwiches!
+        triggerKitchenExit();
+        return;
+    }
+    
+    const fridge = document.getElementById('kitchen-refrigerator');
+    const heldSandwich = document.getElementById('kitchen-held-sandwich');
+    const fridgeSandwich = document.getElementById(`fridge-sandwich-${num}`);
     const armRight = document.getElementById('priya-avatar-arm-right');
     const mouth = document.getElementById('priya-avatar-mouth');
     
-    // Bite 1
-    showKitchenCaption("*taking a bite*");
-    if (armRight) armRight.classList.add('eating');
-    if (mouth) mouth.classList.add('chewing');
+    // Step 1: Open refrigerator
+    showKitchenCaption(`Priya: Grabbing sandwich ${num} from the refrigerator...`);
+    if (fridge) fridge.classList.add('open');
     
-    // Chewing sound effect synthesized or voice chewing text
-    speakCustomVoice("Mmm", false);
-    
+    // Wait 1.5s for fridge door to open fully
     setTimeout(() => {
-        // Midpoint of animation: sandwich is bitten
-        if (sandwich) sandwich.classList.add('bite-1');
-    }, 1000);
-    
-    setTimeout(() => {
-        // Bite 1 complete, reset arm for a brief moment
-        if (armRight) armRight.className = 'priya-arm-right';
-        if (mouth) mouth.className = 'priya-mouth';
-        hideKitchenCaption();
+        // Priya reaches in to grab the sandwich
+        if (armRight) armRight.style.transform = 'rotate(-120deg) translateY(-10px) translateX(-5px)';
         
-        // Bite 2 after 1 second pause
+        // Wait 1s for grab
         setTimeout(() => {
-            showKitchenCaption("*munch munch*");
-            if (armRight) armRight.classList.add('eating');
-            if (mouth) mouth.classList.add('chewing');
+            // Refrigerator sandwich disappears, held sandwich appears in hand
+            if (fridgeSandwich) fridgeSandwich.style.display = 'none';
+            if (heldSandwich) {
+                heldSandwich.style.display = 'block';
+                heldSandwich.className = 'sandwich-food held'; // reset bites
+            }
+            // Hand goes back down
+            if (armRight) armRight.style.transform = '';
             
-            setTimeout(() => {
-                if (sandwich) sandwich.classList.add('bite-2');
-            }, 1000);
+            // Close refrigerator door
+            if (fridge) fridge.classList.remove('open');
+            hideKitchenCaption();
             
+            // Wait 1s after closing before eating
             setTimeout(() => {
-                if (armRight) armRight.className = 'priya-arm-right';
-                if (mouth) mouth.className = 'priya-mouth';
-                hideKitchenCaption();
+                // Step 2: Eat this sandwich (3 bites)
+                showKitchenCaption(`Priya: Munching sandwich ${num}...`);
                 
-                // Bite 3 after 1 second pause
+                // Bite 1
+                if (armRight) armRight.classList.add('eating');
+                if (mouth) mouth.classList.add('chewing');
+                speakCustomVoice("Mmm", false);
+                
                 setTimeout(() => {
-                    showKitchenCaption("*munch... gulp*");
-                    if (armRight) armRight.classList.add('eating');
-                    if (mouth) mouth.classList.add('chewing');
-                    
-                    setTimeout(() => {
-                        if (sandwich) sandwich.classList.add('bite-3');
-                    }, 1000);
-                    
-                    setTimeout(() => {
-                        if (armRight) armRight.className = 'priya-arm-right';
-                        if (mouth) mouth.className = 'priya-mouth';
-                        hideKitchenCaption();
-                        
-                        // Finish eating sequence
-                        triggerKitchenExit();
-                        
-                    }, 2000);
+                    if (heldSandwich) heldSandwich.classList.add('bite-1');
                 }, 1000);
                 
-            }, 2000);
+                setTimeout(() => {
+                    if (armRight) armRight.className = 'priya-arm-right';
+                    if (mouth) mouth.className = 'priya-mouth';
+                    
+                    // Bite 2 after 0.8s pause
+                    setTimeout(() => {
+                        if (armRight) armRight.classList.add('eating');
+                        if (mouth) mouth.classList.add('chewing');
+                        
+                        setTimeout(() => {
+                            if (heldSandwich) heldSandwich.classList.add('bite-2');
+                        }, 1000);
+                        
+                        setTimeout(() => {
+                            if (armRight) armRight.className = 'priya-arm-right';
+                            if (mouth) mouth.className = 'priya-mouth';
+                            
+                            // Bite 3 after 0.8s pause
+                            setTimeout(() => {
+                                if (armRight) armRight.classList.add('eating');
+                                if (mouth) mouth.classList.add('chewing');
+                                
+                                setTimeout(() => {
+                                    if (heldSandwich) heldSandwich.classList.add('bite-3');
+                                }, 1000);
+                                
+                                setTimeout(() => {
+                                    if (armRight) armRight.className = 'priya-arm-right';
+                                    if (mouth) mouth.className = 'priya-mouth';
+                                    if (heldSandwich) heldSandwich.style.display = 'none';
+                                    hideKitchenCaption();
+                                    
+                                    // Move to next sandwich!
+                                    setTimeout(() => {
+                                        eatSandwichSequence(num + 1);
+                                    }, 1000);
+                                    
+                                }, 2000);
+                            }, 1000);
+                            
+                        }, 2000);
+                    }, 800);
+                    
+                }, 2000);
+                
+            }, 1000);
+            
         }, 1000);
         
-    }, 2000);
+    }, 1500);
 }
 
 function triggerKitchenExit() {
