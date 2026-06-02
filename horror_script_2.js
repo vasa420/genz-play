@@ -1906,11 +1906,7 @@ window.triggerEnterKitchen = function() {
 };
 
 function startPriyaKitchenSequence() {
-    const priya = document.getElementById('kitchen-priya');
     const fridge = document.getElementById('kitchen-refrigerator');
-    const heldFruit = document.getElementById('kitchen-held-fruit');
-    const armRight = document.getElementById('priya-avatar-arm-right');
-    const mouth = document.getElementById('priya-avatar-mouth');
     
     // Reset all 3 fruits inside refrigerator
     for (let i = 1; i <= 3; i++) {
@@ -1921,270 +1917,126 @@ function startPriyaKitchenSequence() {
         }
     }
     
-    if (heldFruit) {
-        heldFruit.style.display = 'none';
-        heldFruit.className = 'kitchen-fruit held';
-    }
-    if (priya) {
-        priya.style.left = '-150px';
-        priya.classList.remove('walking');
-    }
     if (fridge) fridge.classList.remove('open');
-    if (armRight) {
-        armRight.className = 'priya-arm-right';
-        armRight.style.transform = '';
+    hideKitchenCaption();
+    
+    // Show suggestion banner to start eating!
+    const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
+    const bannerText = document.getElementById('kitchen-suggestion-text');
+    if (kitchenBanner && bannerText) {
+        bannerText.innerText = "💬 Eat fruits now";
+        kitchenBanner.style.display = 'block';
+        kitchenBanner.onclick = window.triggerEatFruitsInteractive;
     }
-    if (mouth) mouth.className = 'priya-mouth';
-    
-    // 1. Voice line: "I was so hungry... let me grab something from the fridge."
-    const enterUtterance = speakCustomVoice("I was so hungry... let me grab something from the fridge.", false);
-    window.activeUtterance = enterUtterance;
-    showKitchenCaption("Priya: I was so hungry... let me grab something from the fridge.");
-    
-    // Make Priya walk in
-    setTimeout(() => {
-        if (priya) {
-            priya.classList.add('walking');
-            priya.style.left = '320px'; // move to center of kitchen
-        }
-    }, 500);
-    
-    // 3.5 seconds for walking animation
-    setTimeout(() => {
-        if (priya) priya.classList.remove('walking');
-        hideKitchenCaption();
-        
-        // Start eating the 3 fruits one-by-one!
-        eatSandwichSequence(1);
-        
-    }, 4000);
 }
 
-function eatSandwichSequence(num) {
-    if (num > 3) {
-        // Finished all 3 fruits! Show return suggestion banner inside the kitchen
-        const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
-        if (kitchenBanner) {
-            kitchenBanner.style.display = 'block';
-            kitchenBanner.onclick = window.triggerExitKitchenInteractive;
-        } else {
-            // Fallback if element not found
-            window.triggerExitKitchenInteractive();
-        }
-        return;
-    }
+window.triggerEatFruitsInteractive = function() {
+    console.log("Starting 15-second interactive fruit eating sequence...");
+    
+    const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
+    const bannerText = document.getElementById('kitchen-suggestion-text');
+    if (kitchenBanner) kitchenBanner.style.display = 'none';
+    
+    // Voice line: I was so hungry, let me eat these fruits.
+    speakCustomVoice("I was so hungry... let me grab some fruits from the fridge.", false);
+    showKitchenCaption("Priya: I was so hungry... let me grab some fruits from the fridge.");
     
     const fridge = document.getElementById('kitchen-refrigerator');
-    const heldFruit = document.getElementById('kitchen-held-fruit');
-    const fridgeFruit = document.getElementById(`fridge-fruit-${num}`);
-    const armRight = document.getElementById('priya-avatar-arm-right');
-    const mouth = document.getElementById('priya-avatar-mouth');
     
-    const fruitNames = ["", "Apple", "Orange", "Banana"];
-    const fruitEmojis = ["", "🍎", "🍊", "🍌"];
-    const fruitName = fruitNames[num];
-    const fruitEmoji = fruitEmojis[num];
-    
-    // Step 1: Open refrigerator
-    showKitchenCaption(`Priya: Grabbing ${fruitName} from the refrigerator...`);
-    if (fridge) fridge.classList.add('open');
-    
-    // Wait 1.5s for fridge door to open fully
+    // 0s - 5s: Eat Apple
     setTimeout(() => {
-        // Priya reaches in to grab the fruit
-        if (armRight) armRight.style.transform = 'rotate(-120deg) translateY(-10px) translateX(-5px)';
+        showKitchenCaption("Priya: Opening refrigerator to grab Apple...");
+        if (fridge) fridge.classList.add('open');
         
-        // Wait 1s for grab
         setTimeout(() => {
-            // Refrigerator fruit disappears, held fruit appears in hand
-            if (fridgeFruit) fridgeFruit.style.display = 'none';
-            if (heldFruit) {
-                heldFruit.innerText = fruitEmoji;
-                heldFruit.style.display = 'block';
-                heldFruit.className = 'kitchen-fruit held'; // reset bites
-            }
-            // Hand goes back down
-            if (armRight) armRight.style.transform = '';
-            
-            // Close refrigerator door
+            const apple = document.getElementById('fridge-fruit-1');
+            if (apple) apple.style.display = 'none';
             if (fridge) fridge.classList.remove('open');
-            hideKitchenCaption();
-            
-            // Wait 1s after closing before eating
-            setTimeout(() => {
-                // Step 2: Eat this fruit (3 bites)
-                showKitchenCaption(`Priya: Munching ${fruitName}...`);
-                
-                // Bite 1
-                if (armRight) armRight.classList.add('eating');
-                if (mouth) mouth.classList.add('chewing');
-                speakCustomVoice("Mmm", false);
-                
-                setTimeout(() => {
-                    if (heldFruit) heldFruit.classList.add('bite-1');
-                }, 1000);
-                
-                setTimeout(() => {
-                    if (armRight) armRight.className = 'priya-arm-right';
-                    if (mouth) mouth.className = 'priya-mouth';
-                    
-                    // Bite 2 after 0.8s pause
-                    setTimeout(() => {
-                        if (armRight) armRight.classList.add('eating');
-                        if (mouth) mouth.classList.add('chewing');
-                        
-                        setTimeout(() => {
-                            if (heldFruit) heldFruit.classList.add('bite-2');
-                        }, 1000);
-                        
-                        setTimeout(() => {
-                            if (armRight) armRight.className = 'priya-arm-right';
-                            if (mouth) mouth.className = 'priya-mouth';
-                            
-                            // Bite 3 after 0.8s pause
-                            setTimeout(() => {
-                                if (armRight) armRight.classList.add('eating');
-                                if (mouth) mouth.classList.add('chewing');
-                                
-                                setTimeout(() => {
-                                    if (heldFruit) heldFruit.classList.add('bite-3');
-                                }, 1000);
-                                
-                                setTimeout(() => {
-                                    if (armRight) armRight.className = 'priya-arm-right';
-                                    if (mouth) mouth.className = 'priya-mouth';
-                                    if (heldFruit) heldFruit.style.display = 'none';
-                                    hideKitchenCaption();
-                                    
-                                    // Move to next fruit!
-                                    setTimeout(() => {
-                                        eatSandwichSequence(num + 1);
-                                    }, 1000);
-                                    
-                                }, 2000);
-                            }, 1000);
-                            
-                        }, 2000);
-                    }, 800);
-                    
-                }, 2000);
-                
-            }, 1000);
-            
-        }, 1000);
+            showKitchenCaption("Priya: Munching Apple... *crunch crunch*");
+            speakCustomVoice("Mmm", false);
+        }, 1800);
+    }, 1000);
+    
+    // 5s - 10s: Eat Orange
+    setTimeout(() => {
+        showKitchenCaption("Priya: Opening refrigerator to grab Orange...");
+        if (fridge) fridge.classList.add('open');
         
-    }, 1500);
+        setTimeout(() => {
+            const orange = document.getElementById('fridge-fruit-2');
+            if (orange) orange.style.display = 'none';
+            if (fridge) fridge.classList.remove('open');
+            showKitchenCaption("Priya: Munching Orange... *munch munch*");
+            speakCustomVoice("Mmm", false);
+        }, 1800);
+    }, 6000);
+    
+    // 10s - 15s: Eat Banana
+    setTimeout(() => {
+        showKitchenCaption("Priya: Opening refrigerator to grab Banana...");
+        if (fridge) fridge.classList.add('open');
+        
+        setTimeout(() => {
+            const banana = document.getElementById('fridge-fruit-3');
+            if (banana) banana.style.display = 'none';
+            if (fridge) fridge.classList.remove('open');
+            showKitchenCaption("Priya: Munching Banana... *chew chew*");
+            speakCustomVoice("Mmm", false);
+        }, 1800);
+    }, 11000);
+    
+    // 15s: Finished eating! Show return banner
+    setTimeout(() => {
+        hideKitchenCaption();
+        speakCustomVoice("Much better... Now I should get back to the bedroom.", false);
+        showKitchenCaption("Priya: Much better... Now I should get back to the bedroom.");
+        
+        setTimeout(() => {
+            if (kitchenBanner && bannerText) {
+                bannerText.innerText = "💬 Return to the bedroom";
+                kitchenBanner.style.display = 'block';
+                kitchenBanner.onclick = window.triggerExitKitchenInteractive;
+            }
+        }, 1500);
+    }, 15000);
 }
 
 window.triggerExitKitchenInteractive = function() {
-    console.log("User clicked return to bedroom suggestion.");
+    console.log("User clicked return to bedroom suggestion. Transitioning suddenly...");
     
     // Hide the kitchen suggestion banner
     const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
     if (kitchenBanner) kitchenBanner.style.display = 'none';
     
-    const priya = document.getElementById('kitchen-priya');
     const kitchenStage = document.getElementById('cinematic-kitchen-stage');
-    const walkStage = document.getElementById('cinematic-walk-stage');
-    const walkView = document.getElementById('hallway-walk-view');
     const roomStage = document.getElementById('cinematic-room-stage');
     
-    const exitUtterance = speakCustomVoice("Much better... Now I should get back to the bedroom.", false);
-    window.activeUtterance = exitUtterance;
-    showKitchenCaption("Priya: Much better... Now I should get back to the bedroom.");
+    // Suddenly return: instantly hide kitchen, show bedroom zoomed-in
+    if (kitchenStage) {
+        kitchenStage.classList.remove('active');
+        kitchenStage.style.opacity = '0';
+        kitchenStage.style.display = 'none';
+    }
     
+    if (roomStage) {
+        roomStage.style.display = 'flex';
+        roomStage.offsetHeight;
+        roomStage.classList.add('active');
+        roomStage.style.opacity = '1';
+        roomStage.classList.add('zoomed-in'); // Zoom in instantly!
+    }
+    
+    // Let camera settle and then trigger Dad's message
     setTimeout(() => {
-        // Walk Priya back off-screen left
-        if (priya) {
-            priya.classList.add('walking');
-            priya.style.left = '-150px';
-        }
+        console.log("Triggering Dad's storm message after sudden return.");
+        receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+        showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
         
-        setTimeout(() => {
-            if (priya) priya.classList.remove('walking');
-            hideKitchenCaption();
-            
-            // Fade out kitchen stage
-            if (kitchenStage) {
-                kitchenStage.classList.remove('active');
-                kitchenStage.style.opacity = '0';
-            }
-            
-            // Fade back in hallway walk stage
-            setTimeout(() => {
-                if (kitchenStage) kitchenStage.style.display = 'none';
-                
-                if (walkStage) {
-                    walkStage.style.opacity = '1';
-                    walkStage.style.display = 'flex';
-                    // Reflow
-                    walkStage.offsetHeight;
-                    walkStage.classList.add('active');
-                }
-                if (footstepsSound) {
-                    footstepsSound.volume = 0.5;
-                    footstepsSound.play().catch(e => {});
-                }
-                
-                if (walkView) {
-                    walkView.classList.add('bobbing');
-                }
-                
-                // Walk back down hallway duration: 2.5 seconds
-                setTimeout(() => {
-                    if (walkView) walkView.classList.remove('bobbing');
-                    if (walkStage) {
-                        walkStage.classList.remove('active');
-                        walkStage.style.opacity = '0';
-                    }
-                    
-                    // Wait for walk stage fadeout (1s), then show bedroom
-                    setTimeout(() => {
-                        if (walkStage) walkStage.style.display = 'none';
-                        
-                        if (roomStage) {
-                            roomStage.style.display = 'flex';
-                            // Reflow
-                            roomStage.offsetHeight;
-                            roomStage.classList.add('active');
-                            roomStage.style.opacity = '1';
-                            roomStage.classList.add('walking-in');
-                        }
-                        
-                        // Wait for walking-in animation (2.5s)
-                        setTimeout(() => {
-                            if (roomStage) {
-                                roomStage.classList.remove('walking-in');
-                                roomStage.classList.add('zoomed-in');
-                            }
-                            if (footstepsSound) {
-                                footstepsSound.pause();
-                                footstepsSound.currentTime = 0;
-                            }
-                            
-                            // Let camera settle and then trigger Dad's message
-                            setTimeout(() => {
-                                console.log("Triggering Dad's storm message after kitchen sequence.");
-                                receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
-                                showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
-                                
-                                // Enable smart lock alert dot on screen
-                                const alertDot = document.getElementById('cabin-alert-dot');
-                                if (alertDot) alertDot.style.display = 'flex';
-                                
-                                // Trigger loading choices
-                                loadChatChoices();
-                            }, 1000);
-                            
-                        }, 2500);
-                        
-                    }, 1000);
-                    
-                }, 2500);
-                
-            }, 1000); // Wait for kitchen fadeout transition
-            
-        }, 2500); // Priya walking duration
+        // Enable smart lock alert dot on screen
+        const alertDot = document.getElementById('cabin-alert-dot');
+        if (alertDot) alertDot.style.display = 'flex';
         
-    }, 2000); // 2s after voicing exit line
+        // Trigger loading choices
+        loadChatChoices();
+    }, 1000); // Settle time
 };
