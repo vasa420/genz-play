@@ -405,106 +405,126 @@ function proceedToGameFromCinematic() {
 // Show warning screen & start cinematic bedroom door entry / desk zoom sequence
 window.showWarning = function() {
     requestFullScreen();
-    document.getElementById('intro-overlay').style.display = 'none';
     
-    // Completely terminate and remove the background video to prevent audio leakage
-    const introVideo = document.getElementById('intro-video-bg');
-    if (introVideo) {
-        introVideo.pause();
-        introVideo.muted = true;
-        introVideo.src = "";
-        try {
-            introVideo.load();
-        } catch(e) {}
-        introVideo.remove();
+    // Start slow-motion fade to black
+    const blackout = document.getElementById('transition-blackout');
+    if (blackout) {
+        blackout.classList.add('active');
     }
     
-    // Play storm rain sound immediately
-    if (thunderSound) {
-        thunderSound.volume = 0.3;
-        thunderSound.loop = true;
-        thunderSound.play().catch(e => console.log("Storm sound waiting for interaction"));
-    }
-    
-    // Activate cinematic intro layout
-    const cinematicContainer = document.getElementById('cinematic-intro-container');
-    cinematicContainer.classList.add('active');
-    cinematicContainer.style.opacity = '1';
-    
-    const doorStage = document.getElementById('cinematic-door-stage');
-    const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
-    const doorLeaf = document.getElementById('door-leaf');
-    
-    // Phase 1: Start walking slowly towards the bedroom door down the hallway
+    // After 2.0s (slow motion screen gets dark), transition into the game (dark to light)
     setTimeout(() => {
-        if (doorStage) doorStage.classList.add('walk-to-door');
-        if (doorFrame) doorFrame.classList.add('bobbing'); // head-bob footfalls sway
-        if (footstepsSound) {
-            footstepsSound.volume = 0.5;
-            footstepsSound.play().catch(e => {});
-        }
-    }, 100);
-    
-    // Phase 2: Arrive at door at 4.0 seconds, stop walking, and open the bedroom door
-    setTimeout(() => {
-        if (doorFrame) doorFrame.classList.remove('bobbing'); // stand still
-        if (doorLeaf) doorLeaf.classList.add('open');
-        if (footstepsSound) {
-            footstepsSound.pause();
-            footstepsSound.currentTime = 0;
+        document.getElementById('intro-overlay').style.display = 'none';
+        
+        // Completely terminate and remove the background video to prevent audio leakage
+        const introVideo = document.getElementById('intro-video-bg');
+        if (introVideo) {
+            introVideo.pause();
+            introVideo.muted = true;
+            introVideo.src = "";
+            try {
+                introVideo.load();
+            } catch(e) {}
+            introVideo.remove();
         }
         
-        // Play door squeak/creepy audio
-        if (creepyImpact) {
-            creepyImpact.volume = 0.4;
-            creepyImpact.play().catch(e => {});
+        // Play storm rain sound immediately
+        if (thunderSound) {
+            thunderSound.volume = 0.3;
+            thunderSound.loop = true;
+            thunderSound.play().catch(e => console.log("Storm sound waiting for interaction"));
         }
         
-        // Phase 3: Walk through the open bedroom door at 6.0 seconds
+        // Activate cinematic intro layout
+        const cinematicContainer = document.getElementById('cinematic-intro-container');
+        if (cinematicContainer) {
+            cinematicContainer.classList.add('active');
+            cinematicContainer.style.opacity = '1';
+        }
+        
+        const doorStage = document.getElementById('cinematic-door-stage');
+        const doorFrame = doorStage ? doorStage.querySelector('.door-frame') : null;
+        const doorLeaf = document.getElementById('door-leaf');
+        
+        // Phase 1: Start walking slowly towards the bedroom door down the hallway
         setTimeout(() => {
-            if (doorStage) doorStage.classList.add('zoomed-through');
-            if (doorFrame) doorFrame.classList.add('bobbing'); // start bobbing again as we step through
+            if (doorStage) doorStage.classList.add('walk-to-door');
+            if (doorFrame) doorFrame.classList.add('bobbing'); // head-bob footfalls sway
             if (footstepsSound) {
                 footstepsSound.volume = 0.5;
                 footstepsSound.play().catch(e => {});
             }
-            
-            const roomStage = document.getElementById('cinematic-room-stage');
-            if (roomStage) roomStage.classList.add('active');
-            
-            // Start phone ringtone audio
-            if (ringtone) {
-                ringtone.volume = 0.6;
-                ringtone.loop = true;
-                ringtone.play().catch(e => {});
+        }, 100);
+        
+        // Phase 2: Arrive at door at 4.0 seconds, stop walking, and open the bedroom door
+        setTimeout(() => {
+            if (doorFrame) doorFrame.classList.remove('bobbing'); // stand still
+            if (doorLeaf) doorLeaf.classList.add('open');
+            if (footstepsSound) {
+                footstepsSound.pause();
+                footstepsSound.currentTime = 0;
             }
             
-            // Camera slow zooms in on the desk
-            setTimeout(() => {
-                roomStage.classList.add('zoomed-in');
-            }, 100);
+            // Play door squeak/creepy audio
+            if (creepyImpact) {
+                creepyImpact.volume = 0.4;
+                creepyImpact.play().catch(e => {});
+            }
             
-            // Phase 4: Settle camera zoom on phone at 10.5 seconds and display Dad call screen
+            // Phase 3: Walk through the open bedroom door at 6.0 seconds
             setTimeout(() => {
-                if (doorFrame) doorFrame.classList.remove('bobbing');
+                if (doorStage) doorStage.classList.add('zoomed-through');
+                if (doorFrame) doorFrame.classList.add('bobbing'); // start bobbing again as we step through
                 if (footstepsSound) {
-                    footstepsSound.pause();
-                    footstepsSound.currentTime = 0;
+                    footstepsSound.volume = 0.5;
+                    footstepsSound.play().catch(e => {});
                 }
                 
-                const phoneScreen = document.getElementById('mock-phone-screen');
-                if (phoneScreen) phoneScreen.classList.remove('ring-glow'); // settle screen display
+                const roomStage = document.getElementById('cinematic-room-stage');
+                if (roomStage) roomStage.classList.add('active');
                 
-                const callerUI = document.getElementById('mock-caller-screen-ui');
-                if (callerUI) callerUI.style.display = 'flex';
+                // Start phone ringtone audio
+                if (ringtone) {
+                    ringtone.volume = 0.6;
+                    ringtone.loop = true;
+                    ringtone.play().catch(e => {});
+                }
                 
-                const callActionsUI = document.getElementById('mock-call-actions-ui');
-                if (callActionsUI) callActionsUI.style.display = 'flex';
-            }, 4500);
+                // Camera slow zooms in on the desk
+                setTimeout(() => {
+                    roomStage.classList.add('zoomed-in');
+                }, 100);
+                
+                // Phase 4: Settle camera zoom on phone at 10.5 seconds and display Dad call screen
+                setTimeout(() => {
+                    if (doorFrame) doorFrame.classList.remove('bobbing');
+                    if (footstepsSound) {
+                        footstepsSound.pause();
+                        footstepsSound.currentTime = 0;
+                    }
+                    
+                    const phoneScreen = document.getElementById('mock-phone-screen');
+                    if (phoneScreen) phoneScreen.classList.remove('ring-glow'); // settle screen display
+                    
+                    const callerUI = document.getElementById('mock-caller-screen-ui');
+                    if (callerUI) callerUI.style.display = 'flex';
+                    
+                    const callActionsUI = document.getElementById('mock-call-actions-ui');
+                    if (callActionsUI) callActionsUI.style.display = 'flex';
+                }, 4500);
+                
+            }, 2000); // 2 seconds for door swing to reveal bedroom
             
-        }, 2000); // 2 seconds for door swing to reveal bedroom
+        }, 4100); // Walk down hallway duration
+
+        // Start fading blackout overlay from black back to clear (dark to light)
+        setTimeout(() => {
+            if (blackout) {
+                blackout.classList.remove('active');
+            }
+        }, 50); // slight delay to allow rendering and trigger transition
         
-    }, 4100); // Walk down hallway duration
+    }, 2000); // Match CSS transition duration of 2.0s for the fade to black
 };
 
 // Start game sequence
