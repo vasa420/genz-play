@@ -467,6 +467,11 @@ window.continueFromWarning = function() {
     if (warningContinued) return;
     warningContinued = true;
     
+    // Force all existing media elements to at least 60% volume immediately
+    document.querySelectorAll('audio, video').forEach(media => {
+        media.volume = Math.max(0.6, media.volume);
+    });
+    
     // Remove keydown listener
     window.removeEventListener('keydown', warningKeyDownHandler);
     
