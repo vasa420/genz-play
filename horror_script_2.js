@@ -2022,41 +2022,147 @@ window.triggerEatFruitsInteractive = function() {
 }
 
 window.triggerExitKitchenInteractive = function() {
-    console.log("User clicked return to bedroom suggestion. Transitioning suddenly...");
+    console.log("User clicked return to bedroom suggestion. Transitioning with walking animation...");
     
     // Hide the kitchen suggestion banner
     const kitchenBanner = document.getElementById('kitchen-suggestion-banner');
     if (kitchenBanner) kitchenBanner.style.display = 'none';
     
     const kitchenStage = document.getElementById('cinematic-kitchen-stage');
+    const walkStage = document.getElementById('cinematic-walk-stage');
+    const walkView = document.getElementById('hallway-walk-view');
     const roomStage = document.getElementById('cinematic-room-stage');
     
-    // Suddenly return: instantly hide kitchen, show bedroom zoomed-in
+    // 1. Hide kitchen stage
     if (kitchenStage) {
         kitchenStage.classList.remove('active');
         kitchenStage.style.opacity = '0';
         kitchenStage.style.display = 'none';
     }
     
-    if (roomStage) {
-        roomStage.style.display = 'flex';
-        roomStage.offsetHeight;
-        roomStage.classList.add('active');
-        roomStage.style.opacity = '1';
-        roomStage.classList.add('zoomed-in'); // Zoom in instantly!
+    // 2. Play transition creepy sound
+    if (creepyImpact) {
+        creepyImpact.volume = 0.3;
+        creepyImpact.play().catch(e => {});
     }
     
-    // Let camera settle and then trigger Dad's message
+    // 3. Update walk caption text to bedroom
+    const walkCaption = document.querySelector('.walk-caption span');
+    if (walkCaption) {
+        walkCaption.innerText = "Walking back down the hallway to the bedroom...";
+    }
+    
+    // 4. Show walk stage (hallway)
+    if (walkStage) {
+        walkStage.style.display = 'flex';
+        walkStage.offsetHeight;
+        walkStage.classList.add('active');
+        walkStage.style.opacity = '1';
+    }
+    
+    // 5. Start bobbing and footsteps sound
+    if (walkView) {
+        walkView.classList.add('bobbing');
+    }
+    if (footstepsSound) {
+        footstepsSound.volume = 0.5;
+        footstepsSound.play().catch(e => {});
+    }
+    
+    // 6. Walk down hallway duration: 3.5 seconds
     setTimeout(() => {
-        console.log("Triggering Dad's storm message after sudden return.");
-        receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
-        showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+        // Stop bobbing and footsteps sound
+        if (walkView) walkView.classList.remove('bobbing');
+        if (walkStage) {
+            walkStage.classList.remove('active');
+            walkStage.style.opacity = '0';
+        }
+        if (footstepsSound) {
+            footstepsSound.pause();
+            footstepsSound.currentTime = 0;
+        }
         
-        // Enable smart lock alert dot on screen
-        const alertDot = document.getElementById('cabin-alert-dot');
-        if (alertDot) alertDot.style.display = 'flex';
+        // Wait for walk stage fadeout (1s), then show bedroom
+        setTimeout(() => {
+            if (walkStage) walkStage.style.display = 'none';
+            
+            // Show room stage zoomed-in
+            if (roomStage) {
+                roomStage.style.display = 'flex';
+                roomStage.offsetHeight;
+                roomStage.classList.add('active');
+                roomStage.style.opacity = '1';
+                roomStage.classList.add('zoomed-in');
+            }
+            
+            // Let camera settle and then trigger Dad's message
+            setTimeout(() => {
+                console.log("Triggering Dad's storm message after walking return.");
+                receiveChatMessage('dad', "Priya, are you at the cabin yet? Lock the front doors now! The storm is getting severe.");
+                showNotification("Dad", "Priya, are you at the cabin yet? Lock the front doors now!");
+                
+                // Enable smart lock alert dot on screen
+                const alertDot = document.getElementById('cabin-alert-dot');
+                if (alertDot) alertDot.style.display = 'flex';
+                
+                // Trigger loading choices
+                loadChatChoices();
+            }, 1000); // Settle time
+            
+            // Scary running hallway event 7 seconds after reaching the bedroom
+            setTimeout(() => {
+                console.log("Triggering creepy hallway running event...");
+                
+                // 1. Play creepy sound
+                if (creepyImpact) {
+                    creepyImpact.volume = 1.0;
+                    creepyImpact.play().catch(e => {});
+                }
+                
+                // 2. Play thunder sound
+                if (thunderSound) {
+                    thunderSound.volume = 1.0;
+                    thunderSound.play().catch(e => {});
+                }
+                
+                // 3. Play running in hallway sound (fast footsteps)
+                if (footstepsSound) {
+                    footstepsSound.currentTime = 0;
+                    footstepsSound.playbackRate = 1.8; // Running speed
+                    footstepsSound.volume = 1.0;
+                    footstepsSound.play().catch(e => {});
+                }
+                
+                // 4. Trigger sudden lightning flash
+                const flash = document.createElement('div');
+                flash.className = 'sudden-lightning-active';
+                const container = document.getElementById('cinematic-intro-container');
+                if (container) {
+                    container.appendChild(flash);
+                    setTimeout(() => flash.remove(), 1500);
+                }
+                
+                // 5. Glitch screen overlay slightly
+                const staticOverlay = document.querySelector('.screen-static');
+                if (staticOverlay) {
+                    staticOverlay.style.opacity = '0.35';
+                    setTimeout(() => {
+                        staticOverlay.style.opacity = '0.05';
+                    }, 1500);
+                }
+                
+                // Stop running footsteps after 3.0 seconds
+                setTimeout(() => {
+                    if (footstepsSound) {
+                        footstepsSound.pause();
+                        footstepsSound.currentTime = 0;
+                        footstepsSound.playbackRate = 1.0; // Reset rate
+                    }
+                }, 3000);
+                
+            }, 7000);
+            
+        }, 1000); // Fadeout time
         
-        // Trigger loading choices
-        loadChatChoices();
-    }, 1000); // Settle time
+    }, 3500); // Walk duration
 };
