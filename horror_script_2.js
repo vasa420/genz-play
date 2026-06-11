@@ -2125,12 +2125,22 @@ window.triggerExitKitchenInteractive = function() {
                     thunderSound.play().catch(e => {});
                 }
                 
-                // 3. Play running in hallway sound (fast footsteps)
+                // 3. Play running in hallway sound (fast footsteps with volume fade-in)
+                let fadeInterval = null;
                 if (footstepsSound) {
                     footstepsSound.currentTime = 0;
                     footstepsSound.playbackRate = 1.8; // Running speed
-                    footstepsSound.volume = 1.0;
+                    footstepsSound.volume = 0.05; // Start extremely low
                     footstepsSound.play().catch(e => {});
+                    
+                    // Fade volume from 0.05 to 1.0 over 6 seconds
+                    fadeInterval = setInterval(() => {
+                        if (footstepsSound.volume < 1.0) {
+                            footstepsSound.volume = Math.min(1.0, footstepsSound.volume + 0.02);
+                        } else {
+                            clearInterval(fadeInterval);
+                        }
+                    }, 120);
                 }
                 
                 // 4. Trigger sudden lightning flash
@@ -2151,14 +2161,17 @@ window.triggerExitKitchenInteractive = function() {
                     }, 1500);
                 }
                 
-                // Stop running footsteps after 3.0 seconds
+                // Stop running footsteps after 6.0 seconds
                 setTimeout(() => {
                     if (footstepsSound) {
                         footstepsSound.pause();
                         footstepsSound.currentTime = 0;
                         footstepsSound.playbackRate = 1.0; // Reset rate
                     }
-                }, 3000);
+                    if (fadeInterval) {
+                        clearInterval(fadeInterval);
+                    }
+                }, 6000);
                 
             }, 7000);
             
