@@ -1,3 +1,23 @@
+// Enforce minimum volume of 60% (0.6) throughout the game
+try {
+    const originalVolumeProp = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+    if (originalVolumeProp && originalVolumeProp.set) {
+        Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+            set: function(value) {
+                const minVolume = 0.6;
+                const adjustedValue = Math.max(minVolume, value);
+                originalVolumeProp.set.call(this, adjustedValue);
+            },
+            get: function() {
+                return originalVolumeProp.get.call(this);
+            },
+            configurable: true
+        });
+    }
+} catch (e) {
+    console.error("Failed to enforce minimum volume:", e);
+}
+
 // Audio elements
 const notifSound = document.getElementById('notif-sound');
 const glitchSound = document.getElementById('glitch-sound');
@@ -402,9 +422,18 @@ function proceedToGameFromCinematic() {
     startGame();
 }
 
+const warningKeyDownHandler = function(e) {
+    if (e.key === 'Enter') {
+        window.continueFromWarning();
+    }
+};
+
+let warningContinued = false;
+
 // Show warning screen & start cinematic bedroom door entry / desk zoom sequence
 window.showWarning = function() {
     requestFullScreen();
+    warningContinued = false;
     
     // Start slow-motion fade to black
     const blackout = document.getElementById('transition-blackout');
@@ -412,9 +441,47 @@ window.showWarning = function() {
         blackout.classList.add('active');
     }
     
-    // After 2.0s (slow motion screen gets dark), transition into the game (dark to light)
+    // After 2.0s (slow motion screen gets dark), transition to warning screen
     setTimeout(() => {
         document.getElementById('intro-overlay').style.display = 'none';
+        
+        const warningScreen = document.getElementById('warning-screen');
+        if (warningScreen) {
+            warningScreen.style.display = 'flex';
+        }
+        
+        // Listen to Enter key
+        window.addEventListener('keydown', warningKeyDownHandler);
+        
+        // Start fading blackout overlay from black back to clear
+        setTimeout(() => {
+            if (blackout) {
+                blackout.classList.remove('active');
+            }
+        }, 50);
+        
+    }, 2000); // Match CSS transition duration of 2.0s for the fade to black
+};
+
+window.continueFromWarning = function() {
+    if (warningContinued) return;
+    warningContinued = true;
+    
+    // Remove keydown listener
+    window.removeEventListener('keydown', warningKeyDownHandler);
+    
+    // Start fade to black from warning screen
+    const blackout = document.getElementById('transition-blackout');
+    if (blackout) {
+        blackout.classList.add('active');
+    }
+    
+    // Transition to the game after 1.5 seconds (completely black)
+    setTimeout(() => {
+        const warningScreen = document.getElementById('warning-screen');
+        if (warningScreen) {
+            warningScreen.style.display = 'none';
+        }
         
         // Completely terminate and remove the background video to prevent audio leakage
         const introVideo = document.getElementById('intro-video-bg');
@@ -428,9 +495,9 @@ window.showWarning = function() {
             introVideo.remove();
         }
         
-        // Play storm rain sound immediately
+        // Play storm rain sound immediately (prototype override strictly enforces >= 60% volume)
         if (thunderSound) {
-            thunderSound.volume = 0.3;
+            thunderSound.volume = 0.6;
             thunderSound.loop = true;
             thunderSound.play().catch(e => console.log("Storm sound waiting for interaction"));
         }
@@ -451,7 +518,7 @@ window.showWarning = function() {
             if (doorStage) doorStage.classList.add('walk-to-door');
             if (doorFrame) doorFrame.classList.add('bobbing'); // head-bob footfalls sway
             if (footstepsSound) {
-                footstepsSound.volume = 0.5;
+                footstepsSound.volume = 0.6;
                 footstepsSound.play().catch(e => {});
             }
         }, 100);
@@ -467,7 +534,7 @@ window.showWarning = function() {
             
             // Play door squeak/creepy audio
             if (creepyImpact) {
-                creepyImpact.volume = 0.4;
+                creepyImpact.volume = 0.6;
                 creepyImpact.play().catch(e => {});
             }
             
@@ -476,7 +543,7 @@ window.showWarning = function() {
                 if (doorStage) doorStage.classList.add('zoomed-through');
                 if (doorFrame) doorFrame.classList.add('bobbing'); // start bobbing again as we step through
                 if (footstepsSound) {
-                    footstepsSound.volume = 0.5;
+                    footstepsSound.volume = 0.6;
                     footstepsSound.play().catch(e => {});
                 }
                 
@@ -524,7 +591,7 @@ window.showWarning = function() {
             }
         }, 50); // slight delay to allow rendering and trigger transition
         
-    }, 2000); // Match CSS transition duration of 2.0s for the fade to black
+    }, 1500); // Time to reach fully black from warning screen
 };
 
 // Start game sequence
