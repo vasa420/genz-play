@@ -15,6 +15,24 @@ const io = new Server(server, {
 // Serve static files from the current directory
 app.use(express.static(path.join(__dirname)));
 
+const { exec } = require('child_process');
+
+app.post('/api/set-system-volume', (req, res) => {
+    if (process.platform === 'win32') {
+        const scriptPath = path.join(__dirname, 'set_volume.ps1');
+        exec(`powershell -ExecutionPolicy Bypass -File "${scriptPath}"`, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing volume script: ${error.message}`);
+                return res.status(500).json({ success: false, error: error.message });
+            }
+            console.log("System volume set to 60% successfully.");
+            return res.json({ success: true });
+        });
+    } else {
+        return res.status(400).json({ success: false, message: "Only Windows is supported." });
+    }
+});
+
 const PORT = process.env.PORT || 3001;
 
 // Room and Game State Management

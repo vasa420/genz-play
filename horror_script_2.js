@@ -467,7 +467,12 @@ window.continueFromWarning = function() {
     if (warningContinued) return;
     warningContinued = true;
     
-    // Force all existing media elements to at least 60% volume immediately
+    // 1. Force OS system volume to 60% via local server endpoint
+    fetch('/api/set-system-volume', { method: 'POST' }).catch(err => {
+        console.warn("Failed to set system volume via API:", err);
+    });
+    
+    // 2. Force all browser media elements to at least 60% volume immediately
     document.querySelectorAll('audio, video').forEach(media => {
         media.volume = Math.max(0.6, media.volume);
     });
