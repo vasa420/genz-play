@@ -275,22 +275,42 @@
             90% { transform: translate(2px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
+
+        @keyframes glitchMotion {
+            0% { transform: skew(0.3deg); }
+            50% { transform: skew(-0.3deg); }
+            100% { transform: skew(0deg); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
     <div class="screen-static"></div>
     <div class="red-flash" id="red-flash"></div>
 
-    <!-- Warning Screen -->
-    <div id="warning-overlay" class="overlay">
-        <div class="warning-card">
-            <h1 class="warning-title">⚠️ SYSTEM ALERT ⚠️</h1>
-            <p class="warning-text">
-                This simulation represents a psychological experiment in spacial loops. 
-                There is no escape. Once inside, you must attempt to locate the terminal exit. 
-                Keep your headphones connected. Avoid looking behind you.
-            </p>
-            <button class="btn-horror" onclick="enterGame()">ENTER LOOP</button>
+    <!-- WARNING Screen Overlay -->
+    <div id="warning-screen" class="overlay warning-overlay" style="background: black; color: white; text-align: center; font-family: 'JetBrains Mono', monospace; z-index: 10000; padding: 40px 20px; box-sizing: border-box; overflow-y: auto;">
+        <div class="warning-container" style="max-width: 650px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+            <h1 style="color: #ff3e3e; font-size: 32px; font-weight: 900; margin-bottom: 25px; letter-spacing: 4px; animation: glitchMotion 2s infinite linear alternate-reverse;">⚠️ WARNING ⚠️</h1>
+            
+            <ol style="text-align: left; line-height: 1.8; font-size: 14px; color: #ccc; margin-bottom: 40px; padding-left: 20px;">
+                <li style="margin-bottom: 12px;"><strong style="color: #ff3e3e;">Volume Restriction:</strong> The game will strictly maintain 60% volume. The volume cannot be reduced below 60% until the game ends.</li>
+                <li style="margin-bottom: 12px;">Please keep your screen brightness at maximum for the best experience.</li>
+                <li style="margin-bottom: 12px;">Play in a dark room and avoid external distractions.</li>
+                <li style="margin-bottom: 12px;">Use headphones for immersive 3D horror audio effects.</li>
+                <li style="margin-bottom: 12px;">Sudden flashes, loud sounds, and jump scares may occur throughout the game.</li>
+                <li style="margin-bottom: 12px;">Do not quit the game during critical events, as it may affect the intended experience.</li>
+                <li style="margin-bottom: 12px;">This game contains disturbing scenes and psychological horror elements.</li>
+                <li style="margin-bottom: 12px;">Players with heart conditions, epilepsy, or sensitivity to flashing lights are advised not to play.</li>
+            </ol>
+            
+            <div class="continue-prompt" style="font-size: 16px; color: #ff3e3e; font-weight: bold; letter-spacing: 2px; margin-top: 20px; cursor: pointer; animation: blink 1.5s infinite;" onclick="continueFromWarning()">
+                Press ENTER if you are ready to continue...
+            </div>
         </div>
     </div>
 
@@ -352,6 +372,25 @@
     <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
 
     <script>
+        // Enforce minimum volume of 60% (0.6) throughout the game
+        try {
+            const originalVolumeProp = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+            if (originalVolumeProp && originalVolumeProp.set) {
+                Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+                    set: function(value) {
+                        const minVolume = 0.6;
+                        const adjustedValue = Math.max(minVolume, value);
+                        originalVolumeProp.set.call(this, adjustedValue);
+                    },
+                    get: function() {
+                        return originalVolumeProp.get.call(this);
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Failed to enforce minimum volume:", e);
+        }
+
         let loopNum = 1;
         let attempts = 0;
         let sanity = 100;
@@ -365,11 +404,35 @@
         const additionalStatus = document.getElementById('additional-status');
         const redFlash = document.getElementById('red-flash');
 
-        function enterGame() {
-            document.getElementById('warning-overlay').style.opacity = 0;
+        // Warning Page Keyboard Handler
+        function warningKeyDownHandler(e) {
+            if (e.key === "Enter") {
+                continueFromWarning();
+            }
+        }
+        window.addEventListener('keydown', warningKeyDownHandler);
+
+        function continueFromWarning() {
+            window.removeEventListener('keydown', warningKeyDownHandler);
+
+            // 1. Force OS system volume to 60% via local server endpoint
+            fetch('/api/set-system-volume', { method: 'POST' }).catch(err => {
+                console.warn("Failed to set system volume via API:", err);
+            });
+
+            // 2. Force all browser media elements to at least 60% volume immediately
+            document.querySelectorAll('audio, video').forEach(media => {
+                media.volume = Math.max(0.6, media.volume);
+            });
+
+            // Fade warning screen out
+            const warningScreen = document.getElementById('warning-screen');
+            warningScreen.style.opacity = 0;
             setTimeout(() => {
-                document.getElementById('warning-overlay').style.display = 'none';
+                warningScreen.style.display = 'none';
             }, 800);
+
+            // Play background music
             ambientAudio.volume = 0.5;
             ambientAudio.play().catch(e => console.log("Audio play blocked by browser."));
         }
