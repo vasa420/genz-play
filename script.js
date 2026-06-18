@@ -8650,5 +8650,7 @@ window.launchGame = function(game) {
         window.location.href = 'hand_cricket_login.html';
     } else if (game === 'snake') {
         window.location.href = 'snake_login.html';
+    } else if (game === 'noexit') {
+        window.location.href = 'no_exit.html';
     }
 };
