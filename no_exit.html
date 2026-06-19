@@ -264,9 +264,9 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
             box-sizing: border-box;
-            transition: opacity 1s ease-out;
+            transition: opacity 0.2s ease-out;
             opacity: 0;
         }
 
@@ -691,17 +691,17 @@
         /* Instructions Scrollbox Styling */
         .instructions-scrollbox {
             text-align: left;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 59, 48, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 59, 48, 0.25);
             border-radius: 12px;
-            padding: 15px;
-            max-height: 250px;
+            padding: 20px;
+            max-height: 480px;
             overflow-y: auto;
             width: 100%;
             margin: 15px 0;
             font-size: 13px;
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.95);
             box-sizing: border-box;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
@@ -763,7 +763,7 @@
         <h1 class="horror-brand">PROJECT SILENCE</h1>
 
         <!-- Content details in middle -->
-        <div class="instruction-content" style="max-width: 520px; width: 90%; gap: 15px;">
+        <div class="instruction-content" style="max-width: 800px; width: 95%; gap: 15px;">
             <!-- 3D Door Icon representation -->
             <div class="door-icon-wrapper" style="margin-bottom: 5px;">
                 <div class="door-icon-3d">
@@ -983,29 +983,23 @@
                     loadingText.textContent = `[LINK: SECURED] STABILIZATION COMPLETE ... 100%`;
                     progressFill.style.width = "100%";
 
-                    // Transition to instruction screen
-                    setTimeout(() => {
-                        const loadingScreen = document.getElementById('loading-screen');
-                        loadingScreen.style.opacity = 0;
-                        setTimeout(() => {
-                            loadingScreen.style.display = 'none';
+                    // Straight transition to instruction screen
+                    const loadingScreen = document.getElementById('loading-screen');
+                    loadingScreen.style.display = 'none';
 
-                            const instScreen = document.getElementById('instruction-screen');
-                            instScreen.style.display = 'flex';
-                            instScreen.offsetHeight; // trigger reflow
-                            instScreen.style.opacity = 1;
+                    const instScreen = document.getElementById('instruction-screen');
+                    instScreen.style.display = 'flex';
+                    instScreen.style.opacity = 1;
 
-                            // Heavy impact sound to make it feel scary when instructions load
-                            impactAudio.currentTime = 0;
-                            impactAudio.volume = 0.8;
-                            impactAudio.play().catch(e => {});
+                    // Heavy impact sound to make it feel scary when instructions load
+                    impactAudio.currentTime = 0;
+                    impactAudio.volume = 0.8;
+                    impactAudio.play().catch(e => {});
 
-                            // Start ambient horror music on instruction screen load
-                            ambientAudio.currentTime = 0;
-                            ambientAudio.volume = 0.5;
-                            ambientAudio.play().catch(e => console.log("Audio play blocked: ", e));
-                        }, 1000);
-                    }, 800);
+                    // Start ambient horror music on instruction screen load
+                    ambientAudio.currentTime = 0;
+                    ambientAudio.volume = 0.5;
+                    ambientAudio.play().catch(e => console.log("Audio play blocked: ", e));
                 } else {
                     progressFill.style.width = progress + "%";
                     loadingText.textContent = `${statusMsg} ... ${Math.floor(progress)}%`;
