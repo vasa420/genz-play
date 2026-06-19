@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NO EXIT | Can You Escape?</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&family=Creepster&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #ff3b30;
@@ -88,62 +88,251 @@
             margin-bottom: 30px;
         }
 
-        /* Warning Overlay */
-        .overlay {
+        /* Creepy font for PROJECT SILENCE */
+        .horror-brand {
+            font-family: 'Creepster', cursive;
+            font-size: 54px;
+            letter-spacing: 6px;
+            color: #ff3b30;
+            text-shadow: 0 0 15px rgba(255, 59, 48, 0.8);
+            margin: 0;
+            text-transform: uppercase;
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        /* Initial Sync Screen styling */
+        .sync-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
-            z-index: 2000;
+            z-index: 20000;
             display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 1s ease-out;
+            opacity: 1;
+        }
+
+        .sync-btn {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            font-size: 16px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            padding: 20px 40px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px var(--primary-glow);
+            animation: pulse-border 2s infinite alternate;
+        }
+
+        /* Thriller Intro Container */
+        .intro-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 15000;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 30px;
-            transition: opacity 0.8s ease;
+            transition: opacity 1s ease-out;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            opacity: 0;
         }
 
-        .warning-card {
+        .intro-text-container {
+            max-width: 700px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .intro-console-text {
+            font-size: 20px;
+            letter-spacing: 2px;
+            line-height: 1.6;
+            color: #ff3b30;
+            text-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+            font-weight: 700;
+        }
+
+        .intro-glitch-active {
+            animation: shake 0.15s infinite;
+        }
+
+        /* Redesigned Instruction Screen */
+        .instruction-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('no_exit_bg.png') no-repeat center center;
+            background-size: cover;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 20px;
+            box-sizing: border-box;
+            transition: opacity 1s ease-out;
+            opacity: 0;
+        }
+
+        /* Glassmorphic overlay filter to keep it dark */
+        .instruction-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 3, 3, 0.7) 0%, rgba(0, 0, 0, 0.95) 100%);
+            backdrop-filter: blur(8px);
+            z-index: -1;
+        }
+
+        .instruction-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
             max-width: 600px;
             text-align: center;
-            font-family: 'JetBrains Mono', monospace;
+            gap: 25px;
         }
 
-        .warning-title {
-            color: var(--primary);
-            font-size: 32px;
+        /* Spooky door icon */
+        .door-icon-wrapper {
+            position: relative;
+            width: 90px;
+            height: 140px;
+            perspective: 500px;
+            animation: float-door 4s infinite ease-in-out;
+            margin-bottom: 10px;
+        }
+
+        .door-icon-3d {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e07a3f, #ba5824);
+            border: 4px solid #ff3b30;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 25px rgba(255, 59, 48, 0.6), inset 0 0 15px rgba(255, 59, 48, 0.3);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .door-icon-3d::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ffffff;
+        }
+
+        /* Glow panel pattern inside door icon */
+        .door-icon-panels {
+            position: absolute;
+            width: 70%;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 4px 0;
+            box-sizing: border-box;
+        }
+        .door-icon-panel {
+            width: 100%;
+            height: 25%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+        }
+
+        .instruction-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 56px;
             font-weight: 900;
-            margin-bottom: 20px;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
         }
 
-        .warning-text {
-            color: #ccc;
-            font-size: 14px;
+        .instruction-desc {
+            font-size: 15px;
             line-height: 1.8;
-            margin-bottom: 40px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+            font-weight: 300;
+            max-width: 520px;
+            letter-spacing: 0.5px;
         }
 
-        .btn-horror {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            padding: 15px 40px;
-            font-family: 'JetBrains Mono', monospace;
+        .btn-enter-loop {
+            background: #ff3b30;
+            border: none;
+            color: #ffffff;
+            padding: 16px 50px;
+            font-family: 'Outfit', sans-serif;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 900;
             letter-spacing: 3px;
-            border-radius: 8px;
+            border-radius: 30px;
             cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 0 15px rgba(255, 59, 48, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.4);
+            text-transform: uppercase;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+            animation: pulse-btn 2s infinite;
+        }
+
+        .btn-enter-loop:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 35px #ff3b30;
+            background: #ff4d43;
+        }
+
+        .instruction-footer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.35);
             text-transform: uppercase;
         }
 
-        .btn-horror:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 25px var(--primary);
-            transform: translateY(-2px);
+        /* Keyframes */
+        @keyframes float-door {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-10px) rotateY(5deg); }
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.95; }
+            50% { transform: scale(1.03); opacity: 1; text-shadow: 0 0 25px rgba(255, 59, 48, 1); }
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: rgba(255, 59, 48, 0.2); box-shadow: 0 0 10px rgba(255, 59, 48, 0.1); }
+            100% { border-color: rgba(255, 59, 48, 0.8); box-shadow: 0 0 25px rgba(255, 59, 48, 0.4); }
+        }
+
+        @keyframes pulse-btn {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(255, 59, 48, 0.7); }
         }
 
         /* Door Grid */
@@ -292,33 +481,47 @@
     <div class="screen-static"></div>
     <div class="red-flash" id="red-flash"></div>
 
-    <!-- WARNING Screen Overlay -->
-    <div id="warning-screen" class="overlay warning-overlay" style="background: black; color: white; text-align: center; font-family: 'JetBrains Mono', monospace; z-index: 10000; padding: 40px 20px; box-sizing: border-box; overflow-y: auto;">
-        <div class="warning-container" style="max-width: 650px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-            <h1 style="color: #ff3e3e; font-size: 32px; font-weight: 900; margin-bottom: 25px; letter-spacing: 4px; animation: glitchMotion 2s infinite linear alternate-reverse;">⚠️ WARNING ⚠️</h1>
-            
-            <ul style="list-style-type: none; text-align: left; line-height: 1.6; font-size: 13px; color: #ccc; margin-bottom: 30px; padding-left: 0; max-height: 50vh; overflow-y: auto; width: 100%; border: 1px solid rgba(255, 62, 62, 0.15); padding: 15px; border-radius: 12px; background: rgba(0,0,0,0.4);">
-                <li style="margin-bottom: 10px;">🚶 <strong>Walk</strong> to increase your survival time.</li>
-                <li style="margin-bottom: 10px;">⏱️ You must complete <strong>20 minutes</strong> of walking time to win.</li>
-                <li style="margin-bottom: 10px;">🧍 If you stop moving, the timer pauses.</li>
-                <li style="margin-bottom: 10px;">👻 The ghost can still move and hunt you even when the timer is paused.</li>
-                <li style="margin-bottom: 10px;">🎤 The game uses your microphone to detect sounds.</li>
-                <li style="margin-bottom: 10px;">🤫 Stay quiet to avoid attracting the ghost.</li>
-                <li style="margin-bottom: 10px;">🗣️ Talking, laughing, shouting, or loud noises will alert the ghost.</li>
-                <li style="margin-bottom: 10px;">😱 Loud sounds increase the chance of jump scares.</li>
-                <li style="margin-bottom: 10px;">🔦 Explore the area carefully and stay aware of your surroundings.</li>
-                <li style="margin-bottom: 10px;">🚪 Watch for sudden paranormal events such as doors closing, lights flickering, and strange sounds.</li>
-                <li style="margin-bottom: 10px;">👣 The longer you walk, the more dangerous the game becomes.</li>
-                <li style="margin-bottom: 10px;">⚠️ Jump scares become more frequent as your walking time increases.</li>
-                <li style="margin-bottom: 10px;">🏃 Avoid the ghost whenever it appears.</li>
-                <li style="margin-bottom: 10px;">💀 Getting caught by the ghost results in <strong>Game Over</strong>.</li>
-                <li style="margin-bottom: 10px;">🏆 Survive and complete <strong>20 minutes</strong> of walking time to escape and win.</li>
-            </ul>
-            
-            <div class="continue-prompt" style="font-size: 16px; color: #ff3e3e; font-weight: bold; letter-spacing: 2px; margin-top: 20px; cursor: pointer; animation: blink 1.5s infinite;" onclick="continueFromWarning()">
-                Press ENTER if you are ready to continue...
-            </div>
+    <!-- 1. SYNC SCREEN -->
+    <div id="sync-screen" class="sync-overlay" onclick="startThrillerIntro()">
+        <div class="sync-btn">INITIALIZE SYSTEM LINK</div>
+    </div>
+
+    <!-- 2. THRILLER INTRO SCREEN (10 seconds) -->
+    <div id="thriller-intro" class="intro-overlay">
+        <div class="screen-static" style="opacity: 0.8; z-index: 1;"></div>
+        <div class="intro-text-container" style="z-index: 2;">
+            <div id="intro-console" class="intro-console-text"></div>
         </div>
+    </div>
+
+    <!-- 3. INSTRUCTION SCREEN (Redesigned matching mockup) -->
+    <div id="instruction-screen" class="instruction-overlay">
+        <!-- Spooky Brand at top -->
+        <h1 class="horror-brand">PROJECT SILENCE</h1>
+
+        <!-- Content details in middle -->
+        <div class="instruction-content">
+            <!-- 3D Door Icon representation -->
+            <div class="door-icon-wrapper">
+                <div class="door-icon-3d">
+                    <div class="door-icon-panels">
+                        <div class="door-icon-panel"></div>
+                        <div class="door-icon-panel"></div>
+                        <div class="door-icon-panel"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="instruction-title">NO EXIT</h2>
+            <p class="instruction-desc">
+                There is no escape. Navigate through a shifting labyrinth of corridors where every door resets your sanity.
+            </p>
+
+            <button class="btn-enter-loop" onclick="enterGameLoop()">ENTER LOOP</button>
+        </div>
+
+        <!-- Footer -->
+        <div class="instruction-footer">LEAVE THE DARKNESS</div>
     </div>
 
     <!-- Main Game Card -->
@@ -373,7 +576,7 @@
     </div>
 
     <!-- Audio Elements -->
-    <audio id="ambient-music" src="no_exit_music.mp3" loop></audio>
+    <audio id="ambient-music" src="atlasaudio-horror-ambience-512255.mp3" loop></audio>
     <audio id="door-open" src="jongmankim8596-opening-the-front-door-210347.mp3"></audio>
     <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3"></audio>
     <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
@@ -411,38 +614,144 @@
         const additionalStatus = document.getElementById('additional-status');
         const redFlash = document.getElementById('red-flash');
 
-        // Warning Page Keyboard Handler
-        function warningKeyDownHandler(e) {
-            if (e.key === "Enter") {
-                continueFromWarning();
-            }
+        // Typewriter Effect helper
+        let typeInterval = null;
+        function typeText(text, callback, speed = 30) {
+            const consoleEl = document.getElementById('intro-console');
+            if (typeInterval) clearInterval(typeInterval);
+            
+            consoleEl.innerHTML = '';
+            let index = 0;
+            typeInterval = setInterval(() => {
+                if (index < text.length) {
+                    consoleEl.innerHTML += text.charAt(index);
+                    index++;
+                } else {
+                    clearInterval(typeInterval);
+                    typeInterval = null;
+                    if (callback) callback();
+                }
+            }, speed);
         }
-        window.addEventListener('keydown', warningKeyDownHandler);
 
-        function continueFromWarning() {
-            window.removeEventListener('keydown', warningKeyDownHandler);
-
-            // 1. Force OS system volume to 60% via local server endpoint
+        // Start Thriller Intro sequence (triggers on click to bypass browser media autoplay block)
+        function startThrillerIntro() {
+            // Trigger volume endpoint and media volume setup
             fetch('/api/set-system-volume', { method: 'POST' }).catch(err => {
                 console.warn("Failed to set system volume via API:", err);
             });
-
-            // 2. Force all browser media elements to at least 60% volume immediately
             document.querySelectorAll('audio, video').forEach(media => {
                 media.volume = Math.max(0.6, media.volume);
             });
 
-            // Fade warning screen out
-            const warningScreen = document.getElementById('warning-screen');
-            warningScreen.style.opacity = 0;
+            // Fade out sync overlay
+            const syncScreen = document.getElementById('sync-screen');
+            syncScreen.style.opacity = 0;
             setTimeout(() => {
-                warningScreen.style.display = 'none';
-            }, 800);
+                syncScreen.style.display = 'none';
+            }, 1000);
 
-            // Play background music
-            ambientAudio.volume = 0.5;
-            ambientAudio.play().catch(e => console.log("Audio play blocked by browser."));
+            // Show thriller intro overlay
+            const introScreen = document.getElementById('thriller-intro');
+            introScreen.style.display = 'flex';
+            introScreen.offsetHeight; // trigger reflow
+            introScreen.style.opacity = 1;
+
+            // Orchestrate the 10-second cinematic intro sequence
+            // Phase 1 (0s): Decrypting console log + breathing
+            setTimeout(() => {
+                breathingAudio.currentTime = 0;
+                breathingAudio.volume = 0.7;
+                breathingAudio.play().catch(e => {});
+                typeText("DECRYPTING CORRIDOR ANOMALY...");
+            }, 100);
+
+            // Phase 2 (3s): Visual glitch shake + heavy impact + Project Silence reveal
+            setTimeout(() => {
+                introScreen.classList.add('intro-glitch-active');
+                impactAudio.currentTime = 0;
+                impactAudio.volume = 0.8;
+                impactAudio.play().catch(e => {});
+                
+                typeText("SUBJECT CLASSIFICATION: PROJECT SILENCE", () => {
+                    introScreen.classList.remove('intro-glitch-active');
+                });
+            }, 3000);
+
+            // Phase 3 (6s): Warning exit not found
+            setTimeout(() => {
+                typeText("WARNING: EXIT NOT FOUND.");
+            }, 6000);
+
+            // Phase 4 Countdown (7s - 9s): countdown ticks
+            setTimeout(() => {
+                typeText("WARNING: EXIT NOT FOUND. ANOMALY STABILIZING IN 3...");
+                doorOpenAudio.currentTime = 0;
+                doorOpenAudio.volume = 0.6;
+                doorOpenAudio.play().catch(e => {});
+            }, 7000);
+
+            setTimeout(() => {
+                typeText("WARNING: EXIT NOT FOUND. ANOMALY STABILIZING IN 2...");
+                doorOpenAudio.currentTime = 0;
+                doorOpenAudio.volume = 0.6;
+                doorOpenAudio.play().catch(e => {});
+            }, 8000);
+
+            setTimeout(() => {
+                typeText("WARNING: EXIT NOT FOUND. ANOMALY STABILIZING IN 1...");
+                doorOpenAudio.currentTime = 0;
+                doorOpenAudio.volume = 0.6;
+                doorOpenAudio.play().catch(e => {});
+            }, 9000);
+
+            // Phase 5 (10s): Anomaly stabilizer slam + transition to instructions
+            setTimeout(() => {
+                // Play heavy impact
+                impactAudio.currentTime = 0;
+                impactAudio.volume = 1.0;
+                impactAudio.play().catch(e => {});
+
+                // Flash red screen
+                redFlash.style.opacity = 1;
+                setTimeout(() => {
+                    redFlash.style.opacity = 0;
+                }, 200);
+
+                // Transition from Intro to Instructions
+                introScreen.style.opacity = 0;
+                setTimeout(() => {
+                    introScreen.style.display = 'none';
+                    
+                    const instScreen = document.getElementById('instruction-screen');
+                    instScreen.style.display = 'flex';
+                    instScreen.offsetHeight; // trigger reflow
+                    instScreen.style.opacity = 1;
+
+                    // Play ambient music loop
+                    ambientAudio.currentTime = 0;
+                    ambientAudio.volume = 0.5;
+                    ambientAudio.play().catch(e => console.log("Audio play blocked by browser."));
+                }, 1000);
+            }, 10000);
         }
+
+        // Enter actual game loop (triggers on clicking 'ENTER LOOP' on instructions page)
+        function enterGameLoop() {
+            const instScreen = document.getElementById('instruction-screen');
+            instScreen.style.opacity = 0;
+            setTimeout(() => {
+                instScreen.style.display = 'none';
+            }, 1000);
+        }
+
+        // Optional shortcut: Press ENTER on the instruction screen to enter game loop
+        window.addEventListener('keydown', (e) => {
+            const instScreen = document.getElementById('instruction-screen');
+            if (instScreen && instScreen.style.display === 'flex' && e.key === 'Enter') {
+                enterGameLoop();
+            }
+        });
 
         const descriptions = [
             "You enter a corridor that looks exactly like the one you left. A draft smells like copper.",
