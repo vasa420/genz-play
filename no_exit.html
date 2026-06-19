@@ -167,7 +167,62 @@
             border-radius: 3px;
             overflow: hidden;
             border: 1px solid rgba(255, 59, 48, 0.1);
-            display: none;
+            display: block;
+        }
+
+        /* Volumetric Smoke Animation */
+        .smoke-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .smoke-particle {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 50% 50%, rgba(200, 200, 200, 0.06), transparent 65%);
+            transform-origin: 50% 50%;
+            filter: blur(25px);
+            opacity: 0;
+        }
+
+        .smoke1 {
+            animation: smoke-drift-1 14s infinite linear;
+        }
+
+        .smoke2 {
+            animation: smoke-drift-2 18s infinite linear;
+            animation-delay: 3s;
+        }
+
+        .smoke3 {
+            animation: smoke-drift-3 22s infinite linear;
+            animation-delay: 6s;
+        }
+
+        @keyframes smoke-drift-1 {
+            0% { transform: translateY(40%) scale(0.6) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-60%) scale(1.4) rotate(180deg); opacity: 0; }
+        }
+
+        @keyframes smoke-drift-2 {
+            0% { transform: translateY(40%) scale(0.8) rotate(90deg); opacity: 0; }
+            25% { opacity: 0.6; }
+            75% { opacity: 0.6; }
+            100% { transform: translateY(-60%) scale(1.8) rotate(-90deg); opacity: 0; }
+        }
+
+        @keyframes smoke-drift-3 {
+            0% { transform: translateY(40%) scale(0.5) rotate(45deg); opacity: 0; }
+            30% { opacity: 0.9; }
+            70% { opacity: 0.9; }
+            100% { transform: translateY(-60%) scale(1.6) rotate(225deg); opacity: 0; }
         }
 
         .progress-bar-fill {
@@ -645,13 +700,18 @@
 
     <!-- 1. CREEPY LOADING SCREEN -->
     <div id="loading-screen" class="loading-overlay">
+        <!-- Smoke Animation Overlay -->
+        <div class="smoke-container">
+            <div class="smoke-particle smoke1"></div>
+            <div class="smoke-particle smoke2"></div>
+            <div class="smoke-particle smoke3"></div>
+        </div>
         <div class="loading-container">
             <h1 class="loading-brand">PROJECT SILENCE</h1>
             <div class="loading-status-text" id="loading-text">SYSTEM OFFLINE</div>
             <div class="progress-bar-wrapper" id="progress-bar-wrapper">
                 <div class="progress-bar-fill" id="progress-bar-fill"></div>
             </div>
-            <button class="btn-loading" id="btn-loading" onclick="startLoadingSequence()">INITIATE LINK</button>
         </div>
     </div>
 
@@ -807,23 +867,11 @@
                 media.volume = Math.max(0.6, media.volume);
             });
 
-            const btnLoading = document.getElementById('btn-loading');
             const progressWrapper = document.getElementById('progress-bar-wrapper');
             const progressFill = document.getElementById('progress-bar-fill');
             const loadingText = document.getElementById('loading-text');
 
-            // Hide the initiate button and show progress bar
-            btnLoading.style.display = 'none';
             progressWrapper.style.display = 'block';
-
-            // Play background music and breathing/heartbeat sound immediately (to bypass browser audio autoplay restrictions)
-            ambientAudio.currentTime = 0;
-            ambientAudio.volume = 0.4;
-            ambientAudio.play().catch(e => console.log("Audio play blocked: ", e));
-
-            breathingAudio.currentTime = 0;
-            breathingAudio.volume = 0.6;
-            breathingAudio.play().catch(e => {});
 
             let progress = 0;
             loadingText.textContent = "SYNCHRONIZING PORTAL... 0%";
@@ -861,6 +909,11 @@
                             impactAudio.currentTime = 0;
                             impactAudio.volume = 0.8;
                             impactAudio.play().catch(e => {});
+
+                            // Start ambient horror music on instruction screen load
+                            ambientAudio.currentTime = 0;
+                            ambientAudio.volume = 0.5;
+                            ambientAudio.play().catch(e => console.log("Audio play blocked: ", e));
                         }, 1000);
                     }, 800);
                 } else {
@@ -868,15 +921,14 @@
                     // Change status text occasionally
                     const phraseIndex = Math.min(Math.floor(progress / 20), creepyPhrases.length - 1);
                     loadingText.textContent = `${creepyPhrases[phraseIndex]} ${progress}%`;
-
-                    // Occasionally play spooky breathing/static sound as it loads
-                    if (progress % 35 === 0) {
-                        breathingAudio.currentTime = 0;
-                        breathingAudio.play().catch(e => {});
-                    }
                 }
             }, 100);
         }
+
+        // Start loading automatically on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            startLoadingSequence();
+        });
 
         // Enter actual game loop (triggers on clicking 'ENTER LOOP' on instructions page)
         function enterGameLoop() {
