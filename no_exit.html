@@ -961,29 +961,15 @@
             setTimeout(() => {
                 instScreen.style.display = 'none';
                 
-                // Show headphones warning screen directly
-                const headphonesScreen = document.getElementById('headphones-screen');
-                headphonesScreen.style.display = 'flex';
-                headphonesScreen.offsetHeight; // trigger reflow
-                headphonesScreen.style.opacity = 1;
-
-                // Play heartbeat/breathing cue during warning
+                // Play breathing/heartbeat cue at the start of the game
                 breathingAudio.currentTime = 0;
                 breathingAudio.volume = 0.8;
                 breathingAudio.play().catch(e => {});
 
-                // Play door open sound for atmosphere
+                // Play door open sound for starting corridor atmosphere
                 doorOpenAudio.currentTime = 0;
                 doorOpenAudio.volume = 0.6;
                 doorOpenAudio.play().catch(e => {});
-
-                // After 5 seconds, fade out headphones screen and reveal the game
-                setTimeout(() => {
-                    headphonesScreen.style.opacity = 0;
-                    setTimeout(() => {
-                        headphonesScreen.style.display = 'none';
-                    }, 1000);
-                }, 5000);
             }, 1000);
         }
 
