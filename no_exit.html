@@ -104,41 +104,34 @@
         .loading-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: url('creepy_loading.png') no-repeat center center;
+            background: radial-gradient(circle at center, rgba(3, 3, 3, 0.25) 0%, rgba(0, 0, 0, 0.9) 100%), url('creepy_loading.png') no-repeat center center;
             background-size: cover;
             z-index: 20000;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-end; /* right side */
+            align-items: flex-end; /* down side */
+            padding: 40px;
+            box-sizing: border-box;
             transition: opacity 1s ease-out;
             opacity: 1;
         }
 
-        .loading-overlay::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, rgba(3, 3, 3, 0.4) 0%, rgba(0, 0, 0, 0.9) 100%);
-            backdrop-filter: blur(4px);
-            z-index: 1;
-        }
-
         .loading-container {
             position: relative;
-            z-index: 2;
-            background: rgba(15, 15, 15, 0.8);
+            z-index: 3;
+            background: rgba(10, 10, 10, 0.85);
             border: 1px solid rgba(255, 59, 48, 0.25);
-            border-radius: 24px;
-            padding: 40px;
-            text-align: center;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: left;
             backdrop-filter: blur(20px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(255, 59, 48, 0.2);
-            max-width: 450px;
-            width: 90%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), 0 0 25px rgba(255, 59, 48, 0.15);
+            max-width: 380px;
+            width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 25px;
+            align-items: stretch;
+            gap: 15px;
         }
 
         .loading-brand {
@@ -175,18 +168,19 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             overflow: hidden;
-            z-index: 1;
+            z-index: 2;
             pointer-events: none;
         }
 
         .smoke-particle {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(circle at 50% 50%, rgba(200, 200, 200, 0.06), transparent 65%);
+            bottom: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: radial-gradient(circle at 50% 50%, rgba(240, 240, 240, 0.08), transparent 70%);
             transform-origin: 50% 50%;
-            filter: blur(25px);
+            filter: blur(50px);
             opacity: 0;
         }
 
@@ -874,23 +868,54 @@
             progressWrapper.style.display = 'block';
 
             let progress = 0;
-            loadingText.textContent = "SYNCHRONIZING PORTAL... 0%";
-
-            const creepyPhrases = [
-                "ESTABLISHING PROTOCOL...",
-                "OPENING SHIFTING LABYRINTH...",
-                "CALIBRATING SANITY DECAY...",
-                "DO NOT LOOK BEHIND YOU...",
-                "THERE IS NO EXIT..."
-            ];
+            loadingText.textContent = "ESTABLISHING CONFLICT LINK... 0%";
 
             const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 4) + 1; // random increment
+                let speedType = "DEFAULT";
+                let rtt = 60; // ms
+                let downlink = 15; // Mbps
+                let effectiveType = "4G";
+                let jitter = false;
+
+                if (navigator.connection) {
+                    const conn = navigator.connection;
+                    effectiveType = (conn.effectiveType || "4g").toUpperCase();
+                    rtt = conn.rtt || 60;
+                    downlink = conn.downlink || 15;
+                }
+
+                // Simulate realistic jitter/packet drops to fit the horror theme and make the loader reactive
+                if (Math.random() < 0.15) {
+                    jitter = true;
+                    rtt = Math.floor(rtt * (2.5 + Math.random() * 3)); // simulate latency spike
+                }
+
+                let progressIncrement = 0;
+                let statusMsg = "";
+
+                if (effectiveType.includes("2G") || downlink < 1.5) {
+                    progressIncrement = Math.random() * 0.6 + 0.2;
+                    statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] WEAK SIGNAL - CALIBRATING`;
+                } else if (effectiveType.includes("3G") || downlink < 5) {
+                    progressIncrement = Math.random() * 1.5 + 0.5;
+                    statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] STABILIZING CONNECTION`;
+                } else {
+                    if (jitter) {
+                        progressIncrement = Math.random() * 0.3 + 0.1; // slow down significantly
+                        statusMsg = `[LINK: JITTER ALERT | RTT: ${rtt}ms] PACKET LOSS DETECTED - RECONNECTING`;
+                    } else {
+                        progressIncrement = Math.floor(Math.random() * 4) + 2; // smooth 2-5% increments
+                        statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] SECURE ROUTE SYNCED`;
+                    }
+                }
+
+                progress += progressIncrement;
+
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(interval);
 
-                    loadingText.textContent = "LINK STABILIZED. REDIRECTING...";
+                    loadingText.textContent = `[LINK: SECURED] STABILIZATION COMPLETE ... 100%`;
                     progressFill.style.width = "100%";
 
                     // Transition to instruction screen
@@ -918,11 +943,9 @@
                     }, 800);
                 } else {
                     progressFill.style.width = progress + "%";
-                    // Change status text occasionally
-                    const phraseIndex = Math.min(Math.floor(progress / 20), creepyPhrases.length - 1);
-                    loadingText.textContent = `${creepyPhrases[phraseIndex]} ${progress}%`;
+                    loadingText.textContent = `${statusMsg} ... ${Math.floor(progress)}%`;
                 }
-            }, 100);
+            }, 120);
         }
 
         // Start loading automatically on page load
