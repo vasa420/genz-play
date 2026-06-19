@@ -100,72 +100,107 @@
             animation: breathe 3s infinite ease-in-out;
         }
 
-        /* Initial Sync Screen styling */
-        .sync-overlay {
+        /* Creepy Loading Screen styling */
+        .loading-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
+            background: url('creepy_loading.png') no-repeat center center;
+            background-size: cover;
             z-index: 20000;
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
             transition: opacity 1s ease-out;
             opacity: 1;
         }
 
-        .sync-btn {
+        .loading-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 3, 3, 0.4) 0%, rgba(0, 0, 0, 0.9) 100%);
+            backdrop-filter: blur(4px);
+            z-index: 1;
+        }
+
+        .loading-container {
+            position: relative;
+            z-index: 2;
+            background: rgba(15, 15, 15, 0.8);
+            border: 1px solid rgba(255, 59, 48, 0.25);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(255, 59, 48, 0.2);
+            max-width: 450px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .loading-brand {
+            font-family: 'Creepster', cursive;
+            font-size: 42px;
+            letter-spacing: 4px;
+            color: #ff3b30;
+            text-shadow: 0 0 15px rgba(255, 59, 48, 0.8);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .loading-status-text {
+            font-family: 'JetBrains Mono', monospace;
+            color: #888;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            min-height: 20px;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 59, 48, 0.1);
+            display: none;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #ff3b30;
+            box-shadow: 0 0 10px #ff3b30;
+            transition: width 0.1s linear;
+        }
+
+        .btn-loading {
             font-family: 'JetBrains Mono', monospace;
             color: var(--primary);
-            font-size: 16px;
-            letter-spacing: 4px;
+            font-size: 14px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            padding: 20px 40px;
+            padding: 15px 30px;
             border: 1px solid var(--border);
             border-radius: 12px;
             background: var(--glass);
             backdrop-filter: blur(10px);
             box-shadow: 0 0 20px var(--primary-glow);
+            cursor: pointer;
+            transition: all 0.3s ease;
             animation: pulse-border 2s infinite alternate;
+            outline: none;
+            width: 100%;
         }
 
-        /* Thriller Intro Container */
-        .intro-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 15000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 1s ease-out;
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            text-align: center;
-            opacity: 0;
-        }
-
-        .intro-text-container {
-            max-width: 700px;
-            height: 120px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .intro-console-text {
-            font-size: 20px;
-            letter-spacing: 2px;
-            line-height: 1.6;
-            color: #ff3b30;
-            text-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
-            font-weight: 700;
-        }
-
-        .intro-glitch-active {
-            animation: shake 0.15s infinite;
+        .btn-loading:hover {
+            background: rgba(255, 59, 48, 0.15);
+            box-shadow: 0 0 30px var(--primary-glow);
+            transform: scale(1.02);
         }
 
         /* Redesigned Instruction Screen */
@@ -569,41 +604,38 @@
             50% { opacity: 1; }
         }
 
-        /* Jumpscare Screen Overlay */
+        /* Jumpscare Overlay */
         .jumpscare-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
-            z-index: 11000;
+            z-index: 9800;
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.15s ease-out;
+            overflow: hidden;
         }
 
         .jumpscare-img {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             object-fit: cover;
-            filter: contrast(1.3) brightness(0.95);
-            box-shadow: 0 0 100px rgba(255, 0, 0, 0.8) inset;
+            width: 100vw;
+            height: 100vh;
+            animation: jumpscare-shake 0.08s infinite alternate, jumpscare-zoom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            filter: contrast(1.3) brightness(0.9);
         }
 
-        .jumpscare-active {
-            animation: violent-shake 0.08s infinite;
+        @keyframes jumpscare-shake {
+            0% { transform: translate(4px, 2px) rotate(0deg); }
+            100% { transform: translate(-4px, -2px) rotate(1deg); }
         }
 
-        @keyframes violent-shake {
-            0% { transform: translate(4px, 4px) rotate(0deg); filter: hue-rotate(0deg); }
-            10% { transform: translate(-3px, -4px) rotate(-1deg); }
-            20% { transform: translate(-5px, 0px) rotate(1deg); }
-            30% { transform: translate(0px, 4px) rotate(0deg); }
-            40% { transform: translate(3px, -3px) rotate(1deg); }
-            50% { transform: translate(-3px, 4px) rotate(-1deg); filter: hue-rotate(90deg); }
-            60% { transform: translate(-5px, 3px) rotate(0deg); }
-            70% { transform: translate(4px, 3px) rotate(-1deg); }
-            80% { transform: translate(-3px, -3px) rotate(1deg); }
-            90% { transform: translate(4px, 4px) rotate(0deg); }
-            100% { transform: translate(3px, -4px) rotate(-1deg); filter: hue-rotate(0deg); }
+        @keyframes jumpscare-zoom {
+            0% { transform: scale(1.0); }
+            100% { transform: scale(1.3); }
         }
     </style>
 </head>
@@ -611,16 +643,15 @@
     <div class="screen-static"></div>
     <div class="red-flash" id="red-flash"></div>
 
-    <!-- 1. SYNC SCREEN -->
-    <div id="sync-screen" class="sync-overlay" onclick="startThrillerIntro()">
-        <div class="sync-btn">INITIALIZE SYSTEM LINK</div>
-    </div>
-
-    <!-- 2. THRILLER INTRO SCREEN (10 seconds) -->
-    <div id="thriller-intro" class="intro-overlay">
-        <div class="screen-static" style="opacity: 0.8; z-index: 1;"></div>
-        <div class="intro-text-container" style="z-index: 2;">
-            <div id="intro-console" class="intro-console-text"></div>
+    <!-- 1. CREEPY LOADING SCREEN -->
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loading-container">
+            <h1 class="loading-brand">PROJECT SILENCE</h1>
+            <div class="loading-status-text" id="loading-text">SYSTEM OFFLINE</div>
+            <div class="progress-bar-wrapper" id="progress-bar-wrapper">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+            <button class="btn-loading" id="btn-loading" onclick="startLoadingSequence()">INITIATE LINK</button>
         </div>
     </div>
 
@@ -654,9 +685,9 @@
         <div class="instruction-footer">LEAVE THE DARKNESS</div>
     </div>
 
-    <!-- 3.5. JUMPSCARE OVERLAY -->
+    <!-- JUMPSCARE FLASH SCREEN (1.2 seconds) -->
     <div id="jumpscare-overlay" class="jumpscare-overlay">
-        <img src="terror_jumpscare.png" class="jumpscare-img jumpscare-active" alt="TERROR">
+        <img src="terror_jumpscare.png" class="jumpscare-img" alt="TERROR">
     </div>
 
     <!-- 4. HEADPHONES ALERT SCREEN (5 seconds) -->
@@ -766,27 +797,9 @@
 
         // Typewriter Effect helper
         let typeInterval = null;
-        function typeText(text, callback, speed = 30) {
-            const consoleEl = document.getElementById('intro-console');
-            if (typeInterval) clearInterval(typeInterval);
-            
-            consoleEl.innerHTML = '';
-            let index = 0;
-            typeInterval = setInterval(() => {
-                if (index < text.length) {
-                    consoleEl.innerHTML += text.charAt(index);
-                    index++;
-                } else {
-                    clearInterval(typeInterval);
-                    typeInterval = null;
-                    if (callback) callback();
-                }
-            }, speed);
-        }
-
-        // Start Thriller Intro sequence (triggers on click to bypass browser media autoplay block)
-        function startThrillerIntro() {
-            // Trigger volume endpoint and media volume setup
+        // Loading screen sequence
+        function startLoadingSequence() {
+            // Set volumes
             fetch('/api/set-system-volume', { method: 'POST' }).catch(err => {
                 console.warn("Failed to set system volume via API:", err);
             });
@@ -794,133 +807,99 @@
                 media.volume = Math.max(0.6, media.volume);
             });
 
-            // Fade out sync overlay
-            const syncScreen = document.getElementById('sync-screen');
-            syncScreen.style.opacity = 0;
-            setTimeout(() => {
-                syncScreen.style.display = 'none';
-            }, 1000);
+            const btnLoading = document.getElementById('btn-loading');
+            const progressWrapper = document.getElementById('progress-bar-wrapper');
+            const progressFill = document.getElementById('progress-bar-fill');
+            const loadingText = document.getElementById('loading-text');
 
-            // Show thriller intro overlay
-            const introScreen = document.getElementById('thriller-intro');
-            introScreen.style.display = 'flex';
-            introScreen.offsetHeight; // trigger reflow
-            introScreen.style.opacity = 1;
+            // Hide the initiate button and show progress bar
+            btnLoading.style.display = 'none';
+            progressWrapper.style.display = 'block';
 
-            // Orchestrate the 10-second cinematic intro sequence
-            // Phase 1 (0s): Decrypting console log + breathing
-            setTimeout(() => {
-                breathingAudio.currentTime = 0;
-                breathingAudio.volume = 0.7;
-                breathingAudio.play().catch(e => {});
-                typeText("DECRYPTING CORRIDOR ANOMALY...");
+            // Play background music and breathing/heartbeat sound immediately (to bypass browser audio autoplay restrictions)
+            ambientAudio.currentTime = 0;
+            ambientAudio.volume = 0.4;
+            ambientAudio.play().catch(e => console.log("Audio play blocked: ", e));
+
+            breathingAudio.currentTime = 0;
+            breathingAudio.volume = 0.6;
+            breathingAudio.play().catch(e => {});
+
+            let progress = 0;
+            loadingText.textContent = "SYNCHRONIZING PORTAL... 0%";
+
+            const creepyPhrases = [
+                "ESTABLISHING PROTOCOL...",
+                "OPENING SHIFTING LABYRINTH...",
+                "CALIBRATING SANITY DECAY...",
+                "DO NOT LOOK BEHIND YOU...",
+                "THERE IS NO EXIT..."
+            ];
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 4) + 1; // random increment
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+
+                    loadingText.textContent = "LINK STABILIZED. REDIRECTING...";
+                    progressFill.style.width = "100%";
+
+                    // Transition to instruction screen
+                    setTimeout(() => {
+                        const loadingScreen = document.getElementById('loading-screen');
+                        loadingScreen.style.opacity = 0;
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+
+                            const instScreen = document.getElementById('instruction-screen');
+                            instScreen.style.display = 'flex';
+                            instScreen.offsetHeight; // trigger reflow
+                            instScreen.style.opacity = 1;
+
+                            // Heavy impact sound to make it feel scary when instructions load
+                            impactAudio.currentTime = 0;
+                            impactAudio.volume = 0.8;
+                            impactAudio.play().catch(e => {});
+                        }, 1000);
+                    }, 800);
+                } else {
+                    progressFill.style.width = progress + "%";
+                    // Change status text occasionally
+                    const phraseIndex = Math.min(Math.floor(progress / 20), creepyPhrases.length - 1);
+                    loadingText.textContent = `${creepyPhrases[phraseIndex]} ${progress}%`;
+
+                    // Occasionally play spooky breathing/static sound as it loads
+                    if (progress % 35 === 0) {
+                        breathingAudio.currentTime = 0;
+                        breathingAudio.play().catch(e => {});
+                    }
+                }
             }, 100);
-
-            // Phase 2 (3s): Visual glitch shake + heavy impact + Project Silence reveal
-            setTimeout(() => {
-                introScreen.classList.add('intro-glitch-active');
-                impactAudio.currentTime = 0;
-                impactAudio.volume = 0.8;
-                impactAudio.play().catch(e => {});
-                
-                typeText("SUBJECT CLASSIFICATION: PROJECT SILENCE", () => {
-                    introScreen.classList.remove('intro-glitch-active');
-                });
-            }, 3000);
-
-            // Phase 3 (6s): Warning exit not found
-            setTimeout(() => {
-                typeText("WARNING: EXIT NOT FOUND.");
-            }, 6000);
-
-            // Phase 4 Countdown (7s - 9s): countdown ticks
-            setTimeout(() => {
-                typeText("WARNING: EXIT NOT FOUND. ANOMALY STABILIZING IN 3...");
-                doorOpenAudio.currentTime = 0;
-                doorOpenAudio.volume = 0.6;
-                doorOpenAudio.play().catch(e => {});
-            }, 7000);
-
-            setTimeout(() => {
-                typeText("WARNING: EXIT NOT FOUND. ANOMALY STABILIZING IN 2...");
-                doorOpenAudio.currentTime = 0;
-                doorOpenAudio.volume = 0.6;
-                doorOpenAudio.play().catch(e => {});
-            }, 8000);
-
-            setTimeout(() => {
-                typeText("WARNING: EXIT NOT FOUND. ANOMALY STABILIZING IN 1...");
-                doorOpenAudio.currentTime = 0;
-                doorOpenAudio.volume = 0.6;
-                doorOpenAudio.play().catch(e => {});
-            }, 9000);
-
-            // Phase 5 (10s): Anomaly stabilizer slam + transition to instructions
-            setTimeout(() => {
-                // Play heavy impact
-                impactAudio.currentTime = 0;
-                impactAudio.volume = 1.0;
-                impactAudio.play().catch(e => {});
-
-                // Flash red screen
-                redFlash.style.opacity = 1;
-                setTimeout(() => {
-                    redFlash.style.opacity = 0;
-                }, 200);
-
-                // Transition from Intro to Instructions
-                introScreen.style.opacity = 0;
-                setTimeout(() => {
-                    introScreen.style.display = 'none';
-                    
-                    const instScreen = document.getElementById('instruction-screen');
-                    instScreen.style.display = 'flex';
-                    instScreen.offsetHeight; // trigger reflow
-                    instScreen.style.opacity = 1;
-
-                    // Play ambient music loop
-                    ambientAudio.currentTime = 0;
-                    ambientAudio.volume = 0.5;
-                    ambientAudio.play().catch(e => console.log("Audio play blocked by browser."));
-                }, 1000);
-            }, 10000);
         }
 
         // Enter actual game loop (triggers on clicking 'ENTER LOOP' on instructions page)
         function enterGameLoop() {
-            // 1. Instantly trigger Jumpscare Overlay
-            const jumpscareOverlay = document.getElementById('jumpscare-overlay');
-            jumpscareOverlay.style.display = 'flex';
-
-            // Play jumpscare sound (impact audio at max volume)
-            impactAudio.currentTime = 0;
-            impactAudio.volume = 1.0;
-            impactAudio.play().catch(e => {});
-
-            // Trigger screen flash
-            redFlash.style.opacity = 1;
+            const instScreen = document.getElementById('instruction-screen');
+            instScreen.style.opacity = 0;
             setTimeout(() => {
-                redFlash.style.opacity = 0;
-            }, 300);
-
-            // 2. Keep jumpscare visible for 1.2 seconds, then transition to headphones screen
-            setTimeout(() => {
-                jumpscareOverlay.style.display = 'none';
-                
-                const instScreen = document.getElementById('instruction-screen');
-                instScreen.style.opacity = 0;
                 instScreen.style.display = 'none';
                 
-                // Show headphones warning screen
+                // Show headphones warning screen directly
                 const headphonesScreen = document.getElementById('headphones-screen');
                 headphonesScreen.style.display = 'flex';
                 headphonesScreen.offsetHeight; // trigger reflow
                 headphonesScreen.style.opacity = 1;
 
-                // Play heartbeat/impact cue during warning to make it premium
+                // Play heartbeat/breathing cue during warning
                 breathingAudio.currentTime = 0;
                 breathingAudio.volume = 0.8;
                 breathingAudio.play().catch(e => {});
+
+                // Play door open sound for atmosphere
+                doorOpenAudio.currentTime = 0;
+                doorOpenAudio.volume = 0.6;
+                doorOpenAudio.play().catch(e => {});
 
                 // After 5 seconds, fade out headphones screen and reveal the game
                 setTimeout(() => {
@@ -929,7 +908,7 @@
                         headphonesScreen.style.display = 'none';
                     }, 1000);
                 }, 5000);
-            }, 1200);
+            }, 1000);
         }
 
         // Optional shortcut: Press ENTER on the instruction screen to enter game loop
