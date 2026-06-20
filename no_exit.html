@@ -999,6 +999,19 @@
             startLoadingSequence();
         });
 
+        // Request fullscreen on first interaction
+        function handleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            if (requestFS && !doc.fullscreenElement) {
+                requestFS.call(docEl).catch(e => console.warn("Fullscreen failed:", e));
+            }
+        }
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, handleFullScreen, { once: true });
+        });
+
         // Enter actual game loop (triggers on clicking 'ENTER LOOP' on instructions page)
         function enterGameLoop() {
             const instScreen = document.getElementById('instruction-screen');

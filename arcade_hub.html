@@ -317,11 +317,24 @@
             }
         };
 
-        // Start sound on interaction
-        document.body.addEventListener('click', () => {
+        // Start sound and enter fullscreen on first user interaction
+        function handleInteraction() {
             const video = document.getElementById('bg-video');
-            video.muted = false;
-        }, { once: true });
+            if (video) {
+                video.muted = false;
+            }
+
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            if (requestFS && !doc.fullscreenElement) {
+                requestFS.call(docEl).catch(e => console.warn("Fullscreen request failed:", e));
+            }
+        }
+
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            document.body.addEventListener(evt, handleInteraction, { once: true });
+        });
     </script>
 </body>
 </html>

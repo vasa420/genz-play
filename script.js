@@ -210,6 +210,13 @@ window.requestFullScreen = function() {
     }
 };
 
+// Automatically request fullscreen on first user interaction when entering the website
+['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+    window.addEventListener(evt, () => {
+        window.requestFullScreen();
+    }, { once: true });
+});
+
 // ==========================================
 // 1.8. PROFESSIONAL CUSTOM MODAL SYSTEM
 // ==========================================
