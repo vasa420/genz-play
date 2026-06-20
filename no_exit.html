@@ -498,15 +498,99 @@
             width: 100%;
         }
 
+        .lobby-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
         .lobby-title {
             font-family: 'Creepster', cursive;
-            font-size: 64px;
-            letter-spacing: 5px;
+            font-size: 72px;
+            letter-spacing: 6px;
             color: #ff3b30;
-            text-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 5px 5px 0px #000;
+            text-shadow: 0 0 25px rgba(255, 59, 48, 0.95), 5px 5px 0px #000;
             margin: 0;
             text-transform: uppercase;
             animation: glitchText 4s infinite linear alternate-reverse;
+            position: relative;
+            z-index: 2;
+        }
+
+        .blood-drip {
+            position: absolute;
+            top: 82%;
+            width: 4px;
+            height: 0;
+            background: linear-gradient(to bottom, #ff3b30, #800000);
+            border-radius: 0 0 4px 4px;
+            z-index: 1;
+            transform-origin: top;
+            box-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+            animation: bloodDripAnim 5s infinite ease-in-out;
+        }
+
+        .blood-drip::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: #800000;
+            border-radius: 50%;
+            transform: translate(-50%, 0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            animation: dropletFall 5s infinite cubic-bezier(0.6, 0.04, 0.98, 0.335);
+            animation-delay: inherit;
+        }
+
+        @keyframes bloodDripAnim {
+            0% {
+                height: 0;
+            }
+            20% {
+                height: var(--max-len);
+            }
+            75% {
+                height: var(--max-len);
+                opacity: 1;
+            }
+            85% {
+                height: var(--max-len);
+                opacity: 0;
+            }
+            100% {
+                height: 0;
+                opacity: 0;
+            }
+        }
+
+        @keyframes dropletFall {
+            0% {
+                transform: translate(-50%, 0) scale(1);
+                opacity: 0;
+            }
+            15% {
+                transform: translate(-50%, 0) scale(1.2);
+                opacity: 1;
+            }
+            20% {
+                transform: translate(-50%, 0) scale(1);
+                opacity: 1;
+            }
+            45% {
+                transform: translate(-50%, 40px) scale(0.9);
+                opacity: 0.9;
+            }
+            70% {
+                transform: translate(-50%, 180px) scale(0.6);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, 180px) scale(0);
+                opacity: 0;
+            }
         }
 
         .lobby-menu {
@@ -811,7 +895,16 @@
             <span style="color: #ff3b30; animation: blink 1.5s infinite;">•</span> ATC STUDIO
         </div>
         <div class="lobby-content">
-            <h1 class="lobby-title">PROJECT SILENCE</h1>
+            <div class="lobby-title-wrapper">
+                <h1 class="lobby-title">NO EXIT</h1>
+                <div class="blood-drip" style="left: 8%; animation-delay: 0.5s; --max-len: 25px;"></div>
+                <div class="blood-drip" style="left: 20%; animation-delay: 1.8s; --max-len: 38px;"></div>
+                <div class="blood-drip" style="left: 33%; animation-delay: 0.2s; --max-len: 20px;"></div>
+                <div class="blood-drip" style="left: 54%; animation-delay: 2.7s; --max-len: 35px;"></div>
+                <div class="blood-drip" style="left: 68%; animation-delay: 1.1s; --max-len: 30px;"></div>
+                <div class="blood-drip" style="left: 80%; animation-delay: 3.4s; --max-len: 42px;"></div>
+                <div class="blood-drip" style="left: 92%; animation-delay: 1.5s; --max-len: 28px;"></div>
+            </div>
             <div class="lobby-menu">
                 <button class="lobby-btn" onclick="lobbyPlay()" onmouseenter="playSpookyHoverSound()">PLAY</button>
                 <button class="lobby-btn" onclick="openLobbySettings()" onmouseenter="playSpookyHoverSound()">SETTINGS</button>
