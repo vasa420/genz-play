@@ -998,6 +998,7 @@
 
     <!-- Audio Elements -->
     <audio id="ambient-music" src="atlasaudio-horror-ambience-512255.mp3" loop></audio>
+    <audio id="lobby-music" src="liecio-music-box-horror-190275.mp3" loop></audio>
     <audio id="door-open" src="jongmankim8596-opening-the-front-door-210347.mp3"></audio>
     <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3"></audio>
     <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
@@ -1028,6 +1029,7 @@
         const impactAudio = document.getElementById('impact-sound');
         const breathingAudio = document.getElementById('breathing-sound');
         const ambientAudio = document.getElementById('ambient-music');
+        const lobbyAudio = document.getElementById('lobby-music');
 
         // Loading screen sequence
         function startLoadingSequence() {
@@ -1251,9 +1253,12 @@
         let isLobbyScreenActive = false;
 
         function showLobbyScreen() {
-            ambientAudio.currentTime = 0;
-            ambientAudio.volume = (masterVolume / 100) * 0.5;
-            ambientAudio.play().catch(e => {});
+            // Pause normal ambient music while in the lobby
+            ambientAudio.pause();
+
+            lobbyAudio.currentTime = 0;
+            lobbyAudio.volume = (masterVolume / 100) * 0.5;
+            lobbyAudio.play().catch(e => {});
 
             const lobby = document.getElementById('lobby-screen');
             if (lobby) {
@@ -1272,6 +1277,9 @@
         }
 
         function lobbyPlay() {
+            // Pause lobby music immediately when starting gameplay
+            lobbyAudio.pause();
+
             const lobby = document.getElementById('lobby-screen');
             if (lobby) {
                 lobby.style.transition = 'opacity 1.0s ease-out';
@@ -1342,6 +1350,9 @@
             
             // Adjust volume of active ambient audio and system limits
             ambientAudio.volume = (masterVolume / 100) * 0.5;
+            if (lobbyAudio) {
+                lobbyAudio.volume = (masterVolume / 100) * 0.5;
+            }
             impactAudio.volume = (masterVolume / 100) * 0.8;
             breathingAudio.volume = (masterVolume / 100) * 0.8;
             doorOpenAudio.volume = (masterVolume / 100) * 0.6;
