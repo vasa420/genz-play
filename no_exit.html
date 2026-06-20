@@ -796,8 +796,8 @@
         <img src="terror_jumpscare.png" class="jumpscare-img" alt="TERROR">
     </div>
 
-    <!-- 4. HEADPHONES ALERT SCREEN (5 seconds) -->
-    <div id="headphones-screen" class="headphones-overlay">
+    <!-- 4. HEADPHONES ALERT SCREEN -->
+    <div id="headphones-screen" class="headphones-overlay" onclick="enterGameLoopFromHeadphones()">
         <div class="headphones-content">
             <div class="headphone-icon-wrapper">
                 <!-- Glowing headphone icon using styled SVG -->
@@ -808,6 +808,7 @@
                 <div class="audio-wave wave-2"></div>
             </div>
             <div class="headphones-text">WEAR HEADPHONES TO GET REAL EXPERIENCE</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.6); margin-top: 30px; animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: 700;">[ PRESS ANY KEY TO ENTER THE LOOP ]</div>
         </div>
     </div>
 
@@ -892,6 +893,8 @@
         let attempts = 0;
         let sanity = 100;
         let isOpening = false;
+        let isInstructionScreenActive = false;
+        let isHeadphoneScreenActive = false;
 
         const doorOpenAudio = document.getElementById('door-open');
         const impactAudio = document.getElementById('impact-sound');
@@ -977,6 +980,7 @@
                     const instScreen = document.getElementById('instruction-screen');
                     instScreen.style.display = 'flex';
                     instScreen.style.opacity = 1;
+                    isInstructionScreenActive = true;
 
                     // Heavy impact sound to make it feel scary when instructions load
                     impactAudio.currentTime = 0;
@@ -1012,32 +1016,79 @@
             window.addEventListener(evt, handleFullScreen, { once: true });
         });
 
-        // Enter actual game loop (triggers on clicking 'ENTER LOOP' on instructions page)
+        // Triggers transition from instruction screen to headphones screen
         function enterGameLoop() {
-            handleFullScreen(); // Go fullscreen
-            const instScreen = document.getElementById('instruction-screen');
-            if (!instScreen || instScreen.style.display === 'none') return;
-            instScreen.style.opacity = 0;
-            setTimeout(() => {
-                instScreen.style.display = 'none';
-                
-                // Play breathing/heartbeat cue at the start of the game
-                breathingAudio.currentTime = 0;
-                breathingAudio.volume = 0.8;
-                breathingAudio.play().catch(e => {});
+            if (!isInstructionScreenActive) return;
+            isInstructionScreenActive = false;
 
-                // Play door open sound for starting corridor atmosphere
-                doorOpenAudio.currentTime = 0;
-                doorOpenAudio.volume = 0.6;
-                doorOpenAudio.play().catch(e => {});
-            }, 1000);
+            handleFullScreen(); // Go fullscreen
+
+            const instScreen = document.getElementById('instruction-screen');
+            if (instScreen) {
+                instScreen.style.opacity = 0;
+                setTimeout(() => {
+                    instScreen.style.display = 'none';
+                    showHeadphonesScreen();
+                }, 1000);
+            }
         }
 
-        // Press any key on the instruction screen to enter game loop
+        // Show the headphones screen
+        function showHeadphonesScreen() {
+            // Pause background music for this page (no background music on this page)
+            ambientAudio.pause();
+
+            const headphonesScreen = document.getElementById('headphones-screen');
+            if (headphonesScreen) {
+                headphonesScreen.style.display = 'flex';
+                // Trigger reflow to enable transition
+                headphonesScreen.offsetHeight;
+                headphonesScreen.style.opacity = 1;
+            }
+            isHeadphoneScreenActive = true;
+        }
+
+        // Triggers transition from headphones screen to actual gameplay
+        function enterGameLoopFromHeadphones() {
+            if (!isHeadphoneScreenActive) return;
+            isHeadphoneScreenActive = false;
+
+            handleFullScreen(); // Ensure we go fullscreen
+
+            const headphonesScreen = document.getElementById('headphones-screen');
+            if (headphonesScreen) {
+                headphonesScreen.style.opacity = 0;
+                setTimeout(() => {
+                    headphonesScreen.style.display = 'none';
+                    startGamePlay();
+                }, 1000);
+            }
+        }
+
+        // Start actual gameplay and resume background music
+        function startGamePlay() {
+            // Play ambient horror music as they enter the game!
+            ambientAudio.currentTime = 0;
+            ambientAudio.volume = 0.5;
+            ambientAudio.play().catch(e => console.log("Audio play blocked: ", e));
+
+            // Play breathing/heartbeat cue at the start of the game
+            breathingAudio.currentTime = 0;
+            breathingAudio.volume = 0.8;
+            breathingAudio.play().catch(e => {});
+
+            // Play door open sound for starting corridor atmosphere
+            doorOpenAudio.currentTime = 0;
+            doorOpenAudio.volume = 0.6;
+            doorOpenAudio.play().catch(e => {});
+        }
+
+        // Press any key on the instruction screen or headphones screen to proceed
         window.addEventListener('keydown', (e) => {
-            const instScreen = document.getElementById('instruction-screen');
-            if (instScreen && instScreen.style.display === 'flex') {
+            if (isInstructionScreenActive) {
                 enterGameLoop();
+            } else if (isHeadphoneScreenActive) {
+                enterGameLoopFromHeadphones();
             }
         });
 
