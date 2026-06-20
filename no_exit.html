@@ -95,26 +95,6 @@
             min-height: 24px;
         }
 
-        .progress-bar-wrapper {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-            border: none;
-            display: block;
-            z-index: 20005;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(to right, #ff3b30, #ff6b6b);
-            box-shadow: 0 0 10px rgba(255, 59, 48, 0.8), 0 0 20px rgba(255, 107, 107, 0.6);
-            transition: width 0.1s linear;
-        }
 
         /* Smoke Screen Animation (Fully Covers) */
         #smoke-container {
@@ -486,10 +466,6 @@
             <h1 class="loading-brand">PROJECT SILENCE</h1>
             <div class="loading-status-text" id="loading-text">SYSTEM OFFLINE</div>
         </div>
-
-        <div class="progress-bar-wrapper">
-            <div class="progress-bar-fill" id="progress-bar-fill"></div>
-        </div>
     </div>
 
     <!-- 2. INSTRUCTION SCREEN -->
@@ -598,7 +574,6 @@
                 media.volume = Math.max(0.6, media.volume);
             });
 
-            const progressFill = document.getElementById('progress-bar-fill');
             const loadingText = document.getElementById('loading-text');
 
             let progress = 0;
@@ -703,7 +678,6 @@
                     particlesIntervals.forEach(id => clearInterval(id));
 
                     loadingText.textContent = `[LINK: SECURED] SYNC COMPLETE ... 100%`;
-                    progressFill.style.width = "100%";
 
                     // Transition to instruction screen
                     const loadingScreen = document.getElementById('loading-screen');
@@ -730,7 +704,6 @@
                     ambientAudio.volume = 0.5;
                     ambientAudio.play().catch(e => {});
                 } else {
-                    progressFill.style.width = progress + "%";
                     loadingText.textContent = `${statusMsg} ... ${Math.floor(progress)}%`;
                 }
             }, 120);
