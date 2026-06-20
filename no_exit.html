@@ -1130,6 +1130,149 @@
             border-color: rgba(255, 255, 255, 0.5);
             box-shadow: 0 4px 15px rgba(255,255,255,0.1);
         }
+
+        /* Staircase Prompts and Fade */
+        #staircase-prompt {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 10, 0.85);
+            border: 1px solid #ff3b30;
+            color: #ff3b30;
+            padding: 15px 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.4);
+            z-index: 8020;
+            display: none;
+            pointer-events: none;
+            animation: breathe 1.5s infinite ease-in-out;
+        }
+
+        #floor-transition-fade {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000000;
+            z-index: 8095;
+            display: none;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        /* Map Blueprint Overlay */
+        .map-container-box {
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid rgba(255, 59, 48, 0.4);
+            box-shadow: 0 0 35px rgba(255, 59, 48, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 550px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .map-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 59, 48, 0.2);
+            padding-bottom: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+        }
+
+        .map-grid-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 4px;
+            width: 320px;
+            height: 320px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 59, 48, 0.25);
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .map-cell {
+            aspect-ratio: 1;
+            background: #111;
+            border-radius: 2px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: rgba(255,255,255,0.15);
+        }
+
+        .map-cell.wall {
+            background: #251010;
+            border: 1px solid rgba(255, 59, 48, 0.08);
+        }
+
+        .map-cell.walkable {
+            background: #0b150b;
+            border: 1px solid rgba(0, 230, 118, 0.05);
+        }
+
+        .map-cell.stairs {
+            background: #25250a;
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+        }
+
+        .map-cell.player::after {
+            content: '•';
+            color: #00e676;
+            font-size: 28px;
+            position: absolute;
+            animation: blink 0.8s infinite;
+        }
+
+        .map-cell.ghost::after {
+            content: '?';
+            color: #ff3b30;
+            font-size: 16px;
+            font-weight: 900;
+            position: absolute;
+            animation: blink 0.5s infinite;
+        }
+
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        .legend-color.player-dot { background: #00e676; border-radius: 50%; }
+        .legend-color.ghost-dot { background: #ff3b30; border-radius: 50%; }
+        .legend-color.wall-box { background: #251010; }
+        .legend-color.room-box { background: #0b150b; }
+        .legend-color.stairs-box { background: #25250a; border: 1px solid #ffcc00; }
     </style>
 </head>
 <body>
@@ -1287,6 +1430,30 @@
         <!-- FPS Crosshair (subtle center dot) -->
         <div class="fps-crosshair"></div>
 
+        <!-- Staircase Interaction HUD Prompt -->
+        <div id="staircase-prompt">[E] USE STAIRS</div>
+
+        <!-- Floor Transition Overlay -->
+        <div id="floor-transition-fade"></div>
+
+        <!-- Map Overlay (blueprint) -->
+        <div id="map-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 5, 0.95); z-index: 8060; justify-content: center; align-items: center; flex-direction: column;">
+            <div class="map-container-box">
+                <div class="map-header">
+                    <span style="color: #ff3b30; font-weight: bold; letter-spacing: 2px;">HOUSE BLUEPRINT - <span id="map-floor-title">GROUND FLOOR</span></span>
+                    <button class="btn-horror-action secondary" onclick="toggleMapOverlay()" style="padding: 5px 15px; font-size: 11px;">CLOSE (M)</button>
+                </div>
+                <div id="map-grid-container" class="map-grid-grid"></div>
+                <div class="map-legend">
+                    <div><span class="legend-color player-dot"></span> Player</div>
+                    <div><span class="legend-color ghost-dot"></span> Signal (?)</div>
+                    <div><span class="legend-color wall-box"></span> Wall</div>
+                    <div><span class="legend-color room-box"></span> Room</div>
+                    <div><span class="legend-color stairs-box"></span> Stairs (E)</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Horror HUD -->
         <div class="game-hud">
             <!-- Left panel: Mic Indicator, Walking Time, Flashlight status -->
@@ -1294,6 +1461,7 @@
                 <div class="hud-item"><span class="hud-label">VOICE NOISE:</span> <span id="hud-noise-level" style="color: #0f0;">SAFE</span></div>
                 <div class="hud-item"><span class="hud-label">WALK SURVIVAL:</span> <span id="hud-survival-time" style="color: #ff3b30; font-weight: bold;">0.00 / 20.00 MIN</span></div>
                 <div class="hud-item"><span class="hud-label">FLASHLIGHT (F):</span> <span id="hud-flashlight-status" style="color: #ffcc00;">ON</span></div>
+                <div class="hud-item"><span class="hud-label">LOCATION:</span> <span id="hud-location-text" style="color: #fff; font-weight: bold;">ENTRANCE</span></div>
             </div>
             
             <!-- Right panel: Controls and instructions -->
@@ -1301,6 +1469,7 @@
                 <div class="hud-item">[W,A,S,D] Move</div>
                 <div class="hud-item">[Mouse] Look Around</div>
                 <div class="hud-item">[F] Flashlight Toggle</div>
+                <div class="hud-item">[M] Map Blueprint</div>
             </div>
         </div>
 
@@ -1311,6 +1480,7 @@
                 <div class="controls-hint">
                     Use <span class="highlight">WASD</span> to walk. Move mouse to look.<br>
                     Press <span class="highlight">F</span> to toggle your flashlight.<br>
+                    Press <span class="highlight">M</span> to view the house blueprint map.<br>
                     Make too much noise in real life, and the ghost will find you.
                 </div>
             </div>
@@ -1584,12 +1754,20 @@
         let lastWalkTimeUpdate = 0;
         let isFlashlightOn = true;
         let spotLight, ambientLight;
-        let walls = [];
         let ghostMesh;
         let ghostPos = { x: 7.5, z: 7.5 }; // Spawn ghost further away
         let ghostSpeed = 0.015;
         let stepsTimer = 0;
         let headBobTime = 0;
+        
+        let groundFloorGroup = null;
+        let secondFloorGroup = null;
+        let activeFloor = 0; // 0 = Ground Floor, 1 = Second Floor
+        let isTransitioningFloor = false;
+        let isNearStairs = false;
+        let isMapOpen = false;
+        let mapUpdateFrameCount = 0;
+
         let microphoneStream = null;
         let micAnalyser = null;
         let micDataArray = null;
@@ -1598,23 +1776,61 @@
         let ghostStalking = false;
         let ghostAlertTimer = 0;
         
-        // Define map layout: 10x10 grid (1 = wall, 0 = walkable space)
-        const HORROR_MAP = [
+        // Define floor maps: 10x10 grids (1 = wall, 0 = walkable, 5 = stairs)
+        const GROUND_FLOOR_MAP = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
             [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
             [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Staircase at (4, 4)
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
             [1, 0, 0, 1, 0, 1, 0, 0, 0, 1],
             [1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
+
+        const SECOND_FLOOR_MAP = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Staircase at (4, 4)
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 1, 0, 1, 1, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
         
         const CELL_SIZE = 4;
         const MAP_SIZE = 10;
         const MAP_OFFSET = (MAP_SIZE * CELL_SIZE) / 2; // offset to center map at (0, 0)
+
+        // Room name labeling mapping
+        const ROOM_LABELS_1ST = {
+            "1,1": "Entrance Corridor", "1,2": "Entrance Corridor", "1,3": "Entrance Corridor",
+            "1,5": "Storage Closet", "1,6": "Storage Closet", "2,5": "Storage Closet",
+            "3,1": "Living Room", "3,2": "Living Room", "3,3": "Living Room",
+            "5,1": "Kitchen Area", "5,2": "Kitchen Area", "5,3": "Kitchen Area",
+            "5,5": "Central Hall", "5,6": "Central Hall", "5,7": "Central Hall", "5,8": "Central Hall",
+            "7,1": "Dining Space", "7,2": "Dining Space", "8,2": "Dining Space",
+            "7,6": "Food Pantry", "7,7": "Food Pantry", "7,8": "Food Pantry",
+            "4,4": "Wooden Staircase",
+            "default": "First Floor Hallway"
+        };
+
+        const ROOM_LABELS_2ND = {
+            "1,1": "Master Bedroom", "1,2": "Master Bedroom", "1,3": "Master Bedroom",
+            "1,5": "Upper Foyer", "1,6": "Upper Foyer", "1,7": "Upper Foyer", "1,8": "Upper Foyer",
+            "2,5": "Upper Foyer",
+            "3,1": "Guest Bedroom", "3,2": "Guest Bedroom", "3,3": "Guest Bedroom",
+            "5,1": "Study Room", "5,2": "Study Room", "5,3": "Study Room",
+            "7,1": "Library Room", "7,2": "Library Room", "8,2": "Library Room",
+            "7,6": "Main Bathroom", "7,7": "Main Bathroom", "7,8": "Main Bathroom",
+            "4,4": "Wooden Staircase",
+            "default": "Second Floor Hallway"
+        };
 
         // Start actual gameplay and resume background music
         function startGamePlay() {
@@ -1644,6 +1860,11 @@
             const canvas = document.getElementById('game-canvas');
             if (!canvas) return;
 
+            activeFloor = 0;
+            isTransitioningFloor = false;
+            isNearStairs = false;
+            isMapOpen = false;
+
             // 1. Create Scene, Camera, Renderer
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x000000, 0.15); // fog creates that spooky depth fade
@@ -1666,12 +1887,17 @@
             const floorTexture = createProceduralFloorTexture();
             const ceilingTexture = createProceduralCeilingTexture();
 
-            // 3. Build Maze
-            walls = [];
+            // 3. Build Mesh Groups for ground floor and second floor
+            groundFloorGroup = new THREE.Group();
+            secondFloorGroup = new THREE.Group();
+            scene.add(groundFloorGroup);
+            scene.add(secondFloorGroup);
+
+            // Ground Floor Walls
             for (let r = 0; r < MAP_SIZE; r++) {
                 for (let c = 0; c < MAP_SIZE; c++) {
-                    if (HORROR_MAP[r][c] === 1) {
-                        // Wall Box Mesh
+                    const val = GROUND_FLOOR_MAP[r][c];
+                    if (val === 1) {
                         const wallGeo = new THREE.BoxGeometry(CELL_SIZE, 4, CELL_SIZE);
                         const wallMat = new THREE.MeshStandardMaterial({
                             map: wallTexture,
@@ -1679,58 +1905,85 @@
                             metalness: 0.1
                         });
                         const wallMesh = new THREE.Mesh(wallGeo, wallMat);
-                        // Center wall
                         wallMesh.position.set(
                             c * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2,
                             2,
                             r * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
                         );
-                        scene.add(wallMesh);
-                        walls.push(wallMesh);
+                        groundFloorGroup.add(wallMesh);
+                    } else if (val === 5) {
+                        // Render 3D steps inside stairs cell
+                        create3DStairs(groundFloorGroup, c, r);
                     }
                 }
             }
 
-            // Floor Plane Mesh
+            // Ground Floor floor & ceiling planes
             const floorGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
-            const floorMat = new THREE.MeshStandardMaterial({
-                map: floorTexture,
-                roughness: 0.7
-            });
+            const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.7 });
             const floorMesh = new THREE.Mesh(floorGeo, floorMat);
             floorMesh.rotation.x = -Math.PI / 2;
             floorMesh.position.set(0, 0, 0);
-            scene.add(floorMesh);
+            groundFloorGroup.add(floorMesh);
 
-            // Ceiling Plane Mesh
             const ceilGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
-            const ceilMat = new THREE.MeshStandardMaterial({
-                map: ceilingTexture,
-                roughness: 0.9
-            });
+            const ceilMat = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 0.9 });
             const ceilMesh = new THREE.Mesh(ceilGeo, ceilMat);
             ceilMesh.rotation.x = Math.PI / 2;
             ceilMesh.position.set(0, 4, 0);
-            scene.add(ceilMesh);
+            groundFloorGroup.add(ceilMesh);
 
-            // Add creepy pictures on the walls at random locations!
+            // Second Floor Walls
+            for (let r = 0; r < MAP_SIZE; r++) {
+                for (let c = 0; c < MAP_SIZE; c++) {
+                    const val = SECOND_FLOOR_MAP[r][c];
+                    if (val === 1) {
+                        const wallGeo = new THREE.BoxGeometry(CELL_SIZE, 4, CELL_SIZE);
+                        const wallMat = new THREE.MeshStandardMaterial({
+                            map: wallTexture,
+                            roughness: 0.9,
+                            metalness: 0.1
+                        });
+                        const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+                        wallMesh.position.set(
+                            c * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2,
+                            2,
+                            r * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
+                        );
+                        secondFloorGroup.add(wallMesh);
+                    } else if (val === 5) {
+                        create3DStairs(secondFloorGroup, c, r);
+                    }
+                }
+            }
+
+            // Second Floor Floor & Ceiling planes
+            const floorMesh2nd = new THREE.Mesh(floorGeo, floorMat);
+            floorMesh2nd.rotation.x = -Math.PI / 2;
+            floorMesh2nd.position.set(0, 0, 0);
+            secondFloorGroup.add(floorMesh2nd);
+
+            const ceilMesh2nd = new THREE.Mesh(ceilGeo, ceilMat);
+            ceilMesh2nd.rotation.x = Math.PI / 2;
+            ceilMesh2nd.position.set(0, 4, 0);
+            secondFloorGroup.add(ceilMesh2nd);
+
+            // Add creepy pictures on the walls
             addWallPaintings();
 
             // 4. Create Ghost Stalker
             createGhost();
 
             // 5. Lighting
-            // Very dim ambient light so outline of close walls is slightly visible
             ambientLight = new THREE.AmbientLight(0xff3b30, 0.003); // extreme low red ambient glow
             scene.add(ambientLight);
 
-            // Flashlight: SpotLight attached to Camera
             spotLight = new THREE.SpotLight(0xffffff, 2.5, 25, Math.PI / 6, 0.5, 1);
             spotLight.castShadow = true;
             scene.add(spotLight);
             scene.add(spotLight.target); // Need target to be in scene
 
-            // 6. Spawn Player at (1.5, 1.5) grid cell
+            // 6. Spawn Player at (1.5, 1.5)
             playerPos.x = 1.5;
             playerPos.z = 1.5;
             walkTimer = 0;
@@ -1738,6 +1991,11 @@
             isFlashlightOn = true;
             document.getElementById('hud-flashlight-status').textContent = "ON";
             document.getElementById('hud-flashlight-status').style.color = "#ffcc00";
+            
+            // Set initial group visibilities
+            groundFloorGroup.visible = true;
+            secondFloorGroup.visible = false;
+            
             updateCameraPosition();
 
             // 7. Request Mic
@@ -1764,17 +2022,14 @@
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
-            // Dark moldy drywall/concrete
             ctx.fillStyle = '#1c1c1c';
             ctx.fillRect(0, 0, 512, 512);
 
-            // Plaster noise
             for (let i = 0; i < 5000; i++) {
                 ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.25})`;
                 ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 4 + 1, Math.random() * 4 + 1);
             }
 
-            // Grunge stains (mold/grime)
             for (let i = 0; i < 25; i++) {
                 ctx.fillStyle = `rgba(15, 25, 15, ${Math.random() * 0.3})`;
                 ctx.beginPath();
@@ -1782,7 +2037,6 @@
                 ctx.fill();
             }
 
-            // Dripping blood stains
             for (let i = 0; i < 6; i++) {
                 if (Math.random() > 0.4) {
                     const bx = Math.random() * 512;
@@ -1792,7 +2046,6 @@
                     ctx.arc(bx, by, Math.random() * 15 + 5, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Drips
                     ctx.beginPath();
                     ctx.moveTo(bx - 3, by);
                     ctx.lineTo(bx + 3, by);
@@ -1816,11 +2069,9 @@
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
-            // Dark old rotting wood floor planks
             ctx.fillStyle = '#23150d';
             ctx.fillRect(0, 0, 512, 512);
 
-            // Draw planks
             ctx.strokeStyle = '#0d0704';
             ctx.lineWidth = 4;
             const plankWidth = 64;
@@ -1830,15 +2081,12 @@
                 ctx.lineTo(x, 512);
                 ctx.stroke();
 
-                // Planks texture grain and rot
                 for (let y = 0; y < 512; y += 128) {
-                    // Plank separator line lines
                     ctx.beginPath();
                     ctx.moveTo(x, y);
                     ctx.lineTo(x + plankWidth, y);
                     ctx.stroke();
 
-                    // Wood grains
                     ctx.strokeStyle = 'rgba(13, 7, 4, 0.4)';
                     ctx.lineWidth = 1;
                     for (let g = 0; g < 4; g++) {
@@ -1867,16 +2115,13 @@
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
 
-            // Old stained ceiling tiles
             ctx.fillStyle = '#3a3a35';
             ctx.fillRect(0, 0, 256, 256);
 
-            // Grime overlay
             ctx.strokeStyle = '#22221e';
             ctx.lineWidth = 3;
             ctx.strokeRect(0, 0, 256, 256);
 
-            // Dust spots
             for (let i = 0; i < 400; i++) {
                 ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.15})`;
                 ctx.fillRect(Math.random() * 256, Math.random() * 256, Math.random() * 3 + 1, Math.random() * 3 + 1);
@@ -1890,7 +2135,6 @@
         }
 
         function addWallPaintings() {
-            // Let's add 6 paintings throughout the house
             const paintSpots = [
                 { pos: new THREE.Vector3(-10, 2, 4), rot: [0, Math.PI/2, 0] },
                 { pos: new THREE.Vector3(10, 2, -4), rot: [0, -Math.PI/2, 0] },
@@ -1906,21 +2150,17 @@
                 canvas.height = 128;
                 const ctx = canvas.getContext('2d');
 
-                // Black frame
                 ctx.fillStyle = '#0f0b08';
                 ctx.fillRect(0, 0, 128, 128);
 
-                // Creepy face painting
-                ctx.fillStyle = '#441111'; // bloody red canvas
+                ctx.fillStyle = '#441111';
                 ctx.fillRect(10, 10, 108, 108);
 
-                // Draw creepy shadow figure/eyes
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
-                ctx.arc(64, 75, 25, 0, Math.PI, true); // face outline
+                ctx.arc(64, 75, 25, 0, Math.PI, true);
                 ctx.fill();
 
-                // Red glowing eyes
                 ctx.fillStyle = '#ff3b30';
                 ctx.beginPath();
                 ctx.arc(52, 55, 4, 0, Math.PI * 2);
@@ -1936,21 +2176,49 @@
                 const paintingMesh = new THREE.Mesh(paintingGeo, paintingMat);
                 paintingMesh.position.copy(spot.pos);
                 paintingMesh.rotation.set(spot.rot[0], spot.rot[1], spot.rot[2]);
-                scene.add(paintingMesh);
+                
+                // Add paintings to both floor groups depending on index to spread them
+                if (spot.pos.x < 0) {
+                    groundFloorGroup.add(paintingMesh);
+                } else {
+                    secondFloorGroup.add(paintingMesh);
+                }
             });
         }
 
+        function create3DStairs(group, cellC, cellR) {
+            const steps = 8;
+            const stepWidth = CELL_SIZE;
+            const stepDepth = CELL_SIZE / steps;
+            const stepHeight = 4 / steps; 
+
+            // Calculate starting world position (bottom left of cell)
+            const xStart = cellC * CELL_SIZE - MAP_OFFSET;
+            const zStart = cellR * CELL_SIZE - MAP_OFFSET;
+
+            for (let i = 0; i < steps; i++) {
+                const stepGeo = new THREE.BoxGeometry(stepWidth, (i + 1) * stepHeight, stepDepth);
+                const stepMat = new THREE.MeshStandardMaterial({ color: 0x18100c, roughness: 0.9 });
+                const stepMesh = new THREE.Mesh(stepGeo, stepMat);
+                
+                // Align steps back-to-front inside cell
+                stepMesh.position.set(
+                    xStart + CELL_SIZE / 2,
+                    ((i + 1) * stepHeight) / 2,
+                    zStart + (i * stepDepth) + stepDepth / 2
+                );
+                group.add(stepMesh);
+            }
+        }
+
         function createGhost() {
-            // The ghost is a creepy, red-eyed floating shadow billboard
             const canvas = document.createElement('canvas');
             canvas.width = 256;
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
 
-            // Draw shadow ghost with transparency
             ctx.clearRect(0, 0, 256, 256);
             
-            // Outer fade shadow
             const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 100);
             grad.addColorStop(0, 'rgba(0, 0, 0, 0.95)');
             grad.addColorStop(0.3, 'rgba(15, 0, 0, 0.85)');
@@ -1962,7 +2230,6 @@
             ctx.arc(128, 128, 100, 0, Math.PI * 2);
             ctx.fill();
 
-            // Glowing red eyes
             ctx.fillStyle = '#ff0000';
             ctx.shadowBlur = 15;
             ctx.shadowColor = '#ff0000';
@@ -1972,7 +2239,6 @@
             ctx.arc(148, 110, 8, 0, Math.PI * 2);
             ctx.fill();
             
-            // Gaping bloody mouth
             ctx.fillStyle = '#550000';
             ctx.shadowBlur = 0;
             ctx.beginPath();
@@ -1988,7 +2254,6 @@
             ghostMesh = new THREE.Sprite(ghostMat);
             ghostMesh.scale.set(2.2, 2.2, 1);
             
-            // Spawn ghost
             ghostPos.x = 7.5;
             ghostPos.z = 7.5;
             updateGhostMeshPosition();
@@ -1999,7 +2264,7 @@
             if (ghostMesh) {
                 ghostMesh.position.set(
                     ghostPos.x * CELL_SIZE - MAP_OFFSET,
-                    1.4, // float above floor
+                    1.4,
                     ghostPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
@@ -2011,15 +2276,13 @@
             const playerWorldX = playerPos.x;
             const playerWorldZ = playerPos.z;
 
-            // Calculate distance to player (in grid cells)
             const dx = playerWorldX - ghostPos.x;
             const dz = playerWorldZ - ghostPos.z;
             const dist = Math.sqrt(dx * dx + dz * dz);
 
-            // If mic volume is loud or player is close, the ghost becomes alert and stalks the player directly!
             if (micVolume > micVolumeThreshold || dist < 3.8) {
                 ghostStalking = true;
-                ghostAlertTimer = 180; // stays alert for 3 seconds (60 fps * 3)
+                ghostAlertTimer = 180;
             }
 
             if (ghostAlertTimer > 0) {
@@ -2029,37 +2292,31 @@
                 }
             }
 
-            // Decide movement target
             let targetX = ghostPos.x;
             let targetZ = ghostPos.z;
 
             if (ghostStalking) {
-                // Head straight toward the player
                 targetX = playerWorldX;
                 targetZ = playerWorldZ;
-                // Double ghost speed if player made noise!
                 const activeSpeed = micVolume > micVolumeThreshold ? ghostSpeed * 2.2 : ghostSpeed * 1.5;
                 
-                // Move towards target
                 const angle = Math.atan2(targetZ - ghostPos.z, targetX - ghostPos.x);
                 const stepX = Math.cos(angle) * activeSpeed;
                 const stepZ = Math.sin(angle) * activeSpeed;
                 
-                // Ghosts float directly through walls
                 ghostPos.x += stepX;
                 ghostPos.z += stepZ;
             } else {
-                // Random wander
                 if (Math.random() > 0.985) {
-                    // Pick a random neighboring cell that is walkable
                     const neighbors = [
                         {x: 0, z: 1}, {x: 0, z: -1}, {x: 1, z: 0}, {x: -1, z: 0}
                     ];
+                    const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
                     const validNeighbors = neighbors.map(n => ({
                         x: Math.floor(ghostPos.x) + n.x,
                         z: Math.floor(ghostPos.z) + n.z
                     })).filter(n => {
-                        return n.x >= 0 && n.x < MAP_SIZE && n.z >= 0 && n.z < MAP_SIZE && HORROR_MAP[n.z][n.x] === 0;
+                        return n.x >= 0 && n.x < MAP_SIZE && n.z >= 0 && n.z < MAP_SIZE && currentMap[n.z][n.x] === 0;
                     });
 
                     if (validNeighbors.length > 0) {
@@ -2087,14 +2344,13 @@
 
             updateGhostMeshPosition();
 
-            // Check if ghost catches player (extremely close range: e.g. dist < 0.6 cells or 2.4 meters)
             if (dist < 0.6) {
                 triggerJumpscare();
             }
         }
 
         function setupMicrophone() {
-            if (microphoneStream) return; // already active
+            if (microphoneStream) return;
 
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
@@ -2147,7 +2403,6 @@
 
         function updateCameraPosition() {
             if (camera) {
-                // Apply head bobbing
                 let bobOffset = 0;
                 if (keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d) {
                     headBobTime += 0.15;
@@ -2163,15 +2418,197 @@
             }
         }
 
-        function handleMovement() {
-            if (!isGameRunning) return;
+        function getCurrentLocationName() {
+            const gridX = Math.floor(playerPos.x);
+            const gridZ = Math.floor(playerPos.z);
+            const key = `${gridX},${gridZ}`;
+            
+            if (activeFloor === 0) {
+                return ROOM_LABELS_1ST[key] || ROOM_LABELS_1ST["default"];
+            } else {
+                return ROOM_LABELS_2ND[key] || ROOM_LABELS_2ND["default"];
+            }
+        }
 
-            // Determine move vector in world space
+        function checkStaircaseInteraction() {
+            if (!isGameRunning || isTransitioningFloor) return;
+
+            const gridX = Math.floor(playerPos.x);
+            const gridZ = Math.floor(playerPos.z);
+            const promptEl = document.getElementById('staircase-prompt');
+
+            // Staircase is positioned at grid cell (4, 4) on both floors
+            if (gridX === 4 && gridZ === 4) {
+                isNearStairs = true;
+                promptEl.style.display = 'block';
+                if (activeFloor === 0) {
+                    promptEl.textContent = "[E] ASCEND TO 2ND FLOOR";
+                } else {
+                    promptEl.textContent = "[E] DESCEND TO 1ST FLOOR";
+                }
+            } else {
+                isNearStairs = false;
+                promptEl.style.display = 'none';
+            }
+        }
+
+        function transitionFloor() {
+            isTransitioningFloor = true;
+            isNearStairs = false;
+            document.getElementById('staircase-prompt').style.display = 'none';
+            
+            const fadeEl = document.getElementById('floor-transition-fade');
+            fadeEl.style.display = 'block';
+            
+            setTimeout(() => {
+                fadeEl.style.opacity = '1';
+            }, 50);
+
+            // Play climbing footsteps
+            playStairsSound();
+
+            setTimeout(() => {
+                activeFloor = activeFloor === 0 ? 1 : 0;
+                
+                if (groundFloorGroup && secondFloorGroup) {
+                    groundFloorGroup.visible = (activeFloor === 0);
+                    secondFloorGroup.visible = (activeFloor === 1);
+                }
+
+                // Relocate player just off the stairs (cell 4, 5) to avoid infinite loop
+                playerPos.x = 4.5;
+                playerPos.z = 5.5;
+                
+                mouseYaw = 0;
+                mousePitch = 0;
+                if (camera) {
+                    camera.rotation.y = mouseYaw;
+                    camera.rotation.x = mousePitch;
+                }
+                
+                updateCameraPosition();
+
+                // Reset ghost on new floor so they don't immediately stalk you on arrival
+                ghostPos.x = 7.5;
+                ghostPos.z = 7.5;
+                ghostStalking = false;
+                ghostAlertTimer = 0;
+                updateGhostMeshPosition();
+
+                fadeEl.style.opacity = '0';
+                
+                setTimeout(() => {
+                    fadeEl.style.display = 'none';
+                    isTransitioningFloor = false;
+                }, 800);
+
+            }, 1200);
+        }
+
+        function playStairsSound() {
+            let delay = 0;
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    playCreakyFootstep();
+                }, delay);
+                delay += 400;
+            }
+        }
+
+        function playCreakyFootstep() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContextClass();
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(80, ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(40, ctx.currentTime + 0.2);
+                
+                gain.gain.setValueAtTime(0.15 * (masterVolume / 100), ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+
+        function toggleMapOverlay() {
+            if (!isGameRunning || isTransitioningFloor) return;
+
+            isMapOpen = !isMapOpen;
+            const overlay = document.getElementById('map-overlay');
+
+            if (isMapOpen) {
+                overlay.style.display = 'flex';
+                document.exitPointerLock();
+                drawMapGrid();
+            } else {
+                overlay.style.display = 'none';
+                lockPointer();
+            }
+        }
+
+        function drawMapGrid() {
+            const container = document.getElementById('map-grid-container');
+            const floorTitle = document.getElementById('map-floor-title');
+            if (!container) return;
+
+            container.innerHTML = '';
+            floorTitle.textContent = activeFloor === 0 ? "GROUND FLOOR" : "SECOND FLOOR";
+
+            const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+            const playerGridX = Math.floor(playerPos.x);
+            const playerGridZ = Math.floor(playerPos.z);
+            const ghostGridX = Math.floor(ghostPos.x);
+            const ghostGridZ = Math.floor(ghostPos.z);
+
+            for (let r = 0; r < MAP_SIZE; r++) {
+                for (let c = 0; c < MAP_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'map-cell';
+
+                    const val = currentMap[r][c];
+                    if (val === 1) {
+                        cell.classList.add('wall');
+                    } else if (val === 5) {
+                        cell.classList.add('stairs');
+                        cell.innerHTML = '▲';
+                    } else {
+                        cell.classList.add('walkable');
+                        
+                        const key = `${c},${r}`;
+                        const label = activeFloor === 0 ? ROOM_LABELS_1ST[key] : ROOM_LABELS_2ND[key];
+                        if (label) {
+                            cell.innerHTML = label.substring(0, 2);
+                        }
+                    }
+
+                    if (c === playerGridX && r === playerGridZ) {
+                        cell.classList.add('player');
+                    }
+
+                    if (c === ghostGridX && r === ghostGridZ) {
+                        cell.classList.add('ghost');
+                    }
+
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function handleMovement() {
+            if (!isGameRunning || isTransitioningFloor || isMapOpen) return;
+
             const moveSpeed = 0.035;
             let moveX = 0;
             let moveZ = 0;
 
-            // Camera direction projected on XZ plane
             const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
             forward.y = 0;
             forward.normalize();
@@ -2197,38 +2634,29 @@
                 moveZ += right.z;
             }
 
-            // Normalise movement vector
             if (moveX !== 0 || moveZ !== 0) {
                 const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
                 moveX = (moveX / len) * moveSpeed;
                 moveZ = (moveZ / len) * moveSpeed;
 
-                // Collision Check
                 const newX = playerPos.x + moveX;
                 const newZ = playerPos.z + moveZ;
-
                 const radius = 0.25;
 
-                // Check X movement
                 if (!checkWallCollision(newX, playerPos.z, radius)) {
                     playerPos.x = newX;
                 }
-                // Check Z movement
                 if (!checkWallCollision(playerPos.x, newZ, radius)) {
                     playerPos.z = newZ;
                 }
 
                 updateCameraPosition();
-                
-                // Play walking audio
                 handleWalkFootsteps();
 
-                // Update Walk Timer
                 const now = performance.now();
                 const deltaSeconds = (now - lastWalkTimeUpdate) / 1000;
                 walkTimer += deltaSeconds;
                 
-                // Scale walking time so 2 minutes of walking is 20 minutes in game
                 const minutesWalked = (walkTimer * 10) / 60;
                 document.getElementById('hud-survival-time').textContent = `${minutesWalked.toFixed(2)} / 20.00 MIN`;
 
@@ -2236,6 +2664,13 @@
                     triggerVictory();
                 }
             }
+            
+            // Check if player stands on stairs cell
+            checkStaircaseInteraction();
+            
+            // Update location HUD text
+            document.getElementById('hud-location-text').textContent = getCurrentLocationName();
+            
             lastWalkTimeUpdate = performance.now();
         }
 
@@ -2250,9 +2685,11 @@
             const startGridZ = Math.max(0, Math.floor(minZ));
             const endGridZ = Math.min(MAP_SIZE - 1, Math.floor(maxZ));
 
+            const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+
             for (let r = startGridZ; r <= endGridZ; r++) {
                 for (let c = startGridX; c <= endGridX; c++) {
-                    if (HORROR_MAP[r][c] === 1) {
+                    if (currentMap[r][c] === 1) {
                         return true; // hit a wall
                     }
                 }
@@ -2284,7 +2721,7 @@
 
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'bandpass';
-                filter.frequency.value = 150; // low frequency thud
+                filter.frequency.value = 150;
                 filter.Q.value = 3.0;
 
                 const gain = ctx.createGain();
@@ -2303,13 +2740,8 @@
         function updateFlashlight() {
             if (!spotLight || !camera) return;
 
-            // Spotlight follows camera position
             spotLight.position.copy(camera.position);
-
-            // Calculate look direction
             const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-            
-            // Position spotlight target ahead
             spotLight.target.position.copy(camera.position).add(dir);
         }
 
@@ -2363,13 +2795,15 @@
                 promptOverlay.style.display = 'none';
                 lastWalkTimeUpdate = performance.now();
             } else {
-                promptOverlay.style.display = 'flex';
+                if (!isMapOpen) {
+                    promptOverlay.style.display = 'flex';
+                }
             }
         }
 
         function onMouseMove(event) {
             const canvas = document.getElementById('game-canvas');
-            if (document.pointerLockElement !== canvas || !isGameRunning) return;
+            if (document.pointerLockElement !== canvas || !isGameRunning || isMapOpen) return;
 
             const sensitivity = 0.002 * globalSensitivity;
             
@@ -2390,6 +2824,12 @@
             if (key === 'f') {
                 toggleFlashlight();
             }
+            if (key === 'e' && isNearStairs && !isTransitioningFloor) {
+                transitionFloor();
+            }
+            if (key === 'm') {
+                toggleMapOverlay();
+            }
         }
 
         function onKeyUp(event) {
@@ -2408,6 +2848,14 @@
             updateFlashlight();
             updateMicVolumeLevel();
             updateGhostAI();
+
+            if (isMapOpen) {
+                mapUpdateFrameCount++;
+                if (mapUpdateFrameCount >= 10) {
+                    mapUpdateFrameCount = 0;
+                    drawMapGrid();
+                }
+            }
 
             if (renderer && scene && camera) {
                 renderer.render(scene, camera);
@@ -2463,6 +2911,10 @@
             playerPos.z = 1.5;
             walkTimer = 0;
             stepsTimer = 0;
+            activeFloor = 0;
+            groundFloorGroup.visible = true;
+            secondFloorGroup.visible = false;
+            
             ghostPos.x = 7.5;
             ghostPos.z = 7.5;
             ghostStalking = false;
@@ -2497,6 +2949,7 @@
             document.getElementById('gameplay-screen').style.display = 'none';
             document.getElementById('game-over-overlay').style.display = 'none';
             document.getElementById('victory-overlay').style.display = 'none';
+            document.getElementById('map-overlay').style.display = 'none';
 
             showLobbyScreen();
         }
