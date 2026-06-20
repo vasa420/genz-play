@@ -155,10 +155,10 @@
         }
 
         .progress-bar-wrapper {
-            width: 100%;
-            height: 4px;
+            width: 120px;
+            height: 2px;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 2px;
+            border-radius: 1px;
             overflow: hidden;
             border: 1px solid rgba(255, 59, 48, 0.1);
             display: block;
@@ -784,7 +784,7 @@
                 </ul>
             </div>
 
-            <button class="btn-enter-loop" onclick="enterGameLoop()">ENTER LOOP</button>
+            <button class="btn-enter-loop" onclick="enterGameLoop()">PRESS ANY KEY TO GO</button>
         </div>
 
         <!-- Footer -->
@@ -1014,7 +1014,9 @@
 
         // Enter actual game loop (triggers on clicking 'ENTER LOOP' on instructions page)
         function enterGameLoop() {
+            handleFullScreen(); // Go fullscreen
             const instScreen = document.getElementById('instruction-screen');
+            if (!instScreen || instScreen.style.display === 'none') return;
             instScreen.style.opacity = 0;
             setTimeout(() => {
                 instScreen.style.display = 'none';
@@ -1031,10 +1033,10 @@
             }, 1000);
         }
 
-        // Optional shortcut: Press ENTER on the instruction screen to enter game loop
+        // Press any key on the instruction screen to enter game loop
         window.addEventListener('keydown', (e) => {
             const instScreen = document.getElementById('instruction-screen');
-            if (instScreen && instScreen.style.display === 'flex' && e.key === 'Enter') {
+            if (instScreen && instScreen.style.display === 'flex') {
                 enterGameLoop();
             }
         });
