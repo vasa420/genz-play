@@ -111,12 +111,16 @@
 
         .smoke-particle {
             position: absolute;
-            bottom: -180px;
+            top: 50%;
+            left: 50%;
+            width: var(--size);
+            height: var(--size);
+            margin-top: calc(var(--size) / -2);
+            margin-left: calc(var(--size) / -2);
             border-radius: 50%;
             pointer-events: none;
             animation: smokeRiseAnim var(--duration) ease-out forwards;
-            background: radial-gradient(circle, var(--color1) 0%, var(--color2) 45%, transparent 75%);
-            /* Hardware acceleration hints to prevent lag (stucking) */
+            background: radial-gradient(circle, var(--color1) 0%, var(--color2) 50%, transparent 85%);
             will-change: transform, opacity;
             backface-visibility: hidden;
             transform-style: preserve-3d;
@@ -124,7 +128,7 @@
 
         @keyframes smokeRiseAnim {
             0% {
-                transform: translate3d(0, 0, 0) scale(0.5) rotate(0deg);
+                transform: translate3d(0, 0, 0) scale(0.1) rotate(0deg);
                 opacity: 0;
             }
             15% {
@@ -134,7 +138,7 @@
                 opacity: calc(var(--max-opacity) * 0.75);
             }
             100% {
-                transform: translate3d(var(--end-x), var(--end-y), 0) scale(2.5) rotate(180deg);
+                transform: translate3d(var(--end-x), var(--end-y), 0) scale(6.5) rotate(var(--end-rotate));
                 opacity: 0;
             }
         }
@@ -591,34 +595,32 @@
                     const particle = document.createElement('div');
                     particle.className = 'smoke-particle';
                     
-                    const size = Math.random() * 120 + 100; // Much larger clouds: 100px to 220px base size
-                    particle.style.width = size + 'px';
-                    particle.style.height = size + 'px';
+                    const size = Math.random() * 80 + 60; // 60px to 140px base size
+                    particle.style.setProperty('--size', size + 'px');
                     
-                    // Spawn across full screen width
-                    particle.style.left = Math.random() * 100 + "%";
+                    const duration = Math.random() * 4.0 + 3.0; // 3.0s to 7.0s
                     
-                    const duration = Math.random() * 3.5 + 3.0; // Slow, organic drift: 3.0s to 6.5s
+                    // Radial drift outward from center
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 250 + 200; // Drift 200px to 450px out
+                    const endX = Math.cos(angle) * distance;
+                    const endY = Math.sin(angle) * distance;
                     
-                    const midX = (Math.random() - 0.5) * 150;
-                    const midY = -(window.innerHeight * 0.45 + Math.random() * 120);
-                    const endX = midX + (Math.random() - 0.5) * 200;
-                    const endY = -(window.innerHeight + 180);
+                    const endRotate = Math.random() * 360;
                     
                     const colors = [
-                        ['rgba(210, 210, 210, 0.40)', 'rgba(150, 150, 150, 0.12)'],
-                        ['rgba(190, 190, 190, 0.35)', 'rgba(130, 130, 130, 0.10)'],
-                        ['rgba(230, 230, 230, 0.45)', 'rgba(170, 170, 170, 0.15)'],
-                        ['rgba(220, 220, 220, 0.38)', 'rgba(140, 140, 140, 0.11)']
+                        ['rgba(210, 210, 210, 0.45)', 'rgba(150, 150, 150, 0.12)'],
+                        ['rgba(190, 190, 190, 0.40)', 'rgba(130, 130, 130, 0.10)'],
+                        ['rgba(230, 230, 230, 0.50)', 'rgba(170, 170, 170, 0.15)'],
+                        ['rgba(220, 220, 220, 0.42)', 'rgba(140, 140, 140, 0.11)']
                     ];
                     const selectedColors = colors[Math.floor(Math.random() * colors.length)];
-                    const maxOpacity = Math.random() * 0.3 + 0.45; // Soft wisps (0.45 to 0.75 max)
+                    const maxOpacity = Math.random() * 0.25 + 0.45; // Soft 3D clouds: 0.45 to 0.70 max
                     
                     particle.style.setProperty('--duration', `${duration}s`);
-                    particle.style.setProperty('--mid-x', `${midX}px`);
-                    particle.style.setProperty('--mid-y', `${midY}px`);
                     particle.style.setProperty('--end-x', `${endX}px`);
                     particle.style.setProperty('--end-y', `${endY}px`);
+                    particle.style.setProperty('--end-rotate', `${endRotate}deg`);
                     particle.style.setProperty('--color1', selectedColors[0]);
                     particle.style.setProperty('--color2', selectedColors[1]);
                     particle.style.setProperty('--max-opacity', maxOpacity);
@@ -628,7 +630,7 @@
                     setTimeout(() => {
                         particle.remove();
                     }, duration * 1000 + 100);
-                }, 160); // Slower spawn rate (160ms) to prevent browser lagging (stucking)
+                }, 160); // Clean and lag-free spawn rate
                 particlesIntervals.push(smokeInterval);
             }
 
