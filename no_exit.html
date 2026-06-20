@@ -759,8 +759,9 @@
 
     <!-- 3. INSTRUCTION SCREEN (Redesigned matching mockup) -->
     <div id="instruction-screen" class="instruction-overlay">
+        <div id="lightning-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; overflow: hidden;"></div>
         <!-- Content details in middle -->
-        <div class="instruction-content" style="max-width: 800px; width: 95%; gap: 15px; margin-top: 20px;">
+        <div class="instruction-content" style="max-width: 800px; width: 95%; gap: 15px; margin-top: 20px; z-index: 10;">
             
             <h2 class="instruction-title" style="font-size: 32px; letter-spacing: 4px; margin: 0 0 10px 0;">👻 Game Instructions</h2>
             
@@ -981,6 +982,7 @@
                     instScreen.style.display = 'flex';
                     instScreen.style.opacity = 1;
                     isInstructionScreenActive = true;
+                    startLightning();
 
                     // Heavy impact sound to make it feel scary when instructions load
                     impactAudio.currentTime = 0;
@@ -1020,6 +1022,8 @@
         function enterGameLoop() {
             if (!isInstructionScreenActive) return;
             isInstructionScreenActive = false;
+
+            stopLightning(); // Stop lightning animation
 
             handleFullScreen(); // Go fullscreen
 
@@ -1081,6 +1085,125 @@
             doorOpenAudio.currentTime = 0;
             doorOpenAudio.volume = 0.6;
             doorOpenAudio.play().catch(e => {});
+        }
+
+        let lightningInterval = null;
+
+        function startLightning() {
+            if (lightningInterval) clearInterval(lightningInterval);
+            triggerLightningStrike();
+            lightningInterval = setInterval(() => {
+                triggerLightningStrike();
+            }, 4000);
+        }
+
+        function stopLightning() {
+            if (lightningInterval) {
+                clearInterval(lightningInterval);
+                lightningInterval = null;
+            }
+            const overlay = document.getElementById('lightning-overlay');
+            if (overlay) overlay.innerHTML = '';
+        }
+
+        function triggerLightningStrike() {
+            const overlay = document.getElementById('lightning-overlay');
+            if (!overlay) return;
+
+            overlay.innerHTML = '';
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            const startX = Math.random() * (width - 100) + 50;
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", width);
+            svg.setAttribute("height", height);
+            svg.style.position = "absolute";
+            svg.style.top = "0";
+            svg.style.left = "0";
+            svg.style.pointerEvents = "none";
+            svg.style.zIndex = "10";
+
+            let points = [];
+            let currentY = 0;
+            let currentX = startX;
+            points.push({ x: currentX, y: currentY });
+
+            const steps = 12;
+            const stepHeight = height / steps;
+
+            for (let i = 1; i <= steps; i++) {
+                currentY += stepHeight;
+                let deviation = (Math.random() - 0.5) * 60;
+                currentX += deviation;
+                currentX = Math.max(10, Math.min(width - 10, currentX));
+                points.push({ x: currentX, y: currentY });
+            }
+
+            let pathD = `M ${points[0].x} ${points[0].y}`;
+            for (let i = 1; i < points.length; i++) {
+                pathD += ` L ${points[i].x} ${points[i].y}`;
+            }
+
+            const pathGlow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathGlow.setAttribute("d", pathD);
+            pathGlow.setAttribute("fill", "none");
+            pathGlow.setAttribute("stroke", "rgba(0, 255, 255, 0.6)");
+            pathGlow.setAttribute("stroke-width", "8");
+            pathGlow.setAttribute("stroke-linecap", "round");
+            pathGlow.setAttribute("stroke-linejoin", "round");
+            pathGlow.style.filter = "blur(6px)";
+
+            const pathCore = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathCore.setAttribute("d", pathD);
+            pathCore.setAttribute("fill", "none");
+            pathCore.setAttribute("stroke", "#ffffff");
+            pathCore.setAttribute("stroke-width", "3");
+            pathCore.setAttribute("stroke-linecap", "round");
+            pathCore.setAttribute("stroke-linejoin", "round");
+            pathCore.style.filter = "drop-shadow(0 0 8px rgba(0, 255, 255, 0.9))";
+
+            svg.appendChild(pathGlow);
+            svg.appendChild(pathCore);
+            overlay.appendChild(svg);
+
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.height = '100%';
+            flash.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            flash.style.zIndex = '9';
+            flash.style.pointerEvents = 'none';
+            flash.style.transition = 'opacity 0.1s ease-out';
+            overlay.appendChild(flash);
+
+            // Double strike visual sequence
+            svg.style.opacity = '1';
+            flash.style.opacity = '1';
+
+            setTimeout(() => {
+                svg.style.opacity = '0.1';
+                flash.style.opacity = '0';
+            }, 60);
+
+            setTimeout(() => {
+                svg.style.opacity = '1';
+                flash.style.opacity = '0.8';
+            }, 120);
+
+            setTimeout(() => {
+                svg.style.opacity = '0';
+                flash.style.opacity = '0';
+            }, 250);
+
+            setTimeout(() => {
+                svg.remove();
+                flash.remove();
+            }, 1000);
         }
 
         // Press any key on the instruction screen or headphones screen to proceed
