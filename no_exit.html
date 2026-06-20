@@ -1507,17 +1507,6 @@
             <div class="victory-subtitle">Connection corridor collapsed. You escaped the shifting loop.</div>
             <button class="btn-horror-action" onclick="abandonHorrorGame()" style="margin-top: 30px;">RETURN TO LOBBY</button>
         </div>
-
-        <!-- Item Inspection Overlay -->
-        <div id="item-inspection-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 25000; justify-content: center; align-items: center;">
-            <div id="item-inspection-card" style="background: rgba(15, 15, 15, 0.95); border: 2px solid rgba(255, 59, 48, 0.4); border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 0 30px rgba(255, 59, 48, 0.3); backdrop-filter: blur(10px);">
-                <h2 id="item-title" style="font-family: 'Creepster', cursive; font-size: 32px; color: #ff3b30; margin-top: 0; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 59, 48, 0.5);">NOTEBOOK</h2>
-                <div id="item-text" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #eee; line-height: 1.6; text-align: left; margin: 20px 0; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); max-height: 300px; overflow-y: auto;">
-                    Scribbled entries...
-                </div>
-                <button id="item-close-btn" class="btn-horror-action" style="padding: 10px 25px; font-size: 14px;">[E] CLOSE</button>
-            </div>
-        </div>
     </div>
 
     <!-- Fullscreen Restore Overlay -->
@@ -1787,15 +1776,15 @@
         let ghostStalking = false;
         let ghostAlertTimer = 0;
         
-        // Define floor maps: 10x10 grids (1 = wall, 0 = walkable, 2 = door, 5 = stairs)
+        // Define floor maps: 10x10 grids (1 = wall, 0 = walkable, 5 = stairs)
         const GROUND_FLOOR_MAP = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 2, 0, 0, 0, 0, 1], // Door at (1, 4)
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
             [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
             [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
             [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Staircase at (4, 4)
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 2, 1, 1, 0, 1, 1, 1, 0, 1], // Door at (6, 1)
+            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
             [1, 0, 0, 1, 0, 1, 0, 0, 0, 1],
             [1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -1804,65 +1793,15 @@
         const SECOND_FLOOR_MAP = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 2, 1, 1, 0, 1, 1, 1, 0, 1], // Door at (2, 1)
+            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
             [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
             [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Staircase at (4, 4)
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 1, 0, 1, 1, 2, 1], // Door at (6, 8)
+            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
             [1, 0, 1, 0, 1, 0, 0, 0, 0, 1],
             [1, 0, 0, 0, 1, 0, 1, 1, 0, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
-
-        // Doors Configuration
-        const doorsConfig = [
-            { id: 'door_0_1_4', floor: 0, r: 1, c: 4, dir: 'Z', isOpen: false, currentAngle: 0, targetAngle: 0, mesh: null },
-            { id: 'door_0_6_1', floor: 0, r: 6, c: 1, dir: 'X', isOpen: false, currentAngle: 0, targetAngle: 0, mesh: null },
-            { id: 'door_1_2_1', floor: 1, r: 2, c: 1, dir: 'X', isOpen: false, currentAngle: 0, targetAngle: 0, mesh: null },
-            { id: 'door_1_6_8', floor: 1, r: 6, c: 8, dir: 'X', isOpen: false, currentAngle: 0, targetAngle: 0, mesh: null }
-        ];
-
-        // Items Configuration
-        const itemsConfig = [
-            {
-                id: 'notebook',
-                name: 'Dusty Notebook',
-                description: 'June 14th.\n\nThey say the house is empty, but I hear it... a faint rasping breath whenever I speak. It gets closer the louder I am.\n\nIf you want to survive, do not make a sound. Project Silence is listening...',
-                floor: 0,
-                r: 1,
-                c: 6,
-                mesh: null
-            },
-            {
-                id: 'key',
-                name: 'Old Brass Key',
-                description: 'A heavy, tarnished key with "NO EXIT" carved into the bow.\n\nIt feels freezing cold to the touch. It doesn\'t seem to fit any door here, but holding it makes the air grow thicker...',
-                floor: 0,
-                r: 7,
-                c: 2,
-                mesh: null
-            },
-            {
-                id: 'diary',
-                name: 'Bloodied Diary',
-                description: 'Entry 404:\n\nI tried to escape down the stairs, but the staircase collapsed in darkness. I ran back up. The thing was waiting. It has no eyes, but it tracked my footsteps.\n\nI hid in the study. If it approaches, do not scream. Do not whisper. Just hold your breath...',
-                floor: 1,
-                r: 1,
-                c: 1,
-                mesh: null
-            },
-            {
-                id: 'medicine',
-                name: 'Strange Medicine Bottle',
-                description: 'A small amber vial labeled "CALMATIVE - 50mg".\n\nThe liquid inside has dried up into a dark, crusty residue.\n\nA handwritten label reads: "For the anxiety. It doesn\'t stop the whispers, but it stops you from screaming... and screaming is fatal."',
-                floor: 1,
-                r: 7,
-                c: 7,
-                mesh: null
-            }
-        ];
-
-        let isInspectingItem = false;
         
         const CELL_SIZE = 4;
         const MAP_SIZE = 10;
@@ -1954,7 +1893,7 @@
             scene.add(groundFloorGroup);
             scene.add(secondFloorGroup);
 
-            // Ground Floor Walls & Doors
+            // Ground Floor Walls
             for (let r = 0; r < MAP_SIZE; r++) {
                 for (let c = 0; c < MAP_SIZE; c++) {
                     const val = GROUND_FLOOR_MAP[r][c];
@@ -1972,8 +1911,6 @@
                             r * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
                         );
                         groundFloorGroup.add(wallMesh);
-                    } else if (val === 2) {
-                        create3DDoor(groundFloorGroup, 0, r, c);
                     } else if (val === 5) {
                         // Render 3D steps inside stairs cell
                         create3DStairs(groundFloorGroup, c, r);
@@ -1996,7 +1933,7 @@
             ceilMesh.position.set(0, 4, 0);
             groundFloorGroup.add(ceilMesh);
 
-            // Second Floor Walls & Doors
+            // Second Floor Walls
             for (let r = 0; r < MAP_SIZE; r++) {
                 for (let c = 0; c < MAP_SIZE; c++) {
                     const val = SECOND_FLOOR_MAP[r][c];
@@ -2014,8 +1951,6 @@
                             r * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
                         );
                         secondFloorGroup.add(wallMesh);
-                    } else if (val === 2) {
-                        create3DDoor(secondFloorGroup, 1, r, c);
                     } else if (val === 5) {
                         create3DStairs(secondFloorGroup, c, r);
                     }
@@ -2038,12 +1973,6 @@
 
             // 4. Create Ghost Stalker
             createGhost();
-
-            // Spawn Room Items
-            itemsConfig.forEach(item => {
-                const group = item.floor === 0 ? groundFloorGroup : secondFloorGroup;
-                create3DItem(group, item);
-            });
 
             // 5. Lighting
             ambientLight = new THREE.AmbientLight(0xff3b30, 0.003); // extreme low red ambient glow
@@ -2282,194 +2211,6 @@
             }
         }
 
-        function create3DDoor(group, floor, r, c) {
-            const doorConfig = doorsConfig.find(d => d.floor === floor && d.r === r && d.c === c);
-            if (!doorConfig) return;
-
-            // Hinge pivot group
-            const pivot = new THREE.Group();
-
-            const cellCenterX = c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-            const cellCenterZ = r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-
-            let pivotX = cellCenterX;
-            let pivotZ = cellCenterZ;
-
-            if (doorConfig.dir === 'X') {
-                // Door lies along X axis. Hinge at min X
-                pivotX = c * CELL_SIZE - MAP_OFFSET;
-                pivot.position.set(pivotX, 0, cellCenterZ);
-            } else {
-                // Door lies along Z axis. Hinge at min Z
-                pivotZ = r * CELL_SIZE - MAP_OFFSET;
-                pivot.position.set(cellCenterX, 0, pivotZ);
-            }
-
-            const panelWidth = doorConfig.dir === 'X' ? CELL_SIZE : 0.15;
-            const panelDepth = doorConfig.dir === 'X' ? 0.15 : CELL_SIZE;
-            const panelHeight = 3.8;
-
-            const doorMat = new THREE.MeshStandardMaterial({
-                color: 0x3d1a0c, // Mahogany brown
-                roughness: 0.8,
-                metalness: 0.1
-            });
-
-            const panelGeo = new THREE.BoxGeometry(panelWidth, panelHeight, panelDepth);
-            const panelMesh = new THREE.Mesh(panelGeo, doorMat);
-
-            if (doorConfig.dir === 'X') {
-                panelMesh.position.set(CELL_SIZE / 2, panelHeight / 2, 0);
-            } else {
-                panelMesh.position.set(0, panelHeight / 2, CELL_SIZE / 2);
-            }
-            pivot.add(panelMesh);
-
-            // Add door handles (knobs)
-            const handleMat = new THREE.MeshStandardMaterial({
-                color: 0xd4af37, // Gold/brass
-                roughness: 0.3,
-                metalness: 0.8
-            });
-            const handleGeo = new THREE.SphereGeometry(0.1, 16, 16);
-
-            const handleOffset = CELL_SIZE - 0.4;
-            if (doorConfig.dir === 'X') {
-                const knobA = new THREE.Mesh(handleGeo, handleMat);
-                knobA.position.set(handleOffset, 1.8, 0.12);
-                pivot.add(knobA);
-
-                const knobB = new THREE.Mesh(handleGeo, handleMat);
-                knobB.position.set(handleOffset, 1.8, -0.12);
-                pivot.add(knobB);
-            } else {
-                const knobA = new THREE.Mesh(handleGeo, handleMat);
-                knobA.position.set(0.12, 1.8, handleOffset);
-                pivot.add(knobA);
-
-                const knobB = new THREE.Mesh(handleGeo, handleMat);
-                knobB.position.set(-0.12, 1.8, handleOffset);
-                pivot.add(knobB);
-            }
-
-            group.add(pivot);
-            doorConfig.mesh = pivot;
-        }
-
-        function create3DItem(group, item) {
-            const itemGroup = new THREE.Group();
-
-            const cellCenterX = item.c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-            const cellCenterZ = item.r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-            itemGroup.position.set(cellCenterX, 0, cellCenterZ);
-
-            // Table top
-            const woodMat = new THREE.MeshStandardMaterial({
-                color: 0x4a2a18, // wood brown
-                roughness: 0.8
-            });
-            const topGeo = new THREE.BoxGeometry(1.6, 0.1, 1.6);
-            const topMesh = new THREE.Mesh(topGeo, woodMat);
-            topMesh.position.y = 0.85;
-            itemGroup.add(topMesh);
-
-            // Legs
-            const legGeo = new THREE.BoxGeometry(0.12, 0.8, 0.12);
-            const legPositions = [
-                {x: -0.7, z: -0.7},
-                {x: 0.7, z: -0.7},
-                {x: -0.7, z: 0.7},
-                {x: 0.7, z: 0.7}
-            ];
-            legPositions.forEach(pos => {
-                const legMesh = new THREE.Mesh(legGeo, woodMat);
-                legMesh.position.set(pos.x, 0.4, pos.z);
-                itemGroup.add(legMesh);
-            });
-
-            // Spooky Item model
-            if (item.id === 'notebook' || item.id === 'diary') {
-                const bookGroup = new THREE.Group();
-                bookGroup.position.set(0, 0.92, 0);
-                bookGroup.rotation.y = Math.random() * 0.4 - 0.2;
-
-                const coverColor = item.id === 'notebook' ? 0x800000 : 0x5a1818;
-                const coverMat = new THREE.MeshStandardMaterial({ color: coverColor, roughness: 0.7 });
-                const coverGeo = new THREE.BoxGeometry(0.6, 0.05, 0.7);
-                const coverMesh = new THREE.Mesh(coverGeo, coverMat);
-                bookGroup.add(coverMesh);
-
-                const pagesMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 });
-                const pagesGeo = new THREE.BoxGeometry(0.56, 0.06, 0.66);
-                const pagesMesh = new THREE.Mesh(pagesGeo, pagesMat);
-                pagesMesh.position.y = 0.01;
-                bookGroup.add(pagesMesh);
-
-                itemGroup.add(bookGroup);
-            } else if (item.id === 'key') {
-                const keyGroup = new THREE.Group();
-                keyGroup.position.set(0, 0.92, 0);
-                keyGroup.rotation.y = Math.PI / 4;
-                keyGroup.rotation.x = Math.PI / 2; // lie flat
-
-                const brassMat = new THREE.MeshStandardMaterial({
-                    color: 0xd4af37,
-                    metalness: 0.8,
-                    roughness: 0.2
-                });
-
-                const shaftGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8);
-                const shaftMesh = new THREE.Mesh(shaftGeo, brassMat);
-                shaftMesh.rotation.z = Math.PI / 2;
-                keyGroup.add(shaftMesh);
-
-                const ringGeo = new THREE.TorusGeometry(0.08, 0.02, 8, 16);
-                const ringMesh = new THREE.Mesh(ringGeo, brassMat);
-                ringMesh.position.x = -0.25;
-                keyGroup.add(ringMesh);
-
-                const bitGeo = new THREE.BoxGeometry(0.06, 0.1, 0.04);
-                const bitMesh = new THREE.Mesh(bitGeo, brassMat);
-                bitMesh.position.set(0.2, -0.04, 0);
-                keyGroup.add(bitMesh);
-
-                itemGroup.add(keyGroup);
-            } else if (item.id === 'medicine') {
-                const bottleGroup = new THREE.Group();
-                bottleGroup.position.set(0, 0.9, 0);
-
-                const bottleMat = new THREE.MeshStandardMaterial({
-                    color: 0xd27d2d,
-                    transparent: true,
-                    opacity: 0.85,
-                    roughness: 0.1,
-                    metalness: 0.1
-                });
-                const bodyGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.35, 16);
-                const bodyMesh = new THREE.Mesh(bodyGeo, bottleMat);
-                bodyMesh.position.y = 0.175;
-                bottleGroup.add(bodyMesh);
-
-                const capMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.5 });
-                const capGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.06, 16);
-                const capMesh = new THREE.Mesh(capGeo, capMat);
-                capMesh.position.y = 0.37;
-                bottleGroup.add(capMesh);
-
-                itemGroup.add(bottleGroup);
-            }
-
-            // Blinking red alert light
-            const itemLight = new THREE.PointLight(0xff3b30, 0.5, 3);
-            itemLight.position.set(0, 1.4, 0);
-            itemGroup.add(itemLight);
-
-            itemGroup.pointLight = itemLight;
-
-            group.add(itemGroup);
-            item.mesh = itemGroup;
-        }
-
         function createGhost() {
             const canvas = document.createElement('canvas');
             canvas.width = 256;
@@ -2689,90 +2430,25 @@
             }
         }
 
-        let activeInteraction = null;
+        function checkStaircaseInteraction() {
+            if (!isGameRunning || isTransitioningFloor) return;
 
-        function showInteractionPrompt(text) {
+            const gridX = Math.floor(playerPos.x);
+            const gridZ = Math.floor(playerPos.z);
             const promptEl = document.getElementById('staircase-prompt');
-            if (promptEl) {
-                promptEl.textContent = text;
+
+            // Staircase is positioned at grid cell (4, 4) on both floors
+            if (gridX === 4 && gridZ === 4) {
+                isNearStairs = true;
                 promptEl.style.display = 'block';
-            }
-        }
-
-        function hideInteractionPrompt() {
-            const promptEl = document.getElementById('staircase-prompt');
-            if (promptEl) {
-                promptEl.style.display = 'none';
-            }
-        }
-
-        function updateInteractions() {
-            if (!isGameRunning || isTransitioningFloor || isInspectingItem) {
-                activeInteraction = null;
-                hideInteractionPrompt();
-                return;
-            }
-
-            const playerGridX = playerPos.x;
-            const playerGridZ = playerPos.z;
-
-            let closestDist = Infinity;
-            let closestType = null;
-            let closestTarget = null;
-
-            // 1. Check stairs (at grid cell 4, 4: center coordinates 4.5, 4.5)
-            const stairDx = playerGridX - 4.5;
-            const stairDz = playerGridZ - 4.5;
-            const stairDist = Math.sqrt(stairDx * stairDx + stairDz * stairDz);
-            if (stairDist < 1.0) {
-                closestDist = stairDist;
-                closestType = 'stairs';
-            }
-
-            // 2. Check doors on active floor
-            doorsConfig.forEach(door => {
-                if (door.floor !== activeFloor) return;
-                const doorDx = playerGridX - (door.c + 0.5);
-                const doorDz = playerGridZ - (door.r + 0.5);
-                const dist = Math.sqrt(doorDx * doorDx + doorDz * doorDz);
-                if (dist < 1.2 && dist < closestDist) {
-                    closestDist = dist;
-                    closestType = 'door';
-                    closestTarget = door;
+                if (activeFloor === 0) {
+                    promptEl.textContent = "[E] ASCEND TO 2ND FLOOR";
+                } else {
+                    promptEl.textContent = "[E] DESCEND TO 1ST FLOOR";
                 }
-            });
-
-            // 3. Check items on active floor
-            itemsConfig.forEach(item => {
-                if (item.floor !== activeFloor) return;
-                const itemDx = playerGridX - (item.c + 0.5);
-                const itemDz = playerGridZ - (item.r + 0.5);
-                const dist = Math.sqrt(itemDx * itemDx + itemDz * itemDz);
-                if (dist < 1.2 && dist < closestDist) {
-                    closestDist = dist;
-                    closestType = 'item';
-                    closestTarget = item;
-                }
-            });
-
-            if (closestType) {
-                activeInteraction = { type: closestType, target: closestTarget };
-                let promptText = "";
-                if (closestType === 'stairs') {
-                    isNearStairs = true; // backward compatibility
-                    promptText = activeFloor === 0 ? "[E] ASCEND TO 2ND FLOOR" : "[E] DESCEND TO 1ST FLOOR";
-                } else if (closestType === 'door') {
-                    isNearStairs = false;
-                    promptText = closestTarget.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR";
-                } else if (closestType === 'item') {
-                    isNearStairs = false;
-                    promptText = `[E] READ ${closestTarget.name.toUpperCase()}`;
-                }
-                showInteractionPrompt(promptText);
             } else {
-                activeInteraction = null;
                 isNearStairs = false;
-                hideInteractionPrompt();
+                promptEl.style.display = 'none';
             }
         }
 
@@ -2903,13 +2579,6 @@
                     } else if (val === 5) {
                         cell.classList.add('stairs');
                         cell.innerHTML = '▲';
-                    } else if (val === 2) {
-                        cell.classList.add('walkable');
-                        const door = doorsConfig.find(d => d.floor === activeFloor && d.r === r && d.c === c);
-                        if (door) {
-                            cell.innerHTML = door.isOpen ? '░' : '█';
-                            cell.style.color = '#ffcc00';
-                        }
                     } else {
                         cell.classList.add('walkable');
                         
@@ -2996,8 +2665,8 @@
                 }
             }
             
-            // Check for nearby interactions (stairs, doors, items)
-            updateInteractions();
+            // Check if player stands on stairs cell
+            checkStaircaseInteraction();
             
             // Update location HUD text
             document.getElementById('hud-location-text').textContent = getCurrentLocationName();
@@ -3020,14 +2689,8 @@
 
             for (let r = startGridZ; r <= endGridZ; r++) {
                 for (let c = startGridX; c <= endGridX; c++) {
-                    const val = currentMap[r][c];
-                    if (val === 1) {
+                    if (currentMap[r][c] === 1) {
                         return true; // hit a wall
-                    } else if (val === 2) {
-                        const door = doorsConfig.find(d => d.floor === activeFloor && d.r === r && d.c === c);
-                        if (door && !door.isOpen) {
-                            return true; // closed door acts as wall
-                        }
                     }
                 }
             }
@@ -3132,7 +2795,7 @@
                 promptOverlay.style.display = 'none';
                 lastWalkTimeUpdate = performance.now();
             } else {
-                if (!isMapOpen && !isInspectingItem) {
+                if (!isMapOpen) {
                     promptOverlay.style.display = 'flex';
                 }
             }
@@ -3153,32 +2816,16 @@
         }
 
         function onKeyDown(event) {
-            const key = event.key.toLowerCase();
-            if (isInspectingItem) {
-                if (key === 'e' || event.key === 'Escape') {
-                    closeItemInspection();
-                    event.preventDefault();
-                }
-                return;
-            }
-
             if (!isGameRunning) return;
+            const key = event.key.toLowerCase();
             if (key === 'w' || key === 'a' || key === 's' || key === 'd') {
                 keysPressed[key] = true;
             }
             if (key === 'f') {
                 toggleFlashlight();
             }
-            if (key === 'e' && !isTransitioningFloor) {
-                if (activeInteraction) {
-                    if (activeInteraction.type === 'stairs') {
-                        transitionFloor();
-                    } else if (activeInteraction.type === 'door') {
-                        toggleDoor(activeInteraction.target);
-                    } else if (activeInteraction.type === 'item') {
-                        inspectItem(activeInteraction.target);
-                    }
-                }
+            if (key === 'e' && isNearStairs && !isTransitioningFloor) {
+                transitionFloor();
             }
             if (key === 'm') {
                 toggleMapOverlay();
@@ -3192,84 +2839,15 @@
             }
         }
 
-        function updateDoorsAnimation() {
-            doorsConfig.forEach(door => {
-                if (door.mesh) {
-                    door.currentAngle += (door.targetAngle - door.currentAngle) * 0.12;
-                    door.mesh.rotation.y = door.currentAngle;
-                }
-            });
-        }
-
-        function updateItemsBlinking() {
-            const time = performance.now() * 0.003;
-            itemsConfig.forEach(item => {
-                if (item.mesh && item.mesh.pointLight) {
-                    item.pointLight.intensity = (Math.sin(time * 3) + 1.0) * 0.4 + 0.1;
-                }
-            });
-        }
-
-        function toggleDoor(door) {
-            door.isOpen = !door.isOpen;
-            if (door.isOpen) {
-                door.targetAngle = door.dir === 'X' ? -Math.PI / 2 : Math.PI / 2;
-            } else {
-                door.targetAngle = 0;
-            }
-
-            try {
-                doorOpenAudio.currentTime = 0;
-                doorOpenAudio.volume = (masterVolume / 100) * 0.6;
-                doorOpenAudio.play().catch(e => {});
-            } catch(e) {}
-        }
-
-        function inspectItem(item) {
-            isInspectingItem = true;
-            document.exitPointerLock();
-
-            // Populate content
-            document.getElementById('item-title').textContent = item.name.toUpperCase();
-            document.getElementById('item-text').innerHTML = item.description.replace(/\n/g, '<br>');
-
-            // Show screen modal
-            document.getElementById('item-inspection-overlay').style.display = 'flex';
-            
-            // Hide normal interaction prompt
-            hideInteractionPrompt();
-        }
-
-        function closeItemInspection() {
-            isInspectingItem = false;
-            document.getElementById('item-inspection-overlay').style.display = 'none';
-
-            // Re-lock pointer
-            lockPointer();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const closeBtn = document.getElementById('item-close-btn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', closeItemInspection);
-            }
-        });
-
         function animateHorrorGame() {
             if (!isGameRunning) return;
 
             requestAnimationFrame(animateHorrorGame);
 
-            if (!isInspectingItem) {
-                handleMovement();
-                updateFlashlight();
-                updateMicVolumeLevel();
-                updateGhostAI();
-            }
-
-            // Animate doors and items always
-            updateDoorsAnimation();
-            updateItemsBlinking();
+            handleMovement();
+            updateFlashlight();
+            updateMicVolumeLevel();
+            updateGhostAI();
 
             if (isMapOpen) {
                 mapUpdateFrameCount++;
