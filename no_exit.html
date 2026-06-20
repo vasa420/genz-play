@@ -111,21 +111,21 @@
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(to right, #ff3b30, #00bfff);
-            box-shadow: 0 0 10px rgba(255, 59, 48, 0.8), 0 0 20px rgba(0, 191, 255, 0.8);
+            background: linear-gradient(to right, #e0e0e0, #00bfff);
+            box-shadow: 0 0 10px rgba(224, 224, 224, 0.8), 0 0 20px rgba(0, 191, 255, 0.8);
             transition: width 0.1s linear;
         }
 
-        /* Fire & Water Side Animations */
-        #fire-container {
+        /* Smoke & Water Side Animations */
+        #smoke-container {
             position: absolute;
             top: 0;
             left: 0;
-            width: 150px;
+            width: 180px;
             height: 100%;
             overflow: hidden;
             pointer-events: none;
-            background: linear-gradient(to right, rgba(255, 59, 48, 0.08), transparent);
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.03), transparent);
             z-index: 2;
         }
 
@@ -141,29 +141,30 @@
             z-index: 2;
         }
 
-        .fire-particle {
+        .smoke-particle {
             position: absolute;
-            bottom: -30px;
+            bottom: -50px;
             border-radius: 50%;
             pointer-events: none;
             mix-blend-mode: screen;
-            animation: fireRiseAnim var(--duration) ease-out forwards;
+            animation: smokeRiseAnim var(--duration) ease-out forwards;
             filter: blur(var(--blur));
-            background: radial-gradient(circle, var(--color1) 20%, var(--color2) 65%, transparent 100%);
-            box-shadow: 0 0 var(--glow) var(--color1);
+            background: radial-gradient(circle, var(--color1) 10%, var(--color2) 50%, transparent 100%);
         }
 
-        @keyframes fireRiseAnim {
+        @keyframes smokeRiseAnim {
             0% {
-                transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-                opacity: 0.8;
+                transform: translate3d(0, 0, 0) scale(0.6) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: var(--max-opacity);
             }
             50% {
-                opacity: 0.9;
-                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(0.85) rotate(180deg);
+                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(1.6) rotate(90deg);
             }
             100% {
-                transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.1) rotate(360deg);
+                transform: translate3d(var(--end-x), var(--end-y), 0) scale(3.2) rotate(180deg);
                 opacity: 0;
             }
         }
@@ -517,8 +518,8 @@
 
     <!-- 1. CREEPY LOADING SCREEN -->
     <div id="loading-screen" class="loading-overlay">
-        <!-- Fire container (Left) -->
-        <div id="fire-container"></div>
+        <!-- Smoke container (Left) -->
+        <div id="smoke-container"></div>
         
         <!-- Water container (Right) -->
         <div id="water-container"></div>
@@ -645,58 +646,58 @@
             let progress = 0;
             loadingText.textContent = "ESTABLISHING CONFLICT LINK... 0%";
 
-            // Fire & Water particle animations
-            const fireContainer = document.getElementById('fire-container');
+            // Smoke & Water particle animations
+            const smokeContainer = document.getElementById('smoke-container');
             const waterContainer = document.getElementById('water-container');
             let particlesIntervals = [];
 
-            // Spawn fire particles (Left screen)
-            if (fireContainer) {
-                const fireInterval = setInterval(() => {
+            // Spawn smoke particles (Left screen)
+            if (smokeContainer) {
+                const smokeInterval = setInterval(() => {
                     const particle = document.createElement('div');
-                    particle.className = 'fire-particle';
+                    particle.className = 'smoke-particle';
                     
-                    const size = Math.random() * 20 + 10;
+                    const size = Math.random() * 30 + 20; // 20px to 50px
                     particle.style.width = size + 'px';
                     particle.style.height = size + 'px';
                     
-                    const left = Math.random() * 110;
+                    const left = Math.random() * 120;
                     particle.style.left = left + 'px';
                     
-                    const duration = Math.random() * 1.5 + 1.2; // 1.2s to 2.7s
-                    const blurVal = Math.random() * 6 + 3;
-                    const glowVal = Math.random() * 8 + 4;
+                    const duration = Math.random() * 3.0 + 2.5; // 2.5s to 5.5s
+                    const blurVal = Math.random() * 15 + 10; // 10px to 25px blur
                     
-                    const midX = (Math.random() - 0.3) * 40;
-                    const midY = -(window.innerHeight * 0.4 + Math.random() * 80);
-                    const endX = midX + (Math.random() - 0.4) * 60;
-                    const endY = -(window.innerHeight + 50);
+                    const midX = (Math.random() - 0.2) * 50;
+                    const midY = -(window.innerHeight * 0.4 + Math.random() * 100);
+                    const endX = midX + (Math.random() - 0.3) * 80;
+                    const endY = -(window.innerHeight + 80);
                     
                     const colors = [
-                        ['rgba(255, 51, 0, 0.85)', 'rgba(255, 102, 0, 0.6)'],
-                        ['rgba(255, 69, 0, 0.9)', 'rgba(255, 140, 0, 0.65)'],
-                        ['rgba(255, 140, 0, 0.85)', 'rgba(255, 215, 0, 0.7)'],
-                        ['rgba(230, 92, 0, 0.9)', 'rgba(255, 153, 0, 0.6)']
+                        ['rgba(220, 220, 220, 0.25)', 'rgba(150, 150, 150, 0.08)'],
+                        ['rgba(240, 240, 240, 0.20)', 'rgba(120, 120, 120, 0.05)'],
+                        ['rgba(200, 200, 200, 0.22)', 'rgba(100, 100, 100, 0.06)'],
+                        ['rgba(255, 255, 255, 0.18)', 'rgba(130, 130, 130, 0.04)']
                     ];
                     const selectedColors = colors[Math.floor(Math.random() * colors.length)];
+                    const maxOpacity = Math.random() * 0.25 + 0.15;
                     
                     particle.style.setProperty('--duration', `${duration}s`);
                     particle.style.setProperty('--blur', `${blurVal}px`);
-                    particle.style.setProperty('--glow', `${glowVal}px`);
                     particle.style.setProperty('--mid-x', `${midX}px`);
                     particle.style.setProperty('--mid-y', `${midY}px`);
                     particle.style.setProperty('--end-x', `${endX}px`);
                     particle.style.setProperty('--end-y', `${endY}px`);
                     particle.style.setProperty('--color1', selectedColors[0]);
                     particle.style.setProperty('--color2', selectedColors[1]);
+                    particle.style.setProperty('--max-opacity', maxOpacity);
                     
-                    fireContainer.appendChild(particle);
+                    smokeContainer.appendChild(particle);
                     
                     setTimeout(() => {
                         particle.remove();
                     }, duration * 1000 + 100);
-                }, 45);
-                particlesIntervals.push(fireInterval);
+                }, 60);
+                particlesIntervals.push(smokeInterval);
             }
  
             // Spawn water bubbles (Right screen)
