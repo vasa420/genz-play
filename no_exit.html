@@ -1026,14 +1026,20 @@
             isInstructionScreenActive = false;
 
             stopLightning(); // Stop lightning animation
-
             handleFullScreen(); // Go fullscreen
 
             const instScreen = document.getElementById('instruction-screen');
             if (instScreen) {
-                instScreen.style.display = 'none';
+                instScreen.style.transition = 'opacity 1.8s ease-in-out'; // Slowly get in dark mode
+                instScreen.style.opacity = 0;
+                
+                setTimeout(() => {
+                    instScreen.style.display = 'none';
+                    showHeadphonesScreen();
+                }, 1800);
+            } else {
+                showHeadphonesScreen();
             }
-            showHeadphonesScreen();
         }
 
         // Show the headphones screen
