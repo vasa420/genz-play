@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NO EXIT | Project Silence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&family=Creepster&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff3b30;
+            --primary-glow: rgba(255, 59, 48, 0.4);
+            --bg: #030303;
+            --glass: rgba(15, 15, 15, 0.8);
+            --border: rgba(255, 59, 48, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(circle at center, #150505 0%, #000 100%);
+        }
+
+        .screen-static {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.4;
+        }
+
+        /* Creepy Loading Screen styling */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 3, 3, 0.4) 0%, rgba(0, 0, 0, 0.95) 100%), url('creepy_loading.png') no-repeat center center;
+            background-size: cover;
+            z-index: 20000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 1s ease-out;
+            opacity: 1;
+        }
+
+        .loading-container {
+            position: relative;
+            z-index: 3;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), 0 0 25px rgba(255, 59, 48, 0.2);
+            max-width: 320px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .loading-brand {
+            font-family: 'Creepster', cursive;
+            font-size: 36px;
+            letter-spacing: 3px;
+            color: #ff3b30;
+            text-shadow: 0 0 15px rgba(255, 59, 48, 0.8);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .loading-status-text {
+            font-family: 'JetBrains Mono', monospace;
+            color: #888;
+            font-size: 10px;
+            letter-spacing: 1px;
+            line-height: 1.4;
+            text-transform: uppercase;
+            min-height: 30px;
+        }
+
+        .progress-bar-wrapper {
+            width: 150px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 59, 48, 0.15);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #ff3b30;
+            box-shadow: 0 0 10px #ff3b30;
+            transition: width 0.1s linear;
+        }
+
+        /* Redesigned Instruction Screen */
+        .instruction-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('no_exit_bg.png') no-repeat center center;
+            background-size: cover;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            transition: opacity 0.2s ease-out;
+            opacity: 0;
+        }
+
+        .instruction-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 3, 3, 0.7) 0%, rgba(0, 0, 0, 0.95) 100%);
+            backdrop-filter: blur(8px);
+            z-index: -1;
+        }
+
+        .instruction-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            max-width: 600px;
+            text-align: center;
+            gap: 25px;
+        }
+
+        .instruction-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions-scrollbox {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 59, 48, 0.25);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+            width: 100%;
+            margin: 15px 0;
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+            box-sizing: border-box;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .instructions-scrollbox::-webkit-scrollbar {
+            width: 6px;
+        }
+        .instructions-scrollbox::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .instructions-scrollbox::-webkit-scrollbar-thumb {
+            background: rgba(255, 59, 48, 0.4);
+            border-radius: 3px;
+        }
+        .instructions-scrollbox::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 59, 48, 0.7);
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .instructions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .btn-enter-loop {
+            background: #ff3b30;
+            border: none;
+            color: #ffffff;
+            padding: 16px 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.4);
+            text-transform: uppercase;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+            animation: pulse-btn 2s infinite;
+        }
+
+        .btn-enter-loop:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 35px #ff3b30;
+            background: #ff4d43;
+        }
+
+        .instruction-footer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.35);
+            text-transform: uppercase;
+        }
+
+        /* Headphones Screen Overlay */
+        .headphones-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9500;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.2s ease-out;
+            opacity: 0;
+        }
+
+        .headphones-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            text-align: center;
+        }
+
+        .headphone-icon-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 140px;
+            height: 140px;
+        }
+
+        .headphone-svg {
+            fill: #ff3b30;
+            filter: drop-shadow(0 0 15px rgba(255, 59, 48, 0.8));
+            animation: breathe 2s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        .audio-wave {
+            position: absolute;
+            border: 2px solid rgba(255, 59, 48, 0.4);
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulse-wave 3s infinite linear;
+            opacity: 0;
+        }
+
+        .wave-1 {
+            width: 80px;
+            height: 80px;
+            animation-delay: 0s;
+        }
+
+        .wave-2 {
+            width: 80px;
+            height: 80px;
+            animation-delay: 1.5s;
+        }
+
+        .headphones-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            max-width: 400px;
+            line-height: 1.5;
+            animation: slow-fade 4s infinite ease-in-out;
+        }
+
+        /* Gameplay Shell Styling */
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 50px 40px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px var(--primary-glow);
+            position: relative;
+            z-index: 10;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .glitch-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: var(--primary);
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000, -2px -2px 0px rgba(0,255,255,0.7);
+            animation: glitchText 3s infinite linear alternate-reverse;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+        }
+
+        .status-display {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 59, 48, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            width: 100%;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .btn-horror {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            font-size: 14px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 15px 30px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px var(--primary-glow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            margin-top: 30px;
+        }
+
+        .btn-horror:hover {
+            background: rgba(255, 59, 48, 0.15);
+            box-shadow: 0 0 30px var(--primary-glow);
+            transform: scale(1.02);
+        }
+
+        @keyframes glitchText {
+            0% { text-shadow: 2px 2px 0px #000, -2px -2px 0px rgba(0,255,255,0.7); }
+            50% { text-shadow: -2px 3px 0px #000, 2px -3px 0px rgba(255,0,255,0.7); }
+            100% { text-shadow: 3px -2px 0px #000, -3px 2px 0px rgba(0,255,0,0.7); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.95; }
+            50% { transform: scale(1.03); opacity: 1; text-shadow: 0 0 25px rgba(255, 59, 48, 1); }
+        }
+
+        @keyframes pulse-btn {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(255, 59, 48, 0.7); }
+        }
+
+        @keyframes pulse-wave {
+            0% { width: 80px; height: 80px; opacity: 0.8; filter: blur(0px); }
+            100% { width: 200px; height: 200px; opacity: 0; filter: blur(4px); }
+        }
+
+        @keyframes slow-fade {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-static"></div>
+    <div id="lightning-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25000; overflow: hidden;"></div>
+
+    <!-- 1. CREEPY LOADING SCREEN -->
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loading-container">
+            <h1 class="loading-brand">PROJECT SILENCE</h1>
+            <div class="loading-status-text" id="loading-text">SYSTEM OFFLINE</div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. INSTRUCTION SCREEN -->
+    <div id="instruction-screen" class="instruction-overlay">
+        <div id="lightning-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; overflow: hidden;"></div>
+        <div class="instruction-content" style="z-index: 10;">
+            <h2 class="instruction-title">👻 Game Instructions</h2>
+            <div class="instructions-scrollbox">
+                <ul class="instructions-list">
+                    <li><span>🚶</span><span>Walk to increase your survival time.</span></li>
+                    <li><span>⏱️</span><span>You must complete 20 minutes of walking time to win.</span></li>
+                    <li><span>🧍</span><span>If you stop moving, the timer pauses.</span></li>
+                    <li><span>👻</span><span>The ghost can still move and hunt you even when the timer is paused.</span></li>
+                    <li><span>🎤</span><span>The game uses your microphone to detect sounds.</span></li>
+                    <li><span>🤫</span><span>Stay quiet to avoid attracting the ghost.</span></li>
+                    <li><span>🗣️</span><span>Talking, laughing, shouting, or loud noises will alert the ghost.</span></li>
+                    <li><span>😱</span><span>Loud sounds increase the chance of jump scares.</span></li>
+                    <li><span>🔦</span><span>Explore the area carefully and stay aware of your surroundings.</span></li>
+                    <li><span>🚪</span><span>Watch for sudden paranormal events such as doors closing, lights flickering, and strange sounds.</span></li>
+                    <li><span>👣</span><span>The longer you walk, the more dangerous the game becomes.</span></li>
+                    <li><span>⚠️</span><span>Jump scares become more frequent as your walking time increases.</span></li>
+                    <li><span>🏃</span><span>Avoid the ghost whenever it appears.</span></li>
+                    <li><span>💀</span><span>Getting caught by the ghost results in Game Over.</span></li>
+                    <li><span>🏆</span><span>Survive and complete 20 minutes of walking time to escape and win.</span></li>
+                </ul>
+            </div>
+            <button class="btn-enter-loop" onclick="enterGameLoop()">PRESS ANY KEY TO GO</button>
+        </div>
+        <div class="instruction-footer">LEAVE THE DARKNESS</div>
+    </div>
+
+    <!-- 3. HEADPHONES ALERT SCREEN -->
+    <div id="headphones-screen" class="headphones-overlay" onclick="enterGameLoopFromHeadphones()">
+        <div class="headphones-content">
+            <div class="headphone-icon-wrapper">
+                <svg class="headphone-svg" viewBox="0 0 24 24" width="80" height="80">
+                    <path d="M12 2C6.48 2 2 6.48 2 12v7c0 1.1.9 2 2 2h3v-8H4v-1c0-4.41 3.59-8 8-8s8 3.59 8 8v1h-3v8h3c1.1 0 2-.9 2-2v-7c0-5.52-4.48-10-10-10z"/>
+                </svg>
+                <div class="audio-wave wave-1"></div>
+                <div class="audio-wave wave-2"></div>
+            </div>
+            <div class="headphones-text">WEAR HEADPHONES TO GET REAL EXPERIENCE</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.6); margin-top: 30px; animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: 700;">[ PRESS ANY KEY TO ENTER THE LOOP ]</div>
+        </div>
+    </div>
+
+    <!-- 4. GAMEPLAY CONTAINER SHELL (Awaiting user concept) -->
+    <div class="game-container" id="gameplay-screen">
+        <h1 class="glitch-title">THE SHIFTING LOOP</h1>
+        <div class="subtitle">PROJECT SILENCE EXPERIMENT</div>
+        
+        <div class="status-display">
+            <div style="color: #666;">[ SYSTEM ] Connection established. Sanity links synched.</div>
+            <div style="color: #ff3b30; font-weight: 700; margin-top: 10px;">[ DIRECTIVE ] Awaiting game concept instructions...</div>
+        </div>
+
+        <button class="btn-horror" onclick="window.location.href='arcade_hub.html'">ABANDON EXPERIMENT</button>
+    </div>
+
+    <!-- Fullscreen Restore Overlay -->
+    <div id="fullscreen-restore-overlay" onclick="restoreFullScreen()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 99999; justify-content: center; align-items: center; cursor: pointer; flex-direction: column; gap: 20px; text-align: center; padding: 20px;">
+        <div style="font-family: 'Creepster', cursive; font-size: 48px; color: #ff3b30; text-shadow: 0 0 20px rgba(255, 59, 48, 0.8); margin: 0 0 10px 0;">SYSTEM INTEGRITY COMPROMISED</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px;">Fullscreen mode exited. Link corridor connection unstable.</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.6); animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: 700;">[ CLICK ANYWHERE TO RESTABILIZE CONNECTION ]</div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="ambient-music" src="atlasaudio-horror-ambience-512255.mp3" loop></audio>
+    <audio id="door-open" src="jongmankim8596-opening-the-front-door-210347.mp3"></audio>
+    <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3"></audio>
+    <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
+
+    <script>
+        // Enforce minimum volume of 60%
+        try {
+            const originalVolumeProp = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+            if (originalVolumeProp && originalVolumeProp.set) {
+                Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+                    set: function(value) {
+                        originalVolumeProp.set.call(this, Math.max(0.6, value));
+                    },
+                    get: function() {
+                        return originalVolumeProp.get.call(this);
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Volume enforcement failed:", e);
+        }
+
+        let isInstructionScreenActive = false;
+        let isHeadphoneScreenActive = false;
+        let hasGameStarted = false;
+
+        const doorOpenAudio = document.getElementById('door-open');
+        const impactAudio = document.getElementById('impact-sound');
+        const breathingAudio = document.getElementById('breathing-sound');
+        const ambientAudio = document.getElementById('ambient-music');
+
+        // Loading screen sequence
+        function startLoadingSequence() {
+            fetch('/api/set-system-volume', { method: 'POST' }).catch(err => {
+                console.warn("Failed to set system volume:", err);
+            });
+            document.querySelectorAll('audio').forEach(media => {
+                media.volume = Math.max(0.6, media.volume);
+            });
+
+            const progressFill = document.getElementById('progress-bar-fill');
+            const loadingText = document.getElementById('loading-text');
+
+            let progress = 0;
+            loadingText.textContent = "ESTABLISHING CONFLICT LINK... 0%";
+
+            const interval = setInterval(() => {
+                let effectiveType = "4G";
+                let rtt = 60;
+                let downlink = 15;
+                let jitter = Math.random() < 0.15;
+
+                if (navigator.connection) {
+                    const conn = navigator.connection;
+                    effectiveType = (conn.effectiveType || "4g").toUpperCase();
+                    rtt = conn.rtt || 60;
+                    downlink = conn.downlink || 15;
+                }
+
+                if (jitter) {
+                    rtt = Math.floor(rtt * (2.5 + Math.random() * 3));
+                }
+
+                let progressIncrement = 0;
+                let statusMsg = "";
+
+                if (effectiveType.includes("2G") || downlink < 1.5) {
+                    progressIncrement = Math.random() * 0.6 + 0.2;
+                    statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] WEAK SIGNAL`;
+                } else if (effectiveType.includes("3G") || downlink < 5) {
+                    progressIncrement = Math.random() * 1.5 + 0.5;
+                    statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] STABILIZING`;
+                } else {
+                    if (jitter) {
+                        progressIncrement = Math.random() * 0.3 + 0.1;
+                        statusMsg = `[LINK: JITTER | RTT: ${rtt}ms] RECONNECTING`;
+                    } else {
+                        progressIncrement = Math.floor(Math.random() * 4) + 2;
+                        statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] ROUTE SYNCED`;
+                    }
+                }
+
+                progress += progressIncrement;
+
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+
+                    loadingText.textContent = `[LINK: SECURED] SYNC COMPLETE ... 100%`;
+                    progressFill.style.width = "100%";
+
+                    // Transition to instruction screen
+                    const loadingScreen = document.getElementById('loading-screen');
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                    }
+
+                    const instScreen = document.getElementById('instruction-screen');
+                    if (instScreen) {
+                        instScreen.style.display = 'flex';
+                        instScreen.offsetHeight; // trigger reflow
+                        instScreen.style.opacity = 1;
+                    }
+
+                    isInstructionScreenActive = true;
+                    hasGameStarted = true;
+                    startLightning();
+
+                    impactAudio.currentTime = 0;
+                    impactAudio.volume = 0.8;
+                    impactAudio.play().catch(e => {});
+
+                    ambientAudio.currentTime = 0;
+                    ambientAudio.volume = 0.5;
+                    ambientAudio.play().catch(e => {});
+                } else {
+                    progressFill.style.width = progress + "%";
+                    loadingText.textContent = `${statusMsg} ... ${Math.floor(progress)}%`;
+                }
+            }, 120);
+        }
+
+        // Start sequence on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            startLoadingSequence();
+        });
+
+        // Request fullscreen helper
+        function handleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            if (requestFS && !doc.fullscreenElement) {
+                requestFS.call(docEl).catch(e => console.warn("Fullscreen request blocked:", e));
+            }
+        }
+
+        // Auto fullscreen on first click/keypress
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, handleFullScreen, { once: true });
+        });
+
+        // Triggers transition from instruction screen to headphones screen
+        function enterGameLoop() {
+            if (!isInstructionScreenActive) return;
+            isInstructionScreenActive = false;
+
+            stopLightning(); // Stop lightning animation
+            handleFullScreen(); // Go fullscreen
+
+            const instScreen = document.getElementById('instruction-screen');
+            if (instScreen) {
+                instScreen.style.transition = 'opacity 1.8s ease-in-out'; // Slowly get in dark mode
+                instScreen.style.opacity = 0;
+                
+                setTimeout(() => {
+                    instScreen.style.display = 'none';
+                    showHeadphonesScreen();
+                }, 1800);
+            } else {
+                showHeadphonesScreen();
+            }
+        }
+
+        // Show the headphones screen
+        function showHeadphonesScreen() {
+            ambientAudio.pause();
+
+            const headphonesScreen = document.getElementById('headphones-screen');
+            if (headphonesScreen) {
+                headphonesScreen.style.display = 'flex';
+                headphonesScreen.offsetHeight;
+                headphonesScreen.style.opacity = 1;
+            }
+            isHeadphoneScreenActive = true;
+        }
+
+        // Triggers transition from headphones screen to actual gameplay
+        function enterGameLoopFromHeadphones() {
+            if (!isHeadphoneScreenActive) return;
+            isHeadphoneScreenActive = false;
+
+            handleFullScreen(); // Ensure we go fullscreen
+
+            const headphonesScreen = document.getElementById('headphones-screen');
+            if (headphonesScreen) {
+                headphonesScreen.style.display = 'none';
+            }
+            startGamePlay();
+        }
+
+        // Start actual gameplay and resume background music
+        function startGamePlay() {
+            ambientAudio.currentTime = 0;
+            ambientAudio.volume = 0.5;
+            ambientAudio.play().catch(e => {});
+
+            breathingAudio.currentTime = 0;
+            breathingAudio.volume = 0.8;
+            breathingAudio.play().catch(e => {});
+
+            doorOpenAudio.currentTime = 0;
+            doorOpenAudio.volume = 0.6;
+            doorOpenAudio.play().catch(e => {});
+
+            // Show the gameplay screen container
+            const gameplayScreen = document.getElementById('gameplay-screen');
+            if (gameplayScreen) {
+                gameplayScreen.style.display = 'flex';
+            }
+        }
+
+        // Press any key to proceed
+        window.addEventListener('keydown', (e) => {
+            if (isInstructionScreenActive) {
+                enterGameLoop();
+            } else if (isHeadphoneScreenActive) {
+                enterGameLoopFromHeadphones();
+            }
+        });
+
+        // Lightning visual generator
+        let lightningInterval = null;
+
+        function startLightning() {
+            if (lightningInterval) clearInterval(lightningInterval);
+            triggerLightningStrike();
+            lightningInterval = setInterval(triggerLightningStrike, 4000);
+        }
+
+        function stopLightning() {
+            if (lightningInterval) {
+                clearInterval(lightningInterval);
+                lightningInterval = null;
+            }
+            const overlay = document.getElementById('lightning-overlay');
+            if (overlay) overlay.innerHTML = '';
+        }
+
+        function triggerLightningStrike() {
+            const overlay = document.getElementById('lightning-overlay');
+            if (!overlay) return;
+
+            overlay.innerHTML = '';
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            const startX = Math.random() * (width - 100) + 50;
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", width);
+            svg.setAttribute("height", height);
+            svg.style.position = "absolute";
+            svg.style.top = "0";
+            svg.style.left = "0";
+            svg.style.pointerEvents = "none";
+            svg.style.zIndex = "10";
+
+            let points = [];
+            let currentY = 0;
+            let currentX = startX;
+            points.push({ x: currentX, y: currentY });
+
+            const steps = 12;
+            const stepHeight = height / steps;
+
+            for (let i = 1; i <= steps; i++) {
+                currentY += stepHeight;
+                let deviation = (Math.random() - 0.5) * 60;
+                currentX += deviation;
+                currentX = Math.max(10, Math.min(width - 10, currentX));
+                points.push({ x: currentX, y: currentY });
+            }
+
+            let pathD = `M ${points[0].x} ${points[0].y}`;
+            for (let i = 1; i < points.length; i++) {
+                pathD += ` L ${points[i].x} ${points[i].y}`;
+            }
+
+            const pathGlow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathGlow.setAttribute("d", pathD);
+            pathGlow.setAttribute("fill", "none");
+            pathGlow.setAttribute("stroke", "rgba(0, 255, 255, 0.85)");
+            pathGlow.setAttribute("stroke-width", "16");
+            pathGlow.setAttribute("stroke-linecap", "round");
+            pathGlow.setAttribute("stroke-linejoin", "round");
+            pathGlow.style.filter = "blur(10px)";
+
+            const pathCore = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathCore.setAttribute("d", pathD);
+            pathCore.setAttribute("fill", "none");
+            pathCore.setAttribute("stroke", "#ffffff");
+            pathCore.setAttribute("stroke-width", "6");
+            pathCore.setAttribute("stroke-linecap", "round");
+            pathCore.setAttribute("stroke-linejoin", "round");
+            pathCore.style.filter = "drop-shadow(0 0 15px rgba(0, 255, 255, 1))";
+
+            svg.appendChild(pathGlow);
+            svg.appendChild(pathCore);
+            overlay.appendChild(svg);
+
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.height = '100%';
+            flash.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+            flash.style.zIndex = '9';
+            flash.style.pointerEvents = 'none';
+            flash.style.transition = 'opacity 0.1s ease-out';
+            overlay.appendChild(flash);
+
+            svg.style.opacity = '1';
+            flash.style.opacity = '1';
+
+            setTimeout(() => {
+                svg.style.opacity = '0.2';
+                flash.style.opacity = '0';
+            }, 60);
+
+            setTimeout(() => {
+                svg.style.opacity = '1';
+                flash.style.opacity = '0.9';
+            }, 120);
+
+            setTimeout(() => {
+                svg.style.opacity = '0';
+                flash.style.opacity = '0';
+            }, 250);
+
+            setTimeout(() => {
+                svg.remove();
+                flash.remove();
+            }, 1000);
+        }
+
+        // Fullscreen Restorer
+        document.addEventListener('fullscreenchange', () => {
+            if (hasGameStarted && !document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                const restoreOverlay = document.getElementById('fullscreen-restore-overlay');
+                if (restoreOverlay) {
+                    restoreOverlay.style.display = 'flex';
+                }
+            }
+        });
+
+        function restoreFullScreen() {
+            handleFullScreen();
+            const restoreOverlay = document.getElementById('fullscreen-restore-overlay');
+            if (restoreOverlay) {
+                restoreOverlay.style.display = 'none';
+            }
+        }
+
+        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
+            window.addEventListener(evt, () => {
+                const restoreOverlay = document.getElementById('fullscreen-restore-overlay');
+                if (restoreOverlay && restoreOverlay.style.display === 'flex') {
+                    restoreFullScreen();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
