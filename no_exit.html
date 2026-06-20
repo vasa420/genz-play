@@ -632,46 +632,34 @@
                 particlesIntervals.push(smokeInterval);
             }
 
+            const totalDuration = 10000; // 10 seconds compulsory
+            const updateInterval = 100; // update every 100ms
+            const increments = 100 / (totalDuration / updateInterval); // percentage increment per tick
+
+            const statusMessages = [
+                "ESTABLISHING CONFLICT LINK",
+                "CONNECTING TO REMOTE GATEWAY",
+                "ROUTE DETECTED ... STABILIZING",
+                "SYNCHRONIZING SANITY CHANNELS",
+                "DECRYPTING MEMORY BUFFER",
+                "BYPASSING LOCAL SECURITY FIREWALL",
+                "INJECTING CORRIDOR LINK",
+                "SECURING QUANTUM ENVELOPE",
+                "LINK STABILIZED ... TRANSFERRING DATA",
+                "DOWNLOADING COGNITIVE INTERFACE"
+            ];
+
             const interval = setInterval(() => {
-                let effectiveType = "4G";
-                let rtt = 60;
-                let downlink = 15;
-                let jitter = Math.random() < 0.15;
+                progress += increments;
+                if (progress > 100) progress = 100;
 
-                if (navigator.connection) {
-                    const conn = navigator.connection;
-                    effectiveType = (conn.effectiveType || "4g").toUpperCase();
-                    rtt = conn.rtt || 60;
-                    downlink = conn.downlink || 15;
-                }
-
-                if (jitter) {
-                    rtt = Math.floor(rtt * (2.5 + Math.random() * 3));
-                }
-
-                let progressIncrement = 0;
-                let statusMsg = "";
-
-                if (effectiveType.includes("2G") || downlink < 1.5) {
-                    progressIncrement = Math.random() * 0.6 + 0.2;
-                    statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] WEAK SIGNAL`;
-                } else if (effectiveType.includes("3G") || downlink < 5) {
-                    progressIncrement = Math.random() * 1.5 + 0.5;
-                    statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] STABILIZING`;
-                } else {
-                    if (jitter) {
-                        progressIncrement = Math.random() * 0.3 + 0.1;
-                        statusMsg = `[LINK: JITTER | RTT: ${rtt}ms] RECONNECTING`;
-                    } else {
-                        progressIncrement = Math.floor(Math.random() * 4) + 2;
-                        statusMsg = `[LINK: ${effectiveType} | RTT: ${rtt}ms] ROUTE SYNCED`;
-                    }
-                }
-
-                progress += progressIncrement;
+                const msgIndex = Math.min(Math.floor(progress / 10), statusMessages.length - 1);
+                const currentMsg = statusMessages[msgIndex];
+                
+                let rtt = 50 + Math.floor(Math.random() * 40);
+                let networkMsg = `[LINK: SECURED | RTT: ${rtt}ms] ${currentMsg}`;
 
                 if (progress >= 100) {
-                    progress = 100;
                     clearInterval(interval);
 
                     // Clear smoke particle spawn loops
@@ -704,9 +692,9 @@
                     ambientAudio.volume = 0.5;
                     ambientAudio.play().catch(e => {});
                 } else {
-                    loadingText.textContent = `${statusMsg} ... ${Math.floor(progress)}%`;
+                    loadingText.textContent = `${networkMsg} ... ${Math.floor(progress)}%`;
                 }
-            }, 120);
+            }, updateInterval);
         }
 
         // Start sequence on page load
