@@ -522,13 +522,13 @@
         .blood-drip {
             position: absolute;
             top: 82%;
-            width: 4px;
+            width: 5px;
             height: 0;
-            background: linear-gradient(to bottom, #ff3b30, #800000);
-            border-radius: 0 0 4px 4px;
+            background: linear-gradient(to right, #4d0000 0%, #cc0000 30%, #ff6666 50%, #800000 80%, #300000 100%);
+            border-radius: 0 0 3px 3px;
             z-index: 1;
             transform-origin: top;
-            box-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
             animation: bloodDripAnim 5s infinite ease-in-out;
         }
 
@@ -537,29 +537,45 @@
             position: absolute;
             bottom: 0;
             left: 50%;
-            width: 6px;
-            height: 6px;
-            background: #800000;
-            border-radius: 50%;
+            width: 8px;
+            height: 10px;
+            background: radial-gradient(circle at 35% 35%, #ff4d4d 0%, #990000 65%, #4d0000 100%);
+            border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
             transform: translate(-50%, 0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 
+                inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+                inset -1px -1px 2px rgba(0, 0, 0, 0.8),
+                0 3px 6px rgba(0, 0, 0, 0.6);
             animation: dropletFall 5s infinite cubic-bezier(0.6, 0.04, 0.98, 0.335);
             animation-delay: inherit;
+            transform-origin: top center;
         }
 
         @keyframes bloodDripAnim {
             0% {
                 height: 0;
+                opacity: 0;
             }
-            20% {
-                height: var(--max-len);
+            5% {
+                opacity: 1;
             }
-            75% {
+            30% {
                 height: var(--max-len);
                 opacity: 1;
             }
-            85% {
+            45% {
                 height: var(--max-len);
+                opacity: 1;
+            }
+            50% {
+                height: calc(var(--max-len) - 4px);
+                opacity: 1;
+            }
+            80% {
+                height: calc(var(--max-len) - 4px);
+                opacity: 1;
+            }
+            90% {
                 opacity: 0;
             }
             100% {
@@ -570,27 +586,39 @@
 
         @keyframes dropletFall {
             0% {
-                transform: translate(-50%, 0) scale(1);
+                transform: translate(-50%, 0) scale(0);
                 opacity: 0;
             }
-            15% {
-                transform: translate(-50%, 0) scale(1.2);
+            5% {
+                transform: translate(-50%, 0) scale(0.5);
                 opacity: 1;
             }
-            20% {
+            30% {
                 transform: translate(-50%, 0) scale(1);
+                opacity: 1;
+            }
+            40% {
+                transform: translate(-50%, 2px) scale(1.1, 1.4);
                 opacity: 1;
             }
             45% {
-                transform: translate(-50%, 40px) scale(0.9);
+                transform: translate(-50%, 6px) scale(0.9, 1.8);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, 40px) scale(0.7, 2.0);
+                opacity: 1;
+            }
+            65% {
+                transform: translate(-50%, 150px) scale(0.6, 2.2);
                 opacity: 0.9;
             }
-            70% {
-                transform: translate(-50%, 180px) scale(0.6);
+            75% {
+                transform: translate(-50%, 280px) scale(0.5, 1.8);
                 opacity: 0;
             }
             100% {
-                transform: translate(-50%, 180px) scale(0);
+                transform: translate(-50%, 280px) scale(0);
                 opacity: 0;
             }
         }
