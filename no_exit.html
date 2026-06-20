@@ -63,21 +63,21 @@
             background: rgba(10, 10, 10, 0.9);
             border: 1px solid rgba(255, 59, 48, 0.3);
             border-radius: 16px;
-            padding: 30px;
+            padding: 16px 24px;
             text-align: center;
             backdrop-filter: blur(20px);
             box-shadow: 0 15px 40px rgba(0,0,0,0.9), 0 0 25px rgba(255, 59, 48, 0.2);
             max-width: 320px;
-            width: 100%;
+            width: 90%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
         }
 
         .loading-brand {
             font-family: 'Creepster', cursive;
-            font-size: 36px;
+            font-size: 32px;
             letter-spacing: 3px;
             color: #ff3b30;
             text-shadow: 0 0 15px rgba(255, 59, 48, 0.8);
@@ -92,26 +92,107 @@
             letter-spacing: 1px;
             line-height: 1.4;
             text-transform: uppercase;
-            min-height: 30px;
+            min-height: 24px;
         }
 
         .progress-bar-wrapper {
-            width: 150px;
-            height: 2px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 1px;
             overflow: hidden;
-            border: 1px solid rgba(255, 59, 48, 0.15);
+            border: none;
             display: block;
-            margin: 0 auto;
+            z-index: 20005;
         }
 
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            background: #ff3b30;
-            box-shadow: 0 0 10px #ff3b30;
+            background: linear-gradient(to right, #ff3b30, #00bfff);
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.8), 0 0 20px rgba(0, 191, 255, 0.8);
             transition: width 0.1s linear;
+        }
+
+        /* Fire & Water Side Animations */
+        #fire-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 150px;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            background: linear-gradient(to right, rgba(255, 59, 48, 0.08), transparent);
+            z-index: 2;
+        }
+
+        #water-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            background: linear-gradient(to left, rgba(0, 191, 255, 0.08), transparent);
+            z-index: 2;
+        }
+
+        .fire-particle {
+            position: absolute;
+            bottom: -30px;
+            border-radius: 50%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            animation: fireRiseAnim var(--duration) ease-out forwards;
+            filter: blur(var(--blur));
+            background: radial-gradient(circle, var(--color1) 20%, var(--color2) 65%, transparent 100%);
+            box-shadow: 0 0 var(--glow) var(--color1);
+        }
+
+        @keyframes fireRiseAnim {
+            0% {
+                transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 0.9;
+                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(0.85) rotate(180deg);
+            }
+            100% {
+                transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.1) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .water-bubble {
+            position: absolute;
+            bottom: -30px;
+            border-radius: 50%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(0, 191, 255, 0.15) 60%, rgba(0, 191, 255, 0.35) 100%);
+            box-shadow: 0 0 var(--glow) rgba(0, 191, 255, 0.4);
+            animation: waterRiseAnim var(--duration) linear forwards;
+        }
+
+        @keyframes waterRiseAnim {
+            0% {
+                transform: translate3d(0, 0, 0) scale(0.5);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(1.05);
+                opacity: 0.85;
+            }
+            100% {
+                transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.4);
+                opacity: 0;
+            }
         }
 
         /* Redesigned Instruction Screen */
@@ -436,12 +517,19 @@
 
     <!-- 1. CREEPY LOADING SCREEN -->
     <div id="loading-screen" class="loading-overlay">
+        <!-- Fire container (Left) -->
+        <div id="fire-container"></div>
+        
+        <!-- Water container (Right) -->
+        <div id="water-container"></div>
+
         <div class="loading-container">
             <h1 class="loading-brand">PROJECT SILENCE</h1>
             <div class="loading-status-text" id="loading-text">SYSTEM OFFLINE</div>
-            <div class="progress-bar-wrapper">
-                <div class="progress-bar-fill" id="progress-bar-fill"></div>
-            </div>
+        </div>
+
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
         </div>
     </div>
 
@@ -557,6 +645,97 @@
             let progress = 0;
             loadingText.textContent = "ESTABLISHING CONFLICT LINK... 0%";
 
+            // Fire & Water particle animations
+            const fireContainer = document.getElementById('fire-container');
+            const waterContainer = document.getElementById('water-container');
+            let particlesIntervals = [];
+
+            // Spawn fire particles (Left screen)
+            if (fireContainer) {
+                const fireInterval = setInterval(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'fire-particle';
+                    
+                    const size = Math.random() * 20 + 10;
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+                    
+                    const left = Math.random() * 110;
+                    particle.style.left = left + 'px';
+                    
+                    const duration = Math.random() * 1.5 + 1.2; // 1.2s to 2.7s
+                    const blurVal = Math.random() * 6 + 3;
+                    const glowVal = Math.random() * 8 + 4;
+                    
+                    const midX = (Math.random() - 0.3) * 40;
+                    const midY = -(window.innerHeight * 0.4 + Math.random() * 80);
+                    const endX = midX + (Math.random() - 0.4) * 60;
+                    const endY = -(window.innerHeight + 50);
+                    
+                    const colors = [
+                        ['rgba(255, 51, 0, 0.85)', 'rgba(255, 102, 0, 0.6)'],
+                        ['rgba(255, 69, 0, 0.9)', 'rgba(255, 140, 0, 0.65)'],
+                        ['rgba(255, 140, 0, 0.85)', 'rgba(255, 215, 0, 0.7)'],
+                        ['rgba(230, 92, 0, 0.9)', 'rgba(255, 153, 0, 0.6)']
+                    ];
+                    const selectedColors = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    particle.style.setProperty('--duration', `${duration}s`);
+                    particle.style.setProperty('--blur', `${blurVal}px`);
+                    particle.style.setProperty('--glow', `${glowVal}px`);
+                    particle.style.setProperty('--mid-x', `${midX}px`);
+                    particle.style.setProperty('--mid-y', `${midY}px`);
+                    particle.style.setProperty('--end-x', `${endX}px`);
+                    particle.style.setProperty('--end-y', `${endY}px`);
+                    particle.style.setProperty('--color1', selectedColors[0]);
+                    particle.style.setProperty('--color2', selectedColors[1]);
+                    
+                    fireContainer.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                    }, duration * 1000 + 100);
+                }, 45);
+                particlesIntervals.push(fireInterval);
+            }
+ 
+            // Spawn water bubbles (Right screen)
+            if (waterContainer) {
+                const waterInterval = setInterval(() => {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'water-bubble';
+                    
+                    const size = Math.random() * 12 + 6;
+                    bubble.style.width = size + 'px';
+                    bubble.style.height = size + 'px';
+                    
+                    const right = Math.random() * 110;
+                    bubble.style.right = right + 'px';
+                    
+                    const duration = Math.random() * 2.5 + 2.0; // 2.0s to 4.5s
+                    const glowVal = Math.random() * 6 + 3;
+                    
+                    const midX = (Math.random() - 0.5) * 35;
+                    const midY = -(window.innerHeight * 0.45 + Math.random() * 80);
+                    const endX = (Math.random() - 0.5) * 50;
+                    const endY = -(window.innerHeight + 50);
+                    
+                    bubble.style.setProperty('--duration', `${duration}s`);
+                    bubble.style.setProperty('--glow', `${glowVal}px`);
+                    bubble.style.setProperty('--mid-x', `${midX}px`);
+                    bubble.style.setProperty('--mid-y', `${midY}px`);
+                    bubble.style.setProperty('--end-x', `${endX}px`);
+                    bubble.style.setProperty('--end-y', `${endY}px`);
+                    
+                    waterContainer.appendChild(bubble);
+ 
+                    setTimeout(() => {
+                        bubble.remove();
+                    }, duration * 1000 + 100);
+                }, 85);
+                particlesIntervals.push(waterInterval);
+            }
+
             const interval = setInterval(() => {
                 let effectiveType = "4G";
                 let rtt = 60;
@@ -598,6 +777,9 @@
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(interval);
+
+                    // Clear fire and water spawn loops
+                    particlesIntervals.forEach(id => clearInterval(id));
 
                     loadingText.textContent = `[LINK: SECURED] SYNC COMPLETE ... 100%`;
                     progressFill.style.width = "100%";
