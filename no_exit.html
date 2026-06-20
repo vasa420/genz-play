@@ -739,6 +739,7 @@
 <body>
     <div class="screen-static"></div>
     <div class="red-flash" id="red-flash"></div>
+    <div id="lightning-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25000; overflow: hidden;"></div>
 
     <!-- 1. CREEPY LOADING SCREEN -->
     <div id="loading-screen" class="loading-overlay">
@@ -759,7 +760,6 @@
 
     <!-- 3. INSTRUCTION SCREEN (Redesigned matching mockup) -->
     <div id="instruction-screen" class="instruction-overlay">
-        <div id="lightning-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; overflow: hidden;"></div>
         <!-- Content details in middle -->
         <div class="instruction-content" style="max-width: 800px; width: 95%; gap: 15px; margin-top: 20px; z-index: 10;">
             
@@ -982,7 +982,6 @@
                     instScreen.style.display = 'flex';
                     instScreen.style.opacity = 1;
                     isInstructionScreenActive = true;
-                    startLightning();
 
                     // Heavy impact sound to make it feel scary when instructions load
                     impactAudio.currentTime = 0;
@@ -1003,6 +1002,7 @@
         // Start loading automatically on page load
         window.addEventListener('DOMContentLoaded', () => {
             startLoadingSequence();
+            startLightning();
         });
 
         // Request fullscreen on first interaction
@@ -1022,8 +1022,6 @@
         function enterGameLoop() {
             if (!isInstructionScreenActive) return;
             isInstructionScreenActive = false;
-
-            stopLightning(); // Stop lightning animation
 
             handleFullScreen(); // Go fullscreen
 
@@ -1150,20 +1148,20 @@
             const pathGlow = document.createElementNS("http://www.w3.org/2000/svg", "path");
             pathGlow.setAttribute("d", pathD);
             pathGlow.setAttribute("fill", "none");
-            pathGlow.setAttribute("stroke", "rgba(0, 255, 255, 0.6)");
-            pathGlow.setAttribute("stroke-width", "8");
+            pathGlow.setAttribute("stroke", "rgba(0, 255, 255, 0.85)");
+            pathGlow.setAttribute("stroke-width", "16");
             pathGlow.setAttribute("stroke-linecap", "round");
             pathGlow.setAttribute("stroke-linejoin", "round");
-            pathGlow.style.filter = "blur(6px)";
+            pathGlow.style.filter = "blur(10px)";
 
             const pathCore = document.createElementNS("http://www.w3.org/2000/svg", "path");
             pathCore.setAttribute("d", pathD);
             pathCore.setAttribute("fill", "none");
             pathCore.setAttribute("stroke", "#ffffff");
-            pathCore.setAttribute("stroke-width", "3");
+            pathCore.setAttribute("stroke-width", "6");
             pathCore.setAttribute("stroke-linecap", "round");
             pathCore.setAttribute("stroke-linejoin", "round");
-            pathCore.style.filter = "drop-shadow(0 0 8px rgba(0, 255, 255, 0.9))";
+            pathCore.style.filter = "drop-shadow(0 0 15px rgba(0, 255, 255, 1))";
 
             svg.appendChild(pathGlow);
             svg.appendChild(pathCore);
@@ -1175,7 +1173,7 @@
             flash.style.left = '0';
             flash.style.width = '100%';
             flash.style.height = '100%';
-            flash.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            flash.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
             flash.style.zIndex = '9';
             flash.style.pointerEvents = 'none';
             flash.style.transition = 'opacity 0.1s ease-out';
@@ -1186,13 +1184,13 @@
             flash.style.opacity = '1';
 
             setTimeout(() => {
-                svg.style.opacity = '0.1';
+                svg.style.opacity = '0.2';
                 flash.style.opacity = '0';
             }, 60);
 
             setTimeout(() => {
                 svg.style.opacity = '1';
-                flash.style.opacity = '0.8';
+                flash.style.opacity = '0.9';
             }, 120);
 
             setTimeout(() => {
