@@ -111,87 +111,48 @@
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(to right, #e0e0e0, #00bfff);
-            box-shadow: 0 0 10px rgba(224, 224, 224, 0.8), 0 0 20px rgba(0, 191, 255, 0.8);
+            background: linear-gradient(to right, #ff3b30, #ff6b6b);
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.8), 0 0 20px rgba(255, 107, 107, 0.6);
             transition: width 0.1s linear;
         }
 
-        /* Smoke & Water Side Animations */
+        /* Smoke Screen Animation (Fully Covers) */
         #smoke-container {
             position: absolute;
             top: 0;
             left: 0;
-            width: 180px;
+            width: 100%;
             height: 100%;
             overflow: hidden;
             pointer-events: none;
-            background: linear-gradient(to right, rgba(255, 255, 255, 0.03), transparent);
-            z-index: 2;
-        }
-
-        #water-container {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 150px;
-            height: 100%;
-            overflow: hidden;
-            pointer-events: none;
-            background: linear-gradient(to left, rgba(0, 191, 255, 0.08), transparent);
+            background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
             z-index: 2;
         }
 
         .smoke-particle {
             position: absolute;
-            bottom: -50px;
+            bottom: -80px;
             border-radius: 50%;
             pointer-events: none;
             mix-blend-mode: screen;
             animation: smokeRiseAnim var(--duration) ease-out forwards;
             filter: blur(var(--blur));
-            background: radial-gradient(circle, var(--color1) 10%, var(--color2) 50%, transparent 100%);
+            background: radial-gradient(circle, var(--color1) 8%, var(--color2) 55%, transparent 100%);
         }
 
         @keyframes smokeRiseAnim {
             0% {
-                transform: translate3d(0, 0, 0) scale(0.6) rotate(0deg);
+                transform: translate3d(0, 0, 0) scale(0.5) rotate(0deg);
                 opacity: 0;
             }
-            15% {
+            12% {
                 opacity: var(--max-opacity);
             }
             50% {
-                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(1.6) rotate(90deg);
+                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(2.2) rotate(90deg);
             }
             100% {
-                transform: translate3d(var(--end-x), var(--end-y), 0) scale(3.2) rotate(180deg);
-                opacity: 0;
-            }
-        }
-
-        .water-bubble {
-            position: absolute;
-            bottom: -30px;
-            border-radius: 50%;
-            pointer-events: none;
-            mix-blend-mode: screen;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(0, 191, 255, 0.15) 60%, rgba(0, 191, 255, 0.35) 100%);
-            box-shadow: 0 0 var(--glow) rgba(0, 191, 255, 0.4);
-            animation: waterRiseAnim var(--duration) linear forwards;
-        }
-
-        @keyframes waterRiseAnim {
-            0% {
-                transform: translate3d(0, 0, 0) scale(0.5);
-                opacity: 0.7;
-            }
-            50% {
-                transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(1.05);
-                opacity: 0.85;
-            }
-            100% {
-                transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.4);
+                transform: translate3d(var(--end-x), var(--end-y), 0) scale(5.0) rotate(180deg);
                 opacity: 0;
             }
         }
@@ -518,11 +479,8 @@
 
     <!-- 1. CREEPY LOADING SCREEN -->
     <div id="loading-screen" class="loading-overlay">
-        <!-- Smoke container (Left) -->
+        <!-- Smoke container (Fully Covers) -->
         <div id="smoke-container"></div>
-        
-        <!-- Water container (Right) -->
-        <div id="water-container"></div>
 
         <div class="loading-container">
             <h1 class="loading-brand">PROJECT SILENCE</h1>
@@ -646,40 +604,39 @@
             let progress = 0;
             loadingText.textContent = "ESTABLISHING CONFLICT LINK... 0%";
 
-            // Smoke & Water particle animations
+            // Smoke particle animations
             const smokeContainer = document.getElementById('smoke-container');
-            const waterContainer = document.getElementById('water-container');
             let particlesIntervals = [];
 
-            // Spawn smoke particles (Left screen)
+            // Spawn smoke particles (Fully covers bottom of screen)
             if (smokeContainer) {
                 const smokeInterval = setInterval(() => {
                     const particle = document.createElement('div');
                     particle.className = 'smoke-particle';
                     
-                    const size = Math.random() * 30 + 20; // 20px to 50px
+                    const size = Math.random() * 50 + 30; // Large clouds: 30px to 80px
                     particle.style.width = size + 'px';
                     particle.style.height = size + 'px';
                     
-                    const left = Math.random() * 120;
-                    particle.style.left = left + 'px';
+                    // Spawn across full screen width
+                    particle.style.left = Math.random() * 100 + "%";
                     
-                    const duration = Math.random() * 3.0 + 2.5; // 2.5s to 5.5s
-                    const blurVal = Math.random() * 15 + 10; // 10px to 25px blur
+                    const duration = Math.random() * 3.5 + 3.0; // Slow billows: 3.0s to 6.5s
+                    const blurVal = Math.random() * 20 + 15; // Extra blur: 15px to 35px for realism
                     
-                    const midX = (Math.random() - 0.2) * 50;
-                    const midY = -(window.innerHeight * 0.4 + Math.random() * 100);
-                    const endX = midX + (Math.random() - 0.3) * 80;
-                    const endY = -(window.innerHeight + 80);
+                    const midX = (Math.random() - 0.5) * 150;
+                    const midY = -(window.innerHeight * 0.45 + Math.random() * 120);
+                    const endX = midX + (Math.random() - 0.5) * 200;
+                    const endY = -(window.innerHeight + 100);
                     
                     const colors = [
-                        ['rgba(220, 220, 220, 0.25)', 'rgba(150, 150, 150, 0.08)'],
-                        ['rgba(240, 240, 240, 0.20)', 'rgba(120, 120, 120, 0.05)'],
-                        ['rgba(200, 200, 200, 0.22)', 'rgba(100, 100, 100, 0.06)'],
-                        ['rgba(255, 255, 255, 0.18)', 'rgba(130, 130, 130, 0.04)']
+                        ['rgba(200, 200, 200, 0.18)', 'rgba(120, 120, 120, 0.05)'],
+                        ['rgba(180, 180, 180, 0.15)', 'rgba(90, 90, 90, 0.04)'],
+                        ['rgba(220, 220, 220, 0.16)', 'rgba(100, 100, 100, 0.05)'],
+                        ['rgba(255, 255, 255, 0.12)', 'rgba(140, 140, 140, 0.03)']
                     ];
                     const selectedColors = colors[Math.floor(Math.random() * colors.length)];
-                    const maxOpacity = Math.random() * 0.25 + 0.15;
+                    const maxOpacity = Math.random() * 0.2 + 0.15; // Soft wisps
                     
                     particle.style.setProperty('--duration', `${duration}s`);
                     particle.style.setProperty('--blur', `${blurVal}px`);
@@ -696,45 +653,8 @@
                     setTimeout(() => {
                         particle.remove();
                     }, duration * 1000 + 100);
-                }, 60);
+                }, 35); // Fast spawn rate for complete coverage
                 particlesIntervals.push(smokeInterval);
-            }
- 
-            // Spawn water bubbles (Right screen)
-            if (waterContainer) {
-                const waterInterval = setInterval(() => {
-                    const bubble = document.createElement('div');
-                    bubble.className = 'water-bubble';
-                    
-                    const size = Math.random() * 12 + 6;
-                    bubble.style.width = size + 'px';
-                    bubble.style.height = size + 'px';
-                    
-                    const right = Math.random() * 110;
-                    bubble.style.right = right + 'px';
-                    
-                    const duration = Math.random() * 2.5 + 2.0; // 2.0s to 4.5s
-                    const glowVal = Math.random() * 6 + 3;
-                    
-                    const midX = (Math.random() - 0.5) * 35;
-                    const midY = -(window.innerHeight * 0.45 + Math.random() * 80);
-                    const endX = (Math.random() - 0.5) * 50;
-                    const endY = -(window.innerHeight + 50);
-                    
-                    bubble.style.setProperty('--duration', `${duration}s`);
-                    bubble.style.setProperty('--glow', `${glowVal}px`);
-                    bubble.style.setProperty('--mid-x', `${midX}px`);
-                    bubble.style.setProperty('--mid-y', `${midY}px`);
-                    bubble.style.setProperty('--end-x', `${endX}px`);
-                    bubble.style.setProperty('--end-y', `${endY}px`);
-                    
-                    waterContainer.appendChild(bubble);
- 
-                    setTimeout(() => {
-                        bubble.remove();
-                    }, duration * 1000 + 100);
-                }, 85);
-                particlesIntervals.push(waterInterval);
             }
 
             const interval = setInterval(() => {
@@ -779,7 +699,7 @@
                     progress = 100;
                     clearInterval(interval);
 
-                    // Clear fire and water spawn loops
+                    // Clear smoke particle spawn loops
                     particlesIntervals.forEach(id => clearInterval(id));
 
                     loadingText.textContent = `[LINK: SECURED] SYNC COMPLETE ... 100%`;
