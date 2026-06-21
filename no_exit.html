@@ -1972,6 +1972,9 @@
         let ghostSpeed = 0.015;
         let ghostAnimTime = 0;
         let ghostStepsTimer = 0;
+        let isKillingActive = false;
+        let killSequenceTimer = 0;
+        let slashSoundPlayed = false;
         let stepsTimer = 0;
         let headBobTime = 0;
         
@@ -2076,6 +2079,23 @@
         function initHorror3D() {
             const canvas = document.getElementById('game-canvas');
             if (!canvas) return;
+
+            // Dynamically create the full-screen blood splatter overlay for the killing sequence
+            if (!document.getElementById('kill-blood-splatter')) {
+                const bloodFlash = document.createElement('div');
+                bloodFlash.id = 'kill-blood-splatter';
+                bloodFlash.style.position = 'fixed';
+                bloodFlash.style.top = '0';
+                bloodFlash.style.left = '0';
+                bloodFlash.style.width = '100%';
+                bloodFlash.style.height = '100%';
+                bloodFlash.style.background = 'radial-gradient(circle, rgba(150,0,0,0.85) 0%, rgba(50,0,0,0.98) 100%)';
+                bloodFlash.style.display = 'none';
+                bloodFlash.style.pointerEvents = 'none';
+                bloodFlash.style.zIndex = '15000';
+                bloodFlash.style.transition = 'opacity 0.15s ease-out';
+                document.body.appendChild(bloodFlash);
+            }
 
             activeFloor = 0;
             isTransitioningFloor = false;
@@ -3064,7 +3084,19 @@
                 if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.x = Math.sin(ghostAnimTime) * 0.5;
                 if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x = -Math.sin(ghostAnimTime) * 0.5;
                 if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x = -Math.sin(ghostAnimTime) * 0.4;
-                if (ghostMesh.rightArm) ghostMesh.rightArm.rotation.x = Math.sin(ghostAnimTime) * 0.4;
+                if (ghostMesh.rightArm) {
+                    // If stalking, raise the knife higher in the air and shake it menacingly
+                    if (ghostStalking) {
+                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.45 + Math.sin(ghostAnimTime * 2) * 0.2;
+                        ghostMesh.rightArm.rotation.z = -0.2;
+                    } else {
+                        ghostMesh.rightArm.rotation.x = Math.sin(ghostAnimTime) * 0.4;
+                        ghostMesh.rightArm.rotation.z = 0;
+                    }
+                }
+
+                // Add realistic body bobbing up and down as she walks
+                ghostMesh.position.y = 0.05 + Math.abs(Math.sin(ghostAnimTime * 2)) * 0.07;
 
                 // Accumulate steps timer based on actual movement speed to trigger thuds
                 ghostStepsTimer += Math.sqrt(stepX * stepX + stepZ * stepZ);
@@ -3076,7 +3108,11 @@
                 if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.x *= 0.8;
                 if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x *= 0.8;
                 if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x *= 0.8;
-                if (ghostMesh.rightArm) ghostMesh.rightArm.rotation.x *= 0.8;
+                if (ghostMesh.rightArm) {
+                    ghostMesh.rightArm.rotation.x *= 0.8;
+                    ghostMesh.rightArm.rotation.z *= 0.8;
+                }
+                ghostMesh.position.y = 0.05; // rest on floor
                 ghostStepsTimer = 0;
             }
 
@@ -3633,11 +3669,15 @@
 
             requestAnimationFrame(animateHorrorGame);
 
-            handleMovement();
-            updateFlashlight();
-            updateMicVolumeLevel();
-            updateGhostAI();
-            updateDustParticles();
+            if (isKillingActive) {
+                updateKillingSequence();
+            } else {
+                handleMovement();
+                updateFlashlight();
+                updateMicVolumeLevel();
+                updateGhostAI();
+                updateDustParticles();
+            }
 
             if (isMapOpen) {
                 mapUpdateFrameCount++;
@@ -3652,6 +3692,128 @@
             }
         }
 
+        function updateKillingSequence() {
+            killSequenceTimer += 0.016; // approx delta time per frame
+
+            // 1. Force camera to look directly at the ghost's face
+            if (ghostMesh) {
+                const targetLook = new THREE.Vector3().copy(ghostMesh.position);
+                targetLook.y += 1.6; // face level
+                camera.lookAt(targetLook);
+                
+                // 2. Lunge ghost rapidly towards the camera (the player is at the camera's X and Z coords)
+                const targetX = camera.position.x;
+                const targetZ = camera.position.z;
+                
+                ghostMesh.position.x += (targetX - ghostMesh.position.x) * 0.12;
+                ghostMesh.position.z += (targetZ - ghostMesh.position.z) * 0.12;
+                
+                // Make her rise/loom over the player
+                ghostMesh.position.y += (0.1 - ghostMesh.position.y) * 0.12;
+
+                // Rotate ghost to face camera directly
+                ghostMesh.rotation.y = Math.atan2(targetX - ghostMesh.position.x, targetZ - ghostMesh.position.z) + Math.PI;
+
+                // 3. Animate right arm slash
+                if (killSequenceTimer < 0.25) {
+                    // Wind up the knife: raise arm high
+                    const t = killSequenceTimer / 0.25;
+                    if (ghostMesh.rightArm) {
+                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 * t;
+                        ghostMesh.rightArm.rotation.z = -0.3 * t;
+                    }
+                    if (ghostMesh.leftArm) {
+                        ghostMesh.leftArm.rotation.x = -Math.PI * 0.4 * t;
+                    }
+                } else {
+                    // Slash down violently!
+                    const t = Math.min(1.0, (killSequenceTimer - 0.25) / 0.5);
+                    if (ghostMesh.rightArm) {
+                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 + (Math.PI * 1.1 * t);
+                        ghostMesh.rightArm.rotation.z = -0.3 + (0.5 * t);
+                    }
+                    
+                    // Trigger slash sound & screen blood effect once
+                    if (!slashSoundPlayed) {
+                        slashSoundPlayed = true;
+                        playSlashSound();
+                        const flash = document.getElementById('kill-blood-splatter');
+                        if (flash) {
+                            flash.style.display = 'block';
+                            flash.style.opacity = '1.0';
+                        }
+                    }
+
+                    // Intense camera shake during slash
+                    camera.position.x += (Math.random() - 0.5) * 0.05;
+                    camera.position.y += (Math.random() - 0.5) * 0.05;
+                    camera.position.z += (Math.random() - 0.5) * 0.05;
+                }
+            }
+
+            // 4. End sequence: trigger jumpscare overlay and audio after 0.9s
+            if (killSequenceTimer >= 0.9) {
+                isKillingActive = false;
+                
+                // Hide blood flash overlay
+                const flash = document.getElementById('kill-blood-splatter');
+                if (flash) {
+                    flash.style.display = 'none';
+                    flash.style.opacity = '0';
+                }
+                
+                triggerFinalJumpscare();
+            }
+        }
+
+        function playSlashSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                // Noise buffer for the slash crunch
+                const bufferSize = ctx.sampleRate * 0.3;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.25);
+                
+                gain.gain.setValueAtTime(0.5 * (masterVolume / 100), ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                noise.start();
+                noise.stop(ctx.currentTime + 0.3);
+                
+                // Low sub thump
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(30, ctx.currentTime + 0.2);
+                
+                const oscGain = ctx.createGain();
+                oscGain.gain.setValueAtTime(0.6 * (masterVolume / 100), ctx.currentTime);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                
+                osc.connect(oscGain);
+                oscGain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.25);
+            } catch (e) {}
+        }
+
         function onWindowResize() {
             if (!renderer || !camera) return;
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -3660,9 +3822,22 @@
         }
 
         function triggerJumpscare() {
-            isGameRunning = false;
+            if (isKillingActive) return; // avoid duplicate calls
+            
+            // Start the 3D cinematic killing sequence
+            isKillingActive = true;
+            killSequenceTimer = 0;
+            slashSoundPlayed = false;
+            
             document.exitPointerLock();
+            
+            // Note: We keep isGameRunning = true during the killing sequence so that 
+            // requestAnimationFrame(animateHorrorGame) keeps looping to run updateKillingSequence().
+        }
 
+        function triggerFinalJumpscare() {
+            isGameRunning = false;
+            
             // Display jumpscare overlay inside the gameplay screen
             const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
             jumpscareOverlay.style.display = 'flex';
@@ -3709,6 +3884,18 @@
             ghostPos.z = 7.5;
             ghostStalking = false;
             ghostAlertTimer = 0;
+
+            // Reset killing sequence variables
+            isKillingActive = false;
+            killSequenceTimer = 0;
+            slashSoundPlayed = false;
+
+            // Hide blood flash overlay if active
+            const flash = document.getElementById('kill-blood-splatter');
+            if (flash) {
+                flash.style.display = 'none';
+                flash.style.opacity = '0';
+            }
 
             updateCameraPosition();
             updateGhostMeshPosition();
