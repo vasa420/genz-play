@@ -271,6 +271,15 @@
             text-transform: uppercase;
         }
 
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-warning {
+            animation: shake 0.4s ease-in-out;
+        }
+
         /* Headphones Screen Overlay */
         .headphones-overlay {
             position: fixed;
@@ -1509,6 +1518,22 @@
         </div>
     </div>
 
+    <!-- HEADPHONES DISCONNECTED / WARNING OVERLAY -->
+    <div id="headphones-warning-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 99999; justify-content: center; align-items: center; cursor: pointer; flex-direction: column; gap: 20px; text-align: center; padding: 20px;">
+        <div style="font-family: 'Creepster', cursive; font-size: 48px; color: #ff3b30; text-shadow: 0 0 20px rgba(255, 59, 48, 0.8); margin: 0 0 10px 0;">AUDIO LINK DISRUPTED</div>
+        <div class="headphone-icon-wrapper" style="width: 100px; height: 100px; display: flex; justify-content: center; align-items: center;">
+            <svg class="headphone-svg" viewBox="0 0 24 24" width="70" height="70" style="fill: #ff3b30; filter: drop-shadow(0 0 15px rgba(255,59,48,0.8)); animation: breathe 1.5s infinite ease-in-out;">
+                <path d="M12 2C6.48 2 2 6.48 2 12v7c0 1.1.9 2 2 2h3v-8H4v-1c0-4.41 3.59-8 8-8s8 3.59 8 8v1h-3v8h3c1.1 0 2-.9 2-2v-7c0-5.52-4.48-10-10-10z"/>
+            </svg>
+        </div>
+        <div id="headphones-warning-message" style="font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.6); animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">
+            INSERT YOUR HEADPHONE TO CONTINUE
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #888; letter-spacing: 1px; max-width: 450px; line-height: 1.6; margin-top: 10px;">
+            The shifting loop demands immersive audio connection. Replug your headphones/headset to restore system integrity.
+        </div>
+    </div>
+
     <!-- Fullscreen Restore Overlay -->
     <div id="fullscreen-restore-overlay" onclick="restoreFullScreen()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 99999; justify-content: center; align-items: center; cursor: pointer; flex-direction: column; gap: 20px; text-align: center; padding: 20px;">
         <div style="font-family: 'Creepster', cursive; font-size: 48px; color: #ff3b30; text-shadow: 0 0 20px rgba(255, 59, 48, 0.8); margin: 0 0 10px 0;">SYSTEM INTEGRITY COMPROMISED</div>
@@ -1544,6 +1569,153 @@
         let isInstructionScreenActive = false;
         let isHeadphoneScreenActive = false;
         let hasGameStarted = false;
+
+        let isHeadphonePluggedIn = false;
+        let isGamePausedForHeadphones = false;
+        let headphoneMonitorInterval = null;
+
+        function startHeadphoneMonitor() {
+            if (!navigator.mediaDevices) return;
+            navigator.mediaDevices.ondevicechange = () => {
+                checkHeadphoneStatus();
+            };
+            if (!headphoneMonitorInterval) {
+                headphoneMonitorInterval = setInterval(checkHeadphoneStatus, 1000);
+            }
+            checkHeadphoneStatus();
+        }
+
+        async function checkHeadphoneStatus() {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                    isHeadphonePluggedIn = true;
+                    updateHeadphonesUI();
+                    return true;
+                }
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const outputs = devices.filter(d => d.kind === 'audiooutput');
+                const inputs = devices.filter(d => d.kind === 'audioinput');
+
+                let hasHeadphoneOutput = outputs.some(d => {
+                    const label = d.label.toLowerCase();
+                    return label.includes('headphone') || 
+                           label.includes('headset') || 
+                           label.includes('earphone') || 
+                           label.includes('buds') || 
+                           label.includes('hands-free') || 
+                           label.includes('bluetooth') ||
+                           label.includes('audio output') ||
+                           label.includes('realtek') ||
+                           label.includes('jack');
+                });
+
+                let hasHeadphoneInput = inputs.some(d => {
+                    const label = d.label.toLowerCase();
+                    return label.includes('headset') || 
+                           label.includes('headphone') || 
+                           label.includes('earphone') || 
+                           label.includes('bluetooth');
+                });
+
+                isHeadphonePluggedIn = hasHeadphoneOutput || hasHeadphoneInput;
+                updateHeadphonesUI();
+                return isHeadphonePluggedIn;
+            } catch (err) {
+                console.error("Error in checkHeadphoneStatus:", err);
+                isHeadphonePluggedIn = false;
+                updateHeadphonesUI();
+                return false;
+            }
+        }
+
+        function updateHeadphonesUI() {
+            const headphonesScreenText = document.querySelector('#headphones-screen .headphones-text');
+            const headphonesScreenSubtext = document.querySelector('#headphones-screen [style*="JetBrains Mono"]');
+            const headphoneIcon = document.querySelector('#headphones-screen .headphone-svg');
+
+            if (isHeadphoneScreenActive) {
+                if (isHeadphonePluggedIn) {
+                    if (headphonesScreenText) {
+                        headphonesScreenText.textContent = "WEAR HEADPHONES TO GET REAL EXPERIENCE";
+                        headphonesScreenText.style.color = "#ffffff";
+                        headphonesScreenText.style.textShadow = "0 0 10px rgba(255, 255, 255, 0.5)";
+                    }
+                    if (headphonesScreenSubtext) {
+                        headphonesScreenSubtext.textContent = "[ PRESS ANY KEY TO ENTER THE LOOP ]";
+                        headphonesScreenSubtext.style.color = "#ff3b30";
+                    }
+                    if (headphoneIcon) {
+                        headphoneIcon.style.fill = "#ff3b30";
+                        headphoneIcon.style.filter = "drop-shadow(0 0 15px rgba(255, 59, 48, 0.8))";
+                    }
+                } else {
+                    if (headphonesScreenText) {
+                        headphonesScreenText.textContent = "PLEASE INSERT YOUR HEADPHONE TO CONTINUE.";
+                        headphonesScreenText.style.color = "#ff3b30";
+                        headphonesScreenText.style.textShadow = "0 0 15px rgba(255, 59, 48, 0.8)";
+                    }
+                    if (headphonesScreenSubtext) {
+                        headphonesScreenSubtext.textContent = "[ PLEASE PLUG IN YOUR HEADPHONES TO CONTINUE ]";
+                        headphonesScreenSubtext.style.color = "#888";
+                    }
+                    if (headphoneIcon) {
+                        headphoneIcon.style.fill = "#551111";
+                        headphoneIcon.style.filter = "none";
+                    }
+                }
+            }
+
+            const warningOverlay = document.getElementById('headphones-warning-overlay');
+            if (hasGameStarted && typeof isLobbyScreenActive !== 'undefined' && !isLobbyScreenActive && !isHeadphoneScreenActive && isInstructionScreenActive === false) {
+                if (!isHeadphonePluggedIn) {
+                    if (warningOverlay && warningOverlay.style.display !== 'flex') {
+                        pauseGameForHeadphones();
+                    }
+                } else {
+                    if (warningOverlay && warningOverlay.style.display === 'flex') {
+                        resumeGameFromHeadphones();
+                    }
+                }
+            }
+        }
+
+        function pauseGameForHeadphones() {
+            if (!isGameRunning) return;
+            isGamePausedForHeadphones = true;
+            isGameRunning = false;
+            document.exitPointerLock();
+            
+            // Pause sounds
+            ambientAudio.pause();
+            breathingAudio.pause();
+            doorOpenAudio.pause();
+            
+            const warningOverlay = document.getElementById('headphones-warning-overlay');
+            if (warningOverlay) {
+                warningOverlay.style.display = 'flex';
+            }
+        }
+
+        function resumeGameFromHeadphones() {
+            if (!isGamePausedForHeadphones) return;
+            isGamePausedForHeadphones = false;
+            isGameRunning = true;
+            
+            // Resume sounds
+            ambientAudio.play().catch(e => {});
+            breathingAudio.play().catch(e => {});
+            
+            const warningOverlay = document.getElementById('headphones-warning-overlay');
+            if (warningOverlay) {
+                warningOverlay.style.display = 'none';
+            }
+            
+            const clickPlay = document.getElementById('click-to-play-overlay');
+            if (clickPlay) {
+                clickPlay.style.display = 'flex';
+            }
+            animateHorrorGame();
+        }
 
         const doorOpenAudio = document.getElementById('door-open');
         const impactAudio = document.getElementById('impact-sound');
@@ -1727,11 +1899,29 @@
                 headphonesScreen.style.opacity = 1;
             }
             isHeadphoneScreenActive = true;
+            setupMicrophone();
+            startHeadphoneMonitor();
         }
 
         // Triggers transition from headphones screen to Lobby Screen
         function enterGameLoopFromHeadphones() {
             if (!isHeadphoneScreenActive) return;
+
+            if (!isHeadphonePluggedIn) {
+                impactAudio.currentTime = 0;
+                impactAudio.volume = (masterVolume / 100) * 0.5;
+                impactAudio.play().catch(e => {});
+
+                const headphonesScreen = document.getElementById('headphones-screen');
+                if (headphonesScreen) {
+                    headphonesScreen.classList.add('shake-warning');
+                    setTimeout(() => {
+                        headphonesScreen.classList.remove('shake-warning');
+                    }, 400);
+                }
+                return;
+            }
+
             isHeadphoneScreenActive = false;
 
             handleFullScreen(); // Ensure we go fullscreen
@@ -2368,9 +2558,11 @@
                     } catch (err) {
                         console.warn("Could not start Web Audio microphone analysis:", err);
                     }
+                    checkHeadphoneStatus();
                 })
                 .catch(err => {
                     console.warn("Microphone access denied or unavailable:", err);
+                    checkHeadphoneStatus();
                 });
         }
 
