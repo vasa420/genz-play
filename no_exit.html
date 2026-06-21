@@ -2072,11 +2072,9 @@
             const randomTime = Math.random() * (maxTime - minTime) + minTime;
 
             ghostLaughTimeout = setTimeout(() => {
+                const gameplayScreen = document.getElementById('gameplay-screen');
                 // Check if we are in active gameplay
-                if (typeof isLobbyScreenActive !== 'undefined' && !isLobbyScreenActive && 
-                    typeof isInstructionScreenActive !== 'undefined' && !isInstructionScreenActive &&
-                    typeof isHeadphoneScreenActive !== 'undefined' && !isHeadphoneScreenActive) {
-                    
+                if (gameplayScreen && gameplayScreen.style.display === 'block') {
                     const ghostLaughAudio = document.getElementById('ghost-laugh');
                     if (ghostLaughAudio) {
                         ghostLaughAudio.currentTime = 0; // Reset to beginning
