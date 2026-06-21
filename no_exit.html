@@ -2866,45 +2866,123 @@
         function createRatMesh() {
             const ratGroup = new THREE.Group();
             
-            // Body (grey-brown box)
-            const bodyGeo = new THREE.BoxGeometry(0.12, 0.08, 0.22);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x4a3b32, roughness: 0.9 });
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x42362f, roughness: 0.95 }); // dark grey-brown
+            const pinkMat = new THREE.MeshStandardMaterial({ color: 0xdfa2a2, roughness: 0.8 }); // pinkish inside ear / nose
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // glowing red eyes
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x332a24, roughness: 0.95 });
+            const whiskerMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+
+            // Body (organic fat pill shape)
+            const bodyGeo = new THREE.SphereGeometry(1, 10, 10);
             const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.04;
+            body.scale.set(0.07, 0.06, 0.13);
+            body.position.y = 0.055;
             ratGroup.add(body);
             
             // Head
-            const headGeo = new THREE.BoxGeometry(0.08, 0.06, 0.08);
+            const headGeo = new THREE.SphereGeometry(1, 8, 8);
             const head = new THREE.Mesh(headGeo, bodyMat);
-            head.position.set(0, 0.06, 0.12);
+            head.scale.set(0.045, 0.04, 0.06);
+            head.position.set(0, 0.065, 0.11);
             ratGroup.add(head);
             
-            // Snout (pinkish-grey)
-            const snoutGeo = new THREE.BoxGeometry(0.04, 0.03, 0.05);
-            const snoutMat = new THREE.MeshStandardMaterial({ color: 0x886b5c, roughness: 0.9 });
-            const snout = new THREE.Mesh(snoutGeo, snoutMat);
-            snout.position.set(0, 0.05, 0.17);
-            ratGroup.add(snout);
+            // Snout/Nose tip
+            const noseGeo = new THREE.SphereGeometry(0.012, 6, 6);
+            const nose = new THREE.Mesh(noseGeo, pinkMat);
+            nose.position.set(0, 0.05, 0.17);
+            ratGroup.add(nose);
             
-            // Eyes (tiny glowing red)
-            const eyeGeo = new THREE.SphereGeometry(0.01, 4, 4);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            // Left Ear
+            const leftEarGroup = new THREE.Group();
+            const earGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.005, 8);
+            const earOuter = new THREE.Mesh(earGeo, bodyMat);
+            earOuter.rotation.x = Math.PI / 2;
+            leftEarGroup.add(earOuter);
+            
+            const earInnerGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.006, 8);
+            const earInner = new THREE.Mesh(earInnerGeo, pinkMat);
+            earInner.rotation.x = Math.PI / 2;
+            earInner.position.z = 0.001;
+            leftEarGroup.add(earInner);
+            
+            leftEarGroup.position.set(-0.04, 0.09, 0.095);
+            leftEarGroup.rotation.set(0.2, -0.3, -0.2);
+            ratGroup.add(leftEarGroup);
+            
+            // Right Ear
+            const rightEarGroup = new THREE.Group();
+            const earOuterR = new THREE.Mesh(earGeo, bodyMat);
+            earOuterR.rotation.x = Math.PI / 2;
+            rightEarGroup.add(earOuterR);
+            
+            const earInnerR = new THREE.Mesh(earInnerGeo, pinkMat);
+            earInnerR.rotation.x = Math.PI / 2;
+            earInnerR.position.z = -0.001;
+            rightEarGroup.add(earInnerR);
+            
+            rightEarGroup.position.set(0.04, 0.09, 0.095);
+            rightEarGroup.rotation.set(0.2, 0.3, 0.2);
+            ratGroup.add(rightEarGroup);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.008, 6, 6);
             const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-            leftEye.position.set(-0.035, 0.07, 0.14);
+            leftEye.position.set(-0.024, 0.075, 0.14);
             const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-            rightEye.position.set(0.035, 0.07, 0.14);
+            rightEye.position.set(0.024, 0.075, 0.14);
             ratGroup.add(leftEye);
             ratGroup.add(rightEye);
             
-            // Tail (long thin cylinder)
-            const tailGeo = new THREE.CylinderGeometry(0.006, 0.003, 0.2, 4);
-            const tailMat = new THREE.MeshStandardMaterial({ color: 0x886b5c, roughness: 0.9 });
-            const tail = new THREE.Mesh(tailGeo, tailMat);
-            tail.position.set(0, 0.03, -0.18);
-            tail.rotation.x = -Math.PI / 6; // slanting down/back
+            // Tail (thin cylinder, angled back)
+            const tailGeo = new THREE.CylinderGeometry(0.005, 0.002, 0.2, 6);
+            const tail = new THREE.Mesh(tailGeo, pinkMat);
+            tail.position.set(0, 0.035, -0.16);
+            tail.rotation.set(-Math.PI / 2.5, 0, 0); // pointing straight back slightly up
+            tail.name = "tail";
             ratGroup.add(tail);
             
-            ratGroup.scale.setScalar(0.9);
+            // Legs
+            const legGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.04, 6);
+            
+            const flLeg = new THREE.Mesh(legGeo, legMat);
+            flLeg.position.set(-0.04, 0.02, 0.06);
+            flLeg.rotation.x = 0.2;
+            flLeg.name = "flLeg";
+            ratGroup.add(flLeg);
+            
+            const frLeg = new THREE.Mesh(legGeo, legMat);
+            frLeg.position.set(0.04, 0.02, 0.06);
+            frLeg.rotation.x = -0.2;
+            frLeg.name = "frLeg";
+            ratGroup.add(frLeg);
+            
+            const blLeg = new THREE.Mesh(legGeo, legMat);
+            blLeg.position.set(-0.045, 0.02, -0.06);
+            blLeg.rotation.x = -0.2;
+            blLeg.name = "blLeg";
+            ratGroup.add(blLeg);
+            
+            const brLeg = new THREE.Mesh(legGeo, legMat);
+            brLeg.position.set(0.045, 0.02, -0.06);
+            brLeg.rotation.x = 0.2;
+            brLeg.name = "brLeg";
+            ratGroup.add(brLeg);
+            
+            // Whiskers (3 on each side)
+            const whiskerGeo = new THREE.BoxGeometry(0.12, 0.002, 0.002);
+            for (let i = 0; i < 3; i++) {
+                const wLeft = new THREE.Mesh(whiskerGeo, whiskerMat);
+                wLeft.position.set(-0.06, 0.05, 0.16);
+                wLeft.rotation.set(0, 0.2 - i * 0.2, 0.1);
+                ratGroup.add(wLeft);
+                
+                const wRight = new THREE.Mesh(whiskerGeo, whiskerMat);
+                wRight.position.set(0.06, 0.05, 0.16);
+                wRight.rotation.set(0, -0.2 + i * 0.2, -0.1);
+                ratGroup.add(wRight);
+            }
+
+            ratGroup.scale.setScalar(1.0);
             return ratGroup;
         }
 
@@ -3020,8 +3098,18 @@
                     const t = performance.now() * 0.01;
                     if (c.type === 'rat') {
                         // Wiggle tail
-                        const tail = c.mesh.children.find(child => child.geometry && child.geometry.type === 'CylinderGeometry');
-                        if (tail) tail.rotation.z = Math.sin(t) * 0.15;
+                        const tail = c.mesh.children.find(child => child.name === "tail");
+                        if (tail) tail.rotation.z = Math.sin(t * 1.5) * 0.15;
+                        
+                        // Dampen leg swings back to rest position
+                        const flLeg = c.mesh.children.find(child => child.name === "flLeg");
+                        const frLeg = c.mesh.children.find(child => child.name === "frLeg");
+                        const blLeg = c.mesh.children.find(child => child.name === "blLeg");
+                        const brLeg = c.mesh.children.find(child => child.name === "brLeg");
+                        if (flLeg) flLeg.rotation.x *= 0.8;
+                        if (frLeg) frLeg.rotation.x *= 0.8;
+                        if (blLeg) blLeg.rotation.x *= 0.8;
+                        if (brLeg) brLeg.rotation.x *= 0.8;
                     } else if (c.type === 'cockroach') {
                         // Wiggle body slightly
                         c.mesh.rotation.y += Math.sin(t * 3) * 0.02;
@@ -3056,6 +3144,21 @@
                         if (c.type === 'rat') {
                             // Scurry bobbing
                             c.mesh.position.y = 0.02 + Math.abs(Math.sin(performance.now() * 0.02)) * 0.015;
+                            
+                            // Leg swinging scurry animation
+                            const animTime = performance.now() * 0.035;
+                            const flLeg = c.mesh.children.find(child => child.name === "flLeg");
+                            const frLeg = c.mesh.children.find(child => child.name === "frLeg");
+                            const blLeg = c.mesh.children.find(child => child.name === "blLeg");
+                            const brLeg = c.mesh.children.find(child => child.name === "brLeg");
+                            if (flLeg) flLeg.rotation.x = Math.sin(animTime) * 0.6;
+                            if (frLeg) frLeg.rotation.x = -Math.sin(animTime) * 0.6;
+                            if (blLeg) blLeg.rotation.x = -Math.sin(animTime) * 0.6;
+                            if (brLeg) brLeg.rotation.x = Math.sin(animTime) * 0.6;
+                            
+                            // Scurry tail wagging
+                            const tail = c.mesh.children.find(child => child.name === "tail");
+                            if (tail) tail.rotation.y = Math.sin(animTime) * 0.25;
                         }
                     } else {
                         // Arrived at target, go idle
