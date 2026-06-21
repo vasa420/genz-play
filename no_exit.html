@@ -1975,6 +1975,9 @@
         let isKillingActive = false;
         let killSequenceTimer = 0;
         let slashSoundPlayed = false;
+        let thrownKnife = null;
+        let thrownStartPos = new THREE.Vector3();
+        let thrownKnifeImpactSoundPlayed = false;
         let killBloodParticles = null;
         let killBloodVels = [];
         let stepsTimer = 0;
@@ -2048,7 +2051,7 @@
             "3,1": "Guest Bedroom", "3,2": "Guest Bedroom", "3,3": "Guest Bedroom",
             "5,1": "Study Room", "5,2": "Study Room", "5,3": "Study Room",
             "7,1": "Library Room", "7,2": "Library Room", "8,2": "Library Room",
-            "7,6": "Main Bathroom", "7,7": "Main Bathroom", "7,8": "Main Bathroom",
+            "7,6": "Main Bathroom", "7,7": "Security Room", "7,8": "Security Room",
             "8,4": "Secret Wardrobe Safe Room",
             "4,4": "Wooden Staircase",
             "default": "Second Floor Hallway"
@@ -2215,6 +2218,19 @@
 
             // Spawn Ground Floor Props
             spawnGroundFloorProps();
+
+            // Spawn Second Floor Props (Security Room TV, desk, chairs)
+            spawnSecondFloorProps();
+
+            // Hallway CCTV Cameras on Ground Floor
+            createCCTV(groundFloorGroup, 1, 2, Math.PI/2, 3.8);
+            createCCTV(groundFloorGroup, 5, 4, 0, 3.8);
+            createCCTV(groundFloorGroup, 5, 7, -Math.PI/2, 3.8);
+
+            // Hallway CCTV Cameras on Second Floor
+            createCCTV(secondFloorGroup, 1, 2, Math.PI/2, 3.8);
+            createCCTV(secondFloorGroup, 5, 4, 0, 3.8);
+            createCCTV(secondFloorGroup, 5, 7, -Math.PI/2, 3.8);
 
             // Create Floating Dust/Ash Particles
             createFloatingDustParticles();
@@ -2569,6 +2585,143 @@
             paintGroup2.position.set(5.2, 0, -14.4);
             paintGroup2.rotation.y = Math.PI / 3;
             groundFloorGroup.add(paintGroup2);
+        }
+
+        function spawnSecondFloorProps() {
+            // Security Room Table & Chair & TV Monitor at (c=8, r=7)
+            const desk = createTableMesh();
+            desk.scale.set(1.1, 0.9, 0.9);
+            desk.position.set(14, 0, 10);
+            secondFloorGroup.add(desk);
+
+            const chair = createChairMesh();
+            chair.position.set(14, 0, 11.2);
+            chair.rotation.y = 0; // facing desk
+            secondFloorGroup.add(chair);
+
+            const tv = createTVMonitorMesh();
+            tv.position.set(14, 0.9, 9.8); // on top of the desk top (at y=0.9)
+            tv.rotation.y = Math.PI; // facing chair
+            secondFloorGroup.add(tv);
+            secondFloorGroup.tvMonitor = tv; // Store handle for animating static
+        }
+
+        function createTVMonitorMesh() {
+            const tvGroup = new THREE.Group();
+            
+            // Screen Frame
+            const frameGeo = new THREE.BoxGeometry(1.4, 0.8, 0.06);
+            const frameMat = new THREE.MeshStandardMaterial({
+                color: 0x111111,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const frame = new THREE.Mesh(frameGeo, frameMat);
+            frame.position.y = 0.5; // raise it above stand base
+            tvGroup.add(frame);
+            
+            // Display screen
+            const screenGeo = new THREE.PlaneGeometry(1.32, 0.72);
+            
+            // Create a dynamic CCTV static/grid canvas texture
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill with a green surveillance grid
+            ctx.fillStyle = '#051a05';
+            ctx.fillRect(0, 0, 256, 256);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(5, 5, 246, 246);
+            ctx.beginPath();
+            ctx.moveTo(128, 5); ctx.lineTo(128, 251);
+            ctx.moveTo(5, 128); ctx.lineTo(251, 128);
+            ctx.stroke();
+            
+            // Add some text
+            ctx.fillStyle = '#00ff00';
+            ctx.font = '10px Courier New';
+            ctx.fillText("CAM 1: HALLWAY", 10, 20);
+            ctx.fillText("CAM 2: STAIRS", 138, 20);
+            ctx.fillText("CAM 3: CORRIDOR", 10, 143);
+            ctx.fillText("CAM 4: NO SIGNAL", 138, 143);
+            
+            const screenTexture = new THREE.CanvasTexture(canvas);
+            const screenMat = new THREE.MeshBasicMaterial({
+                map: screenTexture
+            });
+            const screen = new THREE.Mesh(screenGeo, screenMat);
+            screen.position.set(0, 0.5, 0.032); // slightly offset forward
+            tvGroup.add(screen);
+            
+            // Stand neck
+            const neckGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.15, 8);
+            const neck = new THREE.Mesh(neckGeo, frameMat);
+            neck.position.y = 0.08;
+            tvGroup.add(neck);
+            
+            // Stand base
+            const baseGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.02, 12);
+            const base = new THREE.Mesh(baseGeo, frameMat);
+            base.position.y = 0.01;
+            tvGroup.add(base);
+            
+            // Keep a handle to screenTexture to animate static noise later
+            tvGroup.screenTexture = screenTexture;
+            tvGroup.canvas = canvas;
+            tvGroup.ctx = ctx;
+            
+            return tvGroup;
+        }
+
+        function createCCTV(group, cellX, cellZ, angleY, height) {
+            const cctvGroup = new THREE.Group();
+            
+            // Base
+            const baseGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.03, 8);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.rotation.x = Math.PI / 2;
+            cctvGroup.add(base);
+            
+            // Arm
+            const armGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.12, 8);
+            const armMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
+            const arm = new THREE.Mesh(armGeo, armMat);
+            arm.position.y = -0.06;
+            arm.rotation.z = -0.2;
+            cctvGroup.add(arm);
+            
+            // Camera Body
+            const bodyGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.18, 8);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.set(0.02, -0.12, 0.05);
+            body.rotation.x = Math.PI / 3; // point downwards
+            cctvGroup.add(body);
+            
+            // Red blinking LED
+            const ledGeo = new THREE.SphereGeometry(0.012, 6, 6);
+            const ledMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const led = new THREE.Mesh(ledGeo, ledMat);
+            led.position.set(0.02, -0.17, 0.12);
+            cctvGroup.add(led);
+            
+            // Store LED for blinking animation
+            if (!group.cctvLeds) group.cctvLeds = [];
+            group.cctvLeds.push(led);
+            
+            cctvGroup.position.set(
+                cellX * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2,
+                height,
+                cellZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
+            );
+            cctvGroup.rotation.y = angleY;
+            group.add(cctvGroup);
         }
 
         function createTableMesh() {
@@ -2944,6 +3097,7 @@
 
             ghostMesh.add(rightArmGroup);
             ghostMesh.rightArm = rightArmGroup;
+            ghostMesh.knifeMesh = knifeGroup; // Store handle for throwing animation
 
             // 6. Legs with Creepy Leg Shackle
             const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
@@ -3681,6 +3835,44 @@
                 updateDustParticles();
             }
 
+            // Blink CCTV camera red LEDs
+            const cctvTime = performance.now() * 0.005;
+            const isLedOn = Math.sin(cctvTime) > 0.0;
+            if (activeFloor === 0 && groundFloorGroup.cctvLeds) {
+                groundFloorGroup.cctvLeds.forEach(led => {
+                    led.material.color.setHex(isLedOn ? 0xff0000 : 0x220000);
+                });
+            } else if (activeFloor === 1 && secondFloorGroup.cctvLeds) {
+                secondFloorGroup.cctvLeds.forEach(led => {
+                    led.material.color.setHex(isLedOn ? 0xff0000 : 0x220000);
+                });
+            }
+
+            // Animate TV Monitor static noise in Security Room on second floor
+            if (secondFloorGroup.tvMonitor) {
+                const monitor = secondFloorGroup.tvMonitor;
+                const ctx = monitor.ctx;
+                const canvas = monitor.canvas;
+                
+                // Clear CAM 4 section with dark green background
+                ctx.fillStyle = '#051a05';
+                ctx.fillRect(129, 129, 122, 122);
+                
+                // Draw random static noise dots
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.4)';
+                for (let i = 0; i < 70; i++) {
+                    const rx = 130 + Math.random() * 120;
+                    const ry = 130 + Math.random() * 120;
+                    ctx.fillRect(rx, ry, 2.2, 2.2);
+                }
+                
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '10px Courier New';
+                ctx.fillText("CAM 4: NO SIGNAL", 138, 143);
+                
+                monitor.screenTexture.needsUpdate = true;
+            }
+
             if (isMapOpen) {
                 mapUpdateFrameCount++;
                 if (mapUpdateFrameCount >= 10) {
@@ -3719,22 +3911,18 @@
                 // Spooky Jitter/Vibration of Eyes and Screaming Mouth to show high activity
                 const jitterFreq = killSequenceTimer * 60;
                 if (ghostMesh.children) {
-                    // Find eyes and mouth and scale them dynamically
                     ghostMesh.children.forEach(child => {
-                        // Let's identify eyes by scale or position
                         if (child.material && child.material.color && child.material.color.r === 1 && child.material.color.g === 0) {
-                            // Glowing red eye meshes
                             child.scale.setScalar(1.0 + Math.sin(jitterFreq) * 0.45);
                         } else if (child.material && child.material.color && child.material.color.r === 0 && child.material.color.g === 0 && child.material.color.b === 0) {
-                            // Hollow mouth mesh (pure black basic material)
                             child.scale.set(1.2, 2.5 + Math.sin(jitterFreq * 0.8) * 0.6, 0.6);
                         }
                     });
                 }
 
-                // 3. Animate right arm slash, camera falling, screen blackout, and blood spray particles
+                // 3. Knife Throwing animation sequence
                 if (killSequenceTimer < 0.25) {
-                    // Wind up the knife: raise arm high
+                    // Wind up: raise knife arm high
                     const t = killSequenceTimer / 0.25;
                     if (ghostMesh.rightArm) {
                         ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 * t;
@@ -3744,66 +3932,127 @@
                         ghostMesh.leftArm.rotation.x = -Math.PI * 0.4 * t;
                     }
                 } else {
-                    // Slash down violently!
-                    const t = Math.min(1.0, (killSequenceTimer - 0.25) / 0.55);
-                    if (ghostMesh.rightArm) {
-                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 + (Math.PI * 1.25 * t);
-                        ghostMesh.rightArm.rotation.z = -0.3 + (0.5 * t);
-                    }
-                    
-                    // Simulate player collapsing to the ground and tilting sideways (death roll)
-                    camera.rotation.z += 0.035; // camera roll
-                    camera.position.y += (0.25 - camera.position.y) * 0.16; // height drop
-
-                    // Narrow player's tunnel vision to blackout
-                    const flash = document.getElementById('kill-blood-splatter');
-                    if (flash) {
-                        const progress = (killSequenceTimer - 0.25) / 0.65;
-                        const innerRadius = Math.max(0, 100 - progress * 100);
-                        flash.style.background = `radial-gradient(circle, rgba(100,0,0,0) ${innerRadius}%, rgba(0,0,0,0.98) 100%)`;
-                    }
-                    
-                    // Trigger slash sound & screen blood effect & 3D blood spray once
+                    // At 0.25, the ghost throws the knife!
                     if (!slashSoundPlayed) {
                         slashSoundPlayed = true;
-                        playSlashSound();
+                        
+                        // Hide hand knife mesh
+                        if (ghostMesh.knifeMesh) {
+                            ghostMesh.knifeMesh.visible = false;
+                        }
+                        
+                        // Get throwing start position at the ghost's right hand
+                        thrownStartPos.copy(ghostMesh.position).add(new THREE.Vector3(0.3, 1.0, 0).applyQuaternion(ghostMesh.quaternion));
+                        
+                        // Create a separate thrown knife projectile group
+                        try {
+                            thrownKnife = new THREE.Group();
+                            
+                            // Recreate matching butcher knife geometries
+                            const handleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.15, 8);
+                            const handleMat = new THREE.MeshStandardMaterial({ color: 0x221105, roughness: 0.8 });
+                            const handle = new THREE.Mesh(handleGeo, handleMat);
+                            handle.position.y = -0.075;
+                            thrownKnife.add(handle);
+
+                            const guardGeo = new THREE.BoxGeometry(0.08, 0.02, 0.03);
+                            const guardMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6, metalness: 0.8 });
+                            const guard = new THREE.Mesh(guardGeo, guardMat);
+                            guard.position.y = -0.15;
+                            thrownKnife.add(guard);
+
+                            const bladeGeo = new THREE.BoxGeometry(0.06, 0.45, 0.012);
+                            const bladeMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.15, metalness: 0.95 });
+                            const blade = new THREE.Mesh(bladeGeo, bladeMat);
+                            blade.position.y = -0.375;
+                            thrownKnife.add(blade);
+
+                            const bloodGeo = new THREE.BoxGeometry(0.062, 0.18, 0.014);
+                            const bloodMat = new THREE.MeshBasicMaterial({ color: 0x550000 });
+                            const bloodStain = new THREE.Mesh(bloodGeo, bloodMat);
+                            bloodStain.position.set(0.001, -0.45, 0);
+                            thrownKnife.add(bloodStain);
+
+                            thrownKnife.position.copy(thrownStartPos);
+                            scene.add(thrownKnife);
+                        } catch(knErr) {
+                            console.warn("Could not create thrown knife mesh:", knErr);
+                        }
+                    }
+                    
+                    // Throw flight path towards camera
+                    const throwDuration = 0.35; // 350ms flight
+                    const throwProgress = (killSequenceTimer - 0.25) / throwDuration;
+                    
+                    if (thrownKnife) {
+                        thrownKnife.position.lerpVectors(thrownStartPos, camera.position, Math.min(1.0, throwProgress));
+                        // Rapid spin in mid-air
+                        thrownKnife.rotation.x += 0.45;
+                        thrownKnife.rotation.y += 0.3;
+                    }
+                    
+                    // When the knife hits the camera/face:
+                    if (throwProgress >= 1.0) {
+                        // Clean up thrown knife mesh
+                        if (thrownKnife) {
+                            scene.remove(thrownKnife);
+                            thrownKnife = null;
+                        }
+                        
+                        // Respawn new knife back in ghost's hand immediately
+                        if (ghostMesh.knifeMesh && !ghostMesh.knifeMesh.visible) {
+                            ghostMesh.knifeMesh.visible = true;
+                        }
+                        
+                        // Shake camera, flash screen red, trigger slash thud
+                        camera.rotation.z += 0.035; // camera roll
+                        camera.position.y += (0.25 - camera.position.y) * 0.16; // height drop
+
+                        const flash = document.getElementById('kill-blood-splatter');
                         if (flash) {
                             flash.style.display = 'block';
                             flash.style.opacity = '1.0';
+                            const progress = (killSequenceTimer - 0.6) / 0.3;
+                            const innerRadius = Math.max(0, 100 - progress * 100);
+                            flash.style.background = `radial-gradient(circle, rgba(100,0,0,0) ${innerRadius}%, rgba(0,0,0,0.98) 100%)`;
                         }
 
-                        // Instantiate 3D blood particles spraying in the camera's face!
-                        try {
-                            const pCount = 50;
-                            const pGeo = new THREE.BufferGeometry();
-                            const pPos = new Float32Array(pCount * 3);
-                            killBloodVels = [];
+                        // Play the wet slash sound only once
+                        if (!thrownKnifeImpactSoundPlayed) {
+                            thrownKnifeImpactSoundPlayed = true;
+                            playSlashSound();
                             
-                            // Get camera direction vector
-                            const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                            
-                            for (let i = 0; i < pCount; i++) {
-                                pPos[i * 3] = camera.position.x + (Math.random() - 0.5) * 0.2;
-                                pPos[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 0.2;
-                                pPos[i * 3 + 2] = camera.position.z + camDir.z * 0.4 + (Math.random() - 0.5) * 0.2;
+                            // Instantiate 3D blood particles spraying in the camera's face!
+                            try {
+                                const pCount = 50;
+                                const pGeo = new THREE.BufferGeometry();
+                                const pPos = new Float32Array(pCount * 3);
+                                killBloodVels = [];
+                                const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
                                 
-                                killBloodVels.push({
-                                    x: (Math.random() - 0.5) * 1.8,
-                                    y: (Math.random() - 0.2) * 1.5,
-                                    z: (Math.random() - 0.5) * 1.8
+                                for (let i = 0; i < pCount; i++) {
+                                    pPos[i * 3] = camera.position.x + (Math.random() - 0.5) * 0.2;
+                                    pPos[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 0.2;
+                                    pPos[i * 3 + 2] = camera.position.z + camDir.z * 0.4 + (Math.random() - 0.5) * 0.2;
+                                    
+                                    killBloodVels.push({
+                                        x: (Math.random() - 0.5) * 1.8,
+                                        y: (Math.random() - 0.2) * 1.5,
+                                        z: (Math.random() - 0.5) * 1.8
+                                    });
+                                }
+                                pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+                                const pMat = new THREE.PointsMaterial({
+                                    color: 0x990000,
+                                    size: 0.08,
+                                    transparent: true,
+                                    opacity: 0.95
                                 });
+                                killBloodParticles = new THREE.Points(pGeo, pMat);
+                                scene.add(killBloodParticles);
+                            } catch(pe) {
+                                console.warn("Could not create blood particles:", pe);
                             }
-                            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-                            const pMat = new THREE.PointsMaterial({
-                                color: 0x990000,
-                                size: 0.08,
-                                transparent: true,
-                                opacity: 0.95
-                            });
-                            killBloodParticles = new THREE.Points(pGeo, pMat);
-                            scene.add(killBloodParticles);
-                        } catch(pe) {
-                            console.warn("Could not create blood particles:", pe);
                         }
                     }
 
@@ -3833,13 +4082,18 @@
             if (killSequenceTimer >= 0.9) {
                 isKillingActive = false;
                 
-                // Hide blood flash overlay and clean up 3D particles
+                // Hide blood flash overlay and clean up 3D particles & thrown knife
                 const flash = document.getElementById('kill-blood-splatter');
                 if (flash) {
                     flash.style.display = 'none';
                     flash.style.opacity = '0';
                 }
                 
+                if (thrownKnife) {
+                    scene.remove(thrownKnife);
+                    thrownKnife = null;
+                }
+
                 if (killBloodParticles) {
                     scene.remove(killBloodParticles);
                     killBloodParticles = null;
@@ -3972,6 +4226,13 @@
             isKillingActive = false;
             killSequenceTimer = 0;
             slashSoundPlayed = false;
+            thrownKnifeImpactSoundPlayed = false;
+
+            // Clean up thrown knife if any
+            if (thrownKnife) {
+                scene.remove(thrownKnife);
+                thrownKnife = null;
+            }
 
             // Clean up 3D blood particles if any
             if (killBloodParticles) {
