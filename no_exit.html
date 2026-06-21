@@ -2506,14 +2506,14 @@
         function addFloorWallSigns() {
             const signs = [
                 // Ground Floor Signs
-                { floor: 0, text: "GROUND FLOOR", pos: new THREE.Vector3(-14, 2.2, -17.9), rot: [0, 0, 0] },
-                { floor: 0, text: "GROUND FLOOR", pos: new THREE.Vector3(-4.1, 2.2, 2.0), rot: [0, -Math.PI/2, 0] },
-                { floor: 0, text: "GROUND FLOOR", pos: new THREE.Vector3(-14, 2.2, 9.9), rot: [0, 0, 0] },
+                { floor: 0, text: "ATC STUDIO", pos: new THREE.Vector3(-14, 2.2, -17.9), rot: [0, 0, 0] },
+                { floor: 0, text: "ATC STUDIO", pos: new THREE.Vector3(-4.1, 2.2, 2.0), rot: [0, -Math.PI/2, 0] },
+                { floor: 0, text: "ATC STUDIO", pos: new THREE.Vector3(-14, 2.2, 9.9), rot: [0, 0, 0] },
                 
                 // Second Floor Signs
-                { floor: 1, text: "SECOND FLOOR", pos: new THREE.Vector3(-14, 2.2, -17.9), rot: [0, 0, 0] },
-                { floor: 1, text: "SECOND FLOOR", pos: new THREE.Vector3(-4.1, 2.2, 2.0), rot: [0, -Math.PI/2, 0] },
-                { floor: 1, text: "SECOND FLOOR", pos: new THREE.Vector3(-14, 2.2, 9.9), rot: [0, 0, 0] }
+                { floor: 1, text: "ATC STUDIO", pos: new THREE.Vector3(-14, 2.2, -17.9), rot: [0, 0, 0] },
+                { floor: 1, text: "ATC STUDIO", pos: new THREE.Vector3(-4.1, 2.2, 2.0), rot: [0, -Math.PI/2, 0] },
+                { floor: 1, text: "ATC STUDIO", pos: new THREE.Vector3(-14, 2.2, 9.9), rot: [0, 0, 0] }
             ];
 
             signs.forEach(s => {
@@ -2521,8 +2521,9 @@
                 const signGeo = new THREE.PlaneGeometry(2.0, 0.5);
                 const signMat = new THREE.MeshStandardMaterial({
                     map: tex,
-                    roughness: 0.4,
-                    metalness: 0.8
+                    transparent: true,
+                    roughness: 0.9,
+                    metalness: 0.1
                 });
                 const signMesh = new THREE.Mesh(signGeo, signMat);
                 signMesh.position.copy(s.pos);
@@ -2542,20 +2543,29 @@
             canvas.height = 128;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#0f0505';
-            ctx.fillRect(0, 0, 512, 128);
+            // Transparent background
+            ctx.clearRect(0, 0, 512, 128);
 
-            ctx.strokeStyle = '#ff3b30';
-            ctx.lineWidth = 6;
-            ctx.strokeRect(10, 10, 492, 108);
-
-            ctx.fillStyle = '#ff3b30';
-            ctx.font = 'bold 36px "Courier New", monospace';
+            // Red blood/graffiti style text using Creepster font
+            ctx.fillStyle = '#aa0000'; // blood red
+            ctx.font = 'bold 44px "Creepster", "Courier New", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(255, 59, 48, 0.8)';
-            ctx.shadowBlur = 12;
+            
+            // Add shadow to make it pop and look like it staining the wall
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+            ctx.shadowBlur = 8;
             ctx.fillText(text, 256, 64);
+            
+            // Render blood drips
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#800000';
+            for (let i = 0; i < 6; i++) {
+                const dripX = 130 + i * 55 + Math.random() * 20;
+                const dripY = 75 + Math.random() * 5;
+                const dripHeight = 15 + Math.random() * 25;
+                ctx.fillRect(dripX, dripY, 2, dripHeight);
+            }
 
             return new THREE.CanvasTexture(canvas);
         }
