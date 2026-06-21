@@ -2247,12 +2247,15 @@
             // Hallway CCTV Cameras on Second Floor (placed at wall corners looking diagonally)
             createCCTV(secondFloorGroup, 1, 2, Math.PI/4, 3.8, -1.8, -1.8);
             createCCTV(secondFloorGroup, 5, 4, Math.PI/4, 3.8, -1.8, -1.8);
-            createCCTV(secondFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
             createCCTV(secondFloorGroup, 8, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
-
+ 
             // Spawn Spooky hanging 0-watt light bulbs to illuminate hallways & CCTV
             spawnZeroWattBulbs();
-
+ 
+            // Spawn Roaming Creatures (Rats and Cockroaches) on both floors
+            spawnCreatures(groundFloorGroup, 0);
+            spawnCreatures(secondFloorGroup, 1);
+ 
             // Create Floating Dust/Ash Particles
             createFloatingDustParticles();
 
@@ -2828,6 +2831,209 @@
             
             bulbGroup.position.set(x, 0, z);
             group.add(bulbGroup);
+        }
+
+        function createRatMesh() {
+            const ratGroup = new THREE.Group();
+            
+            // Body (grey-brown box)
+            const bodyGeo = new THREE.BoxGeometry(0.12, 0.08, 0.22);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x4a3b32, roughness: 0.9 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.04;
+            ratGroup.add(body);
+            
+            // Head
+            const headGeo = new THREE.BoxGeometry(0.08, 0.06, 0.08);
+            const head = new THREE.Mesh(headGeo, bodyMat);
+            head.position.set(0, 0.06, 0.12);
+            ratGroup.add(head);
+            
+            // Snout (pinkish-grey)
+            const snoutGeo = new THREE.BoxGeometry(0.04, 0.03, 0.05);
+            const snoutMat = new THREE.MeshStandardMaterial({ color: 0x886b5c, roughness: 0.9 });
+            const snout = new THREE.Mesh(snoutGeo, snoutMat);
+            snout.position.set(0, 0.05, 0.17);
+            ratGroup.add(snout);
+            
+            // Eyes (tiny glowing red)
+            const eyeGeo = new THREE.SphereGeometry(0.01, 4, 4);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.035, 0.07, 0.14);
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.035, 0.07, 0.14);
+            ratGroup.add(leftEye);
+            ratGroup.add(rightEye);
+            
+            // Tail (long thin cylinder)
+            const tailGeo = new THREE.CylinderGeometry(0.006, 0.003, 0.2, 4);
+            const tailMat = new THREE.MeshStandardMaterial({ color: 0x886b5c, roughness: 0.9 });
+            const tail = new THREE.Mesh(tailGeo, tailMat);
+            tail.position.set(0, 0.03, -0.18);
+            tail.rotation.x = -Math.PI / 6; // slanting down/back
+            ratGroup.add(tail);
+            
+            ratGroup.scale.setScalar(0.9);
+            return ratGroup;
+        }
+
+        function createCockroachMesh() {
+            const roachGroup = new THREE.Group();
+            
+            // Body (flat dark brown box)
+            const bodyGeo = new THREE.BoxGeometry(0.06, 0.02, 0.12);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x221105, roughness: 0.6 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.01;
+            roachGroup.add(body);
+            
+            // Antennae
+            const antGeo = new THREE.BoxGeometry(0.005, 0.005, 0.08);
+            const antMat = new THREE.MeshBasicMaterial({ color: 0x150b03 });
+            
+            const leftAnt = new THREE.Mesh(antGeo, antMat);
+            leftAnt.position.set(-0.015, 0.02, 0.09);
+            leftAnt.rotation.y = 0.25;
+            roachGroup.add(leftAnt);
+            
+            const rightAnt = new THREE.Mesh(antGeo, antMat);
+            rightAnt.position.set(0.015, 0.02, 0.09);
+            rightAnt.rotation.y = -0.25;
+            roachGroup.add(rightAnt);
+            
+            return roachGroup;
+        }
+
+        function spawnCreatures(group, floor) {
+            // Find all walkable cells
+            const walkableCells = [];
+            const currentMap = floor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+            for (let r = 0; r < MAP_SIZE; r++) {
+                for (let c = 0; c < MAP_SIZE; c++) {
+                    if (currentMap[r][c] === 0) {
+                        walkableCells.push({ x: c, z: r });
+                    }
+                }
+            }
+            
+            if (walkableCells.length === 0) return;
+            
+            group.creatures = [];
+            
+            // Helper to get random walkable position in world coords
+            const getRandomWalkablePos = () => {
+                const cell = walkableCells[Math.floor(Math.random() * walkableCells.length)];
+                return {
+                    x: cell.x * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2 + (Math.random() - 0.5) * (CELL_SIZE - 0.8),
+                    z: cell.z * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2 + (Math.random() - 0.5) * (CELL_SIZE - 0.8)
+                };
+            };
+            
+            // Spawn 4 Rats
+            for (let i = 0; i < 4; i++) {
+                const startPos = getRandomWalkablePos();
+                const ratMesh = createRatMesh();
+                ratMesh.position.set(startPos.x, 0.02, startPos.z);
+                group.add(ratMesh);
+                
+                group.creatures.push({
+                    mesh: ratMesh,
+                    type: 'rat',
+                    pos: { x: startPos.x, z: startPos.z },
+                    targetPos: getRandomWalkablePos(),
+                    speed: 0.02 + Math.random() * 0.015,
+                    state: 'moving',
+                    stateTimer: 0,
+                    walkableCells: walkableCells
+                });
+            }
+            
+            // Spawn 6 Cockroaches
+            for (let i = 0; i < 6; i++) {
+                const startPos = getRandomWalkablePos();
+                const roachMesh = createCockroachMesh();
+                roachMesh.position.set(startPos.x, 0.005, startPos.z);
+                group.add(roachMesh);
+                
+                group.creatures.push({
+                    mesh: roachMesh,
+                    type: 'cockroach',
+                    pos: { x: startPos.x, z: startPos.z },
+                    targetPos: getRandomWalkablePos(),
+                    speed: 0.04 + Math.random() * 0.03,
+                    state: 'moving',
+                    stateTimer: 0,
+                    walkableCells: walkableCells
+                });
+            }
+        }
+
+        function updateCreatures() {
+            const group = activeFloor === 0 ? groundFloorGroup : secondFloorGroup;
+            if (!group || !group.creatures) return;
+            
+            group.creatures.forEach(c => {
+                c.stateTimer -= 0.016; // approx delta time per frame
+                
+                // Helper to choose a new target position in a random walkable cell
+                const pickNewTarget = () => {
+                    const cell = c.walkableCells[Math.floor(Math.random() * c.walkableCells.length)];
+                    c.targetPos = {
+                        x: cell.x * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2 + (Math.random() - 0.5) * (CELL_SIZE - 0.8),
+                        z: cell.z * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2 + (Math.random() - 0.5) * (CELL_SIZE - 0.8)
+                    };
+                };
+                
+                if (c.state === 'idle') {
+                    // Wiggle antennae or tail slightly while idle
+                    const t = performance.now() * 0.01;
+                    if (c.type === 'rat') {
+                        // Wiggle tail
+                        const tail = c.mesh.children.find(child => child.geometry && child.geometry.type === 'CylinderGeometry');
+                        if (tail) tail.rotation.z = Math.sin(t) * 0.15;
+                    } else if (c.type === 'cockroach') {
+                        // Wiggle body slightly
+                        c.mesh.rotation.y += Math.sin(t * 3) * 0.02;
+                    }
+                    
+                    if (c.stateTimer <= 0) {
+                        c.state = 'moving';
+                        pickNewTarget();
+                    }
+                } else if (c.state === 'moving') {
+                    const dx = c.targetPos.x - c.pos.x;
+                    const dz = c.targetPos.z - c.pos.z;
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    
+                    if (dist > 0.08) {
+                        // Scurry towards target
+                        const angle = Math.atan2(dx, dz);
+                        c.mesh.rotation.y = angle;
+                        
+                        // Move forward
+                        c.pos.x += (dx / dist) * c.speed;
+                        c.pos.z += (dz / dist) * c.speed;
+                        
+                        c.mesh.position.x = c.pos.x;
+                        c.mesh.position.z = c.pos.z;
+                        
+                        // Add realistic scurrying wiggle/walk animation
+                        const wiggleSpeed = c.type === 'rat' ? 0.03 : 0.08;
+                        const wiggleAmp = c.type === 'rat' ? 0.08 : 0.22;
+                        c.mesh.rotation.y += Math.sin(performance.now() * wiggleSpeed) * wiggleAmp;
+                        
+                        if (c.type === 'rat') {
+                            // Scurry bobbing
+                            c.mesh.position.y = 0.02 + Math.abs(Math.sin(performance.now() * 0.02)) * 0.015;
+                        }
+                    } else {
+                        // Arrived at target, go idle
+                        c.state = 'idle';
+                        c.stateTimer = 1.0 + Math.random() * 2.0; // idle for 1-3 seconds
+                    }
+                }
+            });
         }
 
         function createTableMesh() {
@@ -3939,6 +4145,7 @@
                 updateMicVolumeLevel();
                 updateGhostAI();
                 updateDustParticles();
+                updateCreatures();
             }
 
             // Increment global frameCount for staggered rendering
