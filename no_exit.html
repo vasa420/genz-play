@@ -2222,15 +2222,15 @@
             // Spawn Second Floor Props (Security Room TV, desk, chairs)
             spawnSecondFloorProps();
 
-            // Hallway CCTV Cameras on Ground Floor
-            createCCTV(groundFloorGroup, 1, 2, Math.PI/2, 3.8);
-            createCCTV(groundFloorGroup, 5, 4, 0, 3.8);
-            createCCTV(groundFloorGroup, 5, 7, -Math.PI/2, 3.8);
+            // Hallway CCTV Cameras on Ground Floor (placed at wall corners looking diagonally)
+            createCCTV(groundFloorGroup, 1, 2, Math.PI/4, 3.8, -1.8, -1.8);
+            createCCTV(groundFloorGroup, 5, 4, Math.PI/4, 3.8, -1.8, -1.8);
+            createCCTV(groundFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
 
-            // Hallway CCTV Cameras on Second Floor
-            createCCTV(secondFloorGroup, 1, 2, Math.PI/2, 3.8);
-            createCCTV(secondFloorGroup, 5, 4, 0, 3.8);
-            createCCTV(secondFloorGroup, 5, 7, -Math.PI/2, 3.8);
+            // Hallway CCTV Cameras on Second Floor (placed at wall corners looking diagonally)
+            createCCTV(secondFloorGroup, 1, 2, Math.PI/4, 3.8, -1.8, -1.8);
+            createCCTV(secondFloorGroup, 5, 4, Math.PI/4, 3.8, -1.8, -1.8);
+            createCCTV(secondFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
 
             // Create Floating Dust/Ash Particles
             createFloatingDustParticles();
@@ -2678,7 +2678,7 @@
             return tvGroup;
         }
 
-        function createCCTV(group, cellX, cellZ, angleY, height) {
+        function createCCTV(group, cellX, cellZ, angleY, height, offsetX = 0, offsetZ = 0) {
             const cctvGroup = new THREE.Group();
             
             // Base
@@ -2716,9 +2716,9 @@
             group.cctvLeds.push(led);
             
             cctvGroup.position.set(
-                cellX * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2,
+                cellX * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2 + offsetX,
                 height,
-                cellZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
+                cellZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2 + offsetZ
             );
             cctvGroup.rotation.y = angleY;
             group.add(cctvGroup);
