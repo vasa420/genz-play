@@ -1969,6 +1969,7 @@
         let spotLight, ambientLight;
         let ghostMesh;
         let ghostPos = { x: 7.5, z: 7.5 }; // Spawn ghost further away
+        let ghostFloor = 0; // 0 = Ground Floor, 1 = Second Floor
         let ghostSpeed = 0.015;
         let ghostAnimTime = 0;
         let ghostStepsTimer = 0;
@@ -3463,6 +3464,9 @@
                     0.05,
                     ghostPos.z * CELL_SIZE - MAP_OFFSET
                 );
+                
+                // Hide ghost if she is not on the player's active floor
+                ghostMesh.visible = (ghostFloor === activeFloor);
             }
         }
 
@@ -3472,6 +3476,7 @@
             const playerWorldX = playerPos.x;
             const playerWorldZ = playerPos.z;
 
+            // Calculate distance based on 2D coordinates (but sound scales if on different floors)
             const dx = playerWorldX - ghostPos.x;
             const dz = playerWorldZ - ghostPos.z;
             const dist = Math.sqrt(dx * dx + dz * dz);
@@ -3494,9 +3499,19 @@
             let stepX = 0;
             let stepZ = 0;
 
+            const isSameFloor = (ghostFloor === activeFloor);
+
             if (ghostStalking) {
-                targetX = playerWorldX;
-                targetZ = playerWorldZ;
+                if (isSameFloor) {
+                    // Stalk player directly
+                    targetX = playerWorldX;
+                    targetZ = playerWorldZ;
+                } else {
+                    // Go to the stairs to change floors!
+                    targetX = 4.5; // center of staircase cell (4, 4)
+                    targetZ = 4.5;
+                }
+                
                 const activeSpeed = micVolume > micVolumeThreshold ? ghostSpeed * 2.2 : ghostSpeed * 1.5;
                 
                 const angle = Math.atan2(targetZ - ghostPos.z, targetX - ghostPos.x);
@@ -3506,17 +3521,25 @@
                 ghostPos.x += stepX;
                 ghostPos.z += stepZ;
                 isMoving = true;
+
+                // Transition floor when reaching stairs (4, 4)
+                if (!isSameFloor && Math.floor(ghostPos.x) === 4 && Math.floor(ghostPos.z) === 4) {
+                    ghostFloor = activeFloor; // climb stairs to player's floor
+                    ghostPos.x = 4.5;
+                    ghostPos.z = 4.5;
+                }
             } else {
+                // Patrol roaming
                 if (Math.random() > 0.985) {
                     const neighbors = [
                         {x: 0, z: 1}, {x: 0, z: -1}, {x: 1, z: 0}, {x: -1, z: 0}
                     ];
-                    const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+                    const currentMap = ghostFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
                     const validNeighbors = neighbors.map(n => ({
                         x: Math.floor(ghostPos.x) + n.x,
                         z: Math.floor(ghostPos.z) + n.z
                     })).filter(n => {
-                        return n.x >= 0 && n.x < MAP_SIZE && n.z >= 0 && n.z < MAP_SIZE && currentMap[n.z][n.x] === 0;
+                        return n.x >= 0 && n.x < MAP_SIZE && n.z >= 0 && n.z < MAP_SIZE && currentMap[n.z][n.x] !== 1;
                     });
 
                     if (validNeighbors.length > 0) {
@@ -3541,6 +3564,15 @@
                         isMoving = true;
                     } else {
                         ghostMesh.targetGrid = null;
+
+                        // Arrived at staircase (4, 4) -> 50% chance to climb up/down floor
+                        if (Math.floor(ghostPos.x) === 4 && Math.floor(ghostPos.z) === 4) {
+                            if (Math.random() > 0.5) {
+                                ghostFloor = ghostFloor === 0 ? 1 : 0;
+                                ghostPos.x = 4.5;
+                                ghostPos.z = 4.5;
+                            }
+                        }
                     }
                 }
             }
@@ -3553,7 +3585,6 @@
                 if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x = -Math.sin(ghostAnimTime) * 0.5;
                 if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x = -Math.sin(ghostAnimTime) * 0.4;
                 if (ghostMesh.rightArm) {
-                    // If stalking, raise the knife higher in the air and shake it menacingly
                     if (ghostStalking) {
                         ghostMesh.rightArm.rotation.x = -Math.PI * 0.45 + Math.sin(ghostAnimTime * 2) * 0.2;
                         ghostMesh.rightArm.rotation.z = -0.2;
@@ -3586,7 +3617,7 @@
 
             updateGhostMeshPosition();
 
-            if (dist < 0.6 && ghostStalking) {
+            if (dist < 0.6 && ghostStalking && ghostFloor === activeFloor) {
                 triggerJumpscare();
             }
         }
@@ -3987,30 +4018,35 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
+                const isOtherFloor = (ghostFloor !== activeFloor);
+                
                 // Volume scales with distance: max volume is 0.8 at dist=0, goes to 0 at dist=15.
-                // It also respects master volume.
-                const vol = Math.max(0, 0.8 * (1.0 - (dist / 15.0))) * (masterVolume / 100);
+                // It also respects master volume. If on other floor, dim volume to 25% to sound muffled.
+                let vol = Math.max(0, 0.8 * (1.0 - (dist / 15.0))) * (masterVolume / 100);
+                if (isOtherFloor) vol *= 0.25;
                 if (vol <= 0.005) return;
                 
                 osc.type = 'triangle';
-                // Deep low pitch thump
-                osc.frequency.setValueAtTime(65, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(15, ctx.currentTime + 0.25);
+                // Deep low pitch thump (lower pitch if on other floor to sound muffled/sub-bass)
+                const startFreq = isOtherFloor ? 40 : 65;
+                const endFreq = isOtherFloor ? 10 : 15;
+                osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + 0.25);
                 
                 gain.gain.setValueAtTime(vol, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
                 
                 osc.connect(gain);
                 
-                // For distance > 4.0, we add a feedback delay node loop to create a hollow echo tail.
-                if (dist > 4.0) {
+                // For distance > 4.0 or other floor, we add a feedback delay node loop to create a hollow echo tail.
+                if (dist > 4.0 || isOtherFloor) {
                     const delayNode = ctx.createDelay();
-                    // Delay time 0.35s
-                    delayNode.delayTime.value = 0.35;
+                    // Delay time 0.35s (longer 0.45s for other floor echo)
+                    delayNode.delayTime.value = isOtherFloor ? 0.45 : 0.35;
                     
                     const feedback = ctx.createGain();
                     // Feedback gain scales with distance: up to 0.5 max feedback
-                    const feedbackVal = Math.min(0.5, ((dist - 4.0) / 11.0) * 0.5);
+                    const feedbackVal = isOtherFloor ? 0.45 : Math.min(0.5, ((dist - 4.0) / 11.0) * 0.5);
                     feedback.gain.value = feedbackVal;
                     
                     // Route gain output into delay node, feedback loop, and destination
