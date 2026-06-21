@@ -1985,6 +1985,7 @@
         let headBobTime = 0;
         
         let cctvTargets = [];
+        let cctvLightsOn = [false, false, false, false];
         let frameCount = 0;
         
         let groundFloorGroup = null;
@@ -2248,6 +2249,7 @@
             // Hallway CCTV Cameras on Second Floor (placed at wall corners looking diagonally)
             createCCTV(secondFloorGroup, 1, 2, Math.PI/4, 3.8, -1.8, -1.8);
             createCCTV(secondFloorGroup, 5, 4, Math.PI/4, 3.8, -1.8, -1.8);
+            createCCTV(secondFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
             createCCTV(secondFloorGroup, 8, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
  
             // Spawn Spooky hanging 0-watt light bulbs to illuminate hallways & CCTV
@@ -2295,6 +2297,7 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mousedown', onDocumentMouseDown);
             
             const overlay = document.getElementById('click-to-play-overlay');
             overlay.addEventListener('click', lockPointer);
@@ -2770,6 +2773,22 @@
             
             if (!group.cctvCameras) group.cctvCameras = [];
             group.cctvCameras.push(cctvCam);
+
+            // Create spotlight for CCTV night vision
+            const spotLight = new THREE.SpotLight(0xaaffaa, 0.0, 18, Math.PI / 3, 0.5, 1.0);
+            spotLight.position.copy(camWorldPos);
+            spotLight.castShadow = false; // ensure no shadows for high performance
+            
+            const targetObj = new THREE.Object3D();
+            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(cctvCam.quaternion);
+            targetObj.position.copy(camWorldPos).add(dir.multiplyScalar(5));
+            
+            group.add(spotLight);
+            group.add(targetObj);
+            spotLight.target = targetObj;
+
+            if (!group.cctvLights) group.cctvLights = [];
+            group.cctvLights.push(spotLight);
         }
 
         function spawnZeroWattBulbs() {
@@ -4159,6 +4178,25 @@
             if (key === 'm') {
                 toggleMapOverlay();
             }
+
+            // CCTV light hotkeys (1-4) active when player stands near the TV desk in cell (8, 7) on second floor
+            const cellX = Math.floor(playerPos.x);
+            const cellZ = Math.floor(playerPos.z);
+            if (activeFloor === 1 && cellX === 8 && cellZ === 7) {
+                if (key === '1') {
+                    cctvLightsOn[0] = !cctvLightsOn[0];
+                    playFlashlightClickSound();
+                } else if (key === '2') {
+                    cctvLightsOn[1] = !cctvLightsOn[1];
+                    playFlashlightClickSound();
+                } else if (key === '3') {
+                    cctvLightsOn[2] = !cctvLightsOn[2];
+                    playFlashlightClickSound();
+                } else if (key === '4') {
+                    cctvLightsOn[3] = !cctvLightsOn[3];
+                    playFlashlightClickSound();
+                }
+            }
         }
 
         function onKeyUp(event) {
@@ -4168,10 +4206,103 @@
             }
         }
 
+        function drawCCTVSwitch(ctx, x, y, isOn) {
+            const w = 16;
+            const h = 8;
+            const px = x;
+            const py = y - 6;
+            
+            // Pill background (dark gray border, black background)
+            ctx.fillStyle = '#111111';
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(px + 4, py + 4, 3.5, Math.PI/2, Math.PI * 1.5);
+            ctx.lineTo(px + w - 4, py + 0.5);
+            ctx.arc(px + w - 4, py + 4, 3.5, Math.PI * 1.5, Math.PI/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw knob
+            ctx.fillStyle = isOn ? '#00ff00' : '#666666';
+            ctx.beginPath();
+            const knobX = isOn ? (px + w - 4) : (px + 4);
+            ctx.arc(knobX, py + 4, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function onDocumentMouseDown(event) {
+            const canvas = document.getElementById('game-canvas');
+            if (document.pointerLockElement !== canvas || !isGameRunning || isKillingActive || isMapOpen) return;
+            
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(0, 0); // Center of screen
+            
+            raycaster.setFromCamera(mouse, camera);
+            
+            if (activeFloor === 1 && secondFloorGroup.tvMonitor) {
+                const intersects = raycaster.intersectObjects(secondFloorGroup.tvMonitor.children, true);
+                if (intersects.length > 0) {
+                    const hit = intersects[0];
+                    if (hit.distance < 3.0) { // Interactable range of 3 meters
+                        if (hit.uv) {
+                            const uv = hit.uv;
+                            const canvasX = uv.x * 256;
+                            const canvasY = (1 - uv.y) * 256;
+                            checkCCTVSwitchClick(canvasX, canvasY);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function checkCCTVSwitchClick(canvasX, canvasY) {
+            let clickedIndex = -1;
+            
+            // Quad 1 (CAM 1)
+            if (canvasX >= 70 && canvasX <= 100 && canvasY >= 5 && canvasY <= 25) {
+                clickedIndex = 0;
+            }
+            // Quad 2 (CAM 2)
+            else if (canvasX >= 194 && canvasX <= 224 && canvasY >= 5 && canvasY <= 25) {
+                clickedIndex = 1;
+            }
+            // Quad 3 (CAM 3)
+            else if (canvasX >= 70 && canvasX <= 100 && canvasY >= 127 && canvasY <= 147) {
+                clickedIndex = 2;
+            }
+            // Quad 4 (CAM 4)
+            else if (canvasX >= 194 && canvasX <= 224 && canvasY >= 127 && canvasY <= 147) {
+                clickedIndex = 3;
+            }
+            
+            if (clickedIndex !== -1) {
+                cctvLightsOn[clickedIndex] = !cctvLightsOn[clickedIndex];
+                playFlashlightClickSound();
+            }
+        }
+
         function animateHorrorGame() {
             if (!isGameRunning) return;
 
             requestAnimationFrame(animateHorrorGame);
+
+            // Update CCTV spotlight intensities based on the toggle states
+            if (groundFloorGroup && groundFloorGroup.cctvLights) {
+                groundFloorGroup.cctvLights.forEach((light, idx) => {
+                    if (light) {
+                        light.intensity = cctvLightsOn[idx] ? 8.0 : 0.0;
+                    }
+                });
+            }
+            if (secondFloorGroup && secondFloorGroup.cctvLights) {
+                secondFloorGroup.cctvLights.forEach((light, idx) => {
+                    if (light) {
+                        light.intensity = cctvLightsOn[idx] ? 8.0 : 0.0;
+                    }
+                });
+            }
 
             if (isKillingActive) {
                 updateKillingSequence();
@@ -4244,38 +4375,52 @@
                 // Blinking recording dot indicator
                 const recBlink = Math.floor(performance.now() / 500) % 2 === 0;
                 
+                // Update quad materials' colors/tint based on cctvLightsOn
+                if (monitor.quadMaterials) {
+                    for (let i = 0; i < 4; i++) {
+                        const mat = monitor.quadMaterials[i];
+                        if (mat) {
+                            mat.color.setHex(cctvLightsOn[i] ? 0xffffff : 0x337733);
+                        }
+                    }
+                }
+
                 ctx.fillStyle = '#00ff00';
                 ctx.font = '8px monospace';
                 
                 // CAM 1: HALLWAY 1
                 ctx.fillText("CAM 1: HALLWAY 1", 10, 16);
+                drawCCTVSwitch(ctx, 78, 16, cctvLightsOn[0]);
                 if (recBlink) {
                     ctx.fillStyle = '#ff0000';
-                    ctx.fillText("● REC", 90, 16);
+                    ctx.fillText("● REC", 102, 16);
                     ctx.fillStyle = '#00ff00';
                 }
                 
                 // CAM 2: STAIRS
                 ctx.fillText("CAM 2: STAIRS", 134, 16);
+                drawCCTVSwitch(ctx, 202, 16, cctvLightsOn[1]);
                 if (recBlink) {
                     ctx.fillStyle = '#ff0000';
-                    ctx.fillText("● REC", 214, 16);
+                    ctx.fillText("● REC", 226, 16);
                     ctx.fillStyle = '#00ff00';
                 }
                 
                 // CAM 3: CORRIDOR
                 ctx.fillText("CAM 3: CORRIDOR", 10, 140);
+                drawCCTVSwitch(ctx, 78, 140, cctvLightsOn[2]);
                 if (recBlink) {
                     ctx.fillStyle = '#ff0000';
-                    ctx.fillText("● REC", 90, 140);
+                    ctx.fillText("● REC", 102, 140);
                     ctx.fillStyle = '#00ff00';
                 }
                 
                 // CAM 4: SEC ROOM
                 ctx.fillText("CAM 4: SEC ROOM", 134, 140);
+                drawCCTVSwitch(ctx, 202, 140, cctvLightsOn[3]);
                 if (recBlink) {
                     ctx.fillStyle = '#ff0000';
-                    ctx.fillText("● REC", 214, 140);
+                    ctx.fillText("● REC", 226, 140);
                     ctx.fillStyle = '#00ff00';
                 }
                 
@@ -4697,6 +4842,7 @@
             document.removeEventListener('keydown', onKeyDown);
             document.removeEventListener('keyup', onKeyUp);
             document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mousedown', onDocumentMouseDown);
             document.removeEventListener('pointerlockchange', onPointerLockChange);
 
             if (microphoneStream) {
