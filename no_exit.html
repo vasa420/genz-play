@@ -2870,6 +2870,56 @@
                 finger.rotation.x = 0.2;
                 rightArmGroup.add(finger);
             }
+
+            // Big Realistic Blood-stained Rusty Meat Knife / Machete in Right Hand
+            const knifeGroup = new THREE.Group();
+            knifeGroup.position.set(0, -0.72, 0.05); // Positioned at the hand
+            knifeGroup.rotation.x = Math.PI / 3; // Angle the knife forward menacingly
+            
+            // Handle (dark wood)
+            const handleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.15, 8);
+            const handleMat = new THREE.MeshStandardMaterial({
+                color: 0x221105,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const handle = new THREE.Mesh(handleGeo, handleMat);
+            handle.position.y = -0.075;
+            knifeGroup.add(handle);
+
+            // Guard / Hilt (dark metallic iron)
+            const guardGeo = new THREE.BoxGeometry(0.08, 0.02, 0.03);
+            const guardMat = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                roughness: 0.6,
+                metalness: 0.8
+            });
+            const guard = new THREE.Mesh(guardGeo, guardMat);
+            guard.position.y = -0.15;
+            knifeGroup.add(guard);
+
+            // Heavy Cleaver/Machete Blade (metal steel with emissive sheen)
+            const bladeGeo = new THREE.BoxGeometry(0.06, 0.45, 0.012);
+            const bladeMat = new THREE.MeshStandardMaterial({
+                color: 0x888888,
+                roughness: 0.15,
+                metalness: 0.95,
+                emissive: 0x111111,
+                emissiveIntensity: 0.2
+            });
+            const blade = new THREE.Mesh(bladeGeo, bladeMat);
+            blade.position.y = -0.375;
+            knifeGroup.add(blade);
+
+            // Crimson Blood Splatter Stains on the Blade
+            const bloodGeo = new THREE.BoxGeometry(0.062, 0.18, 0.014);
+            const bloodMat = new THREE.MeshBasicMaterial({ color: 0x550000 }); // Deep crimson blood
+            const bloodStain = new THREE.Mesh(bloodGeo, bloodMat);
+            bloodStain.position.set(0.001, -0.45, 0); // Staining the tip of the blade
+            knifeGroup.add(bloodStain);
+
+            rightArmGroup.add(knifeGroup);
+
             ghostMesh.add(rightArmGroup);
             ghostMesh.rightArm = rightArmGroup;
 
