@@ -1975,6 +1975,8 @@
         let isKillingActive = false;
         let killSequenceTimer = 0;
         let slashSoundPlayed = false;
+        let killBloodParticles = null;
+        let killBloodVels = [];
         let stepsTimer = 0;
         let headBobTime = 0;
         
@@ -3714,7 +3716,23 @@
                 // Rotate ghost to face camera directly
                 ghostMesh.rotation.y = Math.atan2(targetX - ghostMesh.position.x, targetZ - ghostMesh.position.z) + Math.PI;
 
-                // 3. Animate right arm slash
+                // Spooky Jitter/Vibration of Eyes and Screaming Mouth to show high activity
+                const jitterFreq = killSequenceTimer * 60;
+                if (ghostMesh.children) {
+                    // Find eyes and mouth and scale them dynamically
+                    ghostMesh.children.forEach(child => {
+                        // Let's identify eyes by scale or position
+                        if (child.material && child.material.color && child.material.color.r === 1 && child.material.color.g === 0) {
+                            // Glowing red eye meshes
+                            child.scale.setScalar(1.0 + Math.sin(jitterFreq) * 0.45);
+                        } else if (child.material && child.material.color && child.material.color.r === 0 && child.material.color.g === 0 && child.material.color.b === 0) {
+                            // Hollow mouth mesh (pure black basic material)
+                            child.scale.set(1.2, 2.5 + Math.sin(jitterFreq * 0.8) * 0.6, 0.6);
+                        }
+                    });
+                }
+
+                // 3. Animate right arm slash, camera falling, screen blackout, and blood spray particles
                 if (killSequenceTimer < 0.25) {
                     // Wind up the knife: raise arm high
                     const t = killSequenceTimer / 0.25;
@@ -3727,27 +3745,87 @@
                     }
                 } else {
                     // Slash down violently!
-                    const t = Math.min(1.0, (killSequenceTimer - 0.25) / 0.5);
+                    const t = Math.min(1.0, (killSequenceTimer - 0.25) / 0.55);
                     if (ghostMesh.rightArm) {
-                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 + (Math.PI * 1.1 * t);
+                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 + (Math.PI * 1.25 * t);
                         ghostMesh.rightArm.rotation.z = -0.3 + (0.5 * t);
                     }
                     
-                    // Trigger slash sound & screen blood effect once
+                    // Simulate player collapsing to the ground and tilting sideways (death roll)
+                    camera.rotation.z += 0.035; // camera roll
+                    camera.position.y += (0.25 - camera.position.y) * 0.16; // height drop
+
+                    // Narrow player's tunnel vision to blackout
+                    const flash = document.getElementById('kill-blood-splatter');
+                    if (flash) {
+                        const progress = (killSequenceTimer - 0.25) / 0.65;
+                        const innerRadius = Math.max(0, 100 - progress * 100);
+                        flash.style.background = `radial-gradient(circle, rgba(100,0,0,0) ${innerRadius}%, rgba(0,0,0,0.98) 100%)`;
+                    }
+                    
+                    // Trigger slash sound & screen blood effect & 3D blood spray once
                     if (!slashSoundPlayed) {
                         slashSoundPlayed = true;
                         playSlashSound();
-                        const flash = document.getElementById('kill-blood-splatter');
                         if (flash) {
                             flash.style.display = 'block';
                             flash.style.opacity = '1.0';
                         }
+
+                        // Instantiate 3D blood particles spraying in the camera's face!
+                        try {
+                            const pCount = 50;
+                            const pGeo = new THREE.BufferGeometry();
+                            const pPos = new Float32Array(pCount * 3);
+                            killBloodVels = [];
+                            
+                            // Get camera direction vector
+                            const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                            
+                            for (let i = 0; i < pCount; i++) {
+                                pPos[i * 3] = camera.position.x + (Math.random() - 0.5) * 0.2;
+                                pPos[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 0.2;
+                                pPos[i * 3 + 2] = camera.position.z + camDir.z * 0.4 + (Math.random() - 0.5) * 0.2;
+                                
+                                killBloodVels.push({
+                                    x: (Math.random() - 0.5) * 1.8,
+                                    y: (Math.random() - 0.2) * 1.5,
+                                    z: (Math.random() - 0.5) * 1.8
+                                });
+                            }
+                            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+                            const pMat = new THREE.PointsMaterial({
+                                color: 0x990000,
+                                size: 0.08,
+                                transparent: true,
+                                opacity: 0.95
+                            });
+                            killBloodParticles = new THREE.Points(pGeo, pMat);
+                            scene.add(killBloodParticles);
+                        } catch(pe) {
+                            console.warn("Could not create blood particles:", pe);
+                        }
+                    }
+
+                    // Update 3D blood spray physics (gravity and movement)
+                    if (killBloodParticles) {
+                        try {
+                            const positions = killBloodParticles.geometry.attributes.position.array;
+                            const pCount = positions.length / 3;
+                            for (let i = 0; i < pCount; i++) {
+                                positions[i * 3] += killBloodVels[i].x * 0.016;
+                                positions[i * 3 + 1] += killBloodVels[i].y * 0.016;
+                                positions[i * 3 + 2] += killBloodVels[i].z * 0.016;
+                                killBloodVels[i].y -= 4.0 * 0.016; // gravity fall
+                            }
+                            killBloodParticles.geometry.attributes.position.needsUpdate = true;
+                        } catch(ue) {}
                     }
 
                     // Intense camera shake during slash
-                    camera.position.x += (Math.random() - 0.5) * 0.05;
-                    camera.position.y += (Math.random() - 0.5) * 0.05;
-                    camera.position.z += (Math.random() - 0.5) * 0.05;
+                    camera.position.x += (Math.random() - 0.5) * 0.055;
+                    camera.position.y += (Math.random() - 0.5) * 0.055;
+                    camera.position.z += (Math.random() - 0.5) * 0.055;
                 }
             }
 
@@ -3755,11 +3833,16 @@
             if (killSequenceTimer >= 0.9) {
                 isKillingActive = false;
                 
-                // Hide blood flash overlay
+                // Hide blood flash overlay and clean up 3D particles
                 const flash = document.getElementById('kill-blood-splatter');
                 if (flash) {
                     flash.style.display = 'none';
                     flash.style.opacity = '0';
+                }
+                
+                if (killBloodParticles) {
+                    scene.remove(killBloodParticles);
+                    killBloodParticles = null;
                 }
                 
                 triggerFinalJumpscare();
@@ -3889,6 +3972,12 @@
             isKillingActive = false;
             killSequenceTimer = 0;
             slashSoundPlayed = false;
+
+            // Clean up 3D blood particles if any
+            if (killBloodParticles) {
+                scene.remove(killBloodParticles);
+                killBloodParticles = null;
+            }
 
             // Hide blood flash overlay if active
             const flash = document.getElementById('kill-blood-splatter');
