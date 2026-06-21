@@ -1983,6 +1983,9 @@
         let stepsTimer = 0;
         let headBobTime = 0;
         
+        let cctvTargets = [];
+        let frameCount = 0;
+        
         let groundFloorGroup = null;
         let secondFloorGroup = null;
         let activeFloor = 0; // 0 = Ground Floor, 1 = Second Floor
@@ -2051,7 +2054,7 @@
             "3,1": "Guest Bedroom", "3,2": "Guest Bedroom", "3,3": "Guest Bedroom",
             "5,1": "Study Room", "5,2": "Study Room", "5,3": "Study Room",
             "7,1": "Library Room", "7,2": "Library Room", "8,2": "Library Room",
-            "7,6": "Main Bathroom", "7,7": "Security Room", "7,8": "Security Room",
+            "7,6": "Main Bathroom", "7,7": "Security Room", "8,7": "Security Room",
             "8,4": "Secret Wardrobe Safe Room",
             "4,4": "Wooden Staircase",
             "default": "Second Floor Hallway"
@@ -2123,6 +2126,19 @@
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
+
+            // Initialize or reset CCTV render targets
+            if (cctvTargets && cctvTargets.length > 0) {
+                cctvTargets.forEach(t => t.dispose());
+            }
+            cctvTargets = [];
+            for (let i = 0; i < 4; i++) {
+                cctvTargets.push(new THREE.WebGLRenderTarget(256, 256, {
+                    minFilter: THREE.LinearFilter,
+                    magFilter: THREE.LinearFilter,
+                    format: THREE.RGBAFormat
+                }));
+            }
 
             // 2. Load/Create Procedural Textures
             const wallTexture = createProceduralWallTexture();
@@ -2226,11 +2242,13 @@
             createCCTV(groundFloorGroup, 1, 2, Math.PI/4, 3.8, -1.8, -1.8);
             createCCTV(groundFloorGroup, 5, 4, Math.PI/4, 3.8, -1.8, -1.8);
             createCCTV(groundFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
+            createCCTV(groundFloorGroup, 8, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
 
             // Hallway CCTV Cameras on Second Floor (placed at wall corners looking diagonally)
             createCCTV(secondFloorGroup, 1, 2, Math.PI/4, 3.8, -1.8, -1.8);
             createCCTV(secondFloorGroup, 5, 4, Math.PI/4, 3.8, -1.8, -1.8);
             createCCTV(secondFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
+            createCCTV(secondFloorGroup, 8, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
 
             // Create Floating Dust/Ash Particles
             createFloatingDustParticles();
@@ -2620,43 +2638,45 @@
             frame.position.y = 0.5; // raise it above stand base
             tvGroup.add(frame);
             
-            // Display screen
-            const screenGeo = new THREE.PlaneGeometry(1.32, 0.72);
+            // Four quadrants for live CCTV rendering
+            const quadWidth = 1.32 / 2;
+            const quadHeight = 0.72 / 2;
+            const quadPositions = [
+                [-quadWidth/2, 0.5 + quadHeight/2, 0.031], // Top-Left (CAM 1)
+                [quadWidth/2, 0.5 + quadHeight/2, 0.031],  // Top-Right (CAM 2)
+                [-quadWidth/2, 0.5 - quadHeight/2, 0.031], // Bottom-Left (CAM 3)
+                [quadWidth/2, 0.5 - quadHeight/2, 0.031]   // Bottom-Right (CAM 4)
+            ];
             
-            // Create a dynamic CCTV static/grid canvas texture
+            tvGroup.quadMaterials = [];
+            for (let i = 0; i < 4; i++) {
+                const quadGeo = new THREE.PlaneGeometry(quadWidth, quadHeight);
+                const quadMat = new THREE.MeshBasicMaterial({
+                    map: cctvTargets[i] ? cctvTargets[i].texture : null,
+                    color: 0x99ff99 // night-vision green tint
+                });
+                const quadMesh = new THREE.Mesh(quadGeo, quadMat);
+                quadMesh.position.set(quadPositions[i][0], quadPositions[i][1], quadPositions[i][2]);
+                tvGroup.add(quadMesh);
+                tvGroup.quadMaterials.push(quadMat);
+            }
+            
+            // 2D Text overlay & Grid lines on top of the live renders
+            const overlayGeo = new THREE.PlaneGeometry(1.32, 0.72);
             const canvas = document.createElement('canvas');
             canvas.width = 256;
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
             
-            // Fill with a green surveillance grid
-            ctx.fillStyle = '#051a05';
-            ctx.fillRect(0, 0, 256, 256);
-            
-            // Draw grid lines
-            ctx.strokeStyle = '#00ff00';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(5, 5, 246, 246);
-            ctx.beginPath();
-            ctx.moveTo(128, 5); ctx.lineTo(128, 251);
-            ctx.moveTo(5, 128); ctx.lineTo(251, 128);
-            ctx.stroke();
-            
-            // Add some text
-            ctx.fillStyle = '#00ff00';
-            ctx.font = '10px Courier New';
-            ctx.fillText("CAM 1: HALLWAY", 10, 20);
-            ctx.fillText("CAM 2: STAIRS", 138, 20);
-            ctx.fillText("CAM 3: CORRIDOR", 10, 143);
-            ctx.fillText("CAM 4: NO SIGNAL", 138, 143);
-            
-            const screenTexture = new THREE.CanvasTexture(canvas);
-            const screenMat = new THREE.MeshBasicMaterial({
-                map: screenTexture
+            const overlayTexture = new THREE.CanvasTexture(canvas);
+            const overlayMat = new THREE.MeshBasicMaterial({
+                map: overlayTexture,
+                transparent: true,
+                depthWrite: false
             });
-            const screen = new THREE.Mesh(screenGeo, screenMat);
-            screen.position.set(0, 0.5, 0.032); // slightly offset forward
-            tvGroup.add(screen);
+            const overlayMesh = new THREE.Mesh(overlayGeo, overlayMat);
+            overlayMesh.position.set(0, 0.5, 0.033);
+            tvGroup.add(overlayMesh);
             
             // Stand neck
             const neckGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.15, 8);
@@ -2670,8 +2690,8 @@
             base.position.y = 0.01;
             tvGroup.add(base);
             
-            // Keep a handle to screenTexture to animate static noise later
-            tvGroup.screenTexture = screenTexture;
+            // Keep handles to update the overlay
+            tvGroup.overlayTexture = overlayTexture;
             tvGroup.canvas = canvas;
             tvGroup.ctx = ctx;
             
@@ -2722,6 +2742,27 @@
             );
             cctvGroup.rotation.y = angleY;
             group.add(cctvGroup);
+
+            // Create a PerspectiveCamera for the CCTV view
+            const cctvCam = new THREE.PerspectiveCamera(65, 1, 0.1, 40);
+            
+            // Compute camera world position (centered at the camera body lens)
+            const camWorldPos = new THREE.Vector3(0.02, -0.12, 0.05);
+            camWorldPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), angleY);
+            camWorldPos.add(new THREE.Vector3(
+                cellX * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2 + offsetX,
+                height,
+                cellZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2 + offsetZ
+            ));
+            cctvCam.position.copy(camWorldPos);
+            
+            // Align camera rotation
+            cctvCam.rotation.order = "YXZ";
+            cctvCam.rotation.y = angleY;
+            cctvCam.rotation.x = -Math.PI / 4; // look down diagonally
+            
+            if (!group.cctvCameras) group.cctvCameras = [];
+            group.cctvCameras.push(cctvCam);
         }
 
         function createTableMesh() {
@@ -3835,6 +3876,28 @@
                 updateDustParticles();
             }
 
+            // Increment global frameCount for staggered rendering
+            frameCount++;
+
+            // Staggered CCTV updates to maintain high performance
+            if (activeFloor === 1 && secondFloorGroup.tvMonitor && secondFloorGroup.cctvCameras) {
+                const cctvIndex = frameCount % 4;
+                const cctvCam = secondFloorGroup.cctvCameras[cctvIndex];
+                if (cctvCam && renderer && scene) {
+                    // Hide the TV monitor temporarily to prevent infinite recursive rendering
+                    const monitor = secondFloorGroup.tvMonitor;
+                    monitor.visible = false;
+                    
+                    // Render CCTV perspective to target
+                    renderer.setRenderTarget(cctvTargets[cctvIndex]);
+                    renderer.render(scene, cctvCam);
+                    renderer.setRenderTarget(null);
+                    
+                    // Restore monitor visibility
+                    monitor.visible = true;
+                }
+            }
+
             // Blink CCTV camera red LEDs
             const cctvTime = performance.now() * 0.005;
             const isLedOn = Math.sin(cctvTime) > 0.0;
@@ -3848,29 +3911,89 @@
                 });
             }
 
-            // Animate TV Monitor static noise in Security Room on second floor
+            // Update TV Monitor overlay canvas in Security Room on second floor
             if (secondFloorGroup.tvMonitor) {
                 const monitor = secondFloorGroup.tvMonitor;
                 const ctx = monitor.ctx;
                 const canvas = monitor.canvas;
                 
-                // Clear CAM 4 section with dark green background
-                ctx.fillStyle = '#051a05';
-                ctx.fillRect(129, 129, 122, 122);
+                // Clear overlay with transparent background
+                ctx.clearRect(0, 0, 256, 256);
                 
-                // Draw random static noise dots
-                ctx.fillStyle = 'rgba(0, 255, 0, 0.4)';
-                for (let i = 0; i < 70; i++) {
-                    const rx = 130 + Math.random() * 120;
-                    const ry = 130 + Math.random() * 120;
-                    ctx.fillRect(rx, ry, 2.2, 2.2);
-                }
+                // Draw grid dividing lines (matching green multiplexer theme)
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(4, 4, 248, 248);
+                ctx.beginPath();
+                ctx.moveTo(128, 4); ctx.lineTo(128, 252);
+                ctx.moveTo(4, 128); ctx.lineTo(252, 128);
+                ctx.stroke();
+                
+                // Live dynamic timestamp string
+                const now = new Date();
+                const timeStr = now.toISOString().replace('T', ' ').substring(0, 19);
+                
+                // Blinking recording dot indicator
+                const recBlink = Math.floor(performance.now() / 500) % 2 === 0;
                 
                 ctx.fillStyle = '#00ff00';
-                ctx.font = '10px Courier New';
-                ctx.fillText("CAM 4: NO SIGNAL", 138, 143);
+                ctx.font = '8px monospace';
                 
-                monitor.screenTexture.needsUpdate = true;
+                // CAM 1: HALLWAY 1
+                ctx.fillText("CAM 1: HALLWAY 1", 10, 16);
+                if (recBlink) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillText("● REC", 90, 16);
+                    ctx.fillStyle = '#00ff00';
+                }
+                
+                // CAM 2: STAIRS
+                ctx.fillText("CAM 2: STAIRS", 134, 16);
+                if (recBlink) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillText("● REC", 214, 16);
+                    ctx.fillStyle = '#00ff00';
+                }
+                
+                // CAM 3: CORRIDOR
+                ctx.fillText("CAM 3: CORRIDOR", 10, 140);
+                if (recBlink) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillText("● REC", 90, 140);
+                    ctx.fillStyle = '#00ff00';
+                }
+                
+                // CAM 4: SEC ROOM
+                ctx.fillText("CAM 4: SEC ROOM", 134, 140);
+                if (recBlink) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillText("● REC", 214, 140);
+                    ctx.fillStyle = '#00ff00';
+                }
+                
+                // Draw live timestamp centered at the bottom of the monitor
+                ctx.font = '7px monospace';
+                ctx.fillText(timeStr, 80, 244);
+                
+                // Animated sweep scanlines on all 4 quadrants
+                const scanTime = performance.now() * 0.03;
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.05)';
+                const scanY1 = (scanTime) % 120 + 6;
+                const scanY2 = (scanTime + 60) % 120 + 132;
+                ctx.fillRect(6, scanY1, 116, 2);
+                ctx.fillRect(132, scanY1, 116, 2);
+                ctx.fillRect(6, scanY2, 116, 2);
+                ctx.fillRect(132, scanY2, 116, 2);
+                
+                // Overlay subtle analog noise flicker dots
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.15)';
+                for (let i = 0; i < 15; i++) {
+                    const nx = Math.random() * 240 + 8;
+                    const ny = Math.random() * 240 + 8;
+                    ctx.fillRect(nx, ny, 1, 1);
+                }
+                
+                monitor.overlayTexture.needsUpdate = true;
             }
 
             if (isMapOpen) {
