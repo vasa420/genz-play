@@ -1574,6 +1574,18 @@
         let isGamePausedForHeadphones = false;
         let headphoneMonitorInterval = null;
 
+        let gameAudioCtx = null;
+        function getAudioContext() {
+            if (!gameAudioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                gameAudioCtx = new AudioContextClass();
+            }
+            if (gameAudioCtx.state === 'suspended') {
+                gameAudioCtx.resume();
+            }
+            return gameAudioCtx;
+        }
+
         function startHeadphoneMonitor() {
             if (!navigator.mediaDevices) return;
             navigator.mediaDevices.ondevicechange = () => {
@@ -1958,6 +1970,8 @@
         let ghostMesh;
         let ghostPos = { x: 7.5, z: 7.5 }; // Spawn ghost further away
         let ghostSpeed = 0.015;
+        let ghostAnimTime = 0;
+        let ghostStepsTimer = 0;
         let stepsTimer = 0;
         let headBobTime = 0;
         
@@ -1987,7 +2001,7 @@
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
             [1, 0, 0, 1, 0, 1, 0, 0, 0, 1],
-            [1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+            [1, 1, 0, 0, 0, 1, 0, 1, 0, 1], // Hidden Nook at (8, 3) connected to (8, 2)
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
 
@@ -2000,7 +2014,7 @@
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
             [1, 0, 1, 0, 1, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 1, 0, 1], // Hidden safe room at (8, 4) connected to (8, 3)
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
         
@@ -2017,6 +2031,7 @@
             "5,5": "Central Hall", "5,6": "Central Hall", "5,7": "Central Hall", "5,8": "Central Hall",
             "7,1": "Dining Space", "7,2": "Dining Space", "8,2": "Dining Space",
             "7,6": "Food Pantry", "7,7": "Food Pantry", "7,8": "Food Pantry",
+            "8,3": "Hidden Alcove Hiding Spot",
             "4,4": "Wooden Staircase",
             "default": "First Floor Hallway"
         };
@@ -2029,6 +2044,7 @@
             "5,1": "Study Room", "5,2": "Study Room", "5,3": "Study Room",
             "7,1": "Library Room", "7,2": "Library Room", "8,2": "Library Room",
             "7,6": "Main Bathroom", "7,7": "Main Bathroom", "7,8": "Main Bathroom",
+            "8,4": "Secret Wardrobe Safe Room",
             "4,4": "Wooden Staircase",
             "default": "Second Floor Hallway"
         };
@@ -2680,48 +2696,115 @@
         }
 
         function createGhost() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
+            // Rebuild createGhost to build a 3D lady ghost model using THREE.Group
+            ghostMesh = new THREE.Group();
 
-            ctx.clearRect(0, 0, 256, 256);
-            
-            const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 100);
-            grad.addColorStop(0, 'rgba(0, 0, 0, 0.95)');
-            grad.addColorStop(0.3, 'rgba(15, 0, 0, 0.85)');
-            grad.addColorStop(0.7, 'rgba(40, 0, 0, 0.4)');
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(128, 128, 100, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ff0000';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff0000';
-            
-            ctx.beginPath();
-            ctx.arc(108, 110, 8, 0, Math.PI * 2);
-            ctx.arc(148, 110, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#550000';
-            ctx.shadowBlur = 0;
-            ctx.beginPath();
-            ctx.ellipse(128, 145, 12, 18, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const ghostMat = new THREE.SpriteMaterial({
-                map: texture,
+            // 1. Semi-transparent glowing white dress/body
+            const dressGeo = new THREE.CylinderGeometry(0.2, 0.45, 1.4, 16);
+            const dressMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
                 transparent: true,
-                color: 0xffffff
+                opacity: 0.7,
+                emissive: 0xcccccc,
+                emissiveIntensity: 0.4,
+                roughness: 0.5,
+                metalness: 0.1
             });
-            ghostMesh = new THREE.Sprite(ghostMat);
-            ghostMesh.scale.set(2.2, 2.2, 1);
-            
+            const dress = new THREE.Mesh(dressGeo, dressMat);
+            dress.position.y = 1.1; // dress from y=0.4 to y=1.8
+            ghostMesh.add(dress);
+
+            // 2. Head (grey skin)
+            const headGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({
+                color: 0x999999,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 1.95;
+            ghostMesh.add(head);
+
+            // 3. Hair (long black hair)
+            const hairMat = new THREE.MeshStandardMaterial({
+                color: 0x050505,
+                roughness: 0.9
+            });
+            // Back hair draping down
+            const backHairGeo = new THREE.BoxGeometry(0.35, 1.1, 0.1);
+            const backHair = new THREE.Mesh(backHairGeo, hairMat);
+            backHair.position.set(0, 1.45, -0.15);
+            ghostMesh.add(backHair);
+
+            // Left/right side hair
+            const sideHairGeo = new THREE.BoxGeometry(0.08, 0.8, 0.08);
+            const leftHair = new THREE.Mesh(sideHairGeo, hairMat);
+            leftHair.position.set(-0.16, 1.55, 0.12);
+            ghostMesh.add(leftHair);
+
+            const rightHair = new THREE.Mesh(sideHairGeo, hairMat);
+            rightHair.position.set(0.16, 1.55, 0.12);
+            ghostMesh.add(rightHair);
+
+            // 4. Glowing Red Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.03, 8, 8);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.08, 1.95, 0.18);
+            ghostMesh.add(leftEye);
+
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.08, 1.95, 0.18);
+            ghostMesh.add(rightEye);
+
+            // 5. Arms
+            const armGeo = new THREE.CylinderGeometry(0.035, 0.03, 0.7, 8);
+            const armMat = new THREE.MeshStandardMaterial({
+                color: 0x999999,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+
+            const leftArmGroup = new THREE.Group();
+            leftArmGroup.position.set(-0.3, 1.7, 0);
+            const leftArmMesh = new THREE.Mesh(armGeo, armMat);
+            leftArmMesh.position.y = -0.35;
+            leftArmGroup.add(leftArmMesh);
+            ghostMesh.add(leftArmGroup);
+            ghostMesh.leftArm = leftArmGroup;
+
+            const rightArmGroup = new THREE.Group();
+            rightArmGroup.position.set(0.3, 1.7, 0);
+            const rightArmMesh = new THREE.Mesh(armGeo, armMat);
+            rightArmMesh.position.y = -0.35;
+            rightArmGroup.add(rightArmMesh);
+            ghostMesh.add(rightArmGroup);
+            ghostMesh.rightArm = rightArmGroup;
+
+            // 6. Legs
+            const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
+            const legMat = new THREE.MeshStandardMaterial({
+                color: 0x999999,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+
+            const leftLegGroup = new THREE.Group();
+            leftLegGroup.position.set(-0.2, 0.7, 0);
+            const leftLegMesh = new THREE.Mesh(legGeo, legMat);
+            leftLegMesh.position.y = -0.35;
+            leftLegGroup.add(leftLegMesh);
+            ghostMesh.add(leftLegGroup);
+            ghostMesh.leftLeg = leftLegGroup;
+
+            const rightLegGroup = new THREE.Group();
+            rightLegGroup.position.set(0.2, 0.7, 0);
+            const rightLegMesh = new THREE.Mesh(legGeo, legMat);
+            rightLegMesh.position.y = -0.35;
+            rightLegGroup.add(rightLegMesh);
+            ghostMesh.add(rightLegGroup);
+            ghostMesh.rightLeg = rightLegGroup;
+
             ghostPos.x = 7.5;
             ghostPos.z = 7.5;
             updateGhostMeshPosition();
@@ -2732,7 +2815,7 @@
             if (ghostMesh) {
                 ghostMesh.position.set(
                     ghostPos.x * CELL_SIZE - MAP_OFFSET,
-                    1.4,
+                    0.05,
                     ghostPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
@@ -2762,6 +2845,9 @@
 
             let targetX = ghostPos.x;
             let targetZ = ghostPos.z;
+            let isMoving = false;
+            let stepX = 0;
+            let stepZ = 0;
 
             if (ghostStalking) {
                 targetX = playerWorldX;
@@ -2769,11 +2855,12 @@
                 const activeSpeed = micVolume > micVolumeThreshold ? ghostSpeed * 2.2 : ghostSpeed * 1.5;
                 
                 const angle = Math.atan2(targetZ - ghostPos.z, targetX - ghostPos.x);
-                const stepX = Math.cos(angle) * activeSpeed;
-                const stepZ = Math.sin(angle) * activeSpeed;
+                stepX = Math.cos(angle) * activeSpeed;
+                stepZ = Math.sin(angle) * activeSpeed;
                 
                 ghostPos.x += stepX;
                 ghostPos.z += stepZ;
+                isMoving = true;
             } else {
                 if (Math.random() > 0.985) {
                     const neighbors = [
@@ -2802,12 +2889,38 @@
 
                     if (d > 0.05) {
                         const angle = Math.atan2(adz, adx);
-                        ghostPos.x += Math.cos(angle) * ghostSpeed;
-                        ghostPos.z += Math.sin(angle) * ghostSpeed;
+                        stepX = Math.cos(angle) * ghostSpeed;
+                        stepZ = Math.sin(angle) * ghostSpeed;
+                        ghostPos.x += stepX;
+                        ghostPos.z += stepZ;
+                        isMoving = true;
                     } else {
                         ghostMesh.targetGrid = null;
                     }
                 }
+            }
+
+            // Animate 3D ghost model limbs and rotation based on movement direction
+            if (isMoving) {
+                ghostMesh.rotation.y = Math.atan2(stepX, stepZ);
+                ghostAnimTime += 0.12;
+                if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.x = Math.sin(ghostAnimTime) * 0.5;
+                if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x = -Math.sin(ghostAnimTime) * 0.5;
+                if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x = -Math.sin(ghostAnimTime) * 0.4;
+                if (ghostMesh.rightArm) ghostMesh.rightArm.rotation.x = Math.sin(ghostAnimTime) * 0.4;
+
+                // Accumulate steps timer based on actual movement speed to trigger thuds
+                ghostStepsTimer += Math.sqrt(stepX * stepX + stepZ * stepZ);
+                if (ghostStepsTimer >= 0.45) {
+                    ghostStepsTimer = 0;
+                    playGhostFootstep(dist);
+                }
+            } else {
+                if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.x *= 0.8;
+                if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x *= 0.8;
+                if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x *= 0.8;
+                if (ghostMesh.rightArm) ghostMesh.rightArm.rotation.x *= 0.8;
+                ghostStepsTimer = 0;
             }
 
             updateGhostMeshPosition();
@@ -2987,8 +3100,7 @@
 
         function playCreakyFootstep() {
             try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContextClass();
+                const ctx = getAudioContext();
                 
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
@@ -3177,8 +3289,7 @@
 
         function playFootstepSound() {
             try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContextClass();
+                const ctx = getAudioContext();
                 const bufferSize = ctx.sampleRate * 0.15;
                 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const data = buffer.getChannelData(0);
@@ -3205,6 +3316,57 @@
                 noise.start();
                 noise.stop(ctx.currentTime + 0.15);
             } catch(e) {}
+        }
+
+        function playGhostFootstep(dist) {
+            try {
+                if (dist > 15.0) return;
+                const ctx = getAudioContext();
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                // Volume scales with distance: max volume is 0.8 at dist=0, goes to 0 at dist=15.
+                // It also respects master volume.
+                const vol = Math.max(0, 0.8 * (1.0 - (dist / 15.0))) * (masterVolume / 100);
+                if (vol <= 0.005) return;
+                
+                osc.type = 'triangle';
+                // Deep low pitch thump
+                osc.frequency.setValueAtTime(65, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(15, ctx.currentTime + 0.25);
+                
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+                
+                osc.connect(gain);
+                
+                // For distance > 4.0, we add a feedback delay node loop to create a hollow echo tail.
+                if (dist > 4.0) {
+                    const delayNode = ctx.createDelay();
+                    // Delay time 0.35s
+                    delayNode.delayTime.value = 0.35;
+                    
+                    const feedback = ctx.createGain();
+                    // Feedback gain scales with distance: up to 0.5 max feedback
+                    const feedbackVal = Math.min(0.5, ((dist - 4.0) / 11.0) * 0.5);
+                    feedback.gain.value = feedbackVal;
+                    
+                    // Route gain output into delay node, feedback loop, and destination
+                    gain.connect(delayNode);
+                    delayNode.connect(feedback);
+                    feedback.connect(delayNode);
+                    
+                    delayNode.connect(ctx.destination);
+                }
+                
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {
+                console.warn("Ghost footstep audio failed:", e);
+            }
         }
 
         function updateFlashlight() {
@@ -3234,7 +3396,7 @@
 
         function playFlashlightClickSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
@@ -3524,7 +3686,7 @@
 
         function playSplatSynthSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
@@ -3715,7 +3877,7 @@
         // Bass thud synthesizer
         function playSpookyHoverSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
