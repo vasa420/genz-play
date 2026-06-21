@@ -2250,6 +2250,9 @@
             createCCTV(secondFloorGroup, 5, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
             createCCTV(secondFloorGroup, 8, 7, -Math.PI * 0.75, 3.8, 1.8, 1.8);
 
+            // Spawn Spooky hanging 0-watt light bulbs to illuminate hallways & CCTV
+            spawnZeroWattBulbs();
+
             // Create Floating Dust/Ash Particles
             createFloatingDustParticles();
 
@@ -2763,6 +2766,68 @@
             
             if (!group.cctvCameras) group.cctvCameras = [];
             group.cctvCameras.push(cctvCam);
+        }
+
+        function spawnZeroWattBulbs() {
+            // Positions of 0-watt light bulbs on Ground Floor
+            const groundBulbCells = [
+                {x: 1, z: 2}, // Hallway 1
+                {x: 5, z: 4}, // Staircase area
+                {x: 5, z: 7}, // Corridor
+                {x: 8, z: 7}, // Rear Pantry
+                {x: 1, z: 6}, // Storage closet
+                {x: 5, z: 1}  // Kitchen
+            ];
+            
+            // Positions of 0-watt light bulbs on Second Floor
+            const secondBulbCells = [
+                {x: 1, z: 2}, // Hallway 1
+                {x: 5, z: 4}, // Staircase area
+                {x: 5, z: 7}, // Corridor
+                {x: 8, z: 7}, // Security Room
+                {x: 1, z: 6}, // Upper foyer
+                {x: 5, z: 1}  // Study Room
+            ];
+            
+            groundBulbCells.forEach(cell => createZeroWattBulb(groundFloorGroup, cell.x, cell.z));
+            secondBulbCells.forEach(cell => createZeroWattBulb(secondFloorGroup, cell.x, cell.z));
+        }
+
+        function createZeroWattBulb(group, cellX, cellZ) {
+            const x = cellX * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+            const z = cellZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+            
+            const bulbGroup = new THREE.Group();
+            
+            // Hanging Wire (from ceiling y=4.0 down to y=3.2)
+            const wireGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.8, 4);
+            const wireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const wire = new THREE.Mesh(wireGeo, wireMat);
+            wire.position.y = 3.6;
+            bulbGroup.add(wire);
+            
+            // Socket/Holder
+            const socketGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.07, 6);
+            const socketMat = new THREE.MeshStandardMaterial({ color: 0x252525, roughness: 0.8 });
+            const socket = new THREE.Mesh(socketGeo, socketMat);
+            socket.position.y = 3.165;
+            bulbGroup.add(socket);
+            
+            // Dim 0-watt light bulb (Self-glowing basic material)
+            const bulbGeo = new THREE.SphereGeometry(0.045, 8, 8);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffbb66 }); // soft warm orange glow
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.y = 3.11;
+            bulbGroup.add(bulb);
+            
+            // Point Light source (dim, decay=2, range=9.0)
+            const pointLight = new THREE.PointLight(0xffa54f, 0.55, 9.0, 1.5);
+            pointLight.position.y = 3.0;
+            pointLight.castShadow = false; // disable point light shadows to keep frame rate high
+            bulbGroup.add(pointLight);
+            
+            bulbGroup.position.set(x, 0, z);
+            group.add(bulbGroup);
         }
 
         function createTableMesh() {
