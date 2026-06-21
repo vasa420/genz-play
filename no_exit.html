@@ -1547,6 +1547,7 @@
     <audio id="door-open" src="jongmankim8596-opening-the-front-door-210347.mp3"></audio>
     <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3"></audio>
     <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
+    <audio id="ghost-laugh" src="alex_jauk-evil-witch-laughing-sound-440272.mp3"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -2061,6 +2062,31 @@
             "4,4": "Wooden Staircase",
             "default": "Second Floor Hallway"
         };
+        let ghostLaughTimeout = null;
+
+        function scheduleRandomGhostLaugh() {
+            if (ghostLaughTimeout) clearTimeout(ghostLaughTimeout);
+            
+            const minTime = 15000; // 15 seconds
+            const maxTime = 45000; // 45 seconds
+            const randomTime = Math.random() * (maxTime - minTime) + minTime;
+
+            ghostLaughTimeout = setTimeout(() => {
+                // Check if we are in active gameplay
+                if (typeof isLobbyScreenActive !== 'undefined' && !isLobbyScreenActive && 
+                    typeof isInstructionScreenActive !== 'undefined' && !isInstructionScreenActive &&
+                    typeof isHeadphoneScreenActive !== 'undefined' && !isHeadphoneScreenActive) {
+                    
+                    const ghostLaughAudio = document.getElementById('ghost-laugh');
+                    if (ghostLaughAudio) {
+                        ghostLaughAudio.volume = (masterVolume / 100) * 0.9;
+                        ghostLaughAudio.play().catch(e => console.log('Laugh audio play prevented:', e));
+                    }
+                }
+                // Schedule the next laugh
+                scheduleRandomGhostLaugh();
+            }, randomTime);
+        }
 
         // Start actual gameplay and resume background music
         function startGamePlay() {
@@ -2081,6 +2107,9 @@
             if (gameplayScreen) {
                 gameplayScreen.style.display = 'block';
             }
+
+            // Schedule the random ghost laugh
+            scheduleRandomGhostLaugh();
 
             // Initialize the 3D Horror house rendering
             initHorror3D();
