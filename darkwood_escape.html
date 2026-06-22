@@ -1447,6 +1447,10 @@
     let stormAudioWind = null;
     let stormAudioThunder = null;
     let floorMat;
+    
+    // Moon & Clouds variables
+    let moonSprite, cloudMaterial;
+    let clouds = [];
     let lastFrameTime = 0;
     let playerSpeed = 0.06;
     let boundarySize = 150;
@@ -1694,6 +1698,8 @@
         createGodRays();
         createBirds();
         createRainSystem();
+        createMoon();
+        createClouds();
         
         // Attach controls
         window.addEventListener('resize', onWindowResize);
@@ -2132,8 +2138,18 @@
         document.getElementById('hud-clock').textContent = `${hh}:${mm}:${ss} PM`;
     }
 
+    function getElapsedSeconds() {
+        if (gameHour === 5) {
+            return (gameMinute - 55) * 60 + gameSecond;
+        } else if (gameHour === 6) {
+            return 300 + gameMinute * 60 + gameSecond;
+        } else {
+            return 3900 + (gameHour - 7) * 3600 + gameMinute * 60 + gameSecond;
+        }
+    }
+
     function checkTimeTriggers() {
-        const elapsedSeconds = (gameMinute - 55) * 60 + gameSecond;
+        const elapsedSeconds = getElapsedSeconds();
         if (elapsedSeconds >= 300) {
             isTransitioningToNight = true;
         }
@@ -2493,6 +2509,22 @@
                 ray.mesh.visible = (ray.mesh.material.opacity > 0.01);
             });
         }
+
+        // 4. Update Moon Position & Opacity (opposite coordinates of sun)
+        if (moonSprite && camera) {
+            const moonY = -15 + progress * 50; // starts low, rises to 35
+            const moonX = -45;
+            const moonZ = -45;
+            const moonDir = new THREE.Vector3(moonX, moonY, moonZ).normalize();
+            
+            moonSprite.position.copy(camera.position).addScaledVector(moonDir, 220);
+            
+            // Fade in as sunset finishes, but hide behind clouds during storm
+            const baseMoonOpacity = progress * 0.85;
+            const cloudBlockage = Math.max(0.02, 1.0 - stormIntensity * 0.96); // drops down to 4% (near hidden)
+            
+            moonSprite.material.opacity = baseMoonOpacity * cloudBlockage;
+        }
     }
 
     function updateBirds(time, delta) {
@@ -2560,6 +2592,137 @@
         }
     }
 
+    function createMoon() {
+        // Procedurally generate a realistic cratered moon texture on canvas
+        const createMoonTexture = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw moon body
+            const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+            grad.addColorStop(0, 'rgba(240, 245, 255, 1.0)');
+            grad.addColorStop(0.8, 'rgba(200, 215, 235, 1.0)');
+            grad.addColorStop(1.0, 'rgba(150, 170, 200, 0.85)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(128, 128, 110, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw dark rocky craters for 3D realism
+            const craters = [
+                { x: 90, y: 100, r: 18 },
+                { x: 150, y: 80, r: 24 },
+                { x: 170, y: 140, r: 12 },
+                { x: 100, y: 160, r: 15 },
+                { x: 130, y: 120, r: 10 },
+                { x: 80, y: 130, r: 8 },
+                { x: 135, y: 175, r: 7 },
+                { x: 165, y: 110, r: 9 }
+            ];
+            craters.forEach(c => {
+                // Shadow
+                ctx.fillStyle = 'rgba(110, 125, 150, 0.35)';
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Highlight rim
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = c.r * 0.15;
+                ctx.beginPath();
+                ctx.arc(c.x + c.r * 0.1, c.y + c.r * 0.1, c.r * 0.9, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+            
+            // Generate soft outer atmospheric glow
+            const glowCanvas = document.createElement('canvas');
+            glowCanvas.width = 512;
+            glowCanvas.height = 512;
+            const gCtx = glowCanvas.getContext('2d');
+            const gGrad = gCtx.createRadialGradient(256, 256, 110, 256, 256, 256);
+            gGrad.addColorStop(0, 'rgba(230, 240, 255, 0.4)');
+            gGrad.addColorStop(0.3, 'rgba(190, 210, 255, 0.15)');
+            gGrad.addColorStop(1.0, 'rgba(190, 210, 255, 0)');
+            gCtx.fillStyle = gGrad;
+            gCtx.fillRect(0, 0, 512, 512);
+            
+            // Composite moon body into the glow
+            gCtx.drawImage(canvas, 128, 128);
+            
+            return new THREE.CanvasTexture(glowCanvas);
+        };
+
+        const moonTex = createMoonTexture();
+        const moonMat = new THREE.SpriteMaterial({
+            map: moonTex,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            opacity: 0.0 // starts hidden, fades in as sun sets
+        });
+        
+        moonSprite = new THREE.Sprite(moonMat);
+        moonSprite.scale.set(38, 38, 1);
+        
+        scene.add(moonSprite);
+    }
+
+    function createClouds() {
+        clouds = [];
+        const cloudCount = 10;
+        
+        // Procedurally generate a soft cloud puff texture
+        const createCloudTexture = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+            // Stormy dark grey clouds
+            grad.addColorStop(0, 'rgba(65, 70, 80, 0.85)');
+            grad.addColorStop(0.5, 'rgba(40, 42, 48, 0.45)');
+            grad.addColorStop(0.8, 'rgba(25, 26, 30, 0.15)');
+            grad.addColorStop(1.0, 'rgba(25, 26, 30, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 256, 256);
+            return new THREE.CanvasTexture(canvas);
+        };
+        
+        const cloudTex = createCloudTexture();
+        cloudMaterial = new THREE.SpriteMaterial({
+            map: cloudTex,
+            transparent: true,
+            opacity: 0.0, // starts transparent
+            depthWrite: false
+        });
+        
+        for (let i = 0; i < cloudCount; i++) {
+            const sprite = new THREE.Sprite(cloudMaterial);
+            // Random scales for organic puffiness
+            const sX = 90 + Math.random() * 50;
+            const sY = 55 + Math.random() * 30;
+            sprite.scale.set(sX, sY, 1);
+            
+            // Distribute them in the sky (Y = 110)
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 50 + Math.random() * 120;
+            const cx = -90 + Math.cos(angle) * radius;
+            const cz = -90 + Math.sin(angle) * radius;
+            sprite.position.set(cx, 110, cz);
+            
+            scene.add(sprite);
+            
+            clouds.push({
+                sprite: sprite,
+                speedX: 0.05 + Math.random() * 0.1, // drift velocity
+                speedZ: 0.03 + Math.random() * 0.08,
+                baseX: cx,
+                baseZ: cz
+            });
+        }
+    }
+
     function createRainSystem() {
         const rainCount = 1200;
         rainGeometry = new THREE.BufferGeometry();
@@ -2594,7 +2757,7 @@
     function updateWeather(time, delta) {
         if (!isGameRunning) return;
         
-        const elapsedSeconds = (gameMinute - 55) * 60 + gameSecond;
+        const elapsedSeconds = getElapsedSeconds();
         
         // Storm timeline (6:04 PM to 6:07 PM)
         isStorming = (elapsedSeconds >= 540 && elapsedSeconds < 720);
@@ -2647,6 +2810,27 @@
                 floorMat.roughness = 0.95;
                 floorMat.metalness = 0.05;
             }
+        }
+
+        // 2b. Animate cloud cover and drift in the sky dome
+        if (cloudMaterial) {
+            cloudMaterial.opacity = stormIntensity * 0.82;
+        }
+        if (clouds.length > 0) {
+            clouds.forEach(c => {
+                // Clouds drift dynamically with wind vectors
+                c.sprite.position.x += c.speedX * (60 * delta) * 2.0;
+                c.sprite.position.z += c.speedZ * (60 * delta) * 2.0;
+                
+                // Reposition clouds if they float too far outside camera range
+                const relX = c.sprite.position.x - camera.position.x;
+                const relZ = c.sprite.position.z - camera.position.z;
+                if (Math.abs(relX) > 240) c.sprite.position.x = camera.position.x - relX * 0.9;
+                if (Math.abs(relZ) > 240) c.sprite.position.z = camera.position.z - relZ * 0.9;
+                
+                // Align cloud height relative to camera Y to prevent horizon dipping
+                c.sprite.position.y = 110 + camera.position.y * 0.8;
+            });
         }
         
         // 3. Update rain drops positions relative to camera
@@ -2925,6 +3109,11 @@
             }
             rainParticles = null;
             rainGeometry = null;
+            
+            // Clean up moon and clouds
+            moonSprite = null;
+            cloudMaterial = null;
+            clouds = [];
             
             setTimeout(() => {
                 fade.classList.remove('active');
