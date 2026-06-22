@@ -617,6 +617,85 @@
             z-index: 999;
         }
 
+        /* ─── FULLSCREEN SPLASH ─── */
+        #fs-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #000 url('darkwood_loading_bg.png') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.7s ease;
+        }
+        #fs-splash::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+        }
+        #fs-splash.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .fs-inner {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: fsPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes fsPulse {
+            0%,100% { transform: scale(1);   opacity: 1; }
+            50%      { transform: scale(1.03); opacity: 0.8; }
+        }
+        .fs-icon {
+            font-size: 52px;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 0 20px rgba(80,200,80,0.5));
+        }
+        .fs-title {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(38px, 8vw, 72px);
+            letter-spacing: 5px;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(80,200,80,0.3);
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+        .fs-tap {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 5px;
+            color: #5aaa5a;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            animation: tapBlink 1.4s ease-in-out infinite;
+        }
+        @keyframes tapBlink {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0.3; }
+        }
+        .fs-hint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: #2a4a2a;
+            text-transform: uppercase;
+        }
+        /* corner border deco */
+        .fs-corner {
+            position: absolute;
+            width: 28px; height: 28px;
+            border-color: rgba(80,180,80,0.4);
+            border-style: solid;
+        }
+        .fs-corner.tl { top: 30px; left: 30px; border-width: 2px 0 0 2px; }
+        .fs-corner.tr { top: 30px; right: 30px; border-width: 2px 2px 0 0; }
+        .fs-corner.bl { bottom: 30px; left: 30px; border-width: 0 0 2px 2px; }
+        .fs-corner.br { bottom: 30px; right: 30px; border-width: 0 2px 2px 0; }
+
         @media (max-width: 600px) {
             .instr-grid { grid-template-columns: 1fr; }
             .instr-inner { padding: 20px 16px 16px; }
@@ -630,6 +709,20 @@
 
 <!-- Floating particles -->
 <div class="particles" id="particles"></div>
+
+<!-- ═══ FULLSCREEN SPLASH ═══ -->
+<div id="fs-splash" onclick="enterFullscreen()">
+    <div class="fs-corner tl"></div>
+    <div class="fs-corner tr"></div>
+    <div class="fs-corner bl"></div>
+    <div class="fs-corner br"></div>
+    <div class="fs-inner">
+        <div class="fs-icon">🌲</div>
+        <div class="fs-title">DARKWOOD<br>ESCAPE</div>
+        <div class="fs-tap">▶ &nbsp; TAP TO ENTER FULLSCREEN</div>
+        <div class="fs-hint">◈ &nbsp; ATC ARCADE — PROJECT WOODS &nbsp; ◈</div>
+    </div>
+</div>
 
 <!-- ═══ PAGE 1: LOADING ═══ -->
 <div class="page active" id="loading-page">
@@ -753,6 +846,23 @@
 
     function goLobby() { showPage('lobby-page'); }
 
+    /* ─── FULLSCREEN ─── */
+    function enterFullscreen() {
+        const splash = document.getElementById('fs-splash');
+        // Request fullscreen
+        const el = document.documentElement;
+        const req = el.requestFullscreen || el.webkitRequestFullscreen ||
+                    el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (req) req.call(el).catch(() => {});
+
+        // Fade out splash then start loading
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+            splash.style.display = 'none';
+            startLoadingBar();
+        }, 700);
+    }
+
     /* ─── LOADING BAR ─── */
     let pct = 0;
     const bar     = document.getElementById('bar');
@@ -763,7 +873,7 @@
         { target: 30,  delay: 60  },
         { target: 55,  delay: 90  },
         { target: 70,  delay: 50  },
-        { target: 78,  delay: 200 }, // small pause
+        { target: 78,  delay: 200 },
         { target: 92,  delay: 70  },
         { target: 100, delay: 55  }
     ];
@@ -783,12 +893,14 @@
             if (sIdx < speeds.length) {
                 setTimeout(animateBar, speeds[sIdx - 1].delay * 3);
             } else {
-                // Done — wait then go to instructions
                 setTimeout(() => showPage('instructions-page'), 700);
             }
         }
     }
-    setTimeout(animateBar, 600);
+
+    function startLoadingBar() {
+        setTimeout(animateBar, 400);
+    }
 
     /* ─── SETTINGS MODAL ─── */
     function openSettings()  { document.getElementById('settings-modal').classList.add('open'); }
