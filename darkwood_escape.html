@@ -1446,6 +1446,8 @@
     let lastLightningStrikeTime = 0;
     let stormAudioWind = null;
     let stormAudioThunder = null;
+    let forestBgAudio = null;
+    let rainBgAudio = null;
     let floorMat;
     
     // Moon & Clouds variables
@@ -1606,6 +1608,12 @@
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         } catch(e) {}
+
+        // Forest background music — starts on first pointer lock interaction
+        forestBgAudio = new Audio('eryliaa-evening-forest-with-wind-birds-and-crickets-451151.mp3');
+        forestBgAudio.loop = true;
+        forestBgAudio.volume = 0;
+        rainBgAudio = null;
         
         // Ground Mesh (deformed according to heightmap)
         const floorGeo = new THREE.PlaneGeometry(380, 380, 160, 160);
@@ -2883,6 +2891,37 @@
                 stormAudioWind = null;
             }
         }
+
+        // 1b. Forest background music ↔ Rain background music cross-fade
+        if (soundEnabled) {
+            const forestTargetVol = (1.0 - stormIntensity) * globalVolume * 0.55;
+            // Forest music — play and fade
+            if (forestBgAudio) {
+                if (forestBgAudio.paused && forestTargetVol > 0.01) {
+                    forestBgAudio.play().catch(() => {});
+                }
+                forestBgAudio.volume += (forestTargetVol - forestBgAudio.volume) * 0.03;
+            }
+            // Rain background music — create lazily and fade
+            const rainTargetVol = stormIntensity * globalVolume * 0.5;
+            if (rainTargetVol > 0.01) {
+                if (!rainBgAudio) {
+                    rainBgAudio = new Audio('eryliaa-evening-forest-with-wind-birds-and-crickets-451151.mp3');
+                    rainBgAudio.loop = true;
+                    rainBgAudio.volume = 0;
+                    // Lower pitch for rain ambience via playback rate
+                    rainBgAudio.playbackRate = 0.7;
+                    rainBgAudio.play().catch(() => {});
+                }
+                rainBgAudio.volume += (rainTargetVol - rainBgAudio.volume) * 0.03;
+            } else if (rainBgAudio) {
+                rainBgAudio.volume *= 0.93;
+                if (rainBgAudio.volume < 0.01) {
+                    rainBgAudio.pause();
+                    rainBgAudio = null;
+                }
+            }
+        }
         
         // 2. Wet soil graphics transition (ground remains wet/shiny after storm passes)
         if (floorMat) {
@@ -3191,6 +3230,14 @@
                 try { stormAudioThunder.pause(); } catch(e) {}
                 stormAudioThunder = null;
             }
+            if (forestBgAudio) {
+                try { forestBgAudio.pause(); forestBgAudio.currentTime = 0; } catch(e) {}
+                forestBgAudio = null;
+            }
+            if (rainBgAudio) {
+                try { rainBgAudio.pause(); rainBgAudio.currentTime = 0; } catch(e) {}
+                rainBgAudio = null;
+            }
             rainParticles = null;
             rainGeometry = null;
             
@@ -3218,6 +3265,10 @@
             overlay.style.display = 'none';
             if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();
+            }
+            // Begin forest background music on first pointer lock
+            if (forestBgAudio && forestBgAudio.paused) {
+                forestBgAudio.play().catch(() => {});
             }
         } else {
             if (document.getElementById('victory-overlay').style.display !== 'flex') {
