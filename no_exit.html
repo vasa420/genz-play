@@ -2178,6 +2178,7 @@
             "default": "Cold Mortuary Hallway"
         };
         let ghostLaughTimeout = null;
+        let mortuaryLaughTimeout = null;
 
         function scheduleRandomGhostLaugh() {
             if (ghostLaughTimeout) clearTimeout(ghostLaughTimeout);
@@ -2188,13 +2189,26 @@
 
             ghostLaughTimeout = setTimeout(() => {
                 const gameplayScreen = document.getElementById('gameplay-screen');
-                // Check if we are in active gameplay
-                if (gameplayScreen && gameplayScreen.style.display === 'block') {
+                // Check if we are in active gameplay and not on Mortuary Floor (activeFloor !== 2)
+                if (gameplayScreen && gameplayScreen.style.display === 'block' && activeFloor !== 2) {
                     playInstantSound('ghost-laugh', 0.9);
                 }
                 // Schedule the next laugh
                 scheduleRandomGhostLaugh();
             }, randomTime);
+        }
+
+        function scheduleMortuaryLaugh() {
+            if (mortuaryLaughTimeout) clearTimeout(mortuaryLaughTimeout);
+            
+            mortuaryLaughTimeout = setTimeout(() => {
+                const gameplayScreen = document.getElementById('gameplay-screen');
+                // Only hear this laughing sound on the Mortuary floor (activeFloor === 2)
+                if (gameplayScreen && gameplayScreen.style.display === 'block' && activeFloor === 2) {
+                    playInstantSound('ghost-laugh', 0.95);
+                }
+                scheduleMortuaryLaugh();
+            }, 17000); // every 17 seconds
         }
 
         // Start actual gameplay and resume background music
@@ -2215,8 +2229,9 @@
                 gameplayScreen.style.display = 'block';
             }
 
-            // Schedule the random ghost laugh
+            // Schedule laughs
             scheduleRandomGhostLaugh();
+            scheduleMortuaryLaugh();
 
             // Initialize the 3D Horror house rendering
             initHorror3D();
@@ -6724,6 +6739,16 @@
             paranormalTimer = 0;
             if (ghostlyCorpseMesh) {
                 ghostlyCorpseMesh.visible = false;
+            }
+
+            // Clear active laugh timeouts
+            if (ghostLaughTimeout) {
+                clearTimeout(ghostLaughTimeout);
+                ghostLaughTimeout = null;
+            }
+            if (mortuaryLaughTimeout) {
+                clearTimeout(mortuaryLaughTimeout);
+                mortuaryLaughTimeout = null;
             }
 
             ghostPos.x = 7.5;
