@@ -4190,12 +4190,10 @@
                 const curGridX = Math.floor((currentPos.x + MAP_OFFSET) / CELL_SIZE);
                 const curGridZ = Math.floor((currentPos.z + MAP_OFFSET) / CELL_SIZE);
                 
-                let tgtX = corpse.userData.targetX;
-                let tgtZ = corpse.userData.targetZ;
+                let tgtX = corpse.userData.targetX !== undefined ? Math.floor(corpse.userData.targetX) : curGridX;
+                let tgtZ = corpse.userData.targetZ !== undefined ? Math.floor(corpse.userData.targetZ) : curGridZ;
                 
-                if (tgtX === undefined || tgtZ === undefined) {
-                    tgtX = curGridX;
-                    tgtZ = curGridZ;
+                if (corpse.userData.targetX === undefined || corpse.userData.targetZ === undefined) {
                     corpse.userData.targetX = tgtX;
                     corpse.userData.targetZ = tgtZ;
                 }
@@ -4361,13 +4359,13 @@
             // Spawn 2 walking corpses
             walkingCorpses = [];
             const defaultSpawns = [
-                { x: 3.5, z: 3.5 },
-                { x: 7.5, z: 5.5 }
+                { x: 3, z: 3 },
+                { x: 7, z: 5 }
             ];
             defaultSpawns.forEach((spawn, idx) => {
                 const wCorpse = createWalkingCorpseMesh();
-                const wx = spawn.x * CELL_SIZE - MAP_OFFSET;
-                const wz = spawn.z * CELL_SIZE - MAP_OFFSET;
+                const wx = spawn.x * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                const wz = spawn.z * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
                 wCorpse.position.set(wx, 0.05, wz);
                 wCorpse.userData.targetX = spawn.x;
                 wCorpse.userData.targetZ = spawn.z;
@@ -7194,13 +7192,13 @@
             // Reset walking corpses
             if (walkingCorpses && walkingCorpses.length > 0) {
                 const defaultSpawns = [
-                    { x: 3.5, z: 3.5 },
-                    { x: 7.5, z: 5.5 }
+                    { x: 3, z: 3 },
+                    { x: 7, z: 5 }
                 ];
                 walkingCorpses.forEach((corpse, idx) => {
                     const spawn = defaultSpawns[idx];
-                    const wx = spawn.x * CELL_SIZE - MAP_OFFSET;
-                    const wz = spawn.z * CELL_SIZE - MAP_OFFSET;
+                    const wx = spawn.x * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                    const wz = spawn.z * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
                     corpse.position.set(wx, 0.05, wz);
                     corpse.rotation.set(0, 0, 0);
                     corpse.userData.targetX = spawn.x;
