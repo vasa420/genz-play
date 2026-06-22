@@ -5175,218 +5175,175 @@
             }
         }
 
-        function updateKillingSequence() {
+         function updateKillingSequence() {
             killSequenceTimer += 0.016; // approx delta time per frame
 
-            // 1. Force camera to look directly at the ghost's face
             if (ghostMesh) {
+                // 1. Force camera to look directly at the ghost's face
                 const targetLook = new THREE.Vector3().copy(ghostMesh.position);
-                targetLook.y += 1.6; // face level
+                targetLook.y += 1.65; // face level
                 camera.lookAt(targetLook);
                 
-                // 2. Lunge ghost rapidly towards the camera (the player is at the camera's X and Z coords)
+                // 2. Lunge ghost rapidly towards the camera (very close to the player)
                 const targetX = camera.position.x;
                 const targetZ = camera.position.z;
                 
-                ghostMesh.position.x += (targetX - ghostMesh.position.x) * 0.12;
-                ghostMesh.position.z += (targetZ - ghostMesh.position.z) * 0.12;
+                const dirX = targetX - ghostMesh.position.x;
+                const dirZ = targetZ - ghostMesh.position.z;
+                const dist = Math.sqrt(dirX * dirX + dirZ * dirZ);
                 
-                // Make her rise/loom over the player
-                ghostMesh.position.y += (0.1 - ghostMesh.position.y) * 0.12;
+                if (dist > 0.6) {
+                    ghostMesh.position.x += (dirX / dist) * 0.18;
+                    ghostMesh.position.z += (dirZ / dist) * 0.18;
+                }
+                
+                ghostMesh.position.y += (0.0 - ghostMesh.position.y) * 0.12;
 
-                // Rotate ghost to face camera directly
                 ghostMesh.rotation.y = Math.atan2(targetX - ghostMesh.position.x, targetZ - ghostMesh.position.z) + Math.PI;
 
-                // Spooky Jitter/Vibration of Eyes and Screaming Mouth to show high activity
-                const jitterFreq = killSequenceTimer * 60;
+                const jitterFreq = killSequenceTimer * 75;
                 if (ghostMesh.children) {
                     ghostMesh.children.forEach(child => {
-                        if (child.material && child.material.color && child.material.color.r === 1 && child.material.color.g === 0) {
-                            child.scale.setScalar(1.0 + Math.sin(jitterFreq) * 0.45);
+                        if (child.material && child.material.color && child.material.color.r === 1 && child.material.color.g === 0 && child.material.color.b === 0) {
+                            child.scale.setScalar(1.0 + Math.sin(jitterFreq) * 0.5);
                         } else if (child.material && child.material.color && child.material.color.r === 0 && child.material.color.g === 0 && child.material.color.b === 0) {
-                            child.scale.set(1.2, 2.5 + Math.sin(jitterFreq * 0.8) * 0.6, 0.6);
+                            child.scale.set(1.2, 3.2 + Math.sin(jitterFreq * 0.8) * 0.8, 0.6);
                         }
                     });
                 }
 
-                // 3. Knife Throwing animation sequence
-                if (killSequenceTimer < 0.25) {
-                    // Wind up: raise knife arm high
-                    const t = killSequenceTimer / 0.25;
+                // 3. Stage-Based Cinematic Animations
+                if (killSequenceTimer < 0.8) {
+                    // --- STAGE 1: Grab and Shake (Grab player's screen) ---
+                    const t = killSequenceTimer / 0.8;
+                    if (ghostMesh.leftArm) {
+                        ghostMesh.leftArm.rotation.x = -Math.PI * 0.5;
+                        ghostMesh.leftArm.rotation.y = 0.5 * t;
+                        ghostMesh.leftArm.rotation.z = 0.3;
+                    }
                     if (ghostMesh.rightArm) {
-                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 * t;
-                        ghostMesh.rightArm.rotation.z = -0.3 * t;
+                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.5;
+                        ghostMesh.rightArm.rotation.y = -0.5 * t;
+                        ghostMesh.rightArm.rotation.z = -0.3;
+                    }
+
+                    camera.position.x += (Math.random() - 0.5) * 0.08;
+                    camera.position.y += (Math.random() - 0.5) * 0.08;
+                    camera.position.z += (Math.random() - 0.5) * 0.08;
+                    
+                    camera.rotation.z = Math.sin(killSequenceTimer * 15) * 0.06;
+                }
+                else if (killSequenceTimer >= 0.8 && killSequenceTimer < 2.2) {
+                    // --- STAGE 2: Frenzied Machete Slashing ---
+                    camera.rotation.z += (0 - camera.rotation.z) * 0.1;
+                    if (killSequenceTimer >= 0.8 && killSequenceTimer < 1.3) {
+                        const slashT = (killSequenceTimer - 0.8) / 0.5;
+                        if (ghostMesh.rightArm) {
+                            ghostMesh.rightArm.rotation.x = -Math.PI * 0.8 + Math.PI * 0.95 * slashT;
+                            ghostMesh.rightArm.rotation.z = -0.5 + Math.PI * 0.5 * slashT;
+                        }
+                        if (ghostMesh.leftArm) {
+                            ghostMesh.leftArm.rotation.set(-Math.PI * 0.5, 0.4, 0.2);
+                        }
+
+                        if (killSequenceTimer >= 1.0 && !slashSoundsPlayed.slash1) {
+                            slashSoundsPlayed.slash1 = true;
+                            triggerSlashVisuals(new THREE.Vector3(0.3, 0, -0.2), new THREE.Vector3(-1.8, 0.4, -0.5));
+                        }
+                    }
+                    else if (killSequenceTimer >= 1.3 && killSequenceTimer < 1.8) {
+                        const slashT = (killSequenceTimer - 1.3) / 0.5;
+                        if (ghostMesh.rightArm) {
+                            ghostMesh.rightArm.rotation.set(-Math.PI * 0.8, 0, -0.4);
+                        }
+                        if (ghostMesh.leftArm) {
+                            ghostMesh.leftArm.rotation.x = -Math.PI * 0.6 + Math.PI * 0.8 * slashT;
+                            ghostMesh.leftArm.rotation.z = 0.5 - Math.PI * 0.6 * slashT;
+                        }
+
+                        if (killSequenceTimer >= 1.4 && !slashSoundsPlayed.slash2) {
+                            slashSoundsPlayed.slash2 = true;
+                            triggerSlashVisuals(new THREE.Vector3(-0.3, 0.1, -0.2), new THREE.Vector3(1.8, -0.3, -0.5));
+                        }
+                    }
+                    else if (killSequenceTimer >= 1.8 && killSequenceTimer < 2.2) {
+                        const slashT = (killSequenceTimer - 1.8) / 0.4;
+                        if (ghostMesh.rightArm) {
+                            ghostMesh.rightArm.rotation.set(-Math.PI * 0.8 + Math.PI * 0.95 * slashT, 0, 0.3 * slashT);
+                        }
+                        if (ghostMesh.leftArm) {
+                            ghostMesh.leftArm.rotation.set(-Math.PI * 0.8 + Math.PI * 0.95 * slashT, 0, -0.3 * slashT);
+                        }
+
+                        if (killSequenceTimer >= 1.95 && !slashSoundsPlayed.slash3) {
+                            slashSoundsPlayed.slash3 = true;
+                            triggerSlashVisuals(new THREE.Vector3(0, 0.2, -0.2), new THREE.Vector3(0, -1.8, -1.0));
+                        }
+                    }
+                }
+                else {
+                    // --- STAGE 3: Player Collapse & Death Blow (t = 2.2 to 3.2s) ---
+                    const deathT = Math.min(1.0, (killSequenceTimer - 2.2) / 0.8);
+                    
+                    if (ghostMesh.rightArm) {
+                        ghostMesh.rightArm.rotation.set(-Math.PI * 0.95, -0.2, -0.4);
                     }
                     if (ghostMesh.leftArm) {
-                        ghostMesh.leftArm.rotation.x = -Math.PI * 0.4 * t;
+                        ghostMesh.leftArm.rotation.set(-Math.PI * 0.95, 0.2, 0.4);
                     }
-                } else {
-                    // At 0.25, the ghost throws the knife!
-                    if (!slashSoundPlayed) {
-                        slashSoundPlayed = true;
-                        
-                        // Hide hand knife mesh
-                        if (ghostMesh.knifeMesh) {
-                            ghostMesh.knifeMesh.visible = false;
-                        }
-                        
-                        // Get throwing start position at the ghost's right hand
-                        thrownStartPos.copy(ghostMesh.position).add(new THREE.Vector3(0.3, 1.0, 0).applyQuaternion(ghostMesh.quaternion));
-                        
-                        // Create a separate thrown knife projectile group
-                        try {
-                            thrownKnife = new THREE.Group();
-                            
-                            // Recreate matching butcher knife geometries
-                            const handleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.15, 8);
-                            const handleMat = new THREE.MeshStandardMaterial({ color: 0x221105, roughness: 0.8 });
-                            const handle = new THREE.Mesh(handleGeo, handleMat);
-                            handle.position.y = -0.075;
-                            thrownKnife.add(handle);
 
-                            const guardGeo = new THREE.BoxGeometry(0.08, 0.02, 0.03);
-                            const guardMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6, metalness: 0.8 });
-                            const guard = new THREE.Mesh(guardGeo, guardMat);
-                            guard.position.y = -0.15;
-                            thrownKnife.add(guard);
+                    camera.position.y += (0.12 - camera.position.y) * 0.12;
+                    camera.rotation.z += (1.4 - camera.rotation.z) * 0.12;
 
-                            const bladeGeo = new THREE.BoxGeometry(0.06, 0.45, 0.012);
-                            const bladeMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.15, metalness: 0.95 });
-                            const blade = new THREE.Mesh(bladeGeo, bladeMat);
-                            blade.position.y = -0.375;
-                            thrownKnife.add(blade);
-
-                            const bloodGeo = new THREE.BoxGeometry(0.062, 0.18, 0.014);
-                            const bloodMat = new THREE.MeshBasicMaterial({ color: 0x550000 });
-                            const bloodStain = new THREE.Mesh(bloodGeo, bloodMat);
-                            bloodStain.position.set(0.001, -0.45, 0);
-                            thrownKnife.add(bloodStain);
-
-                            thrownKnife.position.copy(thrownStartPos);
-                            scene.add(thrownKnife);
-                        } catch(knErr) {
-                            console.warn("Could not create thrown knife mesh:", knErr);
-                        }
+                    if (spotLight) {
+                        spotLight.intensity = Math.max(0.0, 2.5 * (1.0 - deathT));
+                    }
+                    if (ambientLight) {
+                        ambientLight.intensity = Math.max(0.0, 0.003 * (1.0 - deathT));
                     }
                     
-                    // Throw flight path towards camera
-                    const throwDuration = 0.35; // 350ms flight
-                    const throwProgress = (killSequenceTimer - 0.25) / throwDuration;
-                    
-                    if (thrownKnife) {
-                        thrownKnife.position.lerpVectors(thrownStartPos, camera.position, Math.min(1.0, throwProgress));
-                        // Rapid spin in mid-air
-                        thrownKnife.rotation.x += 0.45;
-                        thrownKnife.rotation.y += 0.3;
+                    scene.fog.density = 0.15 + deathT * 0.85;
+
+                    if (killSequenceTimer >= 2.3 && !slashSoundsPlayed.thud) {
+                        slashSoundsPlayed.thud = true;
+                        playDeathThudSound();
                     }
-                    
-                    // When the knife hits the camera/face:
-                    if (throwProgress >= 1.0) {
-                        // Clean up thrown knife mesh
-                        if (thrownKnife) {
-                            scene.remove(thrownKnife);
-                            thrownKnife = null;
-                        }
-                        
-                        // Respawn new knife back in ghost's hand immediately
-                        if (ghostMesh.knifeMesh && !ghostMesh.knifeMesh.visible) {
-                            ghostMesh.knifeMesh.visible = true;
-                        }
-                        
-                        // Shake camera, flash screen red, trigger slash thud
-                        camera.rotation.z += 0.035; // camera roll
-                        camera.position.y += (0.25 - camera.position.y) * 0.16; // height drop
-
-                        const flash = document.getElementById('kill-blood-splatter');
-                        if (flash) {
-                            flash.style.display = 'block';
-                            flash.style.opacity = '1.0';
-                            const progress = (killSequenceTimer - 0.6) / 0.3;
-                            const innerRadius = Math.max(0, 100 - progress * 100);
-                            flash.style.background = `radial-gradient(circle, rgba(100,0,0,0) ${innerRadius}%, rgba(0,0,0,0.98) 100%)`;
-                        }
-
-                        // Play the wet slash sound only once
-                        if (!thrownKnifeImpactSoundPlayed) {
-                            thrownKnifeImpactSoundPlayed = true;
-                            playSlashSound();
-                            
-                            // Instantiate 3D blood particles spraying in the camera's face!
-                            try {
-                                const pCount = 50;
-                                const pGeo = new THREE.BufferGeometry();
-                                const pPos = new Float32Array(pCount * 3);
-                                killBloodVels = [];
-                                const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                                
-                                for (let i = 0; i < pCount; i++) {
-                                    pPos[i * 3] = camera.position.x + (Math.random() - 0.5) * 0.2;
-                                    pPos[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 0.2;
-                                    pPos[i * 3 + 2] = camera.position.z + camDir.z * 0.4 + (Math.random() - 0.5) * 0.2;
-                                    
-                                    killBloodVels.push({
-                                        x: (Math.random() - 0.5) * 1.8,
-                                        y: (Math.random() - 0.2) * 1.5,
-                                        z: (Math.random() - 0.5) * 1.8
-                                    });
-                                }
-                                pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-                                const pMat = new THREE.PointsMaterial({
-                                    color: 0x990000,
-                                    size: 0.08,
-                                    transparent: true,
-                                    opacity: 0.95
-                                });
-                                killBloodParticles = new THREE.Points(pGeo, pMat);
-                                scene.add(killBloodParticles);
-                            } catch(pe) {
-                                console.warn("Could not create blood particles:", pe);
-                            }
-                        }
-                    }
-
-                    // Update 3D blood spray physics (gravity and movement)
-                    if (killBloodParticles) {
-                        try {
-                            const positions = killBloodParticles.geometry.attributes.position.array;
-                            const pCount = positions.length / 3;
-                            for (let i = 0; i < pCount; i++) {
-                                positions[i * 3] += killBloodVels[i].x * 0.016;
-                                positions[i * 3 + 1] += killBloodVels[i].y * 0.016;
-                                positions[i * 3 + 2] += killBloodVels[i].z * 0.016;
-                                killBloodVels[i].y -= 4.0 * 0.016; // gravity fall
-                            }
-                            killBloodParticles.geometry.attributes.position.needsUpdate = true;
-                        } catch(ue) {}
-                    }
-
-                    // Intense camera shake during slash
-                    camera.position.x += (Math.random() - 0.5) * 0.055;
-                    camera.position.y += (Math.random() - 0.5) * 0.055;
-                    camera.position.z += (Math.random() - 0.5) * 0.055;
                 }
             }
 
-            // 4. End sequence: trigger jumpscare overlay and audio after 0.9s
-            if (killSequenceTimer >= 0.9) {
+            if (killBloodParticles) {
+                try {
+                    const positions = killBloodParticles.geometry.attributes.position.array;
+                    const pCount = positions.length / 3;
+                    for (let i = 0; i < pCount; i++) {
+                        positions[i * 3] += killBloodVels[i].x * 0.016;
+                        positions[i * 3 + 1] += killBloodVels[i].y * 0.016;
+                        positions[i * 3 + 2] += killBloodVels[i].z * 0.016;
+                        killBloodVels[i].y -= 4.5 * 0.016;
+                    }
+                    killBloodParticles.geometry.attributes.position.needsUpdate = true;
+                    killBloodParticles.material.opacity = Math.max(0, killBloodParticles.material.opacity - 0.01);
+                } catch(ue) {}
+            }
+
+            if (killSequenceTimer >= 3.2) {
                 isKillingActive = false;
                 
-                // Hide blood flash overlay and clean up 3D particles & thrown knife
                 const flash = document.getElementById('kill-blood-splatter');
                 if (flash) {
                     flash.style.display = 'none';
                     flash.style.opacity = '0';
                 }
-                
                 if (thrownKnife) {
                     scene.remove(thrownKnife);
                     thrownKnife = null;
                 }
-
                 if (killBloodParticles) {
                     scene.remove(killBloodParticles);
                     killBloodParticles = null;
                 }
+
+                slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
                 
                 triggerFinalJumpscare();
             }
@@ -5423,11 +5380,6 @@
                 noise.start();
                 noise.stop(ctx.currentTime + 0.3);
                 
-                // Low sub thump
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(30, ctx.currentTime + 0.2);
-                
                 const oscGain = ctx.createGain();
                 oscGain.gain.setValueAtTime(0.6 * (masterVolume / 100), ctx.currentTime);
                 oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
@@ -5440,12 +5392,132 @@
             } catch (e) {}
         }
 
+        function triggerSlashVisuals(offset, baseVel) {
+            // 1. Play the wet slash sound
+            playSlashSound();
+
+            // 2. Camera jolt (sharp shake/roll)
+            const rollDirection = Math.random() > 0.5 ? 1 : -1;
+            camera.rotation.z += rollDirection * (0.15 + Math.random() * 0.15);
+            camera.position.x += (Math.random() - 0.5) * 0.25;
+            camera.position.y += (Math.random() - 0.5) * 0.25;
+            camera.position.z += (Math.random() - 0.5) * 0.25;
+
+            // 3. Screen red radial flash overlay
+            const flash = document.getElementById('kill-blood-splatter');
+            if (flash) {
+                flash.style.display = 'block';
+                flash.style.opacity = '0.9';
+                flash.style.transition = 'none';
+                // Force layout reflow
+                flash.offsetHeight;
+                flash.style.transition = 'opacity 0.45s cubic-bezier(0.1, 0.8, 0.3, 1)';
+                flash.style.opacity = '0';
+            }
+
+            // 4. Instantiation of 60 red 3D particles spraying outward
+            try {
+                const count = 60;
+                
+                // Get emitter starting position in world space
+                const emitterPos = new THREE.Vector3().copy(offset).applyQuaternion(camera.quaternion).add(camera.position);
+                
+                // Get base velocity in world space
+                const worldBaseVel = new THREE.Vector3().copy(baseVel).applyQuaternion(camera.quaternion);
+
+                let combinedPositions = [];
+                let combinedVelocities = [];
+
+                // Retrieve existing particles if they exist
+                if (killBloodParticles && killBloodVels) {
+                    const oldPosAttr = killBloodParticles.geometry.attributes.position;
+                    if (oldPosAttr) {
+                        const oldArr = oldPosAttr.array;
+                        for (let i = 0; i < oldArr.length; i++) {
+                            combinedPositions.push(oldArr[i]);
+                        }
+                        for (let i = 0; i < killBloodVels.length; i++) {
+                            combinedVelocities.push({
+                                x: killBloodVels[i].x,
+                                y: killBloodVels[i].y,
+                                z: killBloodVels[i].z
+                            });
+                        }
+                    }
+                    scene.remove(killBloodParticles);
+                }
+
+                // Generate new particles
+                for (let i = 0; i < count; i++) {
+                    const pX = emitterPos.x + (Math.random() - 0.5) * 0.15;
+                    const pY = emitterPos.y + (Math.random() - 0.5) * 0.15;
+                    const pZ = emitterPos.z + (Math.random() - 0.5) * 0.15;
+
+                    combinedPositions.push(pX, pY, pZ);
+
+                    const spreadX = (Math.random() - 0.5) * 1.5;
+                    const spreadY = (Math.random() - 0.2) * 1.5;
+                    const spreadZ = (Math.random() - 0.5) * 1.5;
+
+                    combinedVelocities.push({
+                        x: worldBaseVel.x + spreadX,
+                        y: worldBaseVel.y + spreadY,
+                        z: worldBaseVel.z + spreadZ
+                    });
+                }
+
+                // Create new BufferGeometry
+                const pGeo = new THREE.BufferGeometry();
+                pGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(combinedPositions), 3));
+
+                const pMat = new THREE.PointsMaterial({
+                    color: 0x990000,
+                    size: 0.08,
+                    transparent: true,
+                    opacity: 0.95
+                });
+
+                killBloodParticles = new THREE.Points(pGeo, pMat);
+                scene.add(killBloodParticles);
+                
+                killBloodVels = combinedVelocities;
+
+            } catch (err) {
+                console.warn("Could not trigger blood particles:", err);
+            }
+        }
+
+        function playDeathThudSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(80, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, ctx.currentTime + 0.6);
+                
+                gain.gain.setValueAtTime(1.0 * (masterVolume / 100), ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.7);
+            } catch (e) {
+                console.warn("Could not play death thud sound:", e);
+            }
+        }
+
         function onWindowResize() {
             if (!renderer || !camera) return;
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
+
+        let slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
 
         function triggerJumpscare() {
             if (isKillingActive) return; // avoid duplicate calls
@@ -5454,6 +5526,9 @@
             isKillingActive = true;
             killSequenceTimer = 0;
             slashSoundPlayed = false;
+            
+            // Reset multiple slash sound states
+            slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
             
             document.exitPointerLock();
             
