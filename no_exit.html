@@ -2074,6 +2074,7 @@
         let currentInteractiveDoor = null;
         
         let ghostlyCorpseMesh = null;
+        let walkingCorpses = [];
         let paranormalActive = false;
         let paranormalTimer = 0;
         
@@ -3554,6 +3555,26 @@
             }
         }
 
+        function createCircularDripTexture(isBlood) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 16;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            if (isBlood) {
+                grad.addColorStop(0, 'rgba(180, 0, 0, 1.0)');     // reflective blood core
+                grad.addColorStop(0.4, 'rgba(110, 0, 0, 0.95)');   // dark blood circle
+                grad.addColorStop(1.0, 'rgba(110, 0, 0, 0)');      // transparent edge
+            } else {
+                grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');  // light reflection
+                grad.addColorStop(0.35, 'rgba(153, 204, 255, 0.8)'); // soft water droplet blue
+                grad.addColorStop(1.0, 'rgba(153, 204, 255, 0)');   // smooth drop falloff
+            }
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 16, 16);
+            return new THREE.CanvasTexture(canvas);
+        }
+
         function createWaterLeak(group, cellC, cellR, isBlood = false) {
             const x = cellC * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
             const z = cellR * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
@@ -3592,10 +3613,12 @@
             pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             
             const pMat = new THREE.PointsMaterial({
-                color: isBlood ? 0x990000 : 0x99ccff,
-                size: isBlood ? 0.045 : 0.038,
+                color: 0xffffff,
+                size: isBlood ? 0.12 : 0.09, // larger scale so circle textures are visible
+                map: createCircularDripTexture(isBlood),
                 transparent: true,
-                opacity: 0.9
+                opacity: 0.95,
+                depthWrite: false
             });
             
             const pointsMesh = new THREE.Points(pGeo, pMat);
@@ -3816,7 +3839,64 @@
             return texture;
         }
 
-        function createAutopsyTableWithCorpse() {
+        function addFingersToHand(armMesh, skinMat, isLeft) {
+            const fingerLength = 0.05;
+            const fingerRadius = 0.007;
+            const fingerGeo = new THREE.CylinderGeometry(fingerRadius, fingerRadius * 1.1, fingerLength, 6);
+            const handZ = -0.4;
+            
+            for (let i = 0; i < 5; i++) {
+                const finger = new THREE.Mesh(fingerGeo, skinMat);
+                const xOffset = (i - 2) * 0.018; 
+                const yOffset = -0.01;
+                const zOffset = handZ - (i === 2 ? 0.02 : (i === 0 ? -0.01 : 0.0));
+                
+                finger.position.set(xOffset, yOffset, zOffset);
+                finger.rotation.x = 0.2 + Math.random() * 0.15;
+                if (isLeft) {
+                    finger.rotation.y = (i - 2) * 0.08;
+                } else {
+                    finger.rotation.y = -(i - 2) * 0.08;
+                }
+                
+                armMesh.add(finger);
+            }
+        }
+
+        function addSpineToTorso(torsoMesh, skinMat) {
+            const boneMat = new THREE.MeshStandardMaterial({
+                color: 0xdddddd,
+                roughness: 0.9,
+                metalness: 0.05
+            });
+            
+            const vertebraeCount = 8;
+            const spineGroup = new THREE.Group();
+            
+            for (let i = 0; i < vertebraeCount; i++) {
+                const vertGeo = new THREE.BoxGeometry(0.08, 0.04, 0.05);
+                const vertebra = new THREE.Mesh(vertGeo, boneMat);
+                
+                const zPos = -0.3 + (i / (vertebraeCount - 1)) * 0.6;
+                vertebra.position.set(0, 0.11, zPos);
+                
+                const wingGeo = new THREE.BoxGeometry(0.14, 0.015, 0.02);
+                const wings = new THREE.Mesh(wingGeo, boneMat);
+                wings.position.set(0, -0.01, 0);
+                vertebra.add(wings);
+                
+                const bumpGeo = new THREE.BoxGeometry(0.02, 0.04, 0.02);
+                const bump = new THREE.Mesh(bumpGeo, boneMat);
+                bump.position.set(0, 0.03, -0.01);
+                bump.rotation.x = -0.2;
+                vertebra.add(bump);
+                
+                spineGroup.add(vertebra);
+            }
+            torsoMesh.add(spineGroup);
+        }
+
+        function createAutopsyTableWithCorpse(idx = 0) {
             const tableGroup = new THREE.Group();
             
             const steelMat = new THREE.MeshStandardMaterial({
@@ -3851,6 +3931,13 @@
                 roughness: 0.85
             });
             
+            const torsoGeo = new THREE.BoxGeometry(0.48, 0.2, 0.9);
+            const torso = new THREE.Mesh(torsoGeo, skinMat);
+            torso.position.set(0, 0.1, 0.35);
+            corpseGroup.add(torso);
+            
+            addSpineToTorso(torso, skinMat);
+            
             const headGeo = new THREE.SphereGeometry(0.12, 12, 12);
             const head = new THREE.Mesh(headGeo, skinMat);
             head.position.set(0, 0.12, 0.95);
@@ -3858,23 +3945,21 @@
             
             const noseGeo = new THREE.BoxGeometry(0.03, 0.06, 0.04);
             const nose = new THREE.Mesh(noseGeo, skinMat);
-            nose.position.set(0, 0.12 + 0.12, 0.95);
+            nose.position.set(0, 0.24, 0.95);
             corpseGroup.add(nose);
-            
-            const torsoGeo = new THREE.BoxGeometry(0.48, 0.2, 0.9);
-            const torso = new THREE.Mesh(torsoGeo, skinMat);
-            torso.position.set(0, 0.1, 0.35);
-            corpseGroup.add(torso);
             
             const armGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.8, 8);
             armGeo.rotateX(Math.PI / 2);
+            
             const leftArm = new THREE.Mesh(armGeo, skinMat);
             leftArm.position.set(-0.3, 0.08, 0.35);
             corpseGroup.add(leftArm);
+            addFingersToHand(leftArm, skinMat, true);
             
             const rightArm = new THREE.Mesh(armGeo, skinMat);
             rightArm.position.set(0.3, 0.08, 0.35);
             corpseGroup.add(rightArm);
+            addFingersToHand(rightArm, skinMat, false);
             
             const legCorpseGeo = new THREE.CylinderGeometry(0.08, 0.06, 1.0, 8);
             legCorpseGeo.rotateX(Math.PI / 2);
@@ -3885,6 +3970,11 @@
             const rightLeg = new THREE.Mesh(legCorpseGeo, skinMat);
             rightLeg.position.set(0.16, 0.08, -0.5);
             corpseGroup.add(rightLeg);
+            
+            if (idx % 2 !== 0) {
+                corpseGroup.rotation.z = Math.PI;
+                nose.position.set(0, 0.0, 0.95);
+            }
             
             const sheetTexture = createBloodStainedSheetTexture();
             const sheetMat = new THREE.MeshStandardMaterial({
@@ -3935,6 +4025,8 @@
             torso.position.set(0, 1.1, 0);
             corpseGroup.add(torso);
             
+            addSpineToTorso(torso, skinMat);
+            
             const sheetTexture = createBloodStainedSheetTexture();
             const shroudMat = new THREE.MeshStandardMaterial({
                 map: sheetTexture,
@@ -3955,10 +4047,12 @@
             const leftArm = new THREE.Mesh(armGeo, skinMat);
             leftArm.position.set(-0.28, 1.35, 0);
             corpseGroup.add(leftArm);
+            addFingersToHand(leftArm, skinMat, true);
             
             const rightArm = new THREE.Mesh(armGeo, skinMat);
             rightArm.position.set(0.28, 1.35, 0);
             corpseGroup.add(rightArm);
+            addFingersToHand(rightArm, skinMat, false);
             
             const legGeo = new THREE.CylinderGeometry(0.07, 0.05, 0.75, 8);
             legGeo.translate(0, -0.375, 0);
@@ -3987,6 +4081,189 @@
             });
             
             return corpseGroup;
+        }
+
+        function createWalkingCorpseMesh() {
+            const corpseGroup = new THREE.Group();
+            
+            const skinMat = new THREE.MeshStandardMaterial({
+                color: 0x5a6a73,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            
+            const torsoGeo = new THREE.BoxGeometry(0.4, 0.6, 0.2);
+            const torso = new THREE.Mesh(torsoGeo, skinMat);
+            torso.position.set(0, 1.1, 0);
+            corpseGroup.add(torso);
+            
+            const boneMat = new THREE.MeshStandardMaterial({
+                color: 0xe0dcd5,
+                roughness: 0.9
+            });
+            const vertebraeCount = 7;
+            for (let i = 0; i < vertebraeCount; i++) {
+                const vertGeo = new THREE.BoxGeometry(0.06, 0.03, 0.04);
+                const vertebra = new THREE.Mesh(vertGeo, boneMat);
+                const yPos = -0.2 + (i / (vertebraeCount - 1)) * 0.4;
+                vertebra.position.set(0, yPos, -0.11);
+                
+                const wingGeo = new THREE.BoxGeometry(0.12, 0.015, 0.015);
+                const wings = new THREE.Mesh(wingGeo, boneMat);
+                wings.position.set(0, 0, 0);
+                vertebra.add(wings);
+                
+                const bumpGeo = new THREE.BoxGeometry(0.015, 0.03, 0.02);
+                const bump = new THREE.Mesh(bumpGeo, boneMat);
+                bump.position.set(0, 0, -0.025);
+                vertebra.add(bump);
+                
+                torso.add(vertebra);
+            }
+            
+            const headGeo = new THREE.SphereGeometry(0.14, 12, 12);
+            const head = new THREE.Mesh(headGeo, skinMat);
+            head.position.set(0, 1.55, 0);
+            corpseGroup.add(head);
+            
+            const jawGeo = new THREE.BoxGeometry(0.1, 0.06, 0.08);
+            const jaw = new THREE.Mesh(jawGeo, skinMat);
+            jaw.position.set(0, 1.42, 0.04);
+            corpseGroup.add(jaw);
+            
+            const armGeo = new THREE.CylinderGeometry(0.04, 0.03, 0.6, 8);
+            armGeo.translate(0, -0.3, 0);
+            
+            const leftArm = new THREE.Mesh(armGeo, skinMat);
+            leftArm.position.set(-0.25, 1.35, 0);
+            corpseGroup.add(leftArm);
+            addFingersToHand(leftArm, skinMat, true);
+            
+            const rightArm = new THREE.Mesh(armGeo, skinMat);
+            rightArm.position.set(0.25, 1.35, 0);
+            corpseGroup.add(rightArm);
+            addFingersToHand(rightArm, skinMat, false);
+            
+            const legGeo = new THREE.CylinderGeometry(0.06, 0.04, 0.7, 8);
+            legGeo.translate(0, -0.35, 0);
+            
+            const leftLeg = new THREE.Mesh(legGeo, skinMat);
+            leftLeg.position.set(-0.13, 0.75, 0);
+            corpseGroup.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeo, skinMat);
+            rightLeg.position.set(0.13, 0.75, 0);
+            corpseGroup.add(rightLeg);
+            
+            corpseGroup.userData = {
+                leftArm: leftArm,
+                rightArm: rightArm,
+                leftLeg: leftLeg,
+                rightLeg: rightLeg,
+                head: head,
+                jaw: jaw,
+                walkCycle: Math.random() * 100,
+                twitchTimer: 0
+            };
+            
+            corpseGroup.traverse(node => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                }
+            });
+            
+            return corpseGroup;
+        }
+
+        function updateWalkingCorpses() {
+            if (!isGameRunning || isKillingActive || activeFloor !== 2) return;
+            
+            const time = performance.now() * 0.001;
+            
+            const playerWorldX = playerPos.x * CELL_SIZE - MAP_OFFSET;
+            const playerWorldZ = playerPos.z * CELL_SIZE - MAP_OFFSET;
+            
+            walkingCorpses.forEach((corpse, idx) => {
+                const currentPos = corpse.position;
+                
+                const curGridX = Math.floor((currentPos.x + MAP_OFFSET) / CELL_SIZE);
+                const curGridZ = Math.floor((currentPos.z + MAP_OFFSET) / CELL_SIZE);
+                
+                let tgtX = corpse.userData.targetX;
+                let tgtZ = corpse.userData.targetZ;
+                
+                if (tgtX === undefined || tgtZ === undefined) {
+                    tgtX = curGridX;
+                    tgtZ = curGridZ;
+                    corpse.userData.targetX = tgtX;
+                    corpse.userData.targetZ = tgtZ;
+                }
+                
+                const tgtWorldX = tgtX * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                const tgtWorldZ = tgtZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                
+                const dx = tgtWorldX - currentPos.x;
+                const dz = tgtWorldZ - currentPos.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                
+                const speed = 0.015;
+                
+                if (dist > 0.05) {
+                    currentPos.x += (dx / dist) * speed;
+                    currentPos.z += (dz / dist) * speed;
+                    
+                    const targetAngle = Math.atan2(dx, dz);
+                    let diff = targetAngle - corpse.rotation.y;
+                    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+                    corpse.rotation.y += diff * 0.1;
+                } else {
+                    const neighbors = [
+                        { x: tgtX + 1, z: tgtZ },
+                        { x: tgtX - 1, z: tgtZ },
+                        { x: tgtX, z: tgtZ + 1 },
+                        { x: tgtX, z: tgtZ - 1 }
+                    ];
+                    
+                    const validNeighbors = neighbors.filter(n => {
+                        if (n.x < 0 || n.x >= MAP_SIZE || n.z < 0 || n.z >= MAP_SIZE) return false;
+                        return MORTUARY_FLOOR_MAP[n.z][n.x] === 0;
+                    });
+                    
+                    if (validNeighbors.length > 0) {
+                        const nextTarget = validNeighbors[Math.floor(Math.random() * validNeighbors.length)];
+                        corpse.userData.targetX = nextTarget.x;
+                        corpse.userData.targetZ = nextTarget.z;
+                    }
+                }
+                
+                const walkCycle = time * 3.5 + idx * 10;
+                
+                corpse.userData.leftLeg.rotation.x = Math.sin(walkCycle) * 0.4;
+                corpse.userData.rightLeg.rotation.x = -Math.sin(walkCycle) * 0.4;
+                
+                corpse.userData.leftArm.rotation.x = Math.PI / 3 + Math.sin(walkCycle * 1.5) * 0.15;
+                corpse.userData.leftArm.rotation.z = -Math.PI / 12 + Math.cos(walkCycle) * 0.1;
+                
+                corpse.userData.rightArm.rotation.x = Math.PI / 3 - Math.sin(walkCycle * 1.7) * 0.15;
+                corpse.userData.rightArm.rotation.z = Math.PI / 12 - Math.cos(walkCycle * 1.2) * 0.1;
+                
+                corpse.userData.head.rotation.z = Math.sin(time * 8 + idx) * 0.15;
+                corpse.userData.head.rotation.y = Math.cos(time * 5 + idx * 2) * 0.2;
+                
+                if (Math.random() < 0.02) {
+                    corpse.userData.head.rotation.x = (Math.random() - 0.5) * 0.5;
+                    corpse.userData.leftArm.rotation.y = (Math.random() - 0.5) * 0.4;
+                    corpse.userData.rightArm.rotation.y = (Math.random() - 0.5) * 0.4;
+                }
+                
+                const pDx = playerWorldX - currentPos.x;
+                const pDz = playerWorldZ - currentPos.z;
+                const pDist = Math.sqrt(pDx * pDx + pDz * pDz);
+                if (pDist < 0.7) {
+                    triggerJumpscare();
+                }
+            });
         }
 
         function buildMortuaryFloor() {
@@ -4068,8 +4345,8 @@
                 { cx: 8, cz: 8, rotY: 0 }
             ];
             
-            tablePositions.forEach(pos => {
-                const table = createAutopsyTableWithCorpse();
+            tablePositions.forEach((pos, idx) => {
+                const table = createAutopsyTableWithCorpse(idx);
                 const wx = pos.cx * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
                 const wz = pos.cz * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
                 table.position.set(wx, 0, wz);
@@ -4080,6 +4357,25 @@
             ghostlyCorpseMesh = createGhostlyCorpseMesh();
             ghostlyCorpseMesh.visible = false;
             mortuaryFloorGroup.add(ghostlyCorpseMesh);
+            
+            // Spawn 2 walking corpses
+            walkingCorpses = [];
+            const defaultSpawns = [
+                { x: 3.5, z: 3.5 },
+                { x: 7.5, z: 5.5 }
+            ];
+            defaultSpawns.forEach((spawn, idx) => {
+                const wCorpse = createWalkingCorpseMesh();
+                const wx = spawn.x * CELL_SIZE - MAP_OFFSET;
+                const wz = spawn.z * CELL_SIZE - MAP_OFFSET;
+                wCorpse.position.set(wx, 0.05, wz);
+                wCorpse.userData.targetX = spawn.x;
+                wCorpse.userData.targetZ = spawn.z;
+                wCorpse.userData.changeDirTimer = 0;
+                
+                mortuaryFloorGroup.add(wCorpse);
+                walkingCorpses.push(wCorpse);
+            });
             
             mortuaryFloorGroup.visible = false;
         }
@@ -6115,6 +6411,7 @@
 
                 if (activeFloor === 2) {
                     updateParanormalActivity();
+                    updateWalkingCorpses();
                 }
 
                 // Update zero-watt bulbs (both flickering and looping on-off)
@@ -6816,6 +7113,27 @@
                 mortuaryFloorGroup.visible = false;
             }
 
+            keysPressed = { w: false, a: false, s: false, d: false };
+            isTransitioningFloor = false;
+            try {
+                breathingAudio.pause();
+                breathingAudio.currentTime = 0;
+            } catch (e) {}
+
+            if (ghostMesh && ghostMesh.children) {
+                ghostMesh.children.forEach(child => {
+                    if (child.material && child.material.color && child.material.color.r === 1 && child.material.color.g === 0 && child.material.color.b === 0) {
+                        child.scale.setScalar(1.0);
+                    } else if (child.material && child.material.color && child.material.color.r === 0 && child.material.color.g === 0 && child.material.color.b === 0) {
+                        child.scale.set(1.2, 3.2, 0.6);
+                    }
+                });
+                if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.set(0, 0, 0);
+                if (ghostMesh.rightArm) ghostMesh.rightArm.rotation.set(0, 0, 0);
+                if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.set(0, 0, 0);
+                if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.set(0, 0, 0);
+            }
+
             // Reset camera rotations (pitch, yaw, roll)
             mouseYaw = Math.PI / 4;
             mousePitch = 0;
@@ -6867,6 +7185,24 @@
             ghostPos.z = 7.5;
             ghostStalking = false;
             ghostAlertTimer = 0;
+
+            // Reset walking corpses
+            if (walkingCorpses && walkingCorpses.length > 0) {
+                const defaultSpawns = [
+                    { x: 3.5, z: 3.5 },
+                    { x: 7.5, z: 5.5 }
+                ];
+                walkingCorpses.forEach((corpse, idx) => {
+                    const spawn = defaultSpawns[idx];
+                    const wx = spawn.x * CELL_SIZE - MAP_OFFSET;
+                    const wz = spawn.z * CELL_SIZE - MAP_OFFSET;
+                    corpse.position.set(wx, 0.05, wz);
+                    corpse.rotation.set(0, 0, 0);
+                    corpse.userData.targetX = spawn.x;
+                    corpse.userData.targetZ = spawn.z;
+                    corpse.userData.changeDirTimer = 0;
+                });
+            }
 
             // Reset killing sequence variables
             isKillingActive = false;
