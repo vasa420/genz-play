@@ -1673,6 +1673,7 @@
         
         // Build environment structures
         createForest();
+        createMountains();
         spawnHikers();
         createStarfield();
         createMistSystem();
@@ -1892,6 +1893,57 @@
         }
     }
 
+    function createMountains() {
+        const mountainCount = 12;
+        const mountainMat = new THREE.MeshStandardMaterial({
+            color: 0x1a1c1a,
+            roughness: 0.95,
+            metalness: 0.05,
+            flatShading: true
+        });
+        
+        for (let i = 0; i < mountainCount; i++) {
+            // Place in a ring surrounding the forest boundary
+            const angle = (i / mountainCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.22;
+            const radius = 175 + Math.random() * 35;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            const terrainH = getTerrainHeight(x, z);
+            const mHeight = 45 + Math.random() * 35;
+            const mRadius = 55 + Math.random() * 35;
+            
+            // Deformed cone geometry for jagged ridges
+            const coneGeo = new THREE.ConeGeometry(mRadius, mHeight, 6, 3);
+            const pos = coneGeo.attributes.position;
+            for (let v = 0; v < pos.count; v++) {
+                const vy = pos.getY(v);
+                if (vy > -mHeight / 2) {
+                    const vx = pos.getX(v);
+                    const vz = pos.getZ(v);
+                    const vAngle = Math.atan2(vz, vx);
+                    
+                    const ridgeNoise = Math.sin(vAngle * 6.0) * (mRadius * 0.15);
+                    const heightNoise = (Math.random() - 0.5) * 1.5;
+                    
+                    pos.setX(v, vx + Math.cos(vAngle) * ridgeNoise);
+                    pos.setZ(v, vz + Math.sin(vAngle) * ridgeNoise);
+                    pos.setY(v, vy + heightNoise);
+                }
+            }
+            coneGeo.computeVertexNormals();
+            
+            const mesh = new THREE.Mesh(coneGeo, mountainMat);
+            // Put base at Y=0 locally, position on top of the terrain base
+            mesh.position.set(x, terrainH + mHeight / 2 - 2, z);
+            
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            
+            scene.add(mesh);
+        }
+    }
+
     function spawnHikers() {
         hikers = [];
         const hikerCount = 5;
@@ -2089,7 +2141,7 @@
         }
         
         const totalSecondsPast6 = (gameHour === 6 ? (gameMinute * 60 + gameSecond) : 0);
-        let progress = totalSecondsPast6 / 15.0; // transitions fully over 15 game seconds
+        let progress = totalSecondsPast6 / 60.0; // Slowed down to set between 6:00 and 6:01 (60 seconds)
         progress = Math.min(1.0, Math.max(0.0, progress));
         
         const startFogColor = new THREE.Color(0xe08b5e);
@@ -2361,7 +2413,7 @@
         let progress = 0;
         if (isTransitioningToNight) {
             const totalSecondsPast6 = (gameHour === 6 ? (gameMinute * 60 + gameSecond) : 0);
-            progress = totalSecondsPast6 / 15.0;
+            progress = totalSecondsPast6 / 60.0; // Slowed down to set between 6:00 and 6:01 (60 seconds)
             progress = Math.min(1.0, Math.max(0.0, progress));
         }
         
@@ -2435,7 +2487,7 @@
         let transitionProgress = 0;
         if (isTransitioningToNight) {
             const totalSecondsPast6 = (gameHour === 6 ? (gameMinute * 60 + gameSecond) : 0);
-            transitionProgress = totalSecondsPast6 / 15.0;
+            transitionProgress = totalSecondsPast6 / 60.0; // Slowed down to set between 6:00 and 6:01 (60 seconds)
             transitionProgress = Math.min(1.0, Math.max(0.0, transitionProgress));
         }
         
