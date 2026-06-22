@@ -769,9 +769,11 @@
 <!-- ═══ PAGE 3: LOBBY ═══ -->
 <div class="page" id="lobby-page">
     <div class="lobby-inner">
-        <div class="lobby-title-block">
+        <div class="lobby-title-block" style="position:relative;">
             <div class="lobby-tag">◈ PROJECT WOODS ◈</div>
-            <div class="lobby-title">DARKWOOD<br>ESCAPE</div>
+            <div class="lobby-title" id="lobby-title-text">DARKWOOD<br>ESCAPE</div>
+            <!-- Fire canvas sits over the title -->
+            <canvas id="fire-canvas"></canvas>
             <div class="lobby-subtitle">Night 01 — Survive Until Dawn</div>
         </div>
         <div class="lobby-divider"></div>
@@ -844,7 +846,10 @@
         document.getElementById(id).classList.add('active');
     }
 
-    function goLobby() { showPage('lobby-page'); }
+    function goLobby() {
+        showPage('lobby-page');
+        setTimeout(startFireEffect, 120);
+    }
 
     /* ─── KEYBOARD: Enter key → continue to lobby ─── */
     document.addEventListener('keydown', function(e) {
@@ -942,6 +947,129 @@
         `;
         pc.appendChild(p);
     }
+
+    /* ═══════════════════════════════════
+       FIRE EFFECT ON LOBBY TITLE
+    ═══════════════════════════════════ */
+    const fireCanvas = document.getElementById('fire-canvas');
+    const fCtx = fireCanvas.getContext('2d');
+
+    // Position the canvas over the title text
+    function resizeFireCanvas() {
+        const titleEl = document.getElementById('lobby-title-text');
+        const rect = titleEl.getBoundingClientRect();
+        fireCanvas.width  = rect.width  + 80;
+        fireCanvas.height = rect.height + 120;
+        fireCanvas.style.position   = 'absolute';
+        fireCanvas.style.left       = (rect.left - document.getElementById('lobby-page').getBoundingClientRect().left - 40) + 'px';
+        fireCanvas.style.top        = (rect.top  - document.getElementById('lobby-page').getBoundingClientRect().top  - 100) + 'px';
+        fireCanvas.style.pointerEvents = 'none';
+        fireCanvas.style.zIndex     = '5';
+    }
+
+    // Fire particle class
+    class FireParticle {
+        constructor(x, baseY, w) {
+            this.x    = x + (Math.random() - 0.5) * 18;
+            this.y    = baseY;
+            this.vx   = (Math.random() - 0.5) * 1.8;
+            this.vy   = -(Math.random() * 3.5 + 1.8);
+            this.size = Math.random() * 10 + 5;
+            this.maxLife = Math.random() * 0.5 + 0.5;
+            this.life    = this.maxLife;
+            this.decay   = Math.random() * 0.018 + 0.008;
+            this.wobble  = Math.random() * 0.08;
+            this.wobbleT = Math.random() * Math.PI * 2;
+        }
+        update() {
+            this.wobbleT += 0.12;
+            this.x    += this.vx + Math.sin(this.wobbleT) * this.wobble * 4;
+            this.y    += this.vy;
+            this.vy   *= 0.985;
+            this.size *= 0.970;
+            this.life -= this.decay;
+        }
+        draw(ctx) {
+            if (this.size < 0.5) return;
+            const ratio = Math.max(0, this.life / this.maxLife);
+            let r, g, b;
+            if (ratio > 0.75) {
+                // White-hot core
+                r = 255; g = 255; b = Math.floor((ratio - 0.75) / 0.25 * 255);
+            } else if (ratio > 0.5) {
+                // Yellow
+                r = 255; g = Math.floor(200 + (ratio - 0.5) / 0.25 * 55); b = 0;
+            } else if (ratio > 0.25) {
+                // Orange
+                r = 255; g = Math.floor((ratio - 0.25) / 0.25 * 160 + 40); b = 0;
+            } else {
+                // Deep red fading out
+                r = Math.floor(180 + ratio / 0.25 * 75); g = 0; b = 0;
+            }
+            const alpha = ratio * 0.85;
+            const grad = ctx.createRadialGradient(
+                this.x, this.y, 0,
+                this.x, this.y, this.size
+            );
+            grad.addColorStop(0, `rgba(${r},${g},${b},${alpha})`);
+            grad.addColorStop(0.4, `rgba(${r},${Math.floor(g*0.6)},0,${alpha * 0.7})`);
+            grad.addColorStop(1, `rgba(${r},0,0,0)`);
+            ctx.beginPath();
+            ctx.fillStyle = grad;
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        isDead() { return this.life <= 0 || this.size < 0.5; }
+    }
+
+    let fireParticles = [];
+    let fireRunning   = false;
+
+    function emitFire() {
+        if (!fireRunning) return;
+        const titleEl = document.getElementById('lobby-title-text');
+        const cRect   = fireCanvas.getBoundingClientRect();
+        const tRect   = titleEl.getBoundingClientRect();
+        const baseY   = fireCanvas.height - 10;
+        const spawnX  = tRect.left - cRect.left;
+        const spawnW  = tRect.width;
+        // Spawn multiple clusters along text width
+        const spawnCount = Math.floor(spawnW / 14);
+        for (let i = 0; i < spawnCount; i++) {
+            if (Math.random() < 0.6) {
+                const x = spawnX + (i / spawnCount) * spawnW + (Math.random() - 0.5) * 12;
+                fireParticles.push(new FireParticle(x, baseY, spawnW));
+            }
+        }
+        // Extra central burst for realism
+        for (let i = 0; i < 5; i++) {
+            const x = spawnX + Math.random() * spawnW;
+            fireParticles.push(new FireParticle(x, baseY, spawnW));
+        }
+    }
+
+    function renderFire() {
+        if (!fireRunning) return;
+        fCtx.clearRect(0, 0, fireCanvas.width, fireCanvas.height);
+        fCtx.globalCompositeOperation = 'screen';
+        fireParticles.forEach(p => { p.update(); p.draw(fCtx); });
+        fireParticles = fireParticles.filter(p => !p.isDead());
+        fCtx.globalCompositeOperation = 'source-over';
+        emitFire();
+        requestAnimationFrame(renderFire);
+    }
+
+    function startFireEffect() {
+        resizeFireCanvas();
+        fireRunning = true;
+        renderFire();
+    }
+
+    // Re-size canvas on window resize
+    window.addEventListener('resize', () => {
+        if (fireRunning) resizeFireCanvas();
+    });
+
 </script>
 </body>
 </html>
