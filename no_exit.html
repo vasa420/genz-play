@@ -2067,6 +2067,7 @@
         let killBloodVels = [];
         let stepsTimer = 0;
         let headBobTime = 0;
+        let waterLeaks = [];
         
         let cctvTargets = [];
         let cctvLightsOn = [false, false, false, false];
@@ -2362,6 +2363,10 @@
  
             // Spawn Spooky hanging 0-watt light bulbs to illuminate hallways & CCTV
             spawnZeroWattBulbs();
+ 
+            // Spawn Ceiling Pipe and Wire networks for both floors
+            spawnCeilingPipesAndWires(groundFloorGroup, 0);
+            spawnCeilingPipesAndWires(secondFloorGroup, 1);
  
             // Spawn Roaming Creatures (Rats and Cockroaches) on both floors
             spawnCreatures(groundFloorGroup, 0);
@@ -3233,6 +3238,19 @@
             pointLight.castShadow = false; // disable point light shadows to keep frame rate high
             pointLight.flickerTimer = 0;
             pointLight.baseIntensity = 0.55;
+            
+            // Store references for visual mesh color syncing
+            pointLight.bulbMesh = bulb;
+            pointLight.bulbMat = bulbMat;
+            
+            // 35% chance to make it a looping on-off light
+            if (Math.random() < 0.35) {
+                pointLight.isLoopingOnOff = true;
+                pointLight.loopOffset = Math.random() * 5.0;
+                pointLight.loopPeriod = 0.6 + Math.random() * 1.4; // between 0.6 and 2.0s
+                pointLight.loopDutyCycle = 0.4 + Math.random() * 0.4; // ON fraction (40% - 80%)
+            }
+            
             bulbGroup.add(pointLight);
             
             // Track for flickering updates
@@ -3241,6 +3259,249 @@
             
             bulbGroup.position.set(x, 0, z);
             group.add(bulbGroup);
+        }
+
+        function createSaggingWire(group, p1, p2) {
+            const midY = Math.min(p1.y, p2.y) - 0.15; // dip in the middle
+            const midPoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+            midPoint.y = midY;
+
+            const points = [];
+            const segments = 4;
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const p = new THREE.Vector3()
+                    .copy(p1).multiplyScalar((1-t)*(1-t))
+                    .addScaledVector(midPoint, 2*(1-t)*t)
+                    .addScaledVector(p2, t*t);
+                points.push(p);
+            }
+
+            const wireMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
+            for (let i = 0; i < points.length - 1; i++) {
+                const start = points[i];
+                const end = points[i+1];
+                const dist = start.distanceTo(end);
+                const wireGeo = new THREE.CylinderGeometry(0.012, 0.012, dist, 4);
+                const segment = new THREE.Mesh(wireGeo, wireMat);
+                
+                segment.position.copy(start).add(end).multiplyScalar(0.5);
+                
+                const direction = new THREE.Vector3().subVectors(end, start).normalize();
+                const alignAxis = new THREE.Vector3(0, 1, 0);
+                segment.quaternion.setFromUnitVectors(alignAxis, direction);
+                
+                group.add(segment);
+            }
+        }
+
+        function createWaterLeak(group, cellC, cellR) {
+            const x = cellC * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+            const z = cellR * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+            const emitterPos = new THREE.Vector3(x, 3.85, z);
+            
+            const pCount = 30; // 15 drops, 15 splashes
+            const positions = new Float32Array(pCount * 3);
+            const velocities = [];
+            const lifetimes = new Float32Array(pCount);
+            
+            // Initialize droplets with random heights
+            for (let i = 0; i < 15; i++) {
+                positions[i * 3] = x + (Math.random() - 0.5) * 0.05;
+                positions[i * 3 + 1] = Math.random() * 3.85;
+                positions[i * 3 + 2] = z + (Math.random() - 0.5) * 0.05;
+                
+                velocities.push(new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.05,
+                    -0.2 - Math.random() * 0.8,
+                    (Math.random() - 0.5) * 0.05
+                ));
+                lifetimes[i] = 1.0;
+            }
+            
+            // Initialize splashes under the floor
+            for (let i = 15; i < 30; i++) {
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = -1.0;
+                positions[i * 3 + 2] = z;
+                
+                velocities.push(new THREE.Vector3(0, 0, 0));
+                lifetimes[i] = 0;
+            }
+            
+            const pGeo = new THREE.BufferGeometry();
+            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const pMat = new THREE.PointsMaterial({
+                color: 0x99ccff,
+                size: 0.038,
+                transparent: true,
+                opacity: 0.85
+            });
+            
+            const pointsMesh = new THREE.Points(pGeo, pMat);
+            group.add(pointsMesh);
+            
+            // Reflective puddle on floor
+            const puddleGeo = new THREE.RingGeometry(0, 0.28, 16);
+            const puddleMat = new THREE.MeshStandardMaterial({
+                color: 0x111c22,
+                roughness: 0.03,
+                metalness: 0.1,
+                transparent: true,
+                opacity: 0.65,
+                side: THREE.DoubleSide
+            });
+            const puddle = new THREE.Mesh(puddleGeo, puddleMat);
+            puddle.rotation.x = -Math.PI / 2;
+            puddle.position.set(x, 0.005, z);
+            group.add(puddle);
+            
+            waterLeaks.push({
+                points: pointsMesh,
+                velocities: velocities,
+                lifetimes: lifetimes,
+                emitter: emitterPos,
+                splashIndex: 15
+            });
+        }
+
+        function spawnCeilingPipesAndWires(group, floorIndex) {
+            const map = floorIndex === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+            
+            const leaks = floorIndex === 0 ? [
+                { r: 5, c: 2 },
+                { r: 1, c: 6 }
+            ] : [
+                { r: 5, c: 2 },
+                { r: 1, c: 7 }
+            ];
+
+            const pipeMat = new THREE.MeshStandardMaterial({
+                color: 0x5a5d60,
+                metalness: 0.8,
+                roughness: 0.35
+            });
+
+            const rustyMat = new THREE.MeshStandardMaterial({
+                color: 0x6e473b,
+                metalness: 0.4,
+                roughness: 0.8
+            });
+
+            const bracketMat = new THREE.MeshStandardMaterial({
+                color: 0x1c1c1c,
+                metalness: 0.5,
+                roughness: 0.8
+            });
+
+            const spawnedLeaksInCell = {};
+
+            for (let r = 0; r < MAP_SIZE; r++) {
+                for (let c = 0; c < MAP_SIZE; c++) {
+                    const val = map[r][c];
+                    if (val !== 0 && val !== 5) continue;
+
+                    const cellX = c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                    const cellZ = r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+
+                    // Center bracket mount on the ceiling
+                    const bracketGeo = new THREE.BoxGeometry(0.16, 0.05, 0.16);
+                    const bracket = new THREE.Mesh(bracketGeo, bracketMat);
+                    bracket.position.set(cellX, 3.96, cellZ);
+                    group.add(bracket);
+
+                    const isLeak = leaks.some(lk => lk.r === r && lk.c === c);
+
+                    // East-West pipe
+                    if (c < MAP_SIZE - 1 && (map[r][c+1] === 0 || map[r][c+1] === 5)) {
+                        const startX = cellX;
+                        const endX = cellX + CELL_SIZE;
+                        const midX = (startX + endX) / 2;
+
+                        if (isLeak) {
+                            const len1 = 1.7;
+                            const pipe1Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
+                            pipe1Geo.rotateZ(Math.PI / 2);
+                            const pipe1 = new THREE.Mesh(pipe1Geo, pipeMat);
+                            pipe1.position.set(startX + len1 / 2, 3.88, cellZ);
+                            group.add(pipe1);
+
+                            const pipe2Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
+                            pipe2Geo.rotateZ(Math.PI / 2);
+                            const pipe2 = new THREE.Mesh(pipe2Geo, pipeMat);
+                            pipe2.position.set(endX - len1 / 2, 3.88, cellZ);
+                            group.add(pipe2);
+
+                            const sleeveGeo = new THREE.CylinderGeometry(0.042, 0.042, 0.4, 6);
+                            sleeveGeo.rotateZ(Math.PI / 2);
+                            const sleeve = new THREE.Mesh(sleeveGeo, rustyMat);
+                            sleeve.position.set(midX, 3.88, cellZ);
+                            sleeve.scale.set(1.0, 1.0, 1.2);
+                            group.add(sleeve);
+
+                            const cellKey = `${c},${r}`;
+                            if (!spawnedLeaksInCell[cellKey]) {
+                                spawnedLeaksInCell[cellKey] = true;
+                                createWaterLeak(group, c, r);
+                            }
+                        } else {
+                            const pipeGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
+                            pipeGeo.rotateZ(Math.PI / 2);
+                            const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                            pipe.position.set(midX, 3.88, cellZ);
+                            group.add(pipe);
+                        }
+
+                        createSaggingWire(group, new THREE.Vector3(startX, 3.84, cellZ + 0.15), new THREE.Vector3(endX, 3.84, cellZ + 0.15));
+                        createSaggingWire(group, new THREE.Vector3(startX, 3.84, cellZ - 0.15), new THREE.Vector3(endX, 3.84, cellZ - 0.15));
+                    }
+
+                    // North-South pipe
+                    if (r < MAP_SIZE - 1 && (map[r+1][c] === 0 || map[r+1][c] === 5)) {
+                        const startZ = cellZ;
+                        const endZ = cellZ + CELL_SIZE;
+                        const midZ = (startZ + endZ) / 2;
+
+                        if (isLeak) {
+                            const len1 = 1.7;
+                            const pipe1Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
+                            pipe1Geo.rotateX(Math.PI / 2);
+                            const pipe1 = new THREE.Mesh(pipe1Geo, pipeMat);
+                            pipe1.position.set(cellX, 3.88, startZ + len1 / 2);
+                            group.add(pipe1);
+
+                            const pipe2Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
+                            pipe2Geo.rotateX(Math.PI / 2);
+                            const pipe2 = new THREE.Mesh(pipe2Geo, pipeMat);
+                            pipe2.position.set(cellX, 3.88, endZ - len1 / 2);
+                            group.add(pipe2);
+
+                            const sleeveGeo = new THREE.CylinderGeometry(0.042, 0.042, 0.4, 6);
+                            sleeveGeo.rotateX(Math.PI / 2);
+                            const sleeve = new THREE.Mesh(sleeveGeo, rustyMat);
+                            sleeve.position.set(cellX, 3.88, midZ);
+                            sleeve.scale.set(1.2, 1.0, 1.0);
+                            group.add(sleeve);
+
+                            const cellKey = `${c},${r}`;
+                            if (!spawnedLeaksInCell[cellKey]) {
+                                spawnedLeaksInCell[cellKey] = true;
+                                createWaterLeak(group, c, r);
+                            }
+                        } else {
+                            const pipeGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
+                            pipeGeo.rotateX(Math.PI / 2);
+                            const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                            pipe.position.set(cellX, 3.88, midZ);
+                            group.add(pipe);
+                        }
+
+                        createSaggingWire(group, new THREE.Vector3(cellX + 0.15, 3.84, startZ), new THREE.Vector3(cellX + 0.15, 3.84, endZ));
+                        createSaggingWire(group, new THREE.Vector3(cellX - 0.15, 3.84, startZ), new THREE.Vector3(cellX - 0.15, 3.84, endZ));
+                    }
+                }
+            }
         }
 
         function createRatMesh() {
@@ -4985,6 +5246,9 @@
 
             requestAnimationFrame(animateHorrorGame);
 
+            // Update water leaking dripping/splashing particles
+            updateWaterLeaks();
+
             // Update CCTV spotlight intensities based on the toggle states
             if (groundFloorGroup && groundFloorGroup.cctvLights) {
                 groundFloorGroup.cctvLights.forEach((light, idx) => {
@@ -5011,17 +5275,45 @@
                 updateDustParticles();
                 updateCreatures();
 
-                // Update flickering zero-watt bulbs
+                // Update zero-watt bulbs (both flickering and looping on-off)
                 const activeGroup = activeFloor === 0 ? groundFloorGroup : secondFloorGroup;
                 if (activeGroup && activeGroup.flickeringLights) {
+                    const time = performance.now() * 0.001;
                     activeGroup.flickeringLights.forEach(light => {
-                        if (light.flickerTimer > 0) {
-                            light.flickerTimer -= 0.016;
-                            light.intensity = Math.random() < 0.25 ? 0.02 : (Math.random() < 0.15 ? 0.75 : light.baseIntensity);
+                        let isCurrentlyOn = true;
+                        
+                        if (light.isLoopingOnOff) {
+                            const timeMod = (time + light.loopOffset) % light.loopPeriod;
+                            isCurrentlyOn = timeMod < (light.loopPeriod * light.loopDutyCycle);
+                            
+                            // High-speed flutter right at the transitions for realistic glitch look
+                            const transitionTime = 0.04;
+                            const isAtTransition = Math.abs(timeMod - (light.loopPeriod * light.loopDutyCycle)) < transitionTime || timeMod < transitionTime;
+                            if (isAtTransition && Math.random() < 0.5) {
+                                isCurrentlyOn = !isCurrentlyOn;
+                            }
+                            
+                            light.intensity = isCurrentlyOn ? light.baseIntensity : 0.0;
                         } else {
-                            light.intensity = light.baseIntensity;
-                            if (Math.random() < 0.002) {
-                                light.flickerTimer = 0.1 + Math.random() * 0.45;
+                            // Standard flickering behavior
+                            if (light.flickerTimer > 0) {
+                                light.flickerTimer -= 0.016;
+                                isCurrentlyOn = Math.random() >= 0.25;
+                                light.intensity = isCurrentlyOn ? light.baseIntensity : 0.02;
+                            } else {
+                                light.intensity = light.baseIntensity;
+                                if (Math.random() < 0.002) {
+                                    light.flickerTimer = 0.1 + Math.random() * 0.45;
+                                }
+                            }
+                        }
+                        
+                        // Sync the bulb mesh visual glow
+                        if (light.bulbMat) {
+                            if (light.intensity > 0.1) {
+                                light.bulbMat.color.setHex(0xffbb66); // warm glowing orange
+                            } else {
+                                light.bulbMat.color.setHex(0x252525); // dark dead bulb
                             }
                         }
                     });
@@ -5173,6 +5465,78 @@
             if (renderer && scene && camera) {
                 renderer.render(scene, camera);
             }
+        }
+
+        function updateWaterLeaks() {
+            const dt = 0.016; // approx delta time
+            const g = 9.8;
+            
+            waterLeaks.forEach(leak => {
+                const posAttr = leak.points.geometry.attributes.position;
+                const positions = posAttr.array;
+                
+                // 1. Update falling droplets (0 to 14)
+                for (let i = 0; i < 15; i++) {
+                    leak.velocities[i].y -= g * dt;
+                    
+                    positions[i * 3] += leak.velocities[i].x * dt;
+                    positions[i * 3 + 1] += leak.velocities[i].y * dt;
+                    positions[i * 3 + 2] += leak.velocities[i].z * dt;
+                    
+                    if (positions[i * 3 + 1] <= 0.015) {
+                        const dropX = positions[i * 3];
+                        const dropZ = positions[i * 3 + 2];
+                        
+                        // Reset to ceiling
+                        positions[i * 3] = leak.emitter.x + (Math.random() - 0.5) * 0.05;
+                        positions[i * 3 + 1] = leak.emitter.y;
+                        positions[i * 3 + 2] = leak.emitter.z + (Math.random() - 0.5) * 0.05;
+                        
+                        leak.velocities[i].set(
+                            (Math.random() - 0.5) * 0.05,
+                            -0.2 - Math.random() * 0.8,
+                            (Math.random() - 0.5) * 0.05
+                        );
+                        
+                        // Trigger splash
+                        const sIdx = leak.splashIndex;
+                        positions[sIdx * 3] = dropX;
+                        positions[sIdx * 3 + 1] = 0.02;
+                        positions[sIdx * 3 + 2] = dropZ;
+                        
+                        leak.velocities[sIdx].set(
+                            (Math.random() - 0.5) * 0.8,
+                            1.0 + Math.random() * 1.2,
+                            (Math.random() - 0.5) * 0.8
+                        );
+                        leak.lifetimes[sIdx] = 0.35 + Math.random() * 0.25;
+                        
+                        leak.splashIndex++;
+                        if (leak.splashIndex >= 30) {
+                            leak.splashIndex = 15;
+                        }
+                    }
+                }
+                
+                // 2. Update splash particles (15 to 29)
+                for (let i = 15; i < 30; i++) {
+                    if (leak.lifetimes[i] > 0) {
+                        leak.lifetimes[i] -= dt;
+                        leak.velocities[i].y -= g * dt;
+                        
+                        positions[i * 3] += leak.velocities[i].x * dt;
+                        positions[i * 3 + 1] += leak.velocities[i].y * dt;
+                        positions[i * 3 + 2] += leak.velocities[i].z * dt;
+                        
+                        if (leak.lifetimes[i] <= 0 || positions[i * 3 + 1] < 0) {
+                            leak.lifetimes[i] = 0;
+                            positions[i * 3 + 1] = -1.0; // hide under floor
+                        }
+                    }
+                }
+                
+                posAttr.needsUpdate = true;
+            });
         }
 
          function updateKillingSequence() {
