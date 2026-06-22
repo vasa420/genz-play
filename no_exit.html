@@ -2069,6 +2069,14 @@
         let headBobTime = 0;
         let waterLeaks = [];
         
+        let mortuaryFloorGroup = null;
+        let interactiveDoors = [];
+        let currentInteractiveDoor = null;
+        
+        let ghostlyCorpseMesh = null;
+        let paranormalActive = false;
+        let paranormalTimer = 0;
+        
         let cctvTargets = [];
         let cctvLightsOn = [false, false, false, false];
         let frameCount = 0;
@@ -2116,6 +2124,19 @@
             [1, 0, 0, 0, 0, 0, 1, 1, 0, 1], // Hidden safe room at (8, 4) connected to (8, 3)
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
+
+        const MORTUARY_FLOOR_MAP = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1], // Rooms: (1,1)-(1,3) and (1,5)-(1,8)
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1], // Walls separating rooms from hallway, doors at (1,2) and (1,6)
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], // Walkable hallway
+            [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Stairs at (4, 4)
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], // Walkable hallway
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1], // Walls separating bottom rooms, doors at (7,2) and (7,6)
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1], // Rooms: (7,1)-(8,3) and (7,5)-(8,8)
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
         
         const CELL_SIZE = 4;
         const MAP_SIZE = 10;
@@ -2146,6 +2167,15 @@
             "8,4": "Secret Wardrobe Safe Room",
             "4,4": "Wooden Staircase",
             "default": "Second Floor Hallway"
+        };
+
+        const ROOM_LABELS_3RD = {
+            "1,1": "Morgue Cold Storage", "1,2": "Morgue Cold Storage", "1,3": "Morgue Cold Storage",
+            "1,5": "Clinical Autopsy Room", "1,6": "Clinical Autopsy Room", "1,7": "Clinical Autopsy Room", "1,8": "Clinical Autopsy Room",
+            "7,1": "Chemical Storage Room", "7,2": "Chemical Storage Room", "7,3": "Chemical Storage Room",
+            "7,5": "Cadaver Dissection Room", "7,6": "Cadaver Dissection Room", "7,7": "Cadaver Dissection Room", "7,8": "Cadaver Dissection Room",
+            "4,4": "Wooden Staircase",
+            "default": "Cold Mortuary Hallway"
         };
         let ghostLaughTimeout = null;
 
@@ -2253,11 +2283,13 @@
             const floorTexture = createProceduralFloorTexture();
             const ceilingTexture = createProceduralCeilingTexture();
 
-            // 3. Build Mesh Groups for ground floor and second floor
+            // 3. Build Mesh Groups for ground floor, second floor and mortuary floor
             groundFloorGroup = new THREE.Group();
             secondFloorGroup = new THREE.Group();
             scene.add(groundFloorGroup);
             scene.add(secondFloorGroup);
+            
+            buildMortuaryFloor();
 
             // Ground Floor Walls
             for (let r = 0; r < MAP_SIZE; r++) {
@@ -2364,13 +2396,15 @@
             // Spawn Spooky hanging 0-watt light bulbs to illuminate hallways & CCTV
             spawnZeroWattBulbs();
  
-            // Spawn Ceiling Pipe and Wire networks for both floors
+            // Spawn Ceiling Pipe and Wire networks for all floors
             spawnCeilingPipesAndWires(groundFloorGroup, 0);
             spawnCeilingPipesAndWires(secondFloorGroup, 1);
+            spawnCeilingPipesAndWires(mortuaryFloorGroup, 2);
  
-            // Spawn Roaming Creatures (Rats and Cockroaches) on both floors
+            // Spawn Roaming Creatures (Rats and Cockroaches) on all floors
             spawnCreatures(groundFloorGroup, 0);
             spawnCreatures(secondFloorGroup, 1);
+            spawnCreatures(mortuaryFloorGroup, 2);
  
             // Create Floating Dust/Ash Particles
             createFloatingDustParticles();
@@ -2554,6 +2588,96 @@
             return texture;
         }
 
+        function createProceduralMorgueWallTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            // Base clinical green-grey concrete
+            ctx.fillStyle = '#263133';
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Draw tile grid (16x16 tiles of size 32x32)
+            ctx.strokeStyle = '#151c1d';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i <= 512; i += 32) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 512);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(512, i);
+                ctx.stroke();
+            }
+
+            // Bevel highlights
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1.0;
+            for (let i = 0; i < 512; i += 32) {
+                ctx.beginPath();
+                ctx.moveTo(i + 1, 0);
+                ctx.lineTo(i + 1, 512);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, i + 1);
+                ctx.lineTo(512, i + 1);
+                ctx.stroke();
+            }
+
+            // Fine cracks
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.lineWidth = 1.0;
+            for (let i = 0; i < 15; i++) {
+                let tx = Math.floor(Math.random() * 16) * 32 + 5;
+                let ty = Math.floor(Math.random() * 16) * 32 + 5;
+                ctx.beginPath();
+                ctx.moveTo(tx, ty);
+                for (let j = 0; j < 3; j++) {
+                    tx += (Math.random() - 0.5) * 12;
+                    ty += Math.random() * 10;
+                    ctx.lineTo(tx, ty);
+                }
+                ctx.stroke();
+            }
+
+            // Mold / Grime stains
+            for (let i = 0; i < 20; i++) {
+                ctx.fillStyle = `rgba(10, 16, 12, ${Math.random() * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(Math.random() * 512, Math.random() * 512, Math.random() * 35 + 10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Dripping Blood stains
+            ctx.fillStyle = 'rgba(90, 0, 0, 0.8)';
+            for (let i = 0; i < 12; i++) {
+                const bx = Math.random() * 512;
+                const by = Math.random() * 400 + 50;
+                const radius = Math.random() * 6 + 2;
+
+                ctx.beginPath();
+                ctx.arc(bx, by, radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(90, 0, 0, 0.8)';
+                ctx.lineWidth = radius * 0.4;
+                ctx.beginPath();
+                ctx.moveTo(bx, by);
+                ctx.lineTo(bx, by + Math.random() * 60 + 15);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(1, 1);
+            return texture;
+        }
+
         function createProceduralFloorTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 512;
@@ -2708,7 +2832,12 @@
                 { floor: 0, cellX: 4.0, cellZ: 5.5, angleY: Math.PI / 2 },
                 { floor: 0, cellX: 1.5, cellZ: 6.0, angleY: 0 },
                 { floor: 1, cellX: 4.0, cellZ: 1.5, angleY: Math.PI / 2 },
-                { floor: 1, cellX: 7.0, cellZ: 8.5, angleY: Math.PI / 2 }
+                { floor: 1, cellX: 7.0, cellZ: 8.5, angleY: Math.PI / 2 },
+                // Floor 2 (Mortuary) doors:
+                { floor: 2, cellX: 3.5, cellZ: 2.0, angleY: 0 },
+                { floor: 2, cellX: 5.5, cellZ: 2.0, angleY: 0 },
+                { floor: 2, cellX: 3.5, cellZ: 6.0, angleY: 0 },
+                { floor: 2, cellX: 5.5, cellZ: 6.0, angleY: 0 }
             ];
 
             doorLocations.forEach(d => {
@@ -2751,7 +2880,7 @@
                 knobBack.position.set(1.45, -0.15, -0.055);
                 hingeGroup.add(knobBack);
 
-                hingeGroup.rotation.y = 0.6 + Math.random() * 0.6;
+                hingeGroup.rotation.y = 0.0; // Starts closed
                 group.add(hingeGroup);
 
                 const worldX = d.cellX * CELL_SIZE - MAP_OFFSET;
@@ -2761,9 +2890,23 @@
 
                 if (d.floor === 0) {
                     groundFloorGroup.add(group);
-                } else {
+                } else if (d.floor === 1) {
                     secondFloorGroup.add(group);
+                } else {
+                    mortuaryFloorGroup.add(group);
                 }
+
+                // Register in interactiveDoors
+                interactiveDoors.push({
+                    floor: d.floor,
+                    cellX: d.cellX,
+                    cellZ: d.cellZ,
+                    angleY: d.angleY,
+                    worldX: worldX,
+                    worldZ: worldZ,
+                    hinge: hingeGroup,
+                    isOpen: false
+                });
             });
         }
 
@@ -3186,9 +3329,20 @@
                 {x: 1, z: 6}, // Upper foyer
                 {x: 5, z: 1}  // Study Room
             ];
+
+            // Positions of 0-watt light bulbs on Mortuary Floor
+            const mortuaryBulbCells = [
+                {x: 1, z: 2}, // Cold storage
+                {x: 1, z: 6}, // Autopsy room
+                {x: 3, z: 3}, // Hallway
+                {x: 5, z: 3}, // Hallway
+                {x: 7, z: 2}, // Chemical storage
+                {x: 7, z: 6}  // Cadaver room
+            ];
             
             groundBulbCells.forEach(cell => createZeroWattBulb(groundFloorGroup, cell.x, cell.z));
             secondBulbCells.forEach(cell => createZeroWattBulb(secondFloorGroup, cell.x, cell.z));
+            mortuaryBulbCells.forEach(cell => createZeroWattBulb(mortuaryFloorGroup, cell.x, cell.z));
         }
 
         function createZeroWattBulb(group, cellX, cellZ) {
@@ -3309,7 +3463,7 @@
             }
         }
 
-        function createWaterLeak(group, cellC, cellR) {
+        function createWaterLeak(group, cellC, cellR, isBlood = false) {
             const x = cellC * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
             const z = cellR * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
             const emitterPos = new THREE.Vector3(x, 3.85, z);
@@ -3347,23 +3501,23 @@
             pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             
             const pMat = new THREE.PointsMaterial({
-                color: 0x99ccff,
-                size: 0.038,
+                color: isBlood ? 0x990000 : 0x99ccff,
+                size: isBlood ? 0.045 : 0.038,
                 transparent: true,
-                opacity: 0.85
+                opacity: 0.9
             });
             
             const pointsMesh = new THREE.Points(pGeo, pMat);
             group.add(pointsMesh);
             
             // Reflective puddle on floor
-            const puddleGeo = new THREE.RingGeometry(0, 0.28, 16);
+            const puddleGeo = new THREE.RingGeometry(0, isBlood ? 0.4 : 0.28, 16);
             const puddleMat = new THREE.MeshStandardMaterial({
-                color: 0x111c22,
-                roughness: 0.03,
+                color: isBlood ? 0x330000 : 0x111c22,
+                roughness: isBlood ? 0.08 : 0.03,
                 metalness: 0.1,
                 transparent: true,
-                opacity: 0.65,
+                opacity: isBlood ? 0.85 : 0.65,
                 side: THREE.DoubleSide
             });
             const puddle = new THREE.Mesh(puddleGeo, puddleMat);
@@ -3381,15 +3535,33 @@
         }
 
         function spawnCeilingPipesAndWires(group, floorIndex) {
-            const map = floorIndex === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+            let map;
+            if (floorIndex === 0) {
+                map = GROUND_FLOOR_MAP;
+            } else if (floorIndex === 1) {
+                map = SECOND_FLOOR_MAP;
+            } else {
+                map = MORTUARY_FLOOR_MAP;
+            }
             
-            const leaks = floorIndex === 0 ? [
-                { r: 5, c: 2 },
-                { r: 1, c: 6 }
-            ] : [
-                { r: 5, c: 2 },
-                { r: 1, c: 7 }
-            ];
+            let leaks;
+            if (floorIndex === 0) {
+                leaks = [
+                    { r: 5, c: 2 },
+                    { r: 1, c: 6 }
+                ];
+            } else if (floorIndex === 1) {
+                leaks = [
+                    { r: 5, c: 2 },
+                    { r: 1, c: 7 }
+                ];
+            } else {
+                leaks = [
+                    { r: 1, c: 2 },
+                    { r: 3, c: 5 },
+                    { r: 7, c: 6 }
+                ];
+            }
 
             const pipeMat = new THREE.MeshStandardMaterial({
                 color: 0x5a5d60,
@@ -3409,7 +3581,6 @@
                 roughness: 0.8
             });
 
-            // Pre-create shared geometries to prevent allocation in cell loops (massive performance boost)
             const bracketGeo = new THREE.BoxGeometry(0.16, 0.05, 0.16);
             
             const pipeEWGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
@@ -3441,31 +3612,26 @@
                     const cellX = c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
                     const cellZ = r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
 
-                    // Center bracket mount on the ceiling
                     const bracket = new THREE.Mesh(bracketGeo, bracketMat);
                     bracket.position.set(cellX, 3.96, cellZ);
                     group.add(bracket);
 
                     const isLeak = leaks.some(lk => lk.r === r && lk.c === c);
 
-                    // East-West pipe
                     if (c < MAP_SIZE - 1 && (map[r][c+1] === 0 || map[r][c+1] === 5)) {
                         const startX = cellX;
                         const endX = cellX + CELL_SIZE;
                         const midX = (startX + endX) / 2;
 
                         if (isLeak) {
-                            // Left segment
                             const pipe1 = new THREE.Mesh(brokenPipeEWGeo, pipeMat);
                             pipe1.position.set(startX + len1 / 2, 3.88, cellZ);
                             group.add(pipe1);
 
-                            // Right segment
                             const pipe2 = new THREE.Mesh(brokenPipeEWGeo, pipeMat);
                             pipe2.position.set(endX - len1 / 2, 3.88, cellZ);
                             group.add(pipe2);
 
-                            // Broken jagged sleeve
                             const sleeve = new THREE.Mesh(sleeveEWGeo, rustyMat);
                             sleeve.position.set(midX, 3.88, cellZ);
                             sleeve.scale.set(1.0, 1.0, 1.2);
@@ -3474,10 +3640,9 @@
                             const cellKey = `${c},${r}`;
                             if (!spawnedLeaksInCell[cellKey]) {
                                 spawnedLeaksInCell[cellKey] = true;
-                                createWaterLeak(group, c, r);
+                                createWaterLeak(group, c, r, floorIndex === 2);
                             }
                         } else {
-                            // Continuous pipe EW
                             const pipe = new THREE.Mesh(pipeEWGeo, pipeMat);
                             pipe.position.set(midX, 3.88, cellZ);
                             group.add(pipe);
@@ -3487,24 +3652,20 @@
                         createSaggingWire(group, new THREE.Vector3(startX, 3.84, cellZ - 0.15), new THREE.Vector3(endX, 3.84, cellZ - 0.15));
                     }
 
-                    // North-South pipe
                     if (r < MAP_SIZE - 1 && (map[r+1][c] === 0 || map[r+1][c] === 5)) {
                         const startZ = cellZ;
                         const endZ = cellZ + CELL_SIZE;
                         const midZ = (startZ + endZ) / 2;
 
                         if (isLeak) {
-                            // Top segment
                             const pipe1 = new THREE.Mesh(brokenPipeNSGeo, pipeMat);
                             pipe1.position.set(cellX, 3.88, startZ + len1 / 2);
                             group.add(pipe1);
 
-                            // Bottom segment
                             const pipe2 = new THREE.Mesh(brokenPipeNSGeo, pipeMat);
                             pipe2.position.set(cellX, 3.88, endZ - len1 / 2);
                             group.add(pipe2);
 
-                            // Broken sleeve NS
                             const sleeve = new THREE.Mesh(sleeveNSGeo, rustyMat);
                             sleeve.position.set(cellX, 3.88, midZ);
                             sleeve.scale.set(1.2, 1.0, 1.0);
@@ -3513,10 +3674,9 @@
                             const cellKey = `${c},${r}`;
                             if (!spawnedLeaksInCell[cellKey]) {
                                 spawnedLeaksInCell[cellKey] = true;
-                                createWaterLeak(group, c, r);
+                                createWaterLeak(group, c, r, floorIndex === 2);
                             }
                         } else {
-                            // Continuous pipe NS
                             const pipe = new THREE.Mesh(pipeNSGeo, pipeMat);
                             pipe.position.set(cellX, 3.88, midZ);
                             group.add(pipe);
@@ -3524,6 +3684,465 @@
 
                         createSaggingWire(group, new THREE.Vector3(cellX + 0.15, 3.84, startZ), new THREE.Vector3(cellX + 0.15, 3.84, endZ));
                         createSaggingWire(group, new THREE.Vector3(cellX - 0.15, 3.84, startZ), new THREE.Vector3(cellX - 0.15, 3.84, endZ));
+                    }
+                }
+            }
+        }
+
+        function createBloodStainedSheetTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * 256, 0);
+                ctx.bezierCurveTo(Math.random() * 256, 80, Math.random() * 256, 170, Math.random() * 256, 256);
+                ctx.stroke();
+            }
+            ctx.fillStyle = 'rgba(100, 0, 0, 0.85)';
+            for (let i = 0; i < 15; i++) {
+                const bx = Math.random() * 256;
+                const by = Math.random() * 256;
+                const radius = Math.random() * 15 + 3;
+                ctx.beginPath();
+                ctx.arc(bx, by, radius, 0, Math.PI * 2);
+                ctx.fill();
+                if (Math.random() > 0.4) {
+                    ctx.strokeStyle = 'rgba(100, 0, 0, 0.85)';
+                    ctx.lineWidth = radius * 0.3;
+                    ctx.beginPath();
+                    ctx.moveTo(bx, by);
+                    ctx.lineTo(bx + (Math.random() - 0.5) * 15, by + radius + Math.random() * 20);
+                    ctx.stroke();
+                }
+            }
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        function createAutopsyTableWithCorpse() {
+            const tableGroup = new THREE.Group();
+            
+            const steelMat = new THREE.MeshStandardMaterial({
+                color: 0x999999,
+                metalness: 0.9,
+                roughness: 0.15
+            });
+            
+            const topGeo = new THREE.BoxGeometry(1.2, 0.05, 2.4);
+            const tableTop = new THREE.Mesh(topGeo, steelMat);
+            tableTop.position.y = 0.8;
+            tableGroup.add(tableTop);
+            
+            const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8);
+            const legPositions = [
+                [-0.5, 0.4, -1.0],
+                [0.5, 0.4, -1.0],
+                [-0.5, 0.4, 1.0],
+                [0.5, 0.4, 1.0]
+            ];
+            legPositions.forEach(pos => {
+                const leg = new THREE.Mesh(legGeo, steelMat);
+                leg.position.set(pos[0], pos[1], pos[2]);
+                tableGroup.add(leg);
+            });
+            
+            const corpseGroup = new THREE.Group();
+            corpseGroup.position.y = 0.825;
+            
+            const skinMat = new THREE.MeshStandardMaterial({
+                color: 0x768894,
+                roughness: 0.85
+            });
+            
+            const headGeo = new THREE.SphereGeometry(0.12, 12, 12);
+            const head = new THREE.Mesh(headGeo, skinMat);
+            head.position.set(0, 0.12, 0.95);
+            corpseGroup.add(head);
+            
+            const noseGeo = new THREE.BoxGeometry(0.03, 0.06, 0.04);
+            const nose = new THREE.Mesh(noseGeo, skinMat);
+            nose.position.set(0, 0.12 + 0.12, 0.95);
+            corpseGroup.add(nose);
+            
+            const torsoGeo = new THREE.BoxGeometry(0.48, 0.2, 0.9);
+            const torso = new THREE.Mesh(torsoGeo, skinMat);
+            torso.position.set(0, 0.1, 0.35);
+            corpseGroup.add(torso);
+            
+            const armGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.8, 8);
+            armGeo.rotateX(Math.PI / 2);
+            const leftArm = new THREE.Mesh(armGeo, skinMat);
+            leftArm.position.set(-0.3, 0.08, 0.35);
+            corpseGroup.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeo, skinMat);
+            rightArm.position.set(0.3, 0.08, 0.35);
+            corpseGroup.add(rightArm);
+            
+            const legCorpseGeo = new THREE.CylinderGeometry(0.08, 0.06, 1.0, 8);
+            legCorpseGeo.rotateX(Math.PI / 2);
+            const leftLeg = new THREE.Mesh(legCorpseGeo, skinMat);
+            leftLeg.position.set(-0.16, 0.08, -0.5);
+            corpseGroup.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legCorpseGeo, skinMat);
+            rightLeg.position.set(0.16, 0.08, -0.5);
+            corpseGroup.add(rightLeg);
+            
+            const sheetTexture = createBloodStainedSheetTexture();
+            const sheetMat = new THREE.MeshStandardMaterial({
+                map: sheetTexture,
+                roughness: 0.9,
+                side: THREE.DoubleSide
+            });
+            
+            const sheetGeo = new THREE.BoxGeometry(0.56, 0.22, 1.35);
+            const sheet = new THREE.Mesh(sheetGeo, sheetMat);
+            sheet.position.set(0, 0.12, -0.32);
+            corpseGroup.add(sheet);
+            
+            tableGroup.add(corpseGroup);
+            
+            tableGroup.traverse(node => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                }
+            });
+            
+            return tableGroup;
+        }
+
+        function createGhostlyCorpseMesh() {
+            const corpseGroup = new THREE.Group();
+            
+            const skinMat = new THREE.MeshStandardMaterial({
+                color: 0x687b87,
+                roughness: 0.9,
+                transparent: true,
+                opacity: 0.95
+            });
+            
+            const headGeo = new THREE.SphereGeometry(0.15, 12, 12);
+            const head = new THREE.Mesh(headGeo, skinMat);
+            head.position.set(0, 1.6, 0);
+            corpseGroup.add(head);
+            
+            const jawGeo = new THREE.BoxGeometry(0.12, 0.06, 0.1);
+            const jaw = new THREE.Mesh(jawGeo, skinMat);
+            jaw.position.set(0, 1.45, 0.05);
+            corpseGroup.add(jaw);
+            
+            const torsoGeo = new THREE.BoxGeometry(0.45, 0.65, 0.22);
+            const torso = new THREE.Mesh(torsoGeo, skinMat);
+            torso.position.set(0, 1.1, 0);
+            corpseGroup.add(torso);
+            
+            const sheetTexture = createBloodStainedSheetTexture();
+            const shroudMat = new THREE.MeshStandardMaterial({
+                map: sheetTexture,
+                roughness: 0.95,
+                transparent: true,
+                opacity: 0.9,
+                side: THREE.DoubleSide
+            });
+            
+            const shroudGeo = new THREE.BoxGeometry(0.48, 1.0, 0.25);
+            const shroud = new THREE.Mesh(shroudGeo, shroudMat);
+            shroud.position.set(0, 0.8, 0);
+            corpseGroup.add(shroud);
+            
+            const armGeo = new THREE.CylinderGeometry(0.05, 0.04, 0.65, 8);
+            armGeo.translate(0, -0.325, 0);
+            
+            const leftArm = new THREE.Mesh(armGeo, skinMat);
+            leftArm.position.set(-0.28, 1.35, 0);
+            corpseGroup.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeo, skinMat);
+            rightArm.position.set(0.28, 1.35, 0);
+            corpseGroup.add(rightArm);
+            
+            const legGeo = new THREE.CylinderGeometry(0.07, 0.05, 0.75, 8);
+            legGeo.translate(0, -0.375, 0);
+            
+            const leftLeg = new THREE.Mesh(legGeo, skinMat);
+            leftLeg.position.set(-0.15, 0.75, 0);
+            corpseGroup.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeo, skinMat);
+            rightLeg.position.set(0.15, 0.75, 0);
+            corpseGroup.add(rightLeg);
+            
+            corpseGroup.userData = {
+                leftArm: leftArm,
+                rightArm: rightArm,
+                leftLeg: leftLeg,
+                rightLeg: rightLeg,
+                walkCycle: 0
+            };
+            
+            corpseGroup.traverse(node => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                }
+            });
+            
+            return corpseGroup;
+        }
+
+        function buildMortuaryFloor() {
+            mortuaryFloorGroup = new THREE.Group();
+            scene.add(mortuaryFloorGroup);
+            
+            const wallTexture = createProceduralMorgueWallTexture();
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#1e282a';
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = '#0f1415';
+            ctx.lineWidth = 2;
+            for (let i = 0; i <= 256; i += 64) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0); ctx.lineTo(i, 256);
+                ctx.moveTo(0, i); ctx.lineTo(256, i);
+                ctx.stroke();
+            }
+            ctx.fillStyle = 'rgba(80, 0, 0, 0.4)';
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random() * 256, Math.random() * 256, Math.random() * 15 + 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            const floorTexture = new THREE.CanvasTexture(canvas);
+            floorTexture.wrapS = THREE.RepeatWrapping;
+            floorTexture.wrapT = THREE.RepeatWrapping;
+            floorTexture.repeat.set(10, 10);
+            
+            const ceilingTexture = createProceduralCeilingTexture();
+            
+            for (let r = 0; r < MAP_SIZE; r++) {
+                for (let c = 0; c < MAP_SIZE; c++) {
+                    const val = MORTUARY_FLOOR_MAP[r][c];
+                    if (val === 1) {
+                        const wallGeo = new THREE.BoxGeometry(CELL_SIZE, 4, CELL_SIZE);
+                        const wallMat = new THREE.MeshStandardMaterial({
+                            map: wallTexture,
+                            roughness: 0.85,
+                            metalness: 0.15
+                        });
+                        const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+                        wallMesh.position.set(
+                            c * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2,
+                            2,
+                            r * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2
+                        );
+                        mortuaryFloorGroup.add(wallMesh);
+                    } else if (val === 5) {
+                        create3DStairs(mortuaryFloorGroup, c, r);
+                    }
+                }
+            }
+            
+            const floorGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
+            const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.5 });
+            const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+            floorMesh.rotation.x = -Math.PI / 2;
+            floorMesh.position.set(0, 0, 0);
+            mortuaryFloorGroup.add(floorMesh);
+            
+            const ceilGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
+            const ceilMat = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 0.9 });
+            const ceilMesh = new THREE.Mesh(ceilGeo, ceilMat);
+            ceilMesh.rotation.x = Math.PI / 2;
+            ceilMesh.position.set(0, 4, 0);
+            mortuaryFloorGroup.add(ceilMesh);
+            
+            const tablePositions = [
+                { cx: 2, cz: 1, rotY: 0 },
+                { cx: 6, cz: 1, rotY: Math.PI / 2 },
+                { cx: 8, cz: 1, rotY: Math.PI / 2 },
+                { cx: 2, cz: 7, rotY: 0 },
+                { cx: 6, cz: 7, rotY: -Math.PI / 2 },
+                { cx: 8, cz: 8, rotY: 0 }
+            ];
+            
+            tablePositions.forEach(pos => {
+                const table = createAutopsyTableWithCorpse();
+                const wx = pos.cx * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                const wz = pos.cz * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                table.position.set(wx, 0, wz);
+                table.rotation.y = pos.rotY;
+                mortuaryFloorGroup.add(table);
+            });
+            
+            ghostlyCorpseMesh = createGhostlyCorpseMesh();
+            ghostlyCorpseMesh.visible = false;
+            mortuaryFloorGroup.add(ghostlyCorpseMesh);
+            
+            mortuaryFloorGroup.visible = false;
+        }
+
+        function toggleDoor(door) {
+            door.isOpen = !door.isOpen;
+            playInstantSound('door-open', 0.7);
+        }
+
+        function updateInteractiveDoors() {
+            interactiveDoors.forEach(door => {
+                const targetRot = door.isOpen ? 1.4 : 0.0;
+                door.hinge.rotation.y += (targetRot - door.hinge.rotation.y) * 0.15;
+            });
+        }
+
+        function playCorpseGroanSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(90, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.8);
+                
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(250, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.8);
+                
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.8);
+            } catch (e) {
+                console.log("Audio error: ", e);
+            }
+        }
+
+        function triggerCorpseVanish() {
+            paranormalActive = false;
+            if (ghostlyCorpseMesh) {
+                ghostlyCorpseMesh.visible = false;
+            }
+            paranormalTimer = -5; // wait extra 5 seconds before restarting timer (total 20s cooldown)
+            
+            playCorpseGroanSound();
+            
+            // Creepy visual static flash overlay
+            const flash = document.createElement('div');
+            flash.style.position = 'fixed';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100vw';
+            flash.style.height = '100vh';
+            flash.style.backgroundColor = 'rgba(150, 0, 0, 0.45)';
+            flash.style.backgroundImage = 'radial-gradient(circle, transparent 20%, #000 80%), repeating-linear-gradient(0deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px)';
+            flash.style.pointerEvents = 'none';
+            flash.style.zIndex = '9999';
+            document.body.appendChild(flash);
+            
+            let intensity = 1.0;
+            const fadeInterval = setInterval(() => {
+                intensity -= 0.15;
+                if (intensity <= 0) {
+                    clearInterval(fadeInterval);
+                    if (flash.parentNode) {
+                        flash.parentNode.removeChild(flash);
+                    }
+                } else {
+                    flash.style.opacity = intensity;
+                }
+            }, 50);
+        }
+
+        function updateParanormalActivity() {
+            if (!isGameRunning || isKillingActive || activeFloor !== 2) return;
+
+            const playerWorldX = playerPos.x * CELL_SIZE - MAP_OFFSET;
+            const playerWorldZ = playerPos.z * CELL_SIZE - MAP_OFFSET;
+            
+            const gridX = Math.floor(playerPos.x);
+            const gridZ = Math.floor(playerPos.z);
+            
+            if (!paranormalActive) {
+                paranormalTimer += 0.016;
+                if (paranormalTimer >= 15) {
+                    paranormalTimer = 0;
+                    if (gridZ === 3 || gridZ === 5) {
+                        let spawnCol = 1;
+                        if (gridX < 5) {
+                            spawnCol = 8;
+                        } else {
+                            spawnCol = 1;
+                        }
+                        
+                        const sx = spawnCol * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2;
+                        const sz = gridZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE/2;
+                        
+                        ghostlyCorpseMesh.position.set(sx, 0.05, sz);
+                        ghostlyCorpseMesh.lookAt(playerWorldX, ghostlyCorpseMesh.position.y, playerWorldZ);
+                        ghostlyCorpseMesh.visible = true;
+                        paranormalActive = true;
+                        
+                        try {
+                            playInstantSound('ghost-laugh', 0.4);
+                        } catch (e) {}
+                    }
+                }
+            } else {
+                const corpsePos = ghostlyCorpseMesh.position;
+                const dx = playerWorldX - corpsePos.x;
+                const dz = playerWorldZ - corpsePos.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                
+                if (dist > 0.1) {
+                    const speed = 0.012;
+                    corpsePos.x += (dx / dist) * speed;
+                    corpsePos.z += (dz / dist) * speed;
+                }
+                
+                ghostlyCorpseMesh.lookAt(playerWorldX, corpsePos.y, playerWorldZ);
+                
+                const time = performance.now() * 0.005;
+                if (ghostlyCorpseMesh.userData) {
+                    ghostlyCorpseMesh.userData.leftArm.rotation.x = Math.sin(time) * 0.5 - 0.25;
+                    ghostlyCorpseMesh.userData.rightArm.rotation.x = -Math.sin(time) * 0.5 - 0.25;
+                    ghostlyCorpseMesh.userData.leftLeg.rotation.x = -Math.sin(time) * 0.4;
+                    ghostlyCorpseMesh.userData.rightLeg.rotation.x = Math.sin(time) * 0.4;
+                }
+                
+                if (dist < 2.2) {
+                    triggerCorpseVanish();
+                    return;
+                }
+                
+                if (isFlashlightOn) {
+                    const camDir = new THREE.Vector3();
+                    camera.getWorldDirection(camDir);
+                    
+                    const camToCorpse = new THREE.Vector3().copy(corpsePos).sub(camera.position);
+                    camToCorpse.y = 0;
+                    const distToCorpse = camToCorpse.length();
+                    camToCorpse.normalize();
+                    
+                    const dot = camDir.dot(camToCorpse);
+                    if (dot > 0.94 && distToCorpse < 16.0) {
+                        triggerCorpseVanish();
                     }
                 }
             }
@@ -3851,7 +4470,14 @@
         }
 
         function updateCreatures() {
-            const group = activeFloor === 0 ? groundFloorGroup : secondFloorGroup;
+            let group;
+            if (activeFloor === 0) {
+                group = groundFloorGroup;
+            } else if (activeFloor === 1) {
+                group = secondFloorGroup;
+            } else {
+                group = mortuaryFloorGroup;
+            }
             if (!group || !group.creatures) return;
             
             group.creatures.forEach(c => {
@@ -4495,7 +5121,14 @@
                 
                 const startCellX = Math.min(MAP_SIZE - 1, Math.max(0, Math.floor(ghostPos.x)));
                 const startCellZ = Math.min(MAP_SIZE - 1, Math.max(0, Math.floor(ghostPos.z)));
-                const currentMap = ghostFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+                let currentMap;
+                if (ghostFloor === 0) {
+                    currentMap = GROUND_FLOOR_MAP;
+                } else if (ghostFloor === 1) {
+                    currentMap = SECOND_FLOOR_MAP;
+                } else {
+                    currentMap = MORTUARY_FLOOR_MAP;
+                }
                 
                 if (window.ghostPathCooldown === undefined) {
                     window.ghostPathCooldown = 0;
@@ -4548,7 +5181,14 @@
                     const neighbors = [
                         {x: 0, z: 1}, {x: 0, z: -1}, {x: 1, z: 0}, {x: -1, z: 0}
                     ];
-                    const currentMap = ghostFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+                    let currentMap;
+                    if (ghostFloor === 0) {
+                        currentMap = GROUND_FLOOR_MAP;
+                    } else if (ghostFloor === 1) {
+                        currentMap = SECOND_FLOOR_MAP;
+                    } else {
+                        currentMap = MORTUARY_FLOOR_MAP;
+                    }
                     const validNeighbors = neighbors.map(n => ({
                         x: Math.floor(ghostPos.x) + n.x,
                         z: Math.floor(ghostPos.z) + n.z
@@ -4714,8 +5354,10 @@
             
             if (activeFloor === 0) {
                 return ROOM_LABELS_1ST[key] || ROOM_LABELS_1ST["default"];
-            } else {
+            } else if (activeFloor === 1) {
                 return ROOM_LABELS_2ND[key] || ROOM_LABELS_2ND["default"];
+            } else {
+                return ROOM_LABELS_3RD[key] || ROOM_LABELS_3RD["default"];
             }
         }
 
@@ -4726,17 +5368,49 @@
             const gridZ = Math.floor(playerPos.z);
             const promptEl = document.getElementById('staircase-prompt');
 
-            // Staircase is positioned at grid cell (4, 4) on both floors
+            // Staircase is positioned at grid cell (4, 4)
             if (gridX === 4 && gridZ === 4) {
                 isNearStairs = true;
                 promptEl.style.display = 'block';
                 if (activeFloor === 0) {
                     promptEl.textContent = "[E] ASCEND TO 2ND FLOOR";
+                } else if (activeFloor === 1) {
+                    promptEl.textContent = "[E] ASCEND TO MORTUARY FLOOR";
                 } else {
-                    promptEl.textContent = "[E] DESCEND TO 1ST FLOOR";
+                    promptEl.textContent = "[E] RETURN TO GROUND FLOOR";
+                }
+                currentInteractiveDoor = null;
+                return;
+            }
+
+            isNearStairs = false;
+
+            // Check door interaction
+            let closeDoor = null;
+            let minDistance = 1.6;
+            
+            interactiveDoors.forEach(door => {
+                if (door.floor === activeFloor) {
+                    const dx = (playerPos.x - door.cellX) * CELL_SIZE;
+                    const dz = (playerPos.z - door.cellZ) * CELL_SIZE;
+                    const dist = Math.sqrt(dx*dx + dz*dz);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closeDoor = door;
+                    }
+                }
+            });
+
+            if (closeDoor) {
+                currentInteractiveDoor = closeDoor;
+                promptEl.style.display = 'block';
+                if (closeDoor.isOpen) {
+                    promptEl.textContent = "[E] CLOSE DOOR";
+                } else {
+                    promptEl.textContent = "[E] OPEN DOOR";
                 }
             } else {
-                isNearStairs = false;
+                currentInteractiveDoor = null;
                 promptEl.style.display = 'none';
             }
         }
@@ -4753,15 +5427,15 @@
                 fadeEl.style.opacity = '1';
             }, 50);
 
-            // Play climbing footsteps
             playStairsSound();
 
             setTimeout(() => {
-                activeFloor = activeFloor === 0 ? 1 : 0;
+                activeFloor = activeFloor === 0 ? 1 : (activeFloor === 1 ? 2 : 0);
                 
-                if (groundFloorGroup && secondFloorGroup) {
+                if (groundFloorGroup && secondFloorGroup && mortuaryFloorGroup) {
                     groundFloorGroup.visible = (activeFloor === 0);
                     secondFloorGroup.visible = (activeFloor === 1);
+                    mortuaryFloorGroup.visible = (activeFloor === 2);
                 }
 
                 // Relocate player just off the stairs (cell 4, 5) to avoid infinite loop
@@ -4848,9 +5522,9 @@
             if (!container) return;
 
             container.innerHTML = '';
-            floorTitle.textContent = activeFloor === 0 ? "GROUND FLOOR" : "SECOND FLOOR";
+            floorTitle.textContent = activeFloor === 0 ? "GROUND FLOOR" : (activeFloor === 1 ? "SECOND FLOOR" : "MORTUARY FLOOR");
 
-            const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+            const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : (activeFloor === 1 ? SECOND_FLOOR_MAP : MORTUARY_FLOOR_MAP);
             const playerGridX = Math.floor(playerPos.x);
             const playerGridZ = Math.floor(playerPos.z);
             const ghostGridX = Math.floor(ghostPos.x);
@@ -4871,7 +5545,7 @@
                         cell.classList.add('walkable');
                         
                         const key = `${c},${r}`;
-                        const label = activeFloor === 0 ? ROOM_LABELS_1ST[key] : ROOM_LABELS_2ND[key];
+                        const label = activeFloor === 0 ? ROOM_LABELS_1ST[key] : (activeFloor === 1 ? ROOM_LABELS_2ND[key] : ROOM_LABELS_3RD[key]);
                         if (label) {
                             cell.innerHTML = label.substring(0, 2);
                         }
@@ -4973,7 +5647,14 @@
             const startGridZ = Math.max(0, Math.floor(minZ));
             const endGridZ = Math.min(MAP_SIZE - 1, Math.floor(maxZ));
 
-            const currentMap = activeFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
+            let currentMap;
+            if (activeFloor === 0) {
+                currentMap = GROUND_FLOOR_MAP;
+            } else if (activeFloor === 1) {
+                currentMap = SECOND_FLOOR_MAP;
+            } else {
+                currentMap = MORTUARY_FLOOR_MAP;
+            }
 
             for (let r = startGridZ; r <= endGridZ; r++) {
                 for (let c = startGridX; c <= endGridX; c++) {
@@ -4982,6 +5663,28 @@
                     }
                 }
             }
+
+            // Check closed doors collision on the current floor
+            for (let i = 0; i < interactiveDoors.length; i++) {
+                const door = interactiveDoors[i];
+                if (door.floor === activeFloor && !door.isOpen) {
+                    const isVertical = Math.abs(door.angleY - Math.PI / 2) < 0.1;
+                    if (isVertical) {
+                        const zOverlap = (pz >= door.cellZ - 0.22) && (pz <= door.cellZ + 0.22);
+                        const xOverlap = Math.abs(px - door.cellX) < (radius + 0.03);
+                        if (zOverlap && xOverlap) {
+                            return true;
+                        }
+                    } else {
+                        const xOverlap = (px >= door.cellX - 0.22) && (px <= door.cellX + 0.22);
+                        const zOverlap = Math.abs(pz - door.cellZ) < (radius + 0.03);
+                        if (xOverlap && zOverlap) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
             return false;
         }
 
@@ -5167,8 +5870,12 @@
             if (key === 'f') {
                 toggleFlashlight();
             }
-            if (key === 'e' && isNearStairs && !isTransitioningFloor) {
-                transitionFloor();
+            if (key === 'e') {
+                if (isNearStairs && !isTransitioningFloor) {
+                    transitionFloor();
+                } else if (currentInteractiveDoor) {
+                    toggleDoor(currentInteractiveDoor);
+                }
             }
             if (key === 'm') {
                 toggleMapOverlay();
@@ -5286,6 +5993,9 @@
             // Update water leaking dripping/splashing particles
             updateWaterLeaks();
 
+            // Update interactive doors smooth rotation
+            updateInteractiveDoors();
+
             // Update CCTV spotlight intensities based on the toggle states
             if (groundFloorGroup && groundFloorGroup.cctvLights) {
                 groundFloorGroup.cctvLights.forEach((light, idx) => {
@@ -5312,14 +6022,31 @@
                 updateDustParticles();
                 updateCreatures();
 
+                if (activeFloor === 2) {
+                    updateParanormalActivity();
+                }
+
                 // Update zero-watt bulbs (both flickering and looping on-off)
-                const activeGroup = activeFloor === 0 ? groundFloorGroup : secondFloorGroup;
+                let activeGroup = groundFloorGroup;
+                if (activeFloor === 1) {
+                    activeGroup = secondFloorGroup;
+                } else if (activeFloor === 2) {
+                    activeGroup = mortuaryFloorGroup;
+                }
+
                 if (activeGroup && activeGroup.flickeringLights) {
                     const time = performance.now() * 0.001;
                     activeGroup.flickeringLights.forEach(light => {
                         let isCurrentlyOn = true;
                         
-                        if (light.isLoopingOnOff) {
+                        if (activeFloor === 2) {
+                            // Rapid strobe light effect for the Mortuary floor!
+                            isCurrentlyOn = Math.sin(time * 60) > 0;
+                            if (Math.random() < 0.15) {
+                                isCurrentlyOn = !isCurrentlyOn;
+                            }
+                            light.intensity = isCurrentlyOn ? light.baseIntensity * 1.5 : 0.0;
+                        } else if (light.isLoopingOnOff) {
                             const timeMod = (time + light.loopOffset) % light.loopPeriod;
                             isCurrentlyOn = timeMod < (light.loopPeriod * light.loopDutyCycle);
                             
@@ -5982,7 +6709,23 @@
             activeFloor = 0;
             groundFloorGroup.visible = true;
             secondFloorGroup.visible = false;
+            if (mortuaryFloorGroup) {
+                mortuaryFloorGroup.visible = false;
+            }
             
+            // Reset doors to closed
+            interactiveDoors.forEach(door => {
+                door.isOpen = false;
+                door.hinge.rotation.y = 0.0;
+            });
+
+            // Reset paranormal walker
+            paranormalActive = false;
+            paranormalTimer = 0;
+            if (ghostlyCorpseMesh) {
+                ghostlyCorpseMesh.visible = false;
+            }
+
             ghostPos.x = 7.5;
             ghostPos.z = 7.5;
             ghostStalking = false;
