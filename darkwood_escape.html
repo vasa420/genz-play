@@ -769,21 +769,9 @@
 <!-- ═══ PAGE 3: LOBBY ═══ -->
 <div class="page" id="lobby-page">
     <div class="lobby-inner">
-        <div class="lobby-title-block" style="position:relative; overflow:visible;">
+        <div class="lobby-title-block">
             <div class="lobby-tag">◈ PROJECT WOODS ◈</div>
-            <!-- Title text hidden — fire draws on top via canvas -->
-            <div class="lobby-title" id="lobby-title-text" style="opacity:0; user-select:none;">DARKWOOD<br>ESCAPE</div>
-            <!-- Fire canvas covers the title area exactly -->
-            <canvas id="fire-canvas" style="
-                position:absolute;
-                left:50%; transform:translateX(-50%);
-                width:120%; max-width:900px;
-                height:100%;
-                top:0;
-                pointer-events:none;
-                z-index:20;
-                display:block;
-            "></canvas>
+            <div class="lobby-title" id="lobby-title-text">DARKWOOD<br>ESCAPE</div>
             <div class="lobby-subtitle">Night 01 — Survive Until Dawn</div>
         </div>
         <div class="lobby-divider"></div>
@@ -858,7 +846,6 @@
 
     function goLobby() {
         showPage('lobby-page');
-        setTimeout(startFireEffect, 120);
     }
 
     /* ─── KEYBOARD: Enter key → continue to lobby ─── */
@@ -957,144 +944,6 @@
         `;
         pc.appendChild(p);
     }
-
-    /* ═══════════════════════════════════
-       FIRE EFFECT — BURNS ON LETTER SHAPES
-    ═══════════════════════════════════ */
-    const fireCanvas = document.getElementById('fire-canvas');
-    const fCtx       = fireCanvas.getContext('2d');
-    let fireParticles = [];
-    let fireRunning   = false;
-    let FW = 0, FH = 0;
-    let textEmitters  = [];   // [x, y] points sampled from letter pixels
-
-    /* ── Particle ── */
-    class FireParticle {
-        constructor(ex, ey) {
-            this.x    = ex + (Math.random() - 0.5) * 3;
-            this.y    = ey + (Math.random() - 0.5) * 3;
-            this.vx   = (Math.random() - 0.5) * 1.4;
-            this.vy   = -(Math.random() * 3.8 + 1.6);
-            this.size = Math.random() * 13 + 5;
-            this.maxLife = Math.random() * 0.55 + 0.4;
-            this.life    = this.maxLife;
-            this.decay   = Math.random() * 0.018 + 0.008;
-            this.wt      = Math.random() * Math.PI * 2;
-        }
-        update() {
-            this.wt  += 0.13;
-            this.x   += this.vx + Math.sin(this.wt) * 0.85;
-            this.y   += this.vy;
-            this.vy  *= 0.984;
-            this.size *= 0.971;
-            this.life -= this.decay;
-        }
-        draw(ctx) {
-            if (this.size < 0.6) return;
-            const t = Math.max(0, this.life / this.maxLife);
-            let r, g, b, a;
-            if (t > 0.75)      { r=255; g=255; b=Math.round((t-.75)/.25*220); a=0.92; }
-            else if (t > 0.5)  { r=255; g=Math.round(180+(t-.5)/.25*75); b=0; a=0.86; }
-            else if (t > 0.25) { r=255; g=Math.round((t-.25)/.25*150+30); b=0; a=0.76; }
-            else               { r=Math.round(160+t/.25*95); g=0; b=0; a=t*3*0.55; }
-            const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
-            grad.addColorStop(0,    `rgba(${r},${g},${b},${a})`);
-            grad.addColorStop(0.45, `rgba(${r},${Math.round(g*.5)},0,${a*.65})`);
-            grad.addColorStop(1,    'rgba(180,0,0,0)');
-            ctx.beginPath();
-            ctx.fillStyle = grad;
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        isDead() { return this.life <= 0 || this.size < 0.5; }
-    }
-
-    /* ── Build emitter list by sampling text pixels ── */
-    function buildTextEmitters() {
-        const titleEl    = document.getElementById('lobby-title-text');
-        const canvasRect = fireCanvas.getBoundingClientRect();
-        const titleRect  = titleEl.getBoundingClientRect();
-
-        // Offset of the title element inside the canvas coordinate space
-        const offX = titleRect.left - canvasRect.left;
-        const offY = titleRect.top  - canvasRect.top;
-        const tW   = titleRect.width;
-        const tH   = titleRect.height;
-
-        // Get actual computed font details
-        const cs       = window.getComputedStyle(titleEl);
-        const fontSize = parseFloat(cs.fontSize);
-        const fontFam  = cs.fontFamily;
-
-        // Off-screen canvas to rasterise text
-        const tmp = document.createElement('canvas');
-        tmp.width  = FW;
-        tmp.height = FH;
-        const tc = tmp.getContext('2d');
-        tc.clearRect(0, 0, FW, FH);
-
-        tc.fillStyle   = '#fff';
-        tc.textAlign   = 'center';
-        tc.textBaseline = 'middle';
-        tc.font        = `900 ${fontSize}px ${fontFam}`;
-
-        // Place the two lines at the same position as the real title element
-        const lineH = fontSize * 1.1;
-        const cx    = offX + tW / 2;
-        const cy    = offY + tH / 2;
-        tc.fillText('DARKWOOD', cx, cy - lineH * 0.52);
-        tc.fillText('ESCAPE',   cx, cy + lineH * 0.52);
-
-        // Sample every 3rd pixel to build emitter list
-        const data = tc.getImageData(0, 0, FW, FH).data;
-        textEmitters = [];
-        for (let y = 0; y < FH; y += 3) {
-            for (let x = 0; x < FW; x += 3) {
-                const alpha = data[(y * FW + x) * 4 + 3];
-                if (alpha > 80) textEmitters.push([x, y]);
-            }
-        }
-    }
-
-    /* ── Sync canvas size + rebuild emitters ── */
-    function syncCanvasSize() {
-        FW = fireCanvas.offsetWidth  || 600;
-        FH = fireCanvas.offsetHeight || 200;
-        fireCanvas.width  = FW;
-        fireCanvas.height = FH;
-        buildTextEmitters();
-    }
-
-    /* ── Emit particles only from letter pixels ── */
-    function emitFire() {
-        if (!textEmitters.length) return;
-        const count = 55;
-        for (let i = 0; i < count; i++) {
-            const e = textEmitters[Math.floor(Math.random() * textEmitters.length)];
-            fireParticles.push(new FireParticle(e[0], e[1]));
-        }
-    }
-
-    /* ── Render loop ── */
-    function renderFire() {
-        if (!fireRunning) return;
-        fCtx.clearRect(0, 0, FW, FH);
-        fCtx.globalCompositeOperation = 'lighter';
-        fireParticles.forEach(p => { p.update(); p.draw(fCtx); });
-        fireParticles = fireParticles.filter(p => !p.isDead());
-        fCtx.globalCompositeOperation = 'source-over';
-        emitFire();
-        requestAnimationFrame(renderFire);
-    }
-
-    function startFireEffect() {
-        syncCanvasSize();
-        if (fireRunning) return;
-        fireRunning = true;
-        renderFire();
-    }
-
-    window.addEventListener('resize', () => { if (fireRunning) syncCanvasSize(); });
 
 </script>
 </body>
