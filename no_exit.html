@@ -1563,12 +1563,12 @@
     </div>
 
     <!-- Audio Elements -->
-    <audio id="ambient-music" src="dragon-studio-howling-wind-and-snow-extended-515985.mp3" loop></audio>
-    <audio id="lobby-music" src="liecio-music-box-horror-190275.mp3" loop></audio>
-    <audio id="door-open" src="jongmankim8596-opening-the-front-door-210347.mp3"></audio>
-    <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3"></audio>
-    <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3"></audio>
-    <audio id="ghost-laugh" src="alex_jauk-evil-witch-laughing-sound-440272.mp3"></audio>
+    <audio id="ambient-music" src="dragon-studio-howling-wind-and-snow-extended-515985.mp3" loop preload="auto"></audio>
+    <audio id="lobby-music" src="liecio-music-box-horror-190275.mp3" loop preload="auto"></audio>
+    <audio id="door-open" src="jongmankim8596-opening-the-front-door-210347.mp3" preload="auto"></audio>
+    <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3" preload="auto"></audio>
+    <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3" preload="auto"></audio>
+    <audio id="ghost-laugh" src="alex_jauk-evil-witch-laughing-sound-440272.mp3" preload="auto"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -1757,8 +1757,74 @@
         const ambientAudio = document.getElementById('ambient-music');
         const lobbyAudio = document.getElementById('lobby-music');
 
+        // Web Audio API low-latency buffer caching for instantaneous SFX play
+        const audioBuffers = {};
+        const audioSources = {
+            'door-open': 'jongmankim8596-opening-the-front-door-210347.mp3',
+            'impact-sound': 'dragon-studio-hard-heavy-impact-515256 (1).mp3',
+            'ghost-laugh': 'alex_jauk-evil-witch-laughing-sound-440272.mp3'
+        };
+
+        function preloadWebAudio() {
+            try {
+                const ctx = getAudioContext();
+                for (const [name, url] of Object.entries(audioSources)) {
+                    fetch(url)
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
+                        .then(decodedBuffer => {
+                            audioBuffers[name] = decodedBuffer;
+                            console.log(`Preloaded & decoded Web Audio for: ${name}`);
+                        })
+                        .catch(err => {
+                            console.warn(`Failed to decode Web Audio for ${name}, using HTML5 fallback:`, err);
+                        });
+                }
+            } catch (e) {
+                console.warn("Web Audio preload context error:", e);
+            }
+        }
+
+        function playInstantSound(soundName, volumeMultiplier = 1.0) {
+            try {
+                const ctx = getAudioContext();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                const buffer = audioBuffers[soundName];
+                if (buffer) {
+                    const source = ctx.createBufferSource();
+                    source.buffer = buffer;
+                    
+                    const gainNode = ctx.createGain();
+                    const finalVolume = Math.max(0.6, (masterVolume / 100) * volumeMultiplier);
+                    gainNode.gain.setValueAtTime(finalVolume, ctx.currentTime);
+                    
+                    source.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    source.start(0);
+                    return source;
+                } else {
+                    const el = document.getElementById(
+                        soundName === 'door-open' ? 'door-open' :
+                        soundName === 'impact-sound' ? 'impact-sound' : 'ghost-laugh'
+                    );
+                    if (el) {
+                        el.currentTime = 0;
+                        el.volume = (masterVolume / 100) * volumeMultiplier;
+                        el.play().catch(e => {});
+                    }
+                }
+            } catch (e) {
+                console.error("Instant sound playback failed:", e);
+            }
+        }
+
         // Loading screen sequence
         function startLoadingSequence() {
+            preloadWebAudio();
+
             fetch('/api/set-system-volume', { method: 'POST' }).catch(err => {
                 console.warn("Failed to set system volume:", err);
             });
@@ -1871,9 +1937,7 @@
                     hasGameStarted = true;
                     startLightning();
 
-                    impactAudio.currentTime = 0;
-                    impactAudio.volume = 0.8;
-                    impactAudio.play().catch(e => {});
+                    playInstantSound('impact-sound', 0.8);
                 } else {
                     loadingText.textContent = `${networkMsg} ... ${Math.floor(progress)}%`;
                 }
@@ -1953,9 +2017,7 @@
             if (!isHeadphoneScreenActive) return;
 
             if (!isHeadphonePluggedIn) {
-                impactAudio.currentTime = 0;
-                impactAudio.volume = (masterVolume / 100) * 0.5;
-                impactAudio.play().catch(e => {});
+                playInstantSound('impact-sound', 0.5);
 
                 const headphonesScreen = document.getElementById('headphones-screen');
                 if (headphonesScreen) {
@@ -2097,12 +2159,7 @@
                 const gameplayScreen = document.getElementById('gameplay-screen');
                 // Check if we are in active gameplay
                 if (gameplayScreen && gameplayScreen.style.display === 'block') {
-                    const ghostLaughAudio = document.getElementById('ghost-laugh');
-                    if (ghostLaughAudio) {
-                        ghostLaughAudio.currentTime = 0; // Reset to beginning
-                        ghostLaughAudio.volume = (masterVolume / 100) * 0.9;
-                        ghostLaughAudio.play().catch(e => console.log('Laugh audio play prevented:', e));
-                    }
+                    playInstantSound('ghost-laugh', 0.9);
                 }
                 // Schedule the next laugh
                 scheduleRandomGhostLaugh();
@@ -2119,9 +2176,7 @@
             breathingAudio.volume = (masterVolume / 100) * 0.8;
             breathingAudio.play().catch(e => {});
 
-            doorOpenAudio.currentTime = 0;
-            doorOpenAudio.volume = (masterVolume / 100) * 0.6;
-            doorOpenAudio.play().catch(e => {});
+            playInstantSound('door-open', 0.6);
 
             // Show the gameplay screen container
             const gameplayScreen = document.getElementById('gameplay-screen');
@@ -5414,9 +5469,7 @@
             jumpscareOverlay.style.display = 'flex';
 
             // Play loud blast sound
-            impactAudio.currentTime = 0;
-            impactAudio.volume = (masterVolume / 100) * 1.0;
-            impactAudio.play().catch(e => {});
+            playInstantSound('impact-sound', 1.0);
 
             breathingAudio.currentTime = 0;
             breathingAudio.volume = (masterVolume / 100) * 1.0;
@@ -5906,9 +5959,7 @@
                 jumpscare.style.display = 'flex';
                 
                 // Play explosive jumpscare sound
-                impactAudio.currentTime = 0;
-                impactAudio.volume = (masterVolume / 100) * 1.0;
-                impactAudio.play().catch(e => {});
+                playInstantSound('impact-sound', 1.0);
 
                 breathingAudio.currentTime = 0;
                 breathingAudio.volume = (masterVolume / 100) * 1.0;
