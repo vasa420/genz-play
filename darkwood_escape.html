@@ -1698,6 +1698,7 @@
         
         // Build environment structures
         createForest();
+        createGroundVegetation();
         createMountains();
         spawnHikers();
         createStarfield();
@@ -1725,7 +1726,7 @@
 
     function createForest() {
         colliders = [];
-        const treeCount = 520; // Increased from 320 to 520 for a dense, thick, realistic forest
+        const treeCount = 700; // Dense realistic forest canopy
         
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2e1d0c, roughness: 0.95 });
         const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xdcdcdc, roughness: 0.85 }); // Light birch bark
@@ -1766,8 +1767,8 @@
             let maxSwayVal = 0.015;
 
             if (treeType === 'spruce') {
-                const height = 11.0 + Math.random() * 7.0;
-                const trunkRadius = 0.22 + Math.random() * 0.14;
+                const height = 18.0 + Math.random() * 10.0;
+                const trunkRadius = 0.28 + Math.random() * 0.16;
                 
                 // Trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.8, trunkRadius, height, 6);
@@ -1803,8 +1804,8 @@
                 maxSwayVal = 0.014 + Math.random() * 0.008;
 
             } else if (treeType === 'oak') {
-                const height = 9.0 + Math.random() * 5.0;
-                const trunkRadius = 0.28 + Math.random() * 0.16;
+                const height = 15.0 + Math.random() * 8.0;
+                const trunkRadius = 0.35 + Math.random() * 0.2;
                 
                 // Trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.9, trunkRadius, height, 6);
@@ -1866,8 +1867,8 @@
                 maxSwayVal = 0.01 + Math.random() * 0.006;
 
             } else if (treeType === 'birch') {
-                const height = 13.0 + Math.random() * 5.0;
-                const trunkRadius = 0.16 + Math.random() * 0.08;
+                const height = 20.0 + Math.random() * 8.0;
+                const trunkRadius = 0.18 + Math.random() * 0.1;
                 
                 // White birch trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.85, trunkRadius, height, 6);
@@ -1911,8 +1912,8 @@
                 maxSwayVal = 0.016 + Math.random() * 0.01;
 
             } else if (treeType === 'dead') {
-                const height = 9.0 + Math.random() * 5.0;
-                const trunkRadius = 0.25 + Math.random() * 0.12;
+                const height = 12.0 + Math.random() * 7.0;
+                const trunkRadius = 0.3 + Math.random() * 0.15;
                 
                 // Main trunk (crooked/tilted dead trees look much creepier and realistic)
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.7, trunkRadius, height, 5);
@@ -2019,54 +2020,293 @@
         }
     }
 
+    function createGroundVegetation() {
+        // --- GRASS BLADES ---
+        const grassColors = [0x3a6b2a, 0x4a7a35, 0x2d5520, 0x567a3c, 0x3d6930];
+        const grassCount = 400;
+        for (let i = 0; i < grassCount; i++) {
+            let gx = (Math.random() - 0.5) * 270;
+            let gz = (Math.random() - 0.5) * 270;
+            if (Math.sqrt(gx*gx + gz*gz) < 5) continue;
+            const gh = getTerrainHeight(gx, gz);
+            if (gh < waterLevel - 0.3) continue;
+            
+            const bladeGroup = new THREE.Group();
+            bladeGroup.position.set(gx, gh, gz);
+            
+            const bladeMat = new THREE.MeshStandardMaterial({
+                color: grassColors[Math.floor(Math.random() * grassColors.length)],
+                roughness: 0.9, side: THREE.DoubleSide
+            });
+            
+            const bladeCount = 6 + Math.floor(Math.random() * 8);
+            for (let b = 0; b < bladeCount; b++) {
+                const bh = 0.35 + Math.random() * 0.55;
+                const bw = 0.04 + Math.random() * 0.04;
+                const bladeGeo = new THREE.PlaneGeometry(bw, bh);
+                const blade = new THREE.Mesh(bladeGeo, bladeMat);
+                blade.position.set(
+                    (Math.random() - 0.5) * 0.4,
+                    bh / 2,
+                    (Math.random() - 0.5) * 0.4
+                );
+                blade.rotation.y = Math.random() * Math.PI * 2;
+                blade.rotation.z = (Math.random() - 0.5) * 0.3;
+                blade.castShadow = false;
+                bladeGroup.add(blade);
+            }
+            scene.add(bladeGroup);
+            
+            // Grass sways in wind
+            windSwayObjects.push({
+                mesh: bladeGroup,
+                phase: Math.random() * Math.PI * 2,
+                speed: 1.2 + Math.random() * 0.8,
+                maxSway: 0.08 + Math.random() * 0.06,
+                isFallable: false,
+                isWaterfall: false
+            });
+        }
+        
+        // --- WILDFLOWERS ---
+        const flowerColors = [0xcc2222, 0xe8c030, 0x9b30d8, 0xffffff, 0xff8c42, 0xff69b4];
+        const flowerCount = 200;
+        for (let i = 0; i < flowerCount; i++) {
+            let fx = (Math.random() - 0.5) * 260;
+            let fz = (Math.random() - 0.5) * 260;
+            if (Math.sqrt(fx*fx + fz*fz) < 5) continue;
+            const fh = getTerrainHeight(fx, fz);
+            if (fh < waterLevel - 0.2) continue;
+            
+            const flowerGroup = new THREE.Group();
+            flowerGroup.position.set(fx, fh, fz);
+            
+            // Stem
+            const stemMat = new THREE.MeshStandardMaterial({ color: 0x2d5520, roughness: 0.9 });
+            const stemH = 0.3 + Math.random() * 0.45;
+            const stemGeo = new THREE.CylinderGeometry(0.015, 0.025, stemH, 4);
+            const stem = new THREE.Mesh(stemGeo, stemMat);
+            stem.position.y = stemH / 2;
+            stem.castShadow = false;
+            flowerGroup.add(stem);
+            
+            // Flower head (small disc)
+            const headColor = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+            const headMat = new THREE.MeshStandardMaterial({ color: headColor, roughness: 0.7, emissive: headColor, emissiveIntensity: 0.08 });
+            const headGeo = new THREE.CircleGeometry(0.08 + Math.random() * 0.06, 6);
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = stemH + 0.04;
+            head.rotation.x = -Math.PI / 2 + (Math.random() - 0.5) * 0.3;
+            head.castShadow = false;
+            flowerGroup.add(head);
+            
+            // Petal ring
+            const petalCount = 5 + Math.floor(Math.random() * 3);
+            for (let p = 0; p < petalCount; p++) {
+                const petalGeo = new THREE.EllipseCurve ? new THREE.CircleGeometry(0.055, 4) : new THREE.CircleGeometry(0.055, 4);
+                const petal = new THREE.Mesh(petalGeo, headMat);
+                const pAngle = (p / petalCount) * Math.PI * 2;
+                petal.position.set(
+                    Math.cos(pAngle) * 0.09,
+                    stemH + 0.03,
+                    Math.sin(pAngle) * 0.09
+                );
+                petal.rotation.x = -Math.PI / 2 + 0.2;
+                petal.rotation.z = pAngle;
+                petal.castShadow = false;
+                flowerGroup.add(petal);
+            }
+            
+            scene.add(flowerGroup);
+        }
+        
+        // --- FERNS & SMALL BUSHES ---
+        const fernMat = new THREE.MeshStandardMaterial({ color: 0x1f4d18, roughness: 0.95, side: THREE.DoubleSide });
+        const bushMat = new THREE.MeshStandardMaterial({ color: 0x284d1e, roughness: 0.9 });
+        const plantCount = 150;
+        for (let i = 0; i < plantCount; i++) {
+            let px = (Math.random() - 0.5) * 270;
+            let pz = (Math.random() - 0.5) * 270;
+            if (Math.sqrt(px*px + pz*pz) < 6) continue;
+            const ph = getTerrainHeight(px, pz);
+            if (ph < waterLevel - 0.2) continue;
+            
+            if (Math.random() < 0.55) {
+                // Fern: flat fan of planes
+                const fernGroup = new THREE.Group();
+                fernGroup.position.set(px, ph, pz);
+                const frondCount = 4 + Math.floor(Math.random() * 4);
+                for (let f = 0; f < frondCount; f++) {
+                    const frondH = 0.4 + Math.random() * 0.35;
+                    const frondGeo = new THREE.PlaneGeometry(0.15 + Math.random() * 0.1, frondH);
+                    const frond = new THREE.Mesh(frondGeo, fernMat);
+                    frond.position.y = frondH / 2;
+                    frond.rotation.y = (f / frondCount) * Math.PI * 2;
+                    frond.rotation.z = 0.3 + Math.random() * 0.4;
+                    frond.castShadow = false;
+                    fernGroup.add(frond);
+                }
+                scene.add(fernGroup);
+                windSwayObjects.push({ mesh: fernGroup, phase: Math.random() * Math.PI * 2, speed: 0.9 + Math.random() * 0.5, maxSway: 0.06, isFallable: false, isWaterfall: false });
+            } else {
+                // Small rounded bush
+                const bushR = 0.3 + Math.random() * 0.35;
+                const bushGeo = new THREE.DodecahedronGeometry(bushR, 0);
+                const bush = new THREE.Mesh(bushGeo, bushMat);
+                bush.position.set(px, ph + bushR * 0.65, pz);
+                bush.castShadow = false;
+                bush.receiveShadow = true;
+                scene.add(bush);
+            }
+        }
+    }
+
+
     function createMountains() {
-        const mountainCount = 12;
-        const mountainMat = new THREE.MeshStandardMaterial({
-            color: 0x1a1c1a,
+        const mountainCount = 16;
+        
+        // Rocky grey peaks at the very top
+        const snowMat = new THREE.MeshStandardMaterial({
+            color: 0xe8ede8,
+            roughness: 0.9,
+            metalness: 0.0,
+            flatShading: true
+        });
+        // Green forested lower slopes
+        const forestSlopeMat = new THREE.MeshStandardMaterial({
+            color: 0x2d5a27,
             roughness: 0.95,
-            metalness: 0.05,
+            metalness: 0.0,
+            flatShading: true
+        });
+        // Dark green mid-slope
+        const midSlopeMat = new THREE.MeshStandardMaterial({
+            color: 0x1e4a1a,
+            roughness: 0.95,
+            metalness: 0.0,
             flatShading: true
         });
         
         for (let i = 0; i < mountainCount; i++) {
             // Place in a ring surrounding the forest boundary
             const angle = (i / mountainCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.22;
-            const radius = 175 + Math.random() * 35;
+            const radius = 170 + Math.random() * 40;
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
             
             const terrainH = getTerrainHeight(x, z);
-            const mHeight = 45 + Math.random() * 35;
-            const mRadius = 55 + Math.random() * 35;
+            const mHeight = 60 + Math.random() * 45;
+            const mRadius = 60 + Math.random() * 40;
             
-            // Deformed cone geometry for jagged ridges
-            const coneGeo = new THREE.ConeGeometry(mRadius, mHeight, 6, 3);
-            const pos = coneGeo.attributes.position;
-            for (let v = 0; v < pos.count; v++) {
-                const vy = pos.getY(v);
-                if (vy > -mHeight / 2) {
-                    const vx = pos.getX(v);
-                    const vz = pos.getZ(v);
+            // --- Rocky grey top peak ---
+            const peakH = mHeight * 0.4;
+            const peakGeo = new THREE.ConeGeometry(mRadius * 0.45, peakH, 7, 2);
+            const peakPos = peakGeo.attributes.position;
+            for (let v = 0; v < peakPos.count; v++) {
+                const vy = peakPos.getY(v);
+                if (vy > -peakH / 2) {
+                    const vx = peakPos.getX(v);
+                    const vz = peakPos.getZ(v);
                     const vAngle = Math.atan2(vz, vx);
-                    
-                    const ridgeNoise = Math.sin(vAngle * 6.0) * (mRadius * 0.15);
-                    const heightNoise = (Math.random() - 0.5) * 1.5;
-                    
-                    pos.setX(v, vx + Math.cos(vAngle) * ridgeNoise);
-                    pos.setZ(v, vz + Math.sin(vAngle) * ridgeNoise);
-                    pos.setY(v, vy + heightNoise);
+                    const ridgeNoise = Math.sin(vAngle * 5) * (mRadius * 0.12);
+                    peakPos.setX(v, vx + Math.cos(vAngle) * ridgeNoise);
+                    peakPos.setZ(v, vz + Math.sin(vAngle) * ridgeNoise);
+                    peakPos.setY(v, vy + (Math.random() - 0.5) * 2.0);
                 }
             }
-            coneGeo.computeVertexNormals();
+            peakGeo.computeVertexNormals();
+            const peakMesh = new THREE.Mesh(peakGeo, snowMat);
+            peakMesh.position.set(x, terrainH + mHeight * 0.72, z);
+            peakMesh.castShadow = false;
+            peakMesh.receiveShadow = true;
+            scene.add(peakMesh);
             
-            const mesh = new THREE.Mesh(coneGeo, mountainMat);
-            // Put base at Y=0 locally, position on top of the terrain base
-            mesh.position.set(x, terrainH + mHeight / 2 - 2, z);
+            // --- Green mid slope ---
+            const midH = mHeight * 0.55;
+            const midGeo = new THREE.ConeGeometry(mRadius * 0.78, midH, 7, 2);
+            const midPos = midGeo.attributes.position;
+            for (let v = 0; v < midPos.count; v++) {
+                const vy = midPos.getY(v);
+                if (vy > -midH / 2) {
+                    const vx = midPos.getX(v);
+                    const vz = midPos.getZ(v);
+                    const vAngle = Math.atan2(vz, vx);
+                    const ridgeNoise = Math.sin(vAngle * 6.0) * (mRadius * 0.13);
+                    midPos.setX(v, vx + Math.cos(vAngle) * ridgeNoise);
+                    midPos.setZ(v, vz + Math.sin(vAngle) * ridgeNoise);
+                    midPos.setY(v, vy + (Math.random() - 0.5) * 1.5);
+                }
+            }
+            midGeo.computeVertexNormals();
+            const midMesh = new THREE.Mesh(midGeo, midSlopeMat);
+            midMesh.position.set(x, terrainH + mHeight * 0.38, z);
+            midMesh.castShadow = false;
+            midMesh.receiveShadow = true;
+            scene.add(midMesh);
             
-            mesh.castShadow = false; // Disable shadow casting for massive performance save on boundary mountains
-            mesh.receiveShadow = true;
+            // --- Deep green forested base ---
+            const baseH = mHeight * 0.45;
+            const baseGeo = new THREE.ConeGeometry(mRadius, baseH, 7, 2);
+            const basePos = baseGeo.attributes.position;
+            for (let v = 0; v < basePos.count; v++) {
+                const vy = basePos.getY(v);
+                if (vy > -baseH / 2) {
+                    const vx = basePos.getX(v);
+                    const vz = basePos.getZ(v);
+                    const vAngle = Math.atan2(vz, vx);
+                    const ridgeNoise = Math.sin(vAngle * 4.0) * (mRadius * 0.16);
+                    basePos.setX(v, vx + Math.cos(vAngle) * ridgeNoise);
+                    basePos.setZ(v, vz + Math.sin(vAngle) * ridgeNoise);
+                    basePos.setY(v, vy + (Math.random() - 0.5) * 1.2);
+                }
+            }
+            baseGeo.computeVertexNormals();
+            const baseMesh = new THREE.Mesh(baseGeo, forestSlopeMat);
+            baseMesh.position.set(x, terrainH + mHeight * 0.15, z);
+            baseMesh.castShadow = false;
+            baseMesh.receiveShadow = true;
+            scene.add(baseMesh);
             
-            scene.add(mesh);
+            // --- Waterfall: animated white particle stream on 30% of mountains ---
+            if (Math.random() < 0.30) {
+                const wfCount = 40;
+                const wfPositions = new Float32Array(wfCount * 3);
+                const wfVelocities = [];
+                const wfBaseX = x + (Math.random() - 0.5) * mRadius * 0.3;
+                const wfBaseZ = z + (Math.random() - 0.5) * mRadius * 0.3;
+                const wfTopY = terrainH + mHeight * 0.68;
+                
+                for (let w = 0; w < wfCount; w++) {
+                    wfPositions[w * 3] = wfBaseX + (Math.random() - 0.5) * 1.2;
+                    wfPositions[w * 3 + 1] = wfTopY - Math.random() * mHeight * 0.55;
+                    wfPositions[w * 3 + 2] = wfBaseZ + (Math.random() - 0.5) * 1.2;
+                    wfVelocities.push(-1.2 - Math.random() * 0.8);
+                }
+                
+                const wfGeo = new THREE.BufferGeometry();
+                wfGeo.setAttribute('position', new THREE.BufferAttribute(wfPositions, 3));
+                const wfMat = new THREE.PointsMaterial({
+                    color: 0xaaddff,
+                    size: 0.55,
+                    transparent: true,
+                    opacity: 0.82,
+                    depthWrite: false
+                });
+                const wfPoints = new THREE.Points(wfGeo, wfMat);
+                scene.add(wfPoints);
+                
+                // Store for animation
+                wfPoints.userData = {
+                    isWaterfall: true,
+                    baseX: wfBaseX,
+                    baseZ: wfBaseZ,
+                    topY: wfTopY,
+                    bottomY: terrainH + 2,
+                    velocities: wfVelocities,
+                    count: wfCount
+                };
+                windSwayObjects.push({ mesh: wfPoints, isWaterfall: true, phase: Math.random() * Math.PI * 2, speed: 0, maxSway: 0, isFallable: false });
+            }
         }
     }
 
@@ -2219,21 +2459,26 @@
         if (clockInterval) clearInterval(clockInterval);
         
         clockInterval = setInterval(() => {
-            if (!isGameRunning) return;
-            
-            gameSecond++;
-            if (gameSecond >= 60) {
-                gameSecond = 0;
-                gameMinute++;
-                if (gameMinute >= 60) {
-                    gameMinute = 0;
-                    gameHour++;
-                    if (gameHour > 12) gameHour = 1;
+            try {
+                if (!isGameRunning) return;
+                
+                gameSecond++;
+                if (gameSecond >= 60) {
+                    gameSecond = 0;
+                    gameMinute++;
+                    if (gameMinute >= 60) {
+                        gameMinute = 0;
+                        gameHour++;
+                        if (gameHour > 12) gameHour = 1;
+                    }
                 }
+                
+                updateClockDisplay();
+                checkTimeTriggers();
+            } catch(e) {
+                // Prevent any error from killing the clock
+                console.warn('Clock tick error:', e);
             }
-            
-            updateClockDisplay();
-            checkTimeTriggers();
         }, 1000);
     }
     
@@ -3488,6 +3733,25 @@
             
             windSwayObjects.forEach(s => {
                 const m = s.mesh;
+                
+                // Animate waterfall particles: fall downward, reset to top
+                if (s.isWaterfall && m.userData.isWaterfall) {
+                    const ud = m.userData;
+                    const wfPos = m.geometry.attributes.position;
+                    for (let w = 0; w < ud.count; w++) {
+                        let wy = wfPos.getY(w);
+                        wy += ud.velocities[w] * (60 * delta);
+                        if (wy < ud.bottomY) {
+                            // Recycle particle back to top with slight scatter
+                            wy = ud.topY;
+                            wfPos.setX(w, ud.baseX + (Math.random() - 0.5) * 1.2);
+                            wfPos.setZ(w, ud.baseZ + (Math.random() - 0.5) * 1.2);
+                        }
+                        wfPos.setY(w, wy);
+                    }
+                    wfPos.needsUpdate = true;
+                    return; // Skip wind sway for waterfalls
+                }
                 
                 // Handle falling trees during heavy storm
                 if (s.isFallable && m.userData.canFall) {
