@@ -1456,6 +1456,8 @@
     // Moon & Clouds variables
     let moonSprite, cloudMaterial;
     let clouds = [];
+    let fallingFireStones = [];
+    let cloudFlashVal = 0;
     let lastFrameTime = 0;
     let playerSpeed = 0.06;
     let boundarySize = 150;
@@ -1611,6 +1613,8 @@
         
         isTransitioningToNight = false;
         flashlightOn = false;
+        fallingFireStones = [];
+        cloudFlashVal = 0;
         
         playerPos.x = 0;
         playerPos.z = 0;
@@ -3335,11 +3339,11 @@
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
             const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-            // Stormy dark grey clouds
-            grad.addColorStop(0, 'rgba(65, 70, 80, 0.85)');
-            grad.addColorStop(0.5, 'rgba(40, 42, 48, 0.45)');
-            grad.addColorStop(0.8, 'rgba(25, 26, 30, 0.15)');
-            grad.addColorStop(1.0, 'rgba(25, 26, 30, 0)');
+            // Stormy black clouds
+            grad.addColorStop(0, 'rgba(15, 16, 20, 0.95)');
+            grad.addColorStop(0.5, 'rgba(10, 11, 13, 0.75)');
+            grad.addColorStop(0.8, 'rgba(5, 5, 6, 0.35)');
+            grad.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, 256, 256);
             return new THREE.CanvasTexture(canvas);
@@ -3350,6 +3354,7 @@
             map: cloudTex,
             transparent: true,
             opacity: 0.0, // starts transparent
+            color: new THREE.Color(0x282c34), // charcoal tint
             depthWrite: false
         });
         
@@ -3462,19 +3467,15 @@
         scene.add(splashParticles);
     }
 
+
+
     /* ─── LIGHTNING STRIKES AND FOREST FIRES ─── */
     // Trigger a lightning strike that falls in the forest relative to player pos
     function triggerTimedStrike() {
-        // Choose a target position around the player (within 20 to 45 units)
         const dist = 20 + Math.random() * 25;
         const angle = Math.random() * Math.PI * 2;
         const targetX = playerPos.x + Math.cos(angle) * dist;
         const targetZ = playerPos.z + Math.sin(angle) * dist;
-        
-        triggerLightningStrike(targetX, targetZ);
-    }
-
-    function triggerLightningStrike(targetX, targetZ) {
         const groundY = getTerrainHeight(targetX, targetZ);
         
         // Find closest tree group to snap to
@@ -3483,12 +3484,12 @@
         
         scene.children.forEach(child => {
             if (child.type === 'Group' && !child.userData.isHiker && !child.userData.isBird && child.position) {
-                const dist = Math.sqrt(
+                const distToTree = Math.sqrt(
                     (child.position.x - targetX) * (child.position.x - targetX) +
                     (child.position.z - targetZ) * (child.position.z - targetZ)
                 );
-                if (dist < minDist) {
-                    minDist = dist;
+                if (distToTree < minDist) {
+                    minDist = distToTree;
                     closestTree = child;
                 }
             }
@@ -3502,77 +3503,130 @@
             strikeX = closestTree.position.x;
             strikeZ = closestTree.position.z;
             strikeY = closestTree.position.y;
-            
-            closestTree.userData.isBurning = true;
-            closestTree.userData.burnTimer = 40.0;
-            closestTree.userData.originalMaterials = [];
-            
-            closestTree.traverse(node => {
-                if (node.isMesh && node.material) {
-                    closestTree.userData.originalMaterials.push({ mesh: node, material: node.material });
-                    
-                    node.material = new THREE.MeshStandardMaterial({
-                        color: 0xaa2200,
-                        emissive: 0xff3300,
-                        emissiveIntensity: 0.85,
-                        roughness: 0.9,
-                        metalness: 0.1
-                    });
-                }
-            });
         }
         
-        createLightningBolt(strikeX, strikeZ, strikeY);
+        spawnFireRock(strikeX, strikeY, strikeZ, closestTree);
+    }
+
+    function triggerAmbientStrike() {
+        const dist = 30 + Math.random() * 35;
+        const angle = Math.random() * Math.PI * 2;
+        const targetX = playerPos.x + Math.cos(angle) * dist;
+        const targetZ = playerPos.z + Math.sin(angle) * dist;
+        const groundY = getTerrainHeight(targetX, targetZ);
         
-        const volumeSlider = document.querySelector('.vol-slider');
-        const globalVolume = volumeSlider ? parseFloat(volumeSlider.value) / 100 : 0.75;
-        playThunderSound(true, globalVolume * 1.4);
+        spawnFireRock(targetX, groundY, targetZ, null);
+    }
+
+    function spawnFireRock(targetX, targetY, targetZ, closestTree) {
+        // Create fire stone mesh (fiery dodecahedron rock)
+        const geom = new THREE.DodecahedronGeometry(1.4, 0);
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0xff3300,
+            emissive: 0xff6600,
+            emissiveIntensity: 4.5,
+            roughness: 0.2,
+            metalness: 0.1
+        });
+        const stoneMesh = new THREE.Mesh(geom, mat);
+        stoneMesh.position.set(targetX, 110, targetZ);
+        scene.add(stoneMesh);
         
-        lightningFlashActive = true;
-        lightningFlashTime = performance.now();
-        lightningStage = 0;
+        const stoneLight = new THREE.PointLight(0xff4400, 3.0, 20);
+        stoneMesh.add(stoneLight);
         
-        createForestFire(strikeX, strikeY, strikeZ, closestTree);
+        // Generate trailing rock mesh representations for the fiery tail
+        const trailCount = 5;
+        const trailMeshes = [];
+        for (let t = 0; t < trailCount; t++) {
+            const tGeo = new THREE.SphereGeometry(0.9 * (1.0 - (t + 1) / (trailCount + 1)), 6, 6);
+            const tMat = new THREE.MeshBasicMaterial({
+                color: 0xff4400,
+                transparent: true,
+                opacity: 0.65 * (1.0 - t / trailCount)
+            });
+            const tMesh = new THREE.Mesh(tGeo, tMat);
+            scene.add(tMesh);
+            trailMeshes.push(tMesh);
+        }
+        
+        fallingFireStones.push({
+            mesh: stoneMesh,
+            light: stoneLight,
+            trailMeshes: trailMeshes,
+            history: [],
+            targetX: targetX,
+            targetY: targetY,
+            targetZ: targetZ,
+            closestTree: closestTree,
+            posY: 110,
+            speed: 46.0 + Math.random() * 6.0 // falls in ~2.2 seconds
+        });
     }
 
     function createLightningBolt(targetX, targetZ, groundY) {
         const boltGroup = new THREE.Group();
-        const mainPoints = [];
-        let curY = 110;
-        let curX = targetX + (Math.random() - 0.5) * 20;
-        let curZ = targetZ + (Math.random() - 0.5) * 20;
-        mainPoints.push(new THREE.Vector3(curX, curY, curZ));
-        
-        const steps = 10;
         const branchPoints = [];
+        
+        const steps = 12;
+        let curY = 110;
+        let curX = targetX + (Math.random() - 0.5) * 15;
+        let curZ = targetZ + (Math.random() - 0.5) * 15;
+        
+        const mainPoints = [];
+        mainPoints.push(new THREE.Vector3(curX, curY, curZ));
         
         for (let s = 1; s <= steps; s++) {
             const ratio = s / steps;
             const targetY = curY - (curY - groundY) / (steps - s + 1);
             curY = targetY;
-            curX = curX + (targetX - curX) * ratio + (Math.random() - 0.5) * 8;
-            curZ = curZ + (targetZ - curZ) * ratio + (Math.random() - 0.5) * 8;
+            curX = curX + (targetX - curX) * ratio + (Math.random() - 0.5) * 6;
+            curZ = curZ + (targetZ - curZ) * ratio + (Math.random() - 0.5) * 6;
             const pt = new THREE.Vector3(curX, curY, curZ);
             mainPoints.push(pt);
             
-            // Randomly branch out
-            if (s > 2 && s < steps - 1 && Math.random() < 0.35) {
-                const bPoints = [pt];
+            // Spawn main branch
+            if (s > 2 && s < steps - 1 && Math.random() < 0.48) {
                 let bx = curX;
                 let by = curY;
                 let bz = curZ;
-                const bSteps = 3 + Math.floor(Math.random() * 3);
+                const bPoints = [pt];
+                const bSteps = 4 + Math.floor(Math.random() * 4);
+                
+                // direction of branch leans away from main trunk
+                const dx = (Math.random() - 0.5) * 14;
+                const dz = (Math.random() - 0.5) * 14;
+                
                 for (let b = 1; b <= bSteps; b++) {
-                    by -= 6 + Math.random() * 6;
-                    bx += (Math.random() - 0.5) * 12;
-                    bz += (Math.random() - 0.5) * 12;
-                    bPoints.push(new THREE.Vector3(bx, by, bz));
+                    by -= 6 + Math.random() * 5;
+                    bx += dx / bSteps + (Math.random() - 0.5) * 4;
+                    bz += dz / bSteps + (Math.random() - 0.5) * 4;
+                    const bPt = new THREE.Vector3(bx, by, bz);
+                    bPoints.push(bPt);
+                    
+                    // Spawn sub-branch out of branch
+                    if (b > 1 && b < bSteps && Math.random() < 0.3) {
+                        let sbx = bx;
+                        let sby = by;
+                        let sbz = bz;
+                        const sbPoints = [bPt];
+                        const sbSteps = 2 + Math.floor(Math.random() * 2);
+                        const sdx = (Math.random() - 0.5) * 8;
+                        const sdz = (Math.random() - 0.5) * 8;
+                        for (let sb = 1; sb <= sbSteps; sb++) {
+                            sby -= 5 + Math.random() * 4;
+                            sbx += sdx / sbSteps + (Math.random() - 0.5) * 2;
+                            sbz += sdz / sbSteps + (Math.random() - 0.5) * 2;
+                            sbPoints.push(new THREE.Vector3(sbx, sby, sbz));
+                        }
+                        branchPoints.push({ points: sbPoints, thickness: 0.10 });
+                    }
                 }
                 branchPoints.push({ points: bPoints, thickness: 0.22 });
             }
         }
         mainPoints.push(new THREE.Vector3(targetX, groundY, targetZ));
-        branchPoints.push({ points: mainPoints, thickness: 0.55 });
+        branchPoints.push({ points: mainPoints, thickness: 0.65 });
         
         const meshes = [];
         const mats = [];
@@ -3910,10 +3964,27 @@
         
         const elapsedSeconds = getElapsedSeconds();
         
-        // Storm timeline (6:04 PM to 6:07 PM)
+        // 1. Calculate weather timelines and progression
+        let weatherProgress = 0.0;
+        if (elapsedSeconds >= 420 && elapsedSeconds < 540) {
+            // Pre-storm build-up: 6:02 to 6:04 PM (120 seconds)
+            weatherProgress = (elapsedSeconds - 420) / 120.0 * 0.5; // grows from 0 to 0.5
+        } else if (elapsedSeconds >= 540 && elapsedSeconds < 720) {
+            // Heavy storm: 6:04 to 6:07 PM
+            // Reaches full storm strength (1.0) inside an 8-second ramp
+            weatherProgress = 0.5 + 0.5 * Math.min(1.0, (elapsedSeconds - 540) / 8.0);
+        } else if (elapsedSeconds >= 720) {
+            // Post-storm clearing (decays back to 0 in 15 seconds)
+            weatherProgress = Math.max(0.0, 1.0 - (elapsedSeconds - 720) / 15.0);
+        }
+        
+        const cloudIntensity = Math.min(1.0, weatherProgress * 2.0); // full at weatherProgress >= 0.5 (6:04 PM)
+        const rainIntensity = Math.max(0.0, (weatherProgress - 0.5) * 2.0); // starts at 6:04 PM, builds to 1.0
+        stormIntensity = weatherProgress; // sways wind sways in trees/grass
+        
         isStorming = (elapsedSeconds >= 540 && elapsedSeconds < 720);
         
-        // Timed lightning strikes (exactly three times in total during storm)
+        // 2. Timed lightning strike scheduling (spawns fire rock meteors!)
         if (isStorming) {
             if (elapsedSeconds >= 560 && !strike1Triggered) {
                 strike1Triggered = true;
@@ -3929,35 +4000,21 @@
             }
         }
         
-        // Calculate storm intensity with an 8-second fade in/out ramp
-        const rampTime = 8.0;
-        if (isStorming) {
-            if (elapsedSeconds < 540 + rampTime) {
-                stormIntensity = (elapsedSeconds - 540) / rampTime;
-            } else if (elapsedSeconds > 720 - rampTime) {
-                stormIntensity = (720 - elapsedSeconds) / rampTime;
-            } else {
-                stormIntensity = 1.0;
-            }
-        } else {
-            stormIntensity = 0.0;
-        }
-        
         // Retrieve volume settings from HTML elements
         const soundToggle = document.querySelector('.modal-box .setting-row:first-child .toggle');
         const soundEnabled = soundToggle ? soundToggle.classList.contains('on') : true;
         const volumeSlider = document.querySelector('.vol-slider');
         const globalVolume = volumeSlider ? parseFloat(volumeSlider.value) / 100 : 0.75;
         
-        // 1. Howling wind sound playback
-        if (soundEnabled && stormIntensity > 0.02) {
+        // 3. Howling wind sound playback
+        if (soundEnabled && weatherProgress > 0.02) {
             if (!stormAudioWind) {
                 stormAudioWind = new Audio('dragon-studio-howling-wind-and-snow-extended-515985.mp3');
                 stormAudioWind.loop = true;
                 stormAudioWind.volume = 0;
                 stormAudioWind.play().catch(() => {});
             }
-            const targetVolume = stormIntensity * globalVolume * 0.75;
+            const targetVolume = weatherProgress * globalVolume * 0.75;
             stormAudioWind.volume += (targetVolume - stormAudioWind.volume) * 0.05;
         } else if (stormAudioWind) {
             stormAudioWind.volume *= 0.9;
@@ -3966,43 +4023,49 @@
                 stormAudioWind = null;
             }
         }
-
-        // 1b. Forest background music ↔ Synthesized Rain sound (stop music while raining)
+        
+        // 4. Forest music cross-fading & synthesized rain audio
         if (soundEnabled) {
-            if (isStorming) {
-                // Fade out forestBgAudio completely and pause it
-                if (forestBgAudio) {
-                    forestBgAudio.volume *= 0.88;
-                    if (forestBgAudio.volume < 0.01) {
+            // Forest bg music target volume
+            let forestTargetVol = globalVolume * 0.55;
+            if (elapsedSeconds >= 420 && elapsedSeconds < 540) {
+                // fade out music completely before rain starts
+                forestTargetVol = globalVolume * 0.55 * (1.0 - (elapsedSeconds - 420) / 120.0);
+            } else if (elapsedSeconds >= 540 && elapsedSeconds < 720) {
+                forestTargetVol = 0;
+            } else if (elapsedSeconds >= 720) {
+                // fade in music after storm ends
+                forestTargetVol = globalVolume * 0.55 * Math.min(1.0, (elapsedSeconds - 720) / 15.0);
+            }
+            
+            if (forestBgAudio) {
+                if (forestTargetVol > 0.01) {
+                    if (forestBgAudio.paused) forestBgAudio.play().catch(() => {});
+                    forestBgAudio.volume += (forestTargetVol - forestBgAudio.volume) * 0.05;
+                } else {
+                    forestBgAudio.volume *= 0.85;
+                    if (forestBgAudio.volume < 0.01 && !forestBgAudio.paused) {
                         forestBgAudio.pause();
                     }
                 }
-                
-                // Synthesize rain sound
+            }
+            
+            // Synthesized rain sound (only runs when rain intensity > 0)
+            if (rainIntensity > 0.02) {
                 startRainSound();
                 if (rainAudioNode) {
-                    const rainTargetVol = stormIntensity * globalVolume * 0.45;
+                    const rainTargetVol = rainIntensity * globalVolume * 0.45;
                     rainAudioNode.gain.gain.setValueAtTime(
                         rainAudioNode.gain.gain.value + (rainTargetVol - rainAudioNode.gain.gain.value) * 0.05,
                         audioCtx.currentTime
                     );
                 }
             } else {
-                // Fade out and stop synthesized rain sound
                 if (rainAudioNode) {
                     rainAudioNode.gain.gain.setValueAtTime(rainAudioNode.gain.gain.value * 0.85, audioCtx.currentTime);
                     if (rainAudioNode.gain.gain.value < 0.01) {
                         stopRainSound();
                     }
-                }
-                
-                // Fade in and resume forestBgAudio
-                if (forestBgAudio) {
-                    if (forestBgAudio.paused) {
-                        forestBgAudio.play().catch(() => {});
-                    }
-                    const forestTargetVol = globalVolume * 0.55;
-                    forestBgAudio.volume += (forestTargetVol - forestBgAudio.volume) * 0.03;
                 }
             }
         } else {
@@ -4011,44 +4074,240 @@
             stopRainSound();
         }
         
-        // 2. Wet soil graphics transition (ground remains wet/shiny after storm passes)
+        // 5. Update stars points opacity (disable stars as storm clouds roll in)
+        let progress = 0;
+        if (isTransitioningToNight) {
+            const totalSecondsPast6 = (gameHour === 6 ? (gameMinute * 60 + gameSecond) : 0);
+            progress = totalSecondsPast6 / 60.0;
+            progress = Math.min(1.0, Math.max(0.0, progress));
+        }
+        if (starsPoints) {
+            starsPoints.material.uniforms.uOpacity.value = (progress * 0.85) * (1.0 - cloudIntensity);
+        }
+        
+        // 6. Moonlight effect & Ambient/Directional lighting adjustments
+        if (ambientLight && directionalLight) {
+            const startFogColor = new THREE.Color(0xe08b5e);
+            const endFogColor = new THREE.Color(0x050c1e);
+            const currentFogColor = startFogColor.clone().lerp(endFogColor, progress);
+            
+            const stormFogColor = new THREE.Color(0x0a0c10); // dark storm fog
+            const targetFogColor = currentFogColor.clone().lerp(stormFogColor, cloudIntensity * 0.85);
+            scene.fog.color.copy(targetFogColor);
+            
+            // thick fog density during rain
+            scene.fog.density = (0.008 + progress * 0.01) * (1.0 - cloudIntensity * 0.2) + rainIntensity * 0.015;
+            
+            // Ambient light dimming
+            const baseAmbientInt = 0.55 - progress * 0.5;
+            const stormAmbientDim = 1.0 - cloudIntensity * 0.68; // dims ambient by 68% in dark storm
+            const currentAmbientInt = baseAmbientInt * stormAmbientDim;
+            
+            const baseAmbientCol = new THREE.Color(0xe08b5e).lerp(new THREE.Color(0x050c1e), progress);
+            const stormAmbientCol = new THREE.Color(0x0a101d);
+            const currentAmbientCol = baseAmbientCol.clone().lerp(stormAmbientCol, cloudIntensity * 0.8);
+            
+            // Directional sun / silvery moonlight
+            const sunX = 40;
+            const sunY = 25 - progress * 40;
+            const sunZ = 30 + progress * 10;
+            const sunPos = new THREE.Vector3(sunX, sunY, sunZ);
+            const moonPos = new THREE.Vector3(-45, 35, -45);
+            
+            const sunIntensity = 1.2 * (1.0 - progress);
+            const moonIntensity = 0.28 * progress * (1.0 - cloudIntensity * 0.82); // moon dims in clouds
+            
+            const lightPos = new THREE.Vector3().copy(sunPos).multiplyScalar(1.0 - progress)
+                .addScaledVector(moonPos, progress);
+            directionalLight.position.copy(lightPos);
+            
+            const sunColor = new THREE.Color(0xff7a3b).lerp(new THREE.Color(0xff2200), progress);
+            const moonColor = new THREE.Color(0x7da8d6); // pale silvery-blue moon light
+            const finalLightColor = sunColor.clone().multiplyScalar(sunIntensity)
+                .add(moonColor.clone().multiplyScalar(moonIntensity));
+                
+            // Check lightning flashes first before overriding intensities
+            if (lightningFlashActive) {
+                const now = performance.now();
+                const age = now - lightningFlashTime;
+                let flashIntensity = 0;
+                
+                if (age < 80) {
+                    flashIntensity = age / 80;
+                } else if (age < 180) {
+                    flashIntensity = 1.0 - (age - 80) / 100;
+                } else if (age < 230) {
+                    flashIntensity = (age - 180) / 50 * 0.7;
+                } else if (age < 450) {
+                    flashIntensity = 0.7 * (1.0 - (age - 230) / 220);
+                } else {
+                    lightningFlashActive = false;
+                }
+                
+                const flashOverlay = document.getElementById('lightning-flash-overlay');
+                if (flashOverlay) {
+                    flashOverlay.style.opacity = flashIntensity * 0.85;
+                }
+                
+                const flashColor = new THREE.Color(0xdceeff);
+                ambientLight.intensity = currentAmbientInt + flashIntensity * 4.5;
+                ambientLight.color.copy(currentAmbientCol.clone().lerp(flashColor, flashIntensity));
+                
+                directionalLight.intensity = (sunIntensity + moonIntensity) + flashIntensity * 6.5;
+                directionalLight.color.copy(new THREE.Color(0xffffff).lerp(flashColor, 0.5));
+                
+                const fogFlashColor = new THREE.Color(0x405575);
+                scene.fog.color.copy(targetFogColor.clone().lerp(fogFlashColor, flashIntensity));
+            } else {
+                const flashOverlay = document.getElementById('lightning-flash-overlay');
+                if (flashOverlay) flashOverlay.style.opacity = 0;
+                
+                // Set default moon/sun lights
+                ambientLight.intensity = currentAmbientInt;
+                ambientLight.color.copy(currentAmbientCol);
+                
+                directionalLight.intensity = sunIntensity + moonIntensity;
+                if (sunIntensity + moonIntensity > 0.01) {
+                    directionalLight.color.copy(finalLightColor.clone().normalize());
+                }
+            }
+        }
+        
+        // 7. Cloud lightning flashes (in-cloud lightning occurs before rain)
+        if (elapsedSeconds >= 420 && elapsedSeconds < 540) {
+            if (Math.random() < 0.012) {
+                cloudFlashVal = 0.4 + Math.random() * 0.55;
+            }
+        }
+        if (cloudFlashVal > 0.01) {
+            cloudFlashVal *= 0.88;
+            if (ambientLight) {
+                ambientLight.intensity += cloudFlashVal * 0.22;
+            }
+            if (cloudMaterial) {
+                // glow clouds to whitish-blue during sheet lightning
+                cloudMaterial.color.setRGB(0.12 + cloudFlashVal * 0.55, 0.12 + cloudFlashVal * 0.55, 0.15 + cloudFlashVal * 0.75);
+            }
+        } else {
+            if (cloudMaterial) {
+                cloudMaterial.color.setRGB(0.12, 0.12, 0.15); // reset to stormy charcoal
+            }
+        }
+        
+        // 8. Wet soil transition
         if (floorMat) {
             if (elapsedSeconds >= 540) {
-                const wetProgress = Math.min(1.0, (elapsedSeconds - 540) / 25.0); // fully wet in 25 seconds
-                floorMat.roughness = 0.95 - wetProgress * 0.57; // drops to 0.38 (glossy/muddy)
-                floorMat.metalness = 0.05 + wetProgress * 0.23; // goes to 0.28 (reflective sheen)
+                const wetProgress = Math.min(1.0, (elapsedSeconds - 540) / 25.0);
+                floorMat.roughness = 0.95 - wetProgress * 0.57;
+                floorMat.metalness = 0.05 + wetProgress * 0.23;
             } else {
                 floorMat.roughness = 0.95;
                 floorMat.metalness = 0.05;
             }
         }
-
-        // 2b. Animate cloud cover and drift in the sky dome
+        
+        // 9. Animate cloud cover and drift in the sky dome
         if (cloudMaterial) {
-            cloudMaterial.opacity = stormIntensity * 0.82;
+            cloudMaterial.opacity = cloudIntensity * 0.82;
         }
         if (clouds.length > 0) {
             clouds.forEach(c => {
-                // Clouds drift dynamically with wind vectors
                 c.sprite.position.x += c.speedX * (60 * delta) * 2.0;
                 c.sprite.position.z += c.speedZ * (60 * delta) * 2.0;
                 
-                // Reposition clouds if they float too far outside camera range
                 const relX = c.sprite.position.x - camera.position.x;
                 const relZ = c.sprite.position.z - camera.position.z;
                 if (Math.abs(relX) > 240) c.sprite.position.x = camera.position.x - relX * 0.9;
                 if (Math.abs(relZ) > 240) c.sprite.position.z = camera.position.z - relZ * 0.9;
                 
-                // Align cloud height relative to camera Y to prevent horizon dipping
                 c.sprite.position.y = 110 + camera.position.y * 0.8;
             });
         }
         
-        // 3. Update rain drops positions relative to camera and trigger ground splashes
+        // 10. Update active falling fire stones (meteors)
+        if (fallingFireStones.length > 0) {
+            fallingFireStones.forEach((stone, idx) => {
+                // Record position history for the trail
+                stone.history.unshift(new THREE.Vector3(stone.targetX, stone.posY, stone.targetZ));
+                if (stone.history.length > 5) {
+                    stone.history.pop();
+                }
+                
+                // Update trail positions
+                stone.trailMeshes.forEach((tMesh, tIdx) => {
+                    if (stone.history[tIdx]) {
+                        tMesh.position.copy(stone.history[tIdx]);
+                    }
+                });
+                
+                stone.posY -= stone.speed * delta;
+                
+                if (stone.posY <= stone.targetY) {
+                    // Hit! Clean up meshes
+                    scene.remove(stone.mesh);
+                    stone.mesh.geometry.dispose();
+                    stone.mesh.material.dispose();
+                    stone.light.dispose();
+                    
+                    stone.trailMeshes.forEach(tMesh => {
+                        scene.remove(tMesh);
+                        tMesh.geometry.dispose();
+                        tMesh.material.dispose();
+                    });
+                    
+                    // Trigger lightning bolt, flash, and sound
+                    createLightningBolt(stone.targetX, stone.targetZ, stone.targetY);
+                    
+                    lightningFlashActive = true;
+                    lightningFlashTime = performance.now();
+                    lightningStage = 0;
+                    lastLightningStrikeTime = performance.now();
+                    
+                    playThunderSound(soundEnabled, globalVolume * 1.4);
+                    
+                    if (stone.closestTree) {
+                        stone.closestTree.userData.isBurning = true;
+                        stone.closestTree.userData.burnTimer = 40.0;
+                        stone.closestTree.userData.originalMaterials = [];
+                        
+                        stone.closestTree.traverse(node => {
+                            if (node.isMesh && node.material) {
+                                stone.closestTree.userData.originalMaterials.push({ mesh: node, material: node.material });
+                                node.material = new THREE.MeshStandardMaterial({
+                                    color: 0xaa2200,
+                                    emissive: 0xff3300,
+                                    emissiveIntensity: 0.85,
+                                    roughness: 0.9,
+                                    metalness: 0.1
+                                });
+                            }
+                        });
+                        createForestFire(stone.targetX, stone.targetY, stone.targetZ, stone.closestTree);
+                    }
+                    
+                    fallingFireStones.splice(idx, 1);
+                } else {
+                    stone.mesh.position.set(stone.targetX, stone.posY, stone.targetZ);
+                    stone.mesh.rotation.x += delta * 4.0;
+                    stone.mesh.rotation.y += delta * 2.5;
+                }
+            });
+        }
+        
+        // 11. Ambient lightning trigger (spawns falling fire stone meteors!)
+        if (isGameRunning && rainIntensity > 0.4) {
+            const now = performance.now();
+            if (!lightningFlashActive && fallingFireStones.length === 0 && (now - lastLightningStrikeTime > 12000 + Math.random() * 12000)) {
+                lastLightningStrikeTime = now;
+                triggerAmbientStrike();
+            }
+        }
+        
+        // 12. Update rain drops positions relative to camera and trigger ground splashes
         if (rainParticles && rainGeometry) {
-            rainParticles.material.opacity = stormIntensity * 0.65;
+            rainParticles.material.opacity = rainIntensity * 0.65;
             
-            if (stormIntensity > 0.01) {
+            if (rainIntensity > 0.01) {
                 const pos = rainGeometry.attributes.position;
                 const vel = rainGeometry.attributes.velocity;
                 const windDriftX = stormIntensity * 6.5;
@@ -4083,13 +4342,13 @@
                                 const speed = 1.5 + Math.random() * 2.2;
                                 const angle = Math.random() * Math.PI * 2;
                                 splashData[idx].vx = Math.cos(angle) * speed;
-                                splashData[idx].vy = 2.0 + Math.random() * 3.0; // upward splash velocity
+                                splashData[idx].vy = 2.0 + Math.random() * 3.0;
                                 splashData[idx].vz = Math.sin(angle) * speed;
                                 splashData[idx].life = 0;
                             }
                         }
                         
-                        // Recycle droplet to the top sky box (260x260 units centered around camera)
+                        // Recycle droplet
                         py = 42 + Math.random() * 15;
                         px = camera.position.x + (Math.random() - 0.5) * 260 - windDriftX * 0.5;
                         pz = camera.position.z + (Math.random() - 0.5) * 260 - windDriftZ * 0.5;
@@ -4103,27 +4362,26 @@
                 
                 // Update active splash particles
                 if (splashParticles && splashGeometry) {
-                    splashParticles.material.opacity = stormIntensity * 0.82;
+                    splashParticles.material.opacity = rainIntensity * 0.82;
                     const posS = splashGeometry.attributes.position;
                     const colS = splashGeometry.attributes.color;
                     
                     for (let i = 0; i < maxSplashCount; i++) {
                         const p = splashData[i];
                         const curY = posS.getY(i);
-                        if (curY < -500) continue; // inactive
+                        if (curY < -500) continue;
                         
                         p.life += delta;
                         if (p.life >= p.maxLife) {
-                            posS.setY(i, -999); // deactivate
+                            posS.setY(i, -999);
                         } else {
                             let px = posS.getX(i) + p.vx * delta;
                             let py = curY + p.vy * delta;
                             let pz = posS.getZ(i) + p.vz * delta;
-                            p.vy -= 9.8 * delta; // gravity deceleration
+                            p.vy -= 9.8 * delta;
                             
                             posS.setXYZ(i, px, py, pz);
                             
-                            // Fade color over lifetime
                             const ratio = p.life / p.maxLife;
                             const alpha = 1.0 - ratio;
                             colS.setXYZ(i, 0.7 * alpha, 0.85 * alpha, 1.0 * alpha);
@@ -4132,68 +4390,6 @@
                     posS.needsUpdate = true;
                     colS.needsUpdate = true;
                 }
-            }
-        }
-        
-        // 4. Lightning visual logic
-        const flashOverlay = document.getElementById('lightning-flash-overlay');
-        if (isGameRunning && stormIntensity > 0.4) {
-            const now = performance.now();
-            
-            if (!lightningFlashActive && (now - lastLightningStrikeTime > 8000 + Math.random() * 8000)) {
-                lightningFlashActive = true;
-                lightningFlashTime = now;
-                lightningStage = 0;
-                lastLightningStrikeTime = now;
-                
-                const delay = 350 + Math.random() * 1000;
-                setTimeout(() => {
-                    playThunderSound(soundEnabled, globalVolume);
-                }, delay);
-            }
-            
-            if (lightningFlashActive) {
-                const age = now - lightningFlashTime;
-                let flashIntensity = 0;
-                
-                if (age < 80) {
-                    flashIntensity = age / 80;
-                } else if (age < 180) {
-                    flashIntensity = 1.0 - (age - 80) / 100;
-                } else if (age < 230) {
-                    flashIntensity = (age - 180) / 50 * 0.7;
-                } else if (age < 450) {
-                    flashIntensity = 0.7 * (1.0 - (age - 230) / 220);
-                } else {
-                    lightningFlashActive = false;
-                }
-                
-                if (flashOverlay) {
-                    flashOverlay.style.opacity = flashIntensity * 0.85;
-                }
-                
-                if (lightningFlashActive && ambientLight && directionalLight) {
-                    const flashColor = new THREE.Color(0xdceeff);
-                    const baseAmbientColor = ambientLight.color.clone();
-                    
-                    ambientLight.intensity = (0.55 - (elapsedSeconds - 300) / 60.0 * 0.5) + flashIntensity * 4.5;
-                    ambientLight.color.copy(baseAmbientColor.clone().lerp(flashColor, flashIntensity));
-                    
-                    directionalLight.intensity = flashIntensity * 6.5;
-                    directionalLight.color.copy(new THREE.Color(0xffffff).lerp(flashColor, 0.5));
-                    
-                    const fogNightColor = new THREE.Color(0x030815);
-                    const fogFlashColor = new THREE.Color(0x405575);
-                    scene.fog.color.copy(fogNightColor.clone().lerp(fogFlashColor, flashIntensity));
-                }
-            } else {
-                if (flashOverlay) {
-                    flashOverlay.style.opacity = 0;
-                }
-            }
-        } else {
-            if (flashOverlay) {
-                flashOverlay.style.opacity = 0;
             }
         }
     }
@@ -4406,6 +4602,29 @@
             moonSprite = null;
             cloudMaterial = null;
             clouds = [];
+            
+            // Clean up falling fire stones
+            if (fallingFireStones) {
+                fallingFireStones.forEach(stone => {
+                    try {
+                        if (stone.mesh) {
+                            scene.remove(stone.mesh);
+                            if (stone.mesh.geometry) stone.mesh.geometry.dispose();
+                            if (stone.mesh.material) stone.mesh.material.dispose();
+                        }
+                        if (stone.light) stone.light.dispose();
+                        if (stone.trailMeshes) {
+                            stone.trailMeshes.forEach(t => {
+                                scene.remove(t);
+                                if (t.geometry) t.geometry.dispose();
+                                if (t.material) t.material.dispose();
+                            });
+                        }
+                    } catch(e) {}
+                });
+            }
+            fallingFireStones = [];
+            cloudFlashVal = 0;
             
             // Clean up fires and sound synthesis
             stopFireSound();
