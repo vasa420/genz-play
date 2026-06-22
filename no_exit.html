@@ -3026,6 +3026,80 @@
             });
         }
 
+        function createSignBloodLeak(group, pos, rot) {
+            const emitterPos = new THREE.Vector3().copy(pos);
+            const ry = rot[1];
+            
+            // Offset slightly forward based on rotation so the drops don't clip through the wall
+            const offsetDist = 0.08;
+            emitterPos.x += Math.sin(ry) * offsetDist;
+            emitterPos.z += Math.cos(ry) * offsetDist;
+            emitterPos.y = 1.95; // start slightly below the 2.2 sign center
+
+            const pCount = 20; // 10 drops, 10 splashes
+            const positions = new Float32Array(pCount * 3);
+            const velocities = [];
+            const lifetimes = new Float32Array(pCount);
+
+            // Initialize droplets with random heights
+            for (let i = 0; i < 10; i++) {
+                const widthOffset = (Math.random() - 0.5) * 0.45;
+                positions[i * 3] = emitterPos.x + Math.cos(ry) * widthOffset;
+                positions[i * 3 + 1] = Math.random() * 1.95;
+                positions[i * 3 + 2] = emitterPos.z - Math.sin(ry) * widthOffset;
+
+                velocities.push(new THREE.Vector3(0, -0.2 - Math.random() * 0.4, 0));
+                lifetimes[i] = 1.0;
+            }
+
+            // Initialize splashes under the floor
+            for (let i = 10; i < 20; i++) {
+                positions[i * 3] = emitterPos.x;
+                positions[i * 3 + 1] = -1.0;
+                positions[i * 3 + 2] = emitterPos.z;
+
+                velocities.push(new THREE.Vector3(0, 0, 0));
+                lifetimes[i] = 0;
+            }
+
+            const pGeo = new THREE.BufferGeometry();
+            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const pMat = new THREE.PointsMaterial({
+                color: 0xb30000, // bright realistic arterial blood red
+                size: 0.048,
+                transparent: true,
+                opacity: 0.95
+            });
+
+            const pointsMesh = new THREE.Points(pGeo, pMat);
+            group.add(pointsMesh);
+
+            // Reflective congealed blood puddle on the floor below the sign
+            const puddleGeo = new THREE.BoxGeometry(0.8, 0.005, 0.3);
+            puddleGeo.rotateY(ry);
+            const puddleMat = new THREE.MeshStandardMaterial({
+                color: 0x3d0000,
+                roughness: 0.08,
+                metalness: 0.1,
+                transparent: true,
+                opacity: 0.85
+            });
+            const puddle = new THREE.Mesh(puddleGeo, puddleMat);
+            puddle.position.set(emitterPos.x, 0.005, emitterPos.z);
+            group.add(puddle);
+
+            waterLeaks.push({
+                points: pointsMesh,
+                velocities: velocities,
+                lifetimes: lifetimes,
+                emitter: emitterPos,
+                splashIndex: 10,
+                isSignLeak: true,
+                angleY: ry
+            });
+        }
+
         function addFloorWallSigns() {
             const signs = [
                 // Ground Floor Signs
@@ -3054,8 +3128,10 @@
 
                 if (s.floor === 0) {
                     groundFloorGroup.add(signMesh);
+                    createSignBloodLeak(groundFloorGroup, s.pos, s.rot);
                 } else {
                     secondFloorGroup.add(signMesh);
+                    createSignBloodLeak(secondFloorGroup, s.pos, s.rot);
                 }
             });
         }
@@ -6257,8 +6333,12 @@
                 const posAttr = leak.points.geometry.attributes.position;
                 const positions = posAttr.array;
                 
-                // 1. Update falling droplets (0 to 14)
-                for (let i = 0; i < 15; i++) {
+                // Determine limits dynamically based on sign leaks vs standard ceiling leaks
+                const numDrops = leak.isSignLeak ? 10 : 15;
+                const totalPoints = leak.isSignLeak ? 20 : 30;
+                
+                // 1. Update falling droplets
+                for (let i = 0; i < numDrops; i++) {
                     leak.velocities[i].y -= g * dt;
                     
                     positions[i * 3] += leak.velocities[i].x * dt;
@@ -6269,15 +6349,22 @@
                         const dropX = positions[i * 3];
                         const dropZ = positions[i * 3 + 2];
                         
-                        // Reset to ceiling
-                        positions[i * 3] = leak.emitter.x + (Math.random() - 0.5) * 0.05;
-                        positions[i * 3 + 1] = leak.emitter.y;
-                        positions[i * 3 + 2] = leak.emitter.z + (Math.random() - 0.5) * 0.05;
+                        // Reset to sign bottom or ceiling
+                        if (leak.isSignLeak) {
+                            const widthOffset = (Math.random() - 0.5) * 0.45;
+                            positions[i * 3] = leak.emitter.x + Math.cos(leak.angleY) * widthOffset;
+                            positions[i * 3 + 1] = leak.emitter.y;
+                            positions[i * 3 + 2] = leak.emitter.z - Math.sin(leak.angleY) * widthOffset;
+                        } else {
+                            positions[i * 3] = leak.emitter.x + (Math.random() - 0.5) * 0.05;
+                            positions[i * 3 + 1] = leak.emitter.y;
+                            positions[i * 3 + 2] = leak.emitter.z + (Math.random() - 0.5) * 0.05;
+                        }
                         
                         leak.velocities[i].set(
-                            (Math.random() - 0.5) * 0.05,
-                            -0.2 - Math.random() * 0.8,
-                            (Math.random() - 0.5) * 0.05
+                            0,
+                            -0.2 - Math.random() * 0.4,
+                            0
                         );
                         
                         // Trigger splash
@@ -6287,21 +6374,21 @@
                         positions[sIdx * 3 + 2] = dropZ;
                         
                         leak.velocities[sIdx].set(
-                            (Math.random() - 0.5) * 0.8,
-                            1.0 + Math.random() * 1.2,
-                            (Math.random() - 0.5) * 0.8
+                            (Math.random() - 0.5) * 0.3,
+                            0.4 + Math.random() * 0.5,
+                            (Math.random() - 0.5) * 0.3
                         );
-                        leak.lifetimes[sIdx] = 0.35 + Math.random() * 0.25;
+                        leak.lifetimes[sIdx] = 0.15 + Math.random() * 0.15;
                         
                         leak.splashIndex++;
-                        if (leak.splashIndex >= 30) {
-                            leak.splashIndex = 15;
+                        if (leak.splashIndex >= totalPoints) {
+                            leak.splashIndex = numDrops;
                         }
                     }
                 }
                 
-                // 2. Update splash particles (15 to 29)
-                for (let i = 15; i < 30; i++) {
+                // 2. Update splash particles
+                for (let i = numDrops; i < totalPoints; i++) {
                     if (leak.lifetimes[i] > 0) {
                         leak.lifetimes[i] -= dt;
                         leak.velocities[i].y -= g * dt;
