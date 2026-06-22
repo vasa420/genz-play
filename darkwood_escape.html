@@ -1463,6 +1463,26 @@
     let audioCtx;
     let flashlightOn = false;
     let colliders = [];
+
+    // Vegetation Instanced Meshes
+    let grassMesh, flowerStemMesh, flowerHeadMesh, fernMesh, bushMesh;
+    let grassMat, flowerStemMat, flowerHeadMat, fernMat, bushMat;
+
+    // Active Fires and synthesis
+    let activeFires = [];
+    let fireAudioNode = null;
+
+    // Timed strike tracking
+    let strike1Triggered = false;
+    let strike2Triggered = false;
+    let strike3Triggered = false;
+
+    // Charred Material for struck trees
+    let charredMaterial;
+    let frameCount = 0; // Frame counter for shadow throttling
+
+    // Global waterfall materials
+    let waterfallMaterial, waterfallMistMat;
     let activeHikerToRescue = null;
     let boundaryPromptTimeout;
 
@@ -1601,6 +1621,8 @@
         // Capped at 1.25 to prevent dynamic shadow/pixel rendering bottleneck on high-DPI/Retina screens
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.autoUpdate = false;
+        renderer.shadowMap.needsUpdate = true;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
         
@@ -1726,7 +1748,7 @@
 
     function createForest() {
         colliders = [];
-        const treeCount = 700; // Dense realistic forest canopy
+        const treeCount = 1000; // Increased to 1000 for a denser realistic forest canopy
         
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2e1d0c, roughness: 0.95 });
         const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xdcdcdc, roughness: 0.85 }); // Light birch bark
@@ -1770,31 +1792,30 @@
                 const height = 18.0 + Math.random() * 10.0;
                 const trunkRadius = 0.28 + Math.random() * 0.16;
                 
-                // Trunk
-                const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.8, trunkRadius, height, 6);
+                // Trunk: optimized to 5 segments
+                const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.8, trunkRadius, height, 5);
                 const trunk = new THREE.Mesh(trunkGeo, trunkMat);
                 trunk.position.y = height / 2;
-                trunk.castShadow = true; // Keep shadow casting on trunks for realistic ground shadows
+                trunk.castShadow = true; 
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
-                // Spruce Cones (slight random rotation & position offset to avoid sterile mathematical look)
+                // Spruce Cones: optimized to 5 segments
                 const coneCount = 3 + Math.floor(Math.random() * 2); // 3 to 4 cones
                 const leafMat = spruceMats[Math.floor(Math.random() * spruceMats.length)];
                 for (let c = 0; c < coneCount; c++) {
                     const coneRadius = trunkRadius * (6.5 - c * 1.3);
                     const coneHeight = height * 0.45;
-                    const coneGeo = new THREE.ConeGeometry(coneRadius, coneHeight, 6);
+                    const coneGeo = new THREE.ConeGeometry(coneRadius, coneHeight, 5);
                     const cone = new THREE.Mesh(coneGeo, leafMat);
                     
-                    // Add subtle organic asymmetry
                     const jX = (Math.random() - 0.5) * 0.08;
                     const jZ = (Math.random() - 0.5) * 0.08;
                     cone.position.set(jX, height * 0.5 + c * (coneHeight * 0.38), jZ);
                     cone.rotation.y = Math.random() * Math.PI * 2;
                     cone.rotation.x = (Math.random() - 0.5) * 0.05; // slight tilt
                     
-                    cone.castShadow = false; // Disable to dramatically improve FPS
+                    cone.castShadow = false; 
                     cone.receiveShadow = true;
                     treeGroup.add(cone);
                 }
@@ -1807,8 +1828,8 @@
                 const height = 15.0 + Math.random() * 8.0;
                 const trunkRadius = 0.35 + Math.random() * 0.2;
                 
-                // Trunk
-                const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.9, trunkRadius, height, 6);
+                // Trunk: optimized to 5 segments
+                const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.9, trunkRadius, height, 5);
                 const trunk = new THREE.Mesh(trunkGeo, trunkMat);
                 trunk.position.y = height / 2;
                 trunk.castShadow = true;
@@ -1817,15 +1838,14 @@
                 
                 const leafMat = oakMats[Math.floor(Math.random() * oakMats.length)];
                 
-                // Realistic branches shooting out from the trunk, each carrying a leaf cluster at its tip
+                // Branches: optimized to 4 segments
                 const branchCount = 3 + Math.floor(Math.random() * 2); // 3 to 4 branches
                 for (let b = 0; b < branchCount; b++) {
                     const bLength = 1.0 + Math.random() * 1.2;
                     const bRadius = trunkRadius * 0.45;
-                    const bGeo = new THREE.CylinderGeometry(bRadius * 0.6, bRadius, bLength, 5);
+                    const bGeo = new THREE.CylinderGeometry(bRadius * 0.6, bRadius, bLength, 4);
                     const branch = new THREE.Mesh(bGeo, trunkMat);
                     
-                    // Distribute around trunk pointing outwards/upwards
                     const bAngle = (b / branchCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
                     const bPitch = 0.5 + Math.random() * 0.45; // angle upwards
                     
@@ -1870,19 +1890,19 @@
                 const height = 20.0 + Math.random() * 8.0;
                 const trunkRadius = 0.18 + Math.random() * 0.1;
                 
-                // White birch trunk
-                const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.85, trunkRadius, height, 6);
+                // White birch trunk: optimized to 5 segments
+                const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.85, trunkRadius, height, 5);
                 const trunk = new THREE.Mesh(trunkGeo, birchTrunkMat);
                 trunk.position.y = height / 2;
                 trunk.castShadow = true;
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
-                // Add horizontal dark spots/rings to white bark for realistic birch texturing
+                // Add horizontal dark spots: optimized to 5 segments
                 const spotCount = 5 + Math.floor(Math.random() * 4);
                 for (let s = 0; s < spotCount; s++) {
                     const spotHeight = 0.04 + Math.random() * 0.06;
-                    const spotGeo = new THREE.CylinderGeometry(trunkRadius * 1.03, trunkRadius * 1.03, spotHeight, 6);
+                    const spotGeo = new THREE.CylinderGeometry(trunkRadius * 1.03, trunkRadius * 1.03, spotHeight, 5);
                     const spotMesh = new THREE.Mesh(spotGeo, deadTrunkMat);
                     spotMesh.position.y = (s + 1) * (height / (spotCount + 2)) + (Math.random() - 0.5) * 0.25;
                     spotMesh.rotation.y = Math.random() * Math.PI * 2;
@@ -1891,11 +1911,11 @@
                 
                 const leafMat = birchMats[Math.floor(Math.random() * birchMats.length)];
                 
-                // Foliage made of a main crown plus a secondary lower side cluster for organic variety
+                // Foliage made of a main crown plus a secondary lower side cluster
                 const foliageCrown = new THREE.Mesh(new THREE.DodecahedronGeometry(trunkRadius * 8.2, 1), leafMat);
                 foliageCrown.position.y = height * 0.88;
                 foliageCrown.scale.set(1, 1.4, 1);
-                foliageCrown.castShadow = false; // Disable to dramatically improve FPS
+                foliageCrown.castShadow = false; 
                 foliageCrown.receiveShadow = true;
                 treeGroup.add(foliageCrown);
                 
@@ -1915,7 +1935,7 @@
                 const height = 12.0 + Math.random() * 7.0;
                 const trunkRadius = 0.3 + Math.random() * 0.15;
                 
-                // Main trunk (crooked/tilted dead trees look much creepier and realistic)
+                // Main trunk: optimized to 5 segments
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.7, trunkRadius, height, 5);
                 const trunk = new THREE.Mesh(trunkGeo, deadTrunkMat);
                 trunk.position.y = height / 2;
@@ -1925,7 +1945,7 @@
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
-                // Add branches
+                // Add branches: optimized to 4 segments
                 const branchCount = 3 + Math.floor(Math.random() * 3);
                 for (let b = 0; b < branchCount; b++) {
                     const bHeight = 2.5 + Math.random() * 3.0;
@@ -1949,7 +1969,7 @@
                     treeGroup.add(pivot);
                 }
                 
-                // Dead trees also get sparse dried leaf clusters (some leaves still cling on)
+                // Dead trees also get sparse dried leaf clusters
                 const deadLeafMat = new THREE.MeshStandardMaterial({ color: 0x5c4a1e, roughness: 0.95 });
                 const deadLeafCount = 2 + Math.floor(Math.random() * 3);
                 for (let dl = 0; dl < deadLeafCount; dl++) {
@@ -1972,7 +1992,6 @@
                 swaySpeed = 0.5 + Math.random() * 0.3;
                 maxSwayVal = 0.012 + Math.random() * 0.007;
                 
-                // Mark some dead trees as "fallable" during storm
                 if (Math.random() < 0.22) {
                     treeGroup.userData.canFall = true;
                     treeGroup.userData.fallDir = (Math.random() - 0.5) * 2 > 0 ? 1 : -1;
@@ -1986,8 +2005,6 @@
             
             scene.add(treeGroup);
             
-            // Push the ENTIRE tree group to sway. Bends the tree naturally from the roots
-            // and avoids floating branches/foliage.
             windSwayObjects.push({
                 mesh: treeGroup,
                 phase: Math.random() * Math.PI * 2,
@@ -2020,150 +2037,318 @@
         }
     }
 
+    function makeMaterialWindSway(material, speedMult, swayMult) {
+        material.onBeforeCompile = function (shader) {
+            shader.uniforms.uTime = { value: 0 };
+            shader.uniforms.uWindSpeed = { value: speedMult };
+            shader.uniforms.uWindStrength = { value: swayMult };
+            shader.uniforms.uStormIntensity = { value: 0 };
+            
+            // Store shader reference on material so we can update it in the game loop
+            material.userData.shader = shader;
+            
+            shader.vertexShader = `
+                uniform float uTime;
+                uniform float uWindSpeed;
+                uniform float uWindStrength;
+                uniform float uStormIntensity;
+            ` + shader.vertexShader;
+            
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <begin_vertex>',
+                `
+                #include <begin_vertex>
+                
+                // Get the instance position from the 4th column of instanceMatrix
+                vec3 instancePos = instanceMatrix[3].xyz;
+                
+                float stormWindSpeedMult = 1.0 + uStormIntensity * 4.5;
+                float stormSwayMult = 1.0 + uStormIntensity * 4.0;
+                
+                float t = uTime * 0.0012 * uWindSpeed * stormWindSpeedMult;
+                float phase = instancePos.x * 0.15 + instancePos.z * 0.15;
+                
+                float sway = sin(t + phase) * uWindStrength * stormSwayMult;
+                
+                if (uStormIntensity > 0.05) {
+                    float jitter = sin(uTime * 0.018 + phase) * (uWindStrength * 0.45) * uStormIntensity;
+                    sway += jitter;
+                }
+                
+                // Sway vertices based on their vertical height relative to instance y
+                float heightAboveBase = transformed.y - instancePos.y;
+                if (heightAboveBase > 0.01) {
+                    transformed.x += sway * heightAboveBase;
+                    transformed.z += sway * 0.5 * heightAboveBase;
+                }
+                `
+            );
+        };
+    }
+
     function createGroundVegetation() {
         // --- GRASS BLADES ---
         const grassColors = [0x3a6b2a, 0x4a7a35, 0x2d5520, 0x567a3c, 0x3d6930];
-        const grassCount = 400;
-        for (let i = 0; i < grassCount; i++) {
-            let gx = (Math.random() - 0.5) * 270;
-            let gz = (Math.random() - 0.5) * 270;
-            if (Math.sqrt(gx*gx + gz*gz) < 5) continue;
+        const grassClumpsCount = 2000;
+        const bladesPerClump = 8;
+        const totalBlades = grassClumpsCount * bladesPerClump;
+        
+        const bladeGeo = new THREE.PlaneGeometry(1, 1);
+        bladeGeo.translate(0, 0.5, 0); // pivot at bottom center
+        
+        grassMat = new THREE.MeshStandardMaterial({
+            roughness: 0.9,
+            side: THREE.DoubleSide
+        });
+        
+        makeMaterialWindSway(grassMat, 1.4, 0.12);
+        
+        grassMesh = new THREE.InstancedMesh(bladeGeo, grassMat, totalBlades);
+        grassMesh.castShadow = false;
+        grassMesh.receiveShadow = true;
+        
+        let index = 0;
+        const dummy = new THREE.Object3D();
+        
+        for (let i = 0; i < grassClumpsCount; i++) {
+            let gx = (Math.random() - 0.5) * 275;
+            let gz = (Math.random() - 0.5) * 275;
+            if (Math.sqrt(gx*gx + gz*gz) < 6) continue;
             const gh = getTerrainHeight(gx, gz);
             if (gh < waterLevel - 0.3) continue;
             
-            const bladeGroup = new THREE.Group();
-            bladeGroup.position.set(gx, gh, gz);
-            
-            const bladeMat = new THREE.MeshStandardMaterial({
-                color: grassColors[Math.floor(Math.random() * grassColors.length)],
-                roughness: 0.9, side: THREE.DoubleSide
-            });
-            
-            const bladeCount = 6 + Math.floor(Math.random() * 8);
-            for (let b = 0; b < bladeCount; b++) {
+            for (let b = 0; b < bladesPerClump; b++) {
                 const bh = 0.35 + Math.random() * 0.55;
                 const bw = 0.04 + Math.random() * 0.04;
-                const bladeGeo = new THREE.PlaneGeometry(bw, bh);
-                const blade = new THREE.Mesh(bladeGeo, bladeMat);
-                blade.position.set(
-                    (Math.random() - 0.5) * 0.4,
-                    bh / 2,
-                    (Math.random() - 0.5) * 0.4
-                );
-                blade.rotation.y = Math.random() * Math.PI * 2;
-                blade.rotation.z = (Math.random() - 0.5) * 0.3;
-                blade.castShadow = false;
-                bladeGroup.add(blade);
+                const ox = (Math.random() - 0.5) * 0.45;
+                const oz = (Math.random() - 0.5) * 0.45;
+                
+                dummy.position.set(gx + ox, gh, gz + oz);
+                dummy.rotation.set(0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.3);
+                dummy.scale.set(bw, bh, 1);
+                dummy.updateMatrix();
+                
+                grassMesh.setMatrixAt(index, dummy.matrix);
+                grassMesh.setColorAt(index, new THREE.Color(grassColors[Math.floor(Math.random() * grassColors.length)]));
+                index++;
             }
-            scene.add(bladeGroup);
-            
-            // Grass sways in wind
-            windSwayObjects.push({
-                mesh: bladeGroup,
-                phase: Math.random() * Math.PI * 2,
-                speed: 1.2 + Math.random() * 0.8,
-                maxSway: 0.08 + Math.random() * 0.06,
-                isFallable: false,
-                isWaterfall: false
-            });
         }
+        grassMesh.count = index;
+        scene.add(grassMesh);
         
         // --- WILDFLOWERS ---
         const flowerColors = [0xcc2222, 0xe8c030, 0x9b30d8, 0xffffff, 0xff8c42, 0xff69b4];
-        const flowerCount = 200;
+        const flowerCount = 600;
+        
+        const stemGeo = new THREE.CylinderGeometry(0.015, 0.022, 1, 4);
+        stemGeo.translate(0, 0.5, 0); // pivot at base
+        
+        flowerStemMat = new THREE.MeshStandardMaterial({
+            color: 0x2d5520,
+            roughness: 0.9
+        });
+        makeMaterialWindSway(flowerStemMat, 0.9, 0.08);
+        
+        flowerStemMesh = new THREE.InstancedMesh(stemGeo, flowerStemMat, flowerCount);
+        flowerStemMesh.castShadow = false;
+        flowerStemMesh.receiveShadow = true;
+        
+        const headGeo = new THREE.CircleGeometry(0.08, 6);
+        headGeo.rotateX(-Math.PI / 2);
+        
+        flowerHeadMat = new THREE.MeshStandardMaterial({
+            roughness: 0.7
+        });
+        makeMaterialWindSway(flowerHeadMat, 0.9, 0.08);
+        
+        const totalHeadInstances = flowerCount * 7;
+        flowerHeadMesh = new THREE.InstancedMesh(headGeo, flowerHeadMat, totalHeadInstances);
+        flowerHeadMesh.castShadow = false;
+        flowerHeadMesh.receiveShadow = true;
+        
+        let stemIndex = 0;
+        let headIndex = 0;
+        
         for (let i = 0; i < flowerCount; i++) {
-            let fx = (Math.random() - 0.5) * 260;
-            let fz = (Math.random() - 0.5) * 260;
-            if (Math.sqrt(fx*fx + fz*fz) < 5) continue;
+            let fx = (Math.random() - 0.5) * 265;
+            let fz = (Math.random() - 0.5) * 265;
+            if (Math.sqrt(fx*fx + fz*fz) < 6) continue;
             const fh = getTerrainHeight(fx, fz);
             if (fh < waterLevel - 0.2) continue;
             
-            const flowerGroup = new THREE.Group();
-            flowerGroup.position.set(fx, fh, fz);
+            const stemH = 0.3 + Math.random() * 0.45;
             
             // Stem
-            const stemMat = new THREE.MeshStandardMaterial({ color: 0x2d5520, roughness: 0.9 });
-            const stemH = 0.3 + Math.random() * 0.45;
-            const stemGeo = new THREE.CylinderGeometry(0.015, 0.025, stemH, 4);
-            const stem = new THREE.Mesh(stemGeo, stemMat);
-            stem.position.y = stemH / 2;
-            stem.castShadow = false;
-            flowerGroup.add(stem);
+            dummy.position.set(fx, fh, fz);
+            dummy.rotation.set(0, 0, 0);
+            dummy.scale.set(1, stemH, 1);
+            dummy.updateMatrix();
+            flowerStemMesh.setMatrixAt(stemIndex, dummy.matrix);
+            stemIndex++;
             
-            // Flower head (small disc)
-            const headColor = flowerColors[Math.floor(Math.random() * flowerColors.length)];
-            const headMat = new THREE.MeshStandardMaterial({ color: headColor, roughness: 0.7, emissive: headColor, emissiveIntensity: 0.08 });
-            const headGeo = new THREE.CircleGeometry(0.08 + Math.random() * 0.06, 6);
-            const head = new THREE.Mesh(headGeo, headMat);
-            head.position.y = stemH + 0.04;
-            head.rotation.x = -Math.PI / 2 + (Math.random() - 0.5) * 0.3;
-            head.castShadow = false;
-            flowerGroup.add(head);
+            // Color
+            const headColorVal = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+            const headColor = new THREE.Color(headColorVal);
             
-            // Petal ring
-            const petalCount = 5 + Math.floor(Math.random() * 3);
+            // Center
+            dummy.position.set(fx, fh + stemH + 0.02, fz);
+            dummy.rotation.set((Math.random() - 0.5) * 0.25, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.25);
+            dummy.scale.set(1.1 + Math.random() * 0.4, 1, 1.1 + Math.random() * 0.4);
+            dummy.updateMatrix();
+            flowerHeadMesh.setMatrixAt(headIndex, dummy.matrix);
+            flowerHeadMesh.setColorAt(headIndex, headColor);
+            headIndex++;
+            
+            // Petals
+            const petalCount = 6;
             for (let p = 0; p < petalCount; p++) {
-                const petalGeo = new THREE.EllipseCurve ? new THREE.CircleGeometry(0.055, 4) : new THREE.CircleGeometry(0.055, 4);
-                const petal = new THREE.Mesh(petalGeo, headMat);
                 const pAngle = (p / petalCount) * Math.PI * 2;
-                petal.position.set(
-                    Math.cos(pAngle) * 0.09,
-                    stemH + 0.03,
-                    Math.sin(pAngle) * 0.09
-                );
-                petal.rotation.x = -Math.PI / 2 + 0.2;
-                petal.rotation.z = pAngle;
-                petal.castShadow = false;
-                flowerGroup.add(petal);
+                const px = fx + Math.cos(pAngle) * 0.09;
+                const pz = fz + Math.sin(pAngle) * 0.09;
+                
+                dummy.position.set(px, fh + stemH + 0.015, pz);
+                dummy.rotation.set(0.18, pAngle, 0.08);
+                dummy.scale.set(0.7, 1, 0.7);
+                dummy.updateMatrix();
+                
+                flowerHeadMesh.setMatrixAt(headIndex, dummy.matrix);
+                flowerHeadMesh.setColorAt(headIndex, headColor);
+                headIndex++;
             }
-            
-            scene.add(flowerGroup);
         }
         
-        // --- FERNS & SMALL BUSHES ---
-        const fernMat = new THREE.MeshStandardMaterial({ color: 0x1f4d18, roughness: 0.95, side: THREE.DoubleSide });
-        const bushMat = new THREE.MeshStandardMaterial({ color: 0x284d1e, roughness: 0.9 });
-        const plantCount = 150;
-        for (let i = 0; i < plantCount; i++) {
-            let px = (Math.random() - 0.5) * 270;
-            let pz = (Math.random() - 0.5) * 270;
-            if (Math.sqrt(px*px + pz*pz) < 6) continue;
+        flowerStemMesh.count = stemIndex;
+        flowerHeadMesh.count = headIndex;
+        scene.add(flowerStemMesh);
+        scene.add(flowerHeadMesh);
+        
+        // --- FERNS ---
+        const fernFrondCount = 6;
+        const fernTotalCount = 350;
+        const totalFronds = fernTotalCount * fernFrondCount;
+        
+        const frondGeo = new THREE.PlaneGeometry(1, 1);
+        frondGeo.translate(0, 0.5, 0);
+        
+        fernMat = new THREE.MeshStandardMaterial({
+            color: 0x1a4513,
+            roughness: 0.95,
+            side: THREE.DoubleSide
+        });
+        makeMaterialWindSway(fernMat, 0.8, 0.07);
+        
+        fernMesh = new THREE.InstancedMesh(frondGeo, fernMat, totalFronds);
+        fernMesh.castShadow = false;
+        fernMesh.receiveShadow = true;
+        
+        let frondIndex = 0;
+        for (let i = 0; i < fernTotalCount; i++) {
+            let px = (Math.random() - 0.5) * 275;
+            let pz = (Math.random() - 0.5) * 275;
+            if (Math.sqrt(px*px + pz*pz) < 7) continue;
             const ph = getTerrainHeight(px, pz);
             if (ph < waterLevel - 0.2) continue;
             
-            if (Math.random() < 0.55) {
-                // Fern: flat fan of planes
-                const fernGroup = new THREE.Group();
-                fernGroup.position.set(px, ph, pz);
-                const frondCount = 4 + Math.floor(Math.random() * 4);
-                for (let f = 0; f < frondCount; f++) {
-                    const frondH = 0.4 + Math.random() * 0.35;
-                    const frondGeo = new THREE.PlaneGeometry(0.15 + Math.random() * 0.1, frondH);
-                    const frond = new THREE.Mesh(frondGeo, fernMat);
-                    frond.position.y = frondH / 2;
-                    frond.rotation.y = (f / frondCount) * Math.PI * 2;
-                    frond.rotation.z = 0.3 + Math.random() * 0.4;
-                    frond.castShadow = false;
-                    fernGroup.add(frond);
-                }
-                scene.add(fernGroup);
-                windSwayObjects.push({ mesh: fernGroup, phase: Math.random() * Math.PI * 2, speed: 0.9 + Math.random() * 0.5, maxSway: 0.06, isFallable: false, isWaterfall: false });
-            } else {
-                // Small rounded bush
-                const bushR = 0.3 + Math.random() * 0.35;
-                const bushGeo = new THREE.DodecahedronGeometry(bushR, 0);
-                const bush = new THREE.Mesh(bushGeo, bushMat);
-                bush.position.set(px, ph + bushR * 0.65, pz);
-                bush.castShadow = false;
-                bush.receiveShadow = true;
-                scene.add(bush);
+            for (let f = 0; f < fernFrondCount; f++) {
+                const frondH = 0.4 + Math.random() * 0.35;
+                const frondW = 0.14 + Math.random() * 0.08;
+                const ry = (f / fernFrondCount) * Math.PI * 2;
+                const rz = 0.3 + Math.random() * 0.38;
+                
+                dummy.position.set(px, ph, pz);
+                dummy.rotation.set(0, ry, rz);
+                dummy.scale.set(frondW, frondH, 1);
+                dummy.updateMatrix();
+                
+                fernMesh.setMatrixAt(frondIndex, dummy.matrix);
+                frondIndex++;
             }
         }
+        fernMesh.count = frondIndex;
+        scene.add(fernMesh);
+        
+        // --- BUSHES ---
+        const bushCount = 100;
+        const bushGeo = new THREE.DodecahedronGeometry(1.0, 0);
+        bushMat = new THREE.MeshStandardMaterial({
+            color: 0x244a1b,
+            roughness: 0.9
+        });
+        makeMaterialWindSway(bushMat, 0.6, 0.04);
+        
+        bushMesh = new THREE.InstancedMesh(bushGeo, bushMat, bushCount);
+        bushMesh.castShadow = false;
+        bushMesh.receiveShadow = true;
+        
+        let bushIndex = 0;
+        for (let i = 0; i < bushCount; i++) {
+            let px = (Math.random() - 0.5) * 275;
+            let pz = (Math.random() - 0.5) * 275;
+            if (Math.sqrt(px*px + pz*pz) < 7) continue;
+            const ph = getTerrainHeight(px, pz);
+            if (ph < waterLevel - 0.2) continue;
+            
+            const bushR = 0.3 + Math.random() * 0.35;
+            dummy.position.set(px, ph + bushR * 0.65, pz);
+            dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            dummy.scale.set(bushR, bushR, bushR);
+            dummy.updateMatrix();
+            
+            bushMesh.setMatrixAt(bushIndex, dummy.matrix);
+            bushIndex++;
+        }
+        bushMesh.count = bushIndex;
+        scene.add(bushMesh);
     }
 
 
     function createMountains() {
         const mountainCount = 16;
+        
+        if (!waterfallMaterial) {
+            // Flowing blue water texture
+            const wfCanvas = document.createElement('canvas');
+            wfCanvas.width = 128;
+            wfCanvas.height = 256;
+            const wfCtx = wfCanvas.getContext('2d');
+            wfCtx.fillStyle = '#0a4cd2'; // Vivid thick blue
+            wfCtx.fillRect(0, 0, 128, 256);
+            
+            // Draw vertical white foam streaks
+            wfCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            for (let j = 0; j < 35; j++) {
+                wfCtx.fillRect(
+                    Math.random() * 128,
+                    Math.random() * 256,
+                    1.5 + Math.random() * 3.5,
+                    25 + Math.random() * 60
+                );
+            }
+            
+            const wfTexture = new THREE.CanvasTexture(wfCanvas);
+            wfTexture.wrapS = THREE.RepeatWrapping;
+            wfTexture.wrapT = THREE.RepeatWrapping;
+            wfTexture.repeat.set(1, 2);
+            
+            waterfallMaterial = new THREE.MeshStandardMaterial({
+                map: wfTexture,
+                roughness: 0.08,
+                metalness: 0.7,
+                transparent: true,
+                opacity: 0.88,
+                side: THREE.DoubleSide,
+                flatShading: true
+            });
+            waterfallMaterial.userData = { texture: wfTexture };
+            
+            waterfallMistMat = new THREE.PointsMaterial({
+                color: 0xe0f2ff,
+                size: 0.8,
+                transparent: true,
+                opacity: 0.75,
+                depthWrite: false
+            });
+        }
         
         // Rocky grey peaks at the very top
         const snowMat = new THREE.MeshStandardMaterial({
@@ -2267,45 +2452,48 @@
             baseMesh.receiveShadow = true;
             scene.add(baseMesh);
             
-            // --- Waterfall: animated white particle stream on 30% of mountains ---
+            // --- Waterfall: thick animated blue water columns ---
             if (Math.random() < 0.30) {
-                const wfCount = 40;
-                const wfPositions = new Float32Array(wfCount * 3);
-                const wfVelocities = [];
-                const wfBaseX = x + (Math.random() - 0.5) * mRadius * 0.3;
-                const wfBaseZ = z + (Math.random() - 0.5) * mRadius * 0.3;
-                const wfTopY = terrainH + mHeight * 0.68;
+                const wfWidth = 4.0 + Math.random() * 2.0;
+                const wfHeight = mHeight * 0.7;
                 
-                for (let w = 0; w < wfCount; w++) {
-                    wfPositions[w * 3] = wfBaseX + (Math.random() - 0.5) * 1.2;
-                    wfPositions[w * 3 + 1] = wfTopY - Math.random() * mHeight * 0.55;
-                    wfPositions[w * 3 + 2] = wfBaseZ + (Math.random() - 0.5) * 1.2;
-                    wfVelocities.push(-1.2 - Math.random() * 0.8);
+                const wfBaseX = x + Math.cos(angle - Math.PI) * mRadius * 0.45;
+                const wfBaseZ = z + Math.sin(angle - Math.PI) * mRadius * 0.45;
+                const wfTopY = terrainH + mHeight * 0.72;
+                const wfBottomY = terrainH + 1.5;
+                
+                const wfGeo = new THREE.PlaneGeometry(wfWidth, wfHeight, 1, 1);
+                const wfMesh = new THREE.Mesh(wfGeo, waterfallMaterial);
+                
+                const midY = (wfTopY + wfBottomY) / 2;
+                wfMesh.position.set(wfBaseX, midY, wfBaseZ);
+                
+                wfMesh.lookAt(0, midY, 0);
+                
+                wfMesh.castShadow = false;
+                wfMesh.receiveShadow = true;
+                scene.add(wfMesh);
+                
+                const mistCount = 25;
+                const mistPos = new Float32Array(mistCount * 3);
+                for (let m = 0; m < mistCount; m++) {
+                    mistPos[m * 3] = wfBaseX + (Math.random() - 0.5) * (wfWidth + 1.5);
+                    mistPos[m * 3 + 1] = wfBottomY + Math.random() * 2;
+                    mistPos[m * 3 + 2] = wfBaseZ + (Math.random() - 0.5) * (wfWidth + 1.5);
                 }
+                const mistGeo = new THREE.BufferGeometry();
+                mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
+                const mistPoints = new THREE.Points(mistGeo, waterfallMistMat);
+                scene.add(mistPoints);
                 
-                const wfGeo = new THREE.BufferGeometry();
-                wfGeo.setAttribute('position', new THREE.BufferAttribute(wfPositions, 3));
-                const wfMat = new THREE.PointsMaterial({
-                    color: 0xaaddff,
-                    size: 0.55,
-                    transparent: true,
-                    opacity: 0.82,
-                    depthWrite: false
-                });
-                const wfPoints = new THREE.Points(wfGeo, wfMat);
-                scene.add(wfPoints);
-                
-                // Store for animation
-                wfPoints.userData = {
+                windSwayObjects.push({
+                    mesh: wfMesh,
+                    mist: mistPoints,
                     isWaterfall: true,
-                    baseX: wfBaseX,
-                    baseZ: wfBaseZ,
                     topY: wfTopY,
-                    bottomY: terrainH + 2,
-                    velocities: wfVelocities,
-                    count: wfCount
-                };
-                windSwayObjects.push({ mesh: wfPoints, isWaterfall: true, phase: Math.random() * Math.PI * 2, speed: 0, maxSway: 0, isFallable: false });
+                    bottomY: wfBottomY,
+                    width: wfWidth
+                });
             }
         }
     }
@@ -3122,6 +3310,359 @@
         scene.add(rainParticles);
     }
 
+    /* ─── LIGHTNING STRIKES AND FOREST FIRES ─── */
+    function triggerTimedStrike() {
+        // Choose a target position around the player (within 20 to 45 units)
+        const dist = 20 + Math.random() * 25;
+        const angle = Math.random() * Math.PI * 2;
+        const targetX = playerPos.x + Math.cos(angle) * dist;
+        const targetZ = playerPos.z + Math.sin(angle) * dist;
+        
+        triggerLightningStrike(targetX, targetZ);
+    }
+
+    function triggerLightningStrike(targetX, targetZ) {
+        const groundY = getTerrainHeight(targetX, targetZ);
+        
+        // Find closest tree group to snap to
+        let closestTree = null;
+        let minDist = 99999;
+        
+        scene.children.forEach(child => {
+            if (child.type === 'Group' && !child.userData.isHiker && !child.userData.isBird && child.position) {
+                const dist = Math.sqrt(
+                    (child.position.x - targetX) * (child.position.x - targetX) +
+                    (child.position.z - targetZ) * (child.position.z - targetZ)
+                );
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestTree = child;
+                }
+            }
+        });
+        
+        let strikeX = targetX;
+        let strikeZ = targetZ;
+        let strikeY = groundY;
+        
+        if (closestTree && minDist < 35) {
+            strikeX = closestTree.position.x;
+            strikeZ = closestTree.position.z;
+            strikeY = closestTree.position.y;
+            
+            closestTree.userData.isBurning = true;
+            closestTree.userData.burnTimer = 40.0;
+            closestTree.userData.originalMaterials = [];
+            
+            closestTree.traverse(node => {
+                if (node.isMesh && node.material) {
+                    closestTree.userData.originalMaterials.push({ mesh: node, material: node.material });
+                    
+                    node.material = new THREE.MeshStandardMaterial({
+                        color: 0xaa2200,
+                        emissive: 0xff3300,
+                        emissiveIntensity: 0.85,
+                        roughness: 0.9,
+                        metalness: 0.1
+                    });
+                }
+            });
+        }
+        
+        createLightningBolt(strikeX, strikeZ, strikeY);
+        
+        const volumeSlider = document.querySelector('.vol-slider');
+        const globalVolume = volumeSlider ? parseFloat(volumeSlider.value) / 100 : 0.75;
+        playThunderSound(true, globalVolume * 1.4);
+        
+        lightningFlashActive = true;
+        lightningFlashTime = performance.now();
+        lightningStage = 0;
+        
+        createForestFire(strikeX, strikeY, strikeZ, closestTree);
+    }
+
+    function createLightningBolt(targetX, targetZ, groundY) {
+        const points = [];
+        let curY = 110;
+        let curX = targetX + (Math.random() - 0.5) * 15;
+        let curZ = targetZ + (Math.random() - 0.5) * 15;
+        points.push(new THREE.Vector3(curX, curY, curZ));
+        
+        const steps = 8;
+        for (let s = 1; s <= steps; s++) {
+            const ratio = s / steps;
+            const targetY = curY - (curY - groundY) / (steps - s + 1);
+            curY = targetY;
+            curX = curX + (targetX - curX) * ratio + (Math.random() - 0.5) * 6;
+            curZ = curZ + (targetZ - curZ) * ratio + (Math.random() - 0.5) * 6;
+            points.push(new THREE.Vector3(curX, curY, curZ));
+        }
+        points.push(new THREE.Vector3(targetX, groundY, targetZ));
+        
+        const curve = new THREE.CatmullRomCurve3(points);
+        const geo = new THREE.TubeGeometry(curve, 18, 0.45, 4, false);
+        const mat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1.0
+        });
+        const boltMesh = new THREE.Mesh(geo, mat);
+        scene.add(boltMesh);
+        
+        const start = performance.now();
+        const tick = () => {
+            const elapsed = performance.now() - start;
+            if (elapsed > 250) {
+                scene.remove(boltMesh);
+                geo.dispose();
+                mat.dispose();
+            } else {
+                mat.opacity = Math.random() > 0.4 ? (1.0 - elapsed / 250) : 0;
+                requestAnimationFrame(tick);
+            }
+        };
+        tick();
+    }
+
+    function createForestFire(x, y, z, tree) {
+        const fireGroup = new THREE.Group();
+        fireGroup.position.set(x, y, z);
+        scene.add(fireGroup);
+        
+        const fireLight = new THREE.PointLight(0xff6600, 2.5, 30);
+        fireLight.position.set(0, 2, 0);
+        fireGroup.add(fireLight);
+        
+        const particleCount = 140;
+        const geometry = new THREE.BufferGeometry();
+        
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        
+        const particlesData = [];
+        
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 1.8;
+            const px = Math.cos(angle) * radius;
+            const pz = Math.sin(angle) * radius;
+            const py = Math.random() * 3.5;
+            
+            positions[i * 3] = px;
+            positions[i * 3 + 1] = py;
+            positions[i * 3 + 2] = pz;
+            
+            colors[i * 3] = 1.0;
+            colors[i * 3 + 1] = 0.9;
+            colors[i * 3 + 2] = 0.5;
+            
+            particlesData.push({
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: 1.5 + Math.random() * 2.0,
+                vz: (Math.random() - 0.5) * 0.5,
+                life: Math.random(),
+                maxLife: 0.8 + Math.random() * 0.8,
+                spreadRadius: radius
+            });
+        }
+        
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        const fireMat = new THREE.PointsMaterial({
+            size: 0.9,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        
+        const firePoints = new THREE.Points(geometry, fireMat);
+        fireGroup.add(firePoints);
+        
+        const fireState = {
+            group: fireGroup,
+            light: fireLight,
+            points: firePoints,
+            geom: geometry,
+            data: particlesData,
+            tree: tree,
+            timeLeft: 40.0,
+            posX: x,
+            posZ: z
+        };
+        
+        activeFires.push(fireState);
+        startFireSound();
+    }
+
+    function updateFires(delta, time) {
+        if (activeFires.length === 0) return;
+        
+        const remainingFires = [];
+        
+        activeFires.forEach(fire => {
+            fire.timeLeft -= delta;
+            
+            if (fire.timeLeft <= 0) {
+                scene.remove(fire.group);
+                fire.geom.dispose();
+                fire.points.material.dispose();
+                
+                if (fire.tree) {
+                    fire.tree.userData.isBurning = false;
+                    
+                    if (!charredMaterial) {
+                        charredMaterial = new THREE.MeshStandardMaterial({
+                            color: 0x111111,
+                            roughness: 0.98,
+                            metalness: 0.05
+                        });
+                    }
+                    
+                    fire.tree.traverse(node => {
+                        if (node.isMesh) {
+                            node.material = charredMaterial;
+                        }
+                    });
+                }
+            } else {
+                remainingFires.push(fire);
+                
+                // Flicker dynamic light
+                fire.light.intensity = 2.0 + Math.sin(time * 0.03) * 0.6 + (Math.random() - 0.5) * 0.4;
+                
+                const pos = fire.geom.attributes.position;
+                const col = fire.geom.attributes.color;
+                
+                for (let i = 0; i < fire.data.length; i++) {
+                    const p = fire.data[i];
+                    p.life += delta;
+                    
+                    if (p.life >= p.maxLife) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const radius = Math.random() * 1.5;
+                        pos.setX(i, Math.cos(angle) * radius);
+                        pos.setY(i, Math.random() * 1.2);
+                        pos.setZ(i, Math.sin(angle) * radius);
+                        
+                        p.life = 0;
+                        p.vx = (Math.random() - 0.5) * 0.4;
+                        p.vy = 1.2 + Math.random() * 1.8;
+                        p.vz = (Math.random() - 0.5) * 0.4;
+                    } else {
+                        let px = pos.getX(i) + p.vx * delta;
+                        let py = pos.getY(i) + p.vy * delta;
+                        let pz = pos.getZ(i) + p.vz * delta;
+                        
+                        pos.setX(i, px);
+                        pos.setY(i, py);
+                        pos.setZ(i, pz);
+                        
+                        const ratio = p.life / p.maxLife;
+                        if (ratio < 0.25) {
+                            const r = 1.0;
+                            const g = 0.9 + ratio * 0.4;
+                            const b = 0.5 - ratio * 2.0;
+                            col.setXYZ(i, r, Math.max(0.6, g), Math.max(0.0, b));
+                        } else if (ratio < 0.6) {
+                            const r = 1.0;
+                            const g = 0.9 - (ratio - 0.25) * 2.0;
+                            col.setXYZ(i, r, Math.max(0.2, g), 0.0);
+                        } else {
+                            const tVal = (ratio - 0.6) / 0.4;
+                            const gray = 0.3 * (1.0 - tVal);
+                            col.setXYZ(i, Math.max(gray, 0.1), Math.max(gray, 0.05), Math.max(gray, 0.05));
+                        }
+                    }
+                }
+                pos.needsUpdate = true;
+                col.needsUpdate = true;
+            }
+        });
+        
+        activeFires = remainingFires;
+        
+        if (activeFires.length === 0) {
+            stopFireSound();
+        }
+    }
+
+    function startFireSound() {
+        if (!audioCtx) return;
+        try {
+            if (fireAudioNode) return;
+            
+            const bufferSize = audioCtx.sampleRate * 2;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+            noise.loop = true;
+            
+            const hissFilter = audioCtx.createBiquadFilter();
+            hissFilter.type = 'bandpass';
+            hissFilter.frequency.value = 350;
+            hissFilter.Q.value = 0.6;
+            
+            const mainGain = audioCtx.createGain();
+            mainGain.gain.value = 0.22;
+            
+            noise.connect(hissFilter);
+            hissFilter.connect(mainGain);
+            mainGain.connect(audioCtx.destination);
+            
+            noise.start();
+            
+            const crackleInterval = setInterval(() => {
+                if (!isGameRunning || activeFires.length === 0) {
+                    clearInterval(crackleInterval);
+                    return;
+                }
+                
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = 120 + Math.random() * 900;
+                    
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.06 + Math.random() * 0.1, audioCtx.currentTime + 0.002);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04 + Math.random() * 0.08);
+                    
+                    osc.connect(gain);
+                    gain.connect(mainGain);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                } catch(err){}
+            }, 75);
+            
+            fireAudioNode = {
+                noiseSource: noise,
+                mainGain: mainGain,
+                interval: crackleInterval
+            };
+        } catch(e) {
+            console.error("Synthesized fire sound failed:", e);
+        }
+    }
+    
+    function stopFireSound() {
+        if (fireAudioNode) {
+            try {
+                fireAudioNode.noiseSource.stop();
+                clearInterval(fireAudioNode.interval);
+            } catch(e){}
+            fireAudioNode = null;
+        }
+    }
+
     function updateWeather(time, delta) {
         if (!isGameRunning) return;
         
@@ -3129,6 +3670,22 @@
         
         // Storm timeline (6:04 PM to 6:07 PM)
         isStorming = (elapsedSeconds >= 540 && elapsedSeconds < 720);
+        
+        // Timed lightning strikes (exactly three times in total during storm)
+        if (isStorming) {
+            if (elapsedSeconds >= 560 && !strike1Triggered) {
+                strike1Triggered = true;
+                triggerTimedStrike();
+            }
+            if (elapsedSeconds >= 610 && !strike2Triggered) {
+                strike2Triggered = true;
+                triggerTimedStrike();
+            }
+            if (elapsedSeconds >= 660 && !strike3Triggered) {
+                strike3Triggered = true;
+                triggerTimedStrike();
+            }
+        }
         
         // Calculate storm intensity with an 8-second fade in/out ramp
         const rampTime = 8.0;
@@ -3522,6 +4079,13 @@
             cloudMaterial = null;
             clouds = [];
             
+            // Clean up fires and sound synthesis
+            stopFireSound();
+            activeFires = [];
+            strike1Triggered = false;
+            strike2Triggered = false;
+            strike3Triggered = false;
+            
             setTimeout(() => {
                 fade.classList.remove('active');
             }, 500);
@@ -3734,22 +4298,22 @@
             windSwayObjects.forEach(s => {
                 const m = s.mesh;
                 
-                // Animate waterfall particles: fall downward, reset to top
-                if (s.isWaterfall && m.userData.isWaterfall) {
-                    const ud = m.userData;
-                    const wfPos = m.geometry.attributes.position;
-                    for (let w = 0; w < ud.count; w++) {
-                        let wy = wfPos.getY(w);
-                        wy += ud.velocities[w] * (60 * delta);
-                        if (wy < ud.bottomY) {
-                            // Recycle particle back to top with slight scatter
-                            wy = ud.topY;
-                            wfPos.setX(w, ud.baseX + (Math.random() - 0.5) * 1.2);
-                            wfPos.setZ(w, ud.baseZ + (Math.random() - 0.5) * 1.2);
-                        }
-                        wfPos.setY(w, wy);
+                // Animate waterfall foam mist spray
+                if (s.isWaterfall) {
+                    const mistGeo = s.mist.geometry;
+                    const pos = mistGeo.attributes.position;
+                    for (let p = 0; p < pos.count; p++) {
+                        let py = pos.getY(p);
+                        py += (Math.random() - 0.5) * 0.15;
+                        if (py < s.bottomY - 1) py = s.bottomY + 1;
+                        if (py > s.bottomY + 3) py = s.bottomY + 1;
+                        pos.setY(p, py);
+                        
+                        let px = pos.getX(p);
+                        px += (Math.random() - 0.5) * 0.1;
+                        pos.setX(p, px);
                     }
-                    wfPos.needsUpdate = true;
+                    pos.needsUpdate = true;
                     return; // Skip wind sway for waterfalls
                 }
                 
@@ -3815,6 +4379,27 @@
             updateSkySunAndGodRays(time, delta);
             updateBirds(time, delta);
             updateWeather(time, delta);
+            
+            // Animate waterfall texture offset
+            if (waterfallMaterial && waterfallMaterial.userData && waterfallMaterial.userData.texture) {
+                waterfallMaterial.userData.texture.offset.y -= delta * 1.6;
+            }
+            
+            // Update active forest fires
+            updateFires(delta, time);
+            
+            // Update vegetation shader uniforms for wind sway
+            [grassMat, flowerStemMat, flowerHeadMat, fernMat, bushMat].forEach(mat => {
+                if (mat && mat.userData && mat.userData.shader) {
+                    mat.userData.shader.uniforms.uTime.value = time;
+                    mat.userData.shader.uniforms.uStormIntensity.value = stormIntensity;
+                }
+            });
+        }
+        
+        frameCount++;
+        if (renderer && frameCount % 4 === 0) {
+            renderer.shadowMap.needsUpdate = true;
         }
         
         renderer.render(scene, camera);
