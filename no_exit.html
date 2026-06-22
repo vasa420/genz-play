@@ -2384,6 +2384,11 @@
 
             spotLight = new THREE.SpotLight(0xffffff, 2.5, 25, Math.PI / 6, 0.5, 1);
             spotLight.castShadow = true;
+            spotLight.shadow.mapSize.width = 512;
+            spotLight.shadow.mapSize.height = 512;
+            spotLight.shadow.camera.near = 0.5;
+            spotLight.shadow.camera.far = 15.0;
+            spotLight.shadow.bias = -0.0005;
             scene.add(spotLight);
             scene.add(spotLight.target); // Need target to be in scene
 
@@ -3261,7 +3266,16 @@
             group.add(bulbGroup);
         }
 
+        let sharedUnitWireGeo = null;
+        let sharedWireMat = null;
+
         function createSaggingWire(group, p1, p2) {
+            if (!sharedUnitWireGeo) {
+                // Unit-length cylinder with height 1.0, radius 0.012
+                sharedUnitWireGeo = new THREE.CylinderGeometry(0.012, 0.012, 1.0, 4);
+                sharedWireMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
+            }
+
             const midY = Math.min(p1.y, p2.y) - 0.15; // dip in the middle
             const midPoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
             midPoint.y = midY;
@@ -3277,15 +3291,15 @@
                 points.push(p);
             }
 
-            const wireMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
             for (let i = 0; i < points.length - 1; i++) {
                 const start = points[i];
                 const end = points[i+1];
                 const dist = start.distanceTo(end);
-                const wireGeo = new THREE.CylinderGeometry(0.012, 0.012, dist, 4);
-                const segment = new THREE.Mesh(wireGeo, wireMat);
                 
+                // Use shared unit cylinder and scale Y dynamically by distance (no duplicate allocations)
+                const segment = new THREE.Mesh(sharedUnitWireGeo, sharedWireMat);
                 segment.position.copy(start).add(end).multiplyScalar(0.5);
+                segment.scale.set(1, dist, 1);
                 
                 const direction = new THREE.Vector3().subVectors(end, start).normalize();
                 const alignAxis = new THREE.Vector3(0, 1, 0);
@@ -3395,6 +3409,28 @@
                 roughness: 0.8
             });
 
+            // Pre-create shared geometries to prevent allocation in cell loops (massive performance boost)
+            const bracketGeo = new THREE.BoxGeometry(0.16, 0.05, 0.16);
+            
+            const pipeEWGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
+            pipeEWGeo.rotateZ(Math.PI / 2);
+            
+            const pipeNSGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
+            pipeNSGeo.rotateX(Math.PI / 2);
+
+            const len1 = 1.7;
+            const brokenPipeEWGeo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
+            brokenPipeEWGeo.rotateZ(Math.PI / 2);
+            
+            const brokenPipeNSGeo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
+            brokenPipeNSGeo.rotateX(Math.PI / 2);
+
+            const sleeveEWGeo = new THREE.CylinderGeometry(0.042, 0.042, 0.4, 6);
+            sleeveEWGeo.rotateZ(Math.PI / 2);
+            
+            const sleeveNSGeo = new THREE.CylinderGeometry(0.042, 0.042, 0.4, 6);
+            sleeveNSGeo.rotateX(Math.PI / 2);
+
             const spawnedLeaksInCell = {};
 
             for (let r = 0; r < MAP_SIZE; r++) {
@@ -3406,7 +3442,6 @@
                     const cellZ = r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
 
                     // Center bracket mount on the ceiling
-                    const bracketGeo = new THREE.BoxGeometry(0.16, 0.05, 0.16);
                     const bracket = new THREE.Mesh(bracketGeo, bracketMat);
                     bracket.position.set(cellX, 3.96, cellZ);
                     group.add(bracket);
@@ -3420,22 +3455,18 @@
                         const midX = (startX + endX) / 2;
 
                         if (isLeak) {
-                            const len1 = 1.7;
-                            const pipe1Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
-                            pipe1Geo.rotateZ(Math.PI / 2);
-                            const pipe1 = new THREE.Mesh(pipe1Geo, pipeMat);
+                            // Left segment
+                            const pipe1 = new THREE.Mesh(brokenPipeEWGeo, pipeMat);
                             pipe1.position.set(startX + len1 / 2, 3.88, cellZ);
                             group.add(pipe1);
 
-                            const pipe2Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
-                            pipe2Geo.rotateZ(Math.PI / 2);
-                            const pipe2 = new THREE.Mesh(pipe2Geo, pipeMat);
+                            // Right segment
+                            const pipe2 = new THREE.Mesh(brokenPipeEWGeo, pipeMat);
                             pipe2.position.set(endX - len1 / 2, 3.88, cellZ);
                             group.add(pipe2);
 
-                            const sleeveGeo = new THREE.CylinderGeometry(0.042, 0.042, 0.4, 6);
-                            sleeveGeo.rotateZ(Math.PI / 2);
-                            const sleeve = new THREE.Mesh(sleeveGeo, rustyMat);
+                            // Broken jagged sleeve
+                            const sleeve = new THREE.Mesh(sleeveEWGeo, rustyMat);
                             sleeve.position.set(midX, 3.88, cellZ);
                             sleeve.scale.set(1.0, 1.0, 1.2);
                             group.add(sleeve);
@@ -3446,9 +3477,8 @@
                                 createWaterLeak(group, c, r);
                             }
                         } else {
-                            const pipeGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
-                            pipeGeo.rotateZ(Math.PI / 2);
-                            const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                            // Continuous pipe EW
+                            const pipe = new THREE.Mesh(pipeEWGeo, pipeMat);
                             pipe.position.set(midX, 3.88, cellZ);
                             group.add(pipe);
                         }
@@ -3464,22 +3494,18 @@
                         const midZ = (startZ + endZ) / 2;
 
                         if (isLeak) {
-                            const len1 = 1.7;
-                            const pipe1Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
-                            pipe1Geo.rotateX(Math.PI / 2);
-                            const pipe1 = new THREE.Mesh(pipe1Geo, pipeMat);
+                            // Top segment
+                            const pipe1 = new THREE.Mesh(brokenPipeNSGeo, pipeMat);
                             pipe1.position.set(cellX, 3.88, startZ + len1 / 2);
                             group.add(pipe1);
 
-                            const pipe2Geo = new THREE.CylinderGeometry(0.035, 0.035, len1, 6);
-                            pipe2Geo.rotateX(Math.PI / 2);
-                            const pipe2 = new THREE.Mesh(pipe2Geo, pipeMat);
+                            // Bottom segment
+                            const pipe2 = new THREE.Mesh(brokenPipeNSGeo, pipeMat);
                             pipe2.position.set(cellX, 3.88, endZ - len1 / 2);
                             group.add(pipe2);
 
-                            const sleeveGeo = new THREE.CylinderGeometry(0.042, 0.042, 0.4, 6);
-                            sleeveGeo.rotateX(Math.PI / 2);
-                            const sleeve = new THREE.Mesh(sleeveGeo, rustyMat);
+                            // Broken sleeve NS
+                            const sleeve = new THREE.Mesh(sleeveNSGeo, rustyMat);
                             sleeve.position.set(cellX, 3.88, midZ);
                             sleeve.scale.set(1.2, 1.0, 1.0);
                             group.add(sleeve);
@@ -3490,9 +3516,8 @@
                                 createWaterLeak(group, c, r);
                             }
                         } else {
-                            const pipeGeo = new THREE.CylinderGeometry(0.035, 0.035, CELL_SIZE, 6);
-                            pipeGeo.rotateX(Math.PI / 2);
-                            const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                            // Continuous pipe NS
+                            const pipe = new THREE.Mesh(pipeNSGeo, pipeMat);
                             pipe.position.set(cellX, 3.88, midZ);
                             group.add(pipe);
                         }
@@ -4472,7 +4497,19 @@
                 const startCellZ = Math.min(MAP_SIZE - 1, Math.max(0, Math.floor(ghostPos.z)));
                 const currentMap = ghostFloor === 0 ? GROUND_FLOOR_MAP : SECOND_FLOOR_MAP;
                 
-                const path = findGhostPath({ x: startCellX, z: startCellZ }, { x: targetCellX, z: targetCellZ }, currentMap);
+                if (window.ghostPathCooldown === undefined) {
+                    window.ghostPathCooldown = 0;
+                    window.ghostPathCache = null;
+                }
+
+                if (window.ghostPathCooldown <= 0 || !window.ghostPathCache) {
+                    window.ghostPathCache = findGhostPath({ x: startCellX, z: startCellZ }, { x: targetCellX, z: targetCellZ }, currentMap);
+                    window.ghostPathCooldown = 12;
+                } else {
+                    window.ghostPathCooldown--;
+                }
+                
+                const path = window.ghostPathCache;
                 
                 if (path && path.length > 1) {
                     // Head to the center of the next cell in the path
@@ -5325,20 +5362,23 @@
 
             // Staggered CCTV updates to maintain high performance
             if (activeFloor === 1 && secondFloorGroup.tvMonitor && secondFloorGroup.cctvCameras) {
-                const cctvIndex = frameCount % 4;
-                const cctvCam = secondFloorGroup.cctvCameras[cctvIndex];
-                if (cctvCam && renderer && scene) {
-                    // Hide the TV monitor temporarily to prevent infinite recursive rendering
-                    const monitor = secondFloorGroup.tvMonitor;
-                    monitor.visible = false;
-                    
-                    // Render CCTV perspective to target
-                    renderer.setRenderTarget(cctvTargets[cctvIndex]);
-                    renderer.render(scene, cctvCam);
-                    renderer.setRenderTarget(null);
-                    
-                    // Restore monitor visibility
-                    monitor.visible = true;
+                // Update only one camera every 4 frames (reduces secondary rendering calls by 75%)
+                if (frameCount % 4 === 0) {
+                    const cctvIndex = Math.floor(frameCount / 4) % 4;
+                    const cctvCam = secondFloorGroup.cctvCameras[cctvIndex];
+                    if (cctvCam && renderer && scene) {
+                        // Hide the TV monitor temporarily to prevent infinite recursive rendering
+                        const monitor = secondFloorGroup.tvMonitor;
+                        monitor.visible = false;
+                        
+                        // Render CCTV perspective to target
+                        renderer.setRenderTarget(cctvTargets[cctvIndex]);
+                        renderer.render(scene, cctvCam);
+                        renderer.setRenderTarget(null);
+                        
+                        // Restore monitor visibility
+                        monitor.visible = true;
+                    }
                 }
             }
 
