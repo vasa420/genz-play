@@ -5817,41 +5817,46 @@
             playStairsSound();
 
             setTimeout(() => {
-                activeFloor = activeFloor === 0 ? 1 : (activeFloor === 1 ? 2 : 0);
-                
-                if (groundFloorGroup && secondFloorGroup && mortuaryFloorGroup) {
-                    groundFloorGroup.visible = (activeFloor === 0);
-                    secondFloorGroup.visible = (activeFloor === 1);
-                    mortuaryFloorGroup.visible = (activeFloor === 2);
-                }
+                try {
+                    activeFloor = activeFloor === 0 ? 1 : (activeFloor === 1 ? 2 : 0);
+                    
+                    if (groundFloorGroup) groundFloorGroup.visible = (activeFloor === 0);
+                    if (secondFloorGroup) secondFloorGroup.visible = (activeFloor === 1);
+                    if (mortuaryFloorGroup) mortuaryFloorGroup.visible = (activeFloor === 2);
 
-                // Relocate player just off the stairs (cell 4, 5) to avoid infinite loop
-                playerPos.x = 4.5;
-                playerPos.z = 5.5;
-                
-                mouseYaw = 0;
-                mousePitch = 0;
-                if (camera) {
-                    camera.rotation.y = mouseYaw;
-                    camera.rotation.x = mousePitch;
-                }
-                
-                updateCameraPosition();
+                    // Relocate player just off the stairs (cell 4, 5) to avoid infinite loop
+                    playerPos.x = 4.5;
+                    playerPos.z = 5.5;
+                    
+                    mouseYaw = 0;
+                    mousePitch = 0;
+                    if (camera) {
+                        camera.rotation.y = mouseYaw;
+                        camera.rotation.x = mousePitch;
+                    }
+                    
+                    updateCameraPosition();
 
-                // Reset ghost on new floor so they don't immediately stalk you on arrival
-                ghostPos.x = 7.5;
-                ghostPos.z = 7.5;
-                ghostStalking = false;
-                ghostAlertTimer = 0;
-                updateGhostMeshPosition();
+                    // Reset ghost on new floor so they don't immediately stalk you on arrival
+                    ghostPos.x = 7.5;
+                    ghostPos.z = 7.5;
+                    ghostStalking = false;
+                    ghostAlertTimer = 0;
+                    updateGhostMeshPosition();
 
-                fadeEl.style.opacity = '0';
-                
-                setTimeout(() => {
+                    fadeEl.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        fadeEl.style.display = 'none';
+                        isTransitioningFloor = false;
+                    }, 800);
+                } catch (err) {
+                    console.error('Floor transition error:', err);
+                    // Safety reset so controls are never permanently locked
+                    fadeEl.style.opacity = '0';
                     fadeEl.style.display = 'none';
                     isTransitioningFloor = false;
-                }, 800);
-
+                }
             }, 1200);
         }
 

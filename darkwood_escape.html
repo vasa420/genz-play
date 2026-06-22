@@ -1766,8 +1766,8 @@
             let maxSwayVal = 0.015;
 
             if (treeType === 'spruce') {
-                const height = 5.0 + Math.random() * 4.0;
-                const trunkRadius = 0.16 + Math.random() * 0.12;
+                const height = 11.0 + Math.random() * 7.0;
+                const trunkRadius = 0.22 + Math.random() * 0.14;
                 
                 // Trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.8, trunkRadius, height, 6);
@@ -1803,8 +1803,8 @@
                 maxSwayVal = 0.014 + Math.random() * 0.008;
 
             } else if (treeType === 'oak') {
-                const height = 4.0 + Math.random() * 3.0;
-                const trunkRadius = 0.22 + Math.random() * 0.12;
+                const height = 9.0 + Math.random() * 5.0;
+                const trunkRadius = 0.28 + Math.random() * 0.16;
                 
                 // Trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.9, trunkRadius, height, 6);
@@ -1866,8 +1866,8 @@
                 maxSwayVal = 0.01 + Math.random() * 0.006;
 
             } else if (treeType === 'birch') {
-                const height = 6.0 + Math.random() * 3.0;
-                const trunkRadius = 0.12 + Math.random() * 0.06;
+                const height = 13.0 + Math.random() * 5.0;
+                const trunkRadius = 0.16 + Math.random() * 0.08;
                 
                 // White birch trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.85, trunkRadius, height, 6);
@@ -1911,8 +1911,8 @@
                 maxSwayVal = 0.016 + Math.random() * 0.01;
 
             } else if (treeType === 'dead') {
-                const height = 4.0 + Math.random() * 3.5;
-                const trunkRadius = 0.2 + Math.random() * 0.1;
+                const height = 9.0 + Math.random() * 5.0;
+                const trunkRadius = 0.25 + Math.random() * 0.12;
                 
                 // Main trunk (crooked/tilted dead trees look much creepier and realistic)
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.7, trunkRadius, height, 5);
@@ -1927,7 +1927,7 @@
                 // Add branches
                 const branchCount = 3 + Math.floor(Math.random() * 3);
                 for (let b = 0; b < branchCount; b++) {
-                    const bHeight = 1.5 + Math.random() * 2.0;
+                    const bHeight = 2.5 + Math.random() * 3.0;
                     const bRadius = trunkRadius * 0.4;
                     const bGeo = new THREE.CylinderGeometry(bRadius * 0.5, bRadius, bHeight, 4);
                     const branch = new THREE.Mesh(bGeo, deadTrunkMat);
@@ -1947,10 +1947,40 @@
                     
                     treeGroup.add(pivot);
                 }
+                
+                // Dead trees also get sparse dried leaf clusters (some leaves still cling on)
+                const deadLeafMat = new THREE.MeshStandardMaterial({ color: 0x5c4a1e, roughness: 0.95 });
+                const deadLeafCount = 2 + Math.floor(Math.random() * 3);
+                for (let dl = 0; dl < deadLeafCount; dl++) {
+                    const dlGeo = new THREE.DodecahedronGeometry(0.8 + Math.random() * 0.6, 0);
+                    const dlMesh = new THREE.Mesh(dlGeo, deadLeafMat);
+                    const dlAngle = Math.random() * Math.PI * 2;
+                    const dlY = height * 0.45 + Math.random() * height * 0.45;
+                    dlMesh.position.set(
+                        Math.cos(dlAngle) * (trunkRadius * 3 + Math.random() * 1.5),
+                        dlY,
+                        Math.sin(dlAngle) * (trunkRadius * 3 + Math.random() * 1.5)
+                    );
+                    dlMesh.castShadow = false;
+                    dlMesh.receiveShadow = true;
+                    treeGroup.add(dlMesh);
+                }
+                
                 colliders.push({ x: x, z: z, radius: trunkRadius * 1.8 });
                 
                 swaySpeed = 0.5 + Math.random() * 0.3;
                 maxSwayVal = 0.012 + Math.random() * 0.007;
+                
+                // Mark some dead trees as "fallable" during storm
+                if (Math.random() < 0.22) {
+                    treeGroup.userData.canFall = true;
+                    treeGroup.userData.fallDir = (Math.random() - 0.5) * 2 > 0 ? 1 : -1;
+                    treeGroup.userData.isFalling = false;
+                    treeGroup.userData.fallAngle = 0;
+                    treeGroup.userData.fallTriggered = false;
+                    treeGroup.userData.originX = x;
+                    treeGroup.userData.originZ = z;
+                }
             }
             
             scene.add(treeGroup);
@@ -1961,7 +1991,8 @@
                 mesh: treeGroup,
                 phase: Math.random() * Math.PI * 2,
                 speed: swaySpeed,
-                maxSway: maxSwayVal
+                maxSway: maxSwayVal,
+                isFallable: treeGroup.userData.canFall || false
             });
         }
         
@@ -3452,22 +3483,54 @@
             
             // Wind Sway Foliage (violently scales up and shakes during the peak of the storm)
             const windTime = time * 0.0012;
-            const stormWindSpeedMult = 1.0 + stormIntensity * 3.2; // up to 4.2x speed
-            const stormSwayMult = 1.0 + stormIntensity * 2.8;      // up to 3.8x sway amplitude
+            const stormWindSpeedMult = 1.0 + stormIntensity * 4.5; // up to 5.5x speed during heavy rain
+            const stormSwayMult = 1.0 + stormIntensity * 4.0;      // up to 5.0x sway amplitude
             
             windSwayObjects.forEach(s => {
+                const m = s.mesh;
+                
+                // Handle falling trees during heavy storm
+                if (s.isFallable && m.userData.canFall) {
+                    if (stormIntensity > 0.82 && !m.userData.fallTriggered) {
+                        // Trigger fall with random delay so not all trees fall at once
+                        m.userData.fallDelay = (m.userData.fallDelay || (Math.random() * 8000 + 2000));
+                        m.userData.fallTimer = (m.userData.fallTimer || 0) + delta * 1000;
+                        if (m.userData.fallTimer >= m.userData.fallDelay) {
+                            m.userData.isFalling = true;
+                            m.userData.fallTriggered = true;
+                        }
+                    }
+                    if (m.userData.isFalling) {
+                        // Crash to ground: rotate up to PI/2 along Z axis
+                        m.userData.fallAngle += delta * (0.4 + Math.random() * 0.1);
+                        if (m.userData.fallAngle > Math.PI / 2) m.userData.fallAngle = Math.PI / 2;
+                        m.rotation.z = m.userData.fallDir * m.userData.fallAngle;
+                        // Slight X rotation for more realistic fall
+                        m.rotation.x = m.userData.fallAngle * 0.15;
+                        return; // Skip normal sway for falling trees
+                    }
+                    // After storm passes, reset fallen trees (if storm ended)
+                    if (m.userData.fallTriggered && stormIntensity < 0.05) {
+                        m.userData.isFalling = false;
+                        m.userData.fallTriggered = false;
+                        m.userData.fallAngle = 0;
+                        m.userData.fallTimer = 0;
+                        m.userData.fallDelay = null;
+                    }
+                }
+                
                 let rotZ = Math.sin(windTime * s.speed * stormWindSpeedMult + s.phase) * s.maxSway * stormSwayMult;
                 let rotX = Math.cos(windTime * s.speed * 0.85 * stormWindSpeedMult + s.phase) * (s.maxSway * 0.7) * stormSwayMult;
                 
                 // Add high-frequency dynamic jitter flutter when storm is active
                 if (stormIntensity > 0.05) {
-                    const jitter = Math.sin(time * 0.018 + s.phase) * (s.maxSway * 0.35) * stormIntensity;
+                    const jitter = Math.sin(time * 0.018 + s.phase) * (s.maxSway * 0.45) * stormIntensity;
                     rotZ += jitter;
                     rotX += jitter * 0.8;
                 }
                 
-                s.mesh.rotation.z = rotZ;
-                s.mesh.rotation.x = rotX;
+                m.rotation.z = rotZ;
+                m.rotation.x = rotX;
             });
             
             mistParticles.forEach(p => {
