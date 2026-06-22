@@ -1430,6 +1430,10 @@
     let starsPoints;
     let mistParticles = [];
     let isTransitioningToNight = false;
+    let skyDome, sunGroup, sunGlow, sunCore, sunAura;
+    let godRays = [];
+    let birds = [];
+    let birdMaterial;
     let lastFrameTime = 0;
     let playerSpeed = 0.06;
     let boundarySize = 150;
@@ -1671,6 +1675,9 @@
         spawnHikers();
         createStarfield();
         createMistSystem();
+        createSkyAndSun();
+        createGodRays();
+        createBirds();
         
         // Attach controls
         window.addEventListener('resize', onWindowResize);
@@ -2126,6 +2133,370 @@
         }
     }
 
+    function createSkyAndSun() {
+        // Create Sky Dome
+        const skyGeo = new THREE.SphereGeometry(245, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const pos = skyGeo.attributes.position;
+        const colors = [];
+        
+        // Beautiful sunset gradient
+        const horizonColor = new THREE.Color(0xf37042); // Warm sunset orange
+        const middleColor = new THREE.Color(0x752d5b);  // Sunset magenta/purple
+        const zenithColor = new THREE.Color(0x0a1128);  // Deep midnight blue
+        
+        for (let i = 0; i < pos.count; i++) {
+            const y = pos.getY(i);
+            const t = Math.min(1.0, Math.max(0.0, y / 245.0)); // 0 at horizon, 1 at zenith
+            let c;
+            if (t < 0.4) {
+                c = horizonColor.clone().lerp(middleColor, t / 0.4);
+            } else {
+                c = middleColor.clone().lerp(zenithColor, (t - 0.4) / 0.6);
+            }
+            colors.push(c.r, c.g, c.b);
+        }
+        skyGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        
+        const skyMat = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+            side: THREE.BackSide,
+            depthWrite: false
+        });
+        
+        skyDome = new THREE.Mesh(skyGeo, skyMat);
+        scene.add(skyDome);
+
+        // Create Sun Group (will be positioned relative to camera)
+        sunGroup = new THREE.Group();
+        
+        // Procedurally generate glowing textures for the sun elements
+        const createGlowTexture = (innerColor, outerColor, ratio) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+            grad.addColorStop(0, innerColor);
+            grad.addColorStop(ratio, outerColor);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 256, 256);
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const coreTex = createGlowTexture('rgba(255,255,255,1)', 'rgba(255,255,230,0.5)', 0.25);
+        const glowTex = createGlowTexture('rgba(255,220,100,0.9)', 'rgba(255,120,40,0.25)', 0.35);
+        const auraTex = createGlowTexture('rgba(255,100,20,0.4)', 'rgba(255,50,0,0.05)', 0.5);
+
+        const coreMat = new THREE.SpriteMaterial({ map: coreTex, blending: THREE.AdditiveBlending, transparent: true });
+        sunCore = new THREE.Sprite(coreMat);
+        sunCore.scale.set(16, 16, 1);
+        sunGroup.add(sunCore);
+
+        const glowMat = new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, transparent: true });
+        sunGlow = new THREE.Sprite(glowMat);
+        sunGlow.scale.set(45, 45, 1);
+        sunGroup.add(sunGlow);
+
+        const auraMat = new THREE.SpriteMaterial({ map: auraTex, blending: THREE.AdditiveBlending, transparent: true });
+        sunAura = new THREE.Sprite(auraMat);
+        sunAura.scale.set(100, 100, 1);
+        sunGroup.add(sunAura);
+
+        scene.add(sunGroup);
+    }
+
+    function createGodRays() {
+        godRays = [];
+        const rayCount = 18;
+        
+        // Shared geometry to save memory
+        // Pivot is at the bottom (translated Y by height/2)
+        const height = 40;
+        const radiusBottom = 4.5;
+        const radiusTop = 0.2;
+        const geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 8, 4, true);
+        geo.translate(0, height / 2, 0); // bottom at Y = 0
+        
+        // Vertex colors for soft vertical gradient (black at top/bottom, bright in middle-low)
+        const pos = geo.attributes.position;
+        const colors = [];
+        for (let i = 0; i < pos.count; i++) {
+            const y = pos.getY(i); // ranges from 0 to height
+            const t = y / height;  // 0 at bottom, 1 at top
+            
+            // Brightest near bottom-mid, fading to black at the top and absolute bottom
+            let intensity = 0;
+            if (t < 0.1) {
+                intensity = (t / 0.1) * 0.25; // fade in from bottom
+            } else {
+                intensity = Math.pow(1.0 - (t - 0.1) / 0.9, 2.2) * 0.25; // fade out towards top
+            }
+            
+            // Warm sunset light colors (warm orange/gold)
+            colors.push(intensity * 1.0, intensity * 0.75, intensity * 0.45);
+        }
+        geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        
+        for (let i = 0; i < rayCount; i++) {
+            let x, z, hVal;
+            do {
+                x = (Math.random() - 0.5) * 260;
+                z = (Math.random() - 0.5) * 260;
+                hVal = getTerrainHeight(x, z);
+            } while (Math.sqrt(x*x + z*z) < 12 || hVal < waterLevel);
+            
+            const mat = new THREE.MeshBasicMaterial({
+                vertexColors: true,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+                opacity: 0.7 + Math.random() * 0.3
+            });
+            
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, hVal, z);
+            
+            scene.add(mesh);
+            
+            godRays.push({
+                mesh: mesh,
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.8 + Math.random() * 0.6,
+                baseOpacity: 0.5 + Math.random() * 0.5
+            });
+        }
+    }
+
+    function createBirds() {
+        birds = [];
+        const birdCount = 6;
+        
+        // Shared material for all birds
+        birdMaterial = new THREE.MeshStandardMaterial({
+            color: 0x181c15, // charcoal forest bird
+            roughness: 0.8,
+            metalness: 0.1,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 1.0
+        });
+        
+        // Low-poly bird parts
+        const bodyGeo = new THREE.ConeGeometry(0.12, 0.5, 4);
+        bodyGeo.rotateX(Math.PI / 2); // face forward along Z
+        
+        const headGeo = new THREE.SphereGeometry(0.08, 4, 4);
+        headGeo.translate(0, 0.05, 0.25); // place on head/front
+        
+        const tailGeo = new THREE.BoxGeometry(0.15, 0.01, 0.25);
+        tailGeo.translate(0, 0, -0.32); // place at tail/rear
+        
+        // Wing geometry
+        const wingGeo = new THREE.BoxGeometry(0.6, 0.015, 0.2);
+        wingGeo.translate(-0.3, 0, 0); // pivot at wing joint
+        
+        const rightWingGeo = wingGeo.clone().translate(0.6, 0, 0); // pivot at other wing joint
+        
+        for (let i = 0; i < birdCount; i++) {
+            const birdGroup = new THREE.Group();
+            
+            // Assemble body, head, tail
+            const body = new THREE.Mesh(bodyGeo, birdMaterial);
+            const head = new THREE.Mesh(headGeo, birdMaterial);
+            const tail = new THREE.Mesh(tailGeo, birdMaterial);
+            birdGroup.add(body);
+            birdGroup.add(head);
+            birdGroup.add(tail);
+            
+            // Assemble left wing
+            const leftWingGroup = new THREE.Group();
+            leftWingGroup.position.set(-0.08, 0.02, 0);
+            const leftWingMesh = new THREE.Mesh(wingGeo, birdMaterial);
+            leftWingGroup.add(leftWingMesh);
+            birdGroup.add(leftWingGroup);
+            
+            // Assemble right wing
+            const rightWingGroup = new THREE.Group();
+            rightWingGroup.position.set(0.08, 0.02, 0);
+            const rightWingMesh = new THREE.Mesh(rightWingGeo, birdMaterial);
+            rightWingGroup.add(rightWingMesh);
+            birdGroup.add(rightWingGroup);
+            
+            // Cast shadows for realism
+            birdGroup.castShadow = true;
+            body.castShadow = true;
+            head.castShadow = true;
+            tail.castShadow = true;
+            leftWingMesh.castShadow = true;
+            rightWingMesh.castShadow = true;
+            
+            scene.add(birdGroup);
+            
+            // Orbit variables
+            const orbitRadius = 50 + Math.random() * 55;
+            const startAngle = Math.random() * Math.PI * 2;
+            const height = 20 + Math.random() * 9;
+            const orbitSpeed = (0.08 + Math.random() * 0.08) * (Math.random() > 0.5 ? 1 : -1);
+            
+            birds.push({
+                mesh: birdGroup,
+                leftWing: leftWingGroup,
+                rightWing: rightWingGroup,
+                angle: startAngle,
+                pathRadius: orbitRadius,
+                pathCenter: new THREE.Vector3((Math.random() - 0.5) * 40, 0, (Math.random() - 0.5) * 40),
+                height: height,
+                orbitSpeed: orbitSpeed,
+                waveSpeed: 1.5 + Math.random() * 1.5,
+                flapSpeed: 10 + Math.random() * 6,
+                phase: Math.random() * Math.PI * 2,
+                glideTimer: Math.random() * 4,
+                isGliding: false
+            });
+        }
+    }
+
+    function updateSkySunAndGodRays(time, delta) {
+        if (!isGameRunning) return;
+        
+        let progress = 0;
+        if (isTransitioningToNight) {
+            const totalSecondsPast6 = (gameHour === 6 ? (gameMinute * 60 + gameSecond) : 0);
+            progress = totalSecondsPast6 / 15.0;
+            progress = Math.min(1.0, Math.max(0.0, progress));
+        }
+        
+        // Calculate sun position in sunset arc (starts high, sets below horizon)
+        const sunY = 25 - progress * 40;
+        const sunX = 40;
+        const sunZ = 30 + progress * 10;
+        const sunDir = new THREE.Vector3(sunX, sunY, sunZ).normalize();
+        
+        // 1. Center sky dome and transition its colors to deep night
+        if (skyDome && camera) {
+            skyDome.position.copy(camera.position);
+            
+            const startSkyMult = new THREE.Color(1.0, 1.0, 1.0);
+            const endSkyMult = new THREE.Color(0.03, 0.03, 0.05);
+            skyDome.material.color.copy(startSkyMult.clone().lerp(endSkyMult, progress));
+        }
+        
+        // 2. Position and color the Sun
+        if (sunGroup && camera) {
+            const sunDistance = 225;
+            sunGroup.position.copy(camera.position).addScaledVector(sunDir, sunDistance);
+            
+            const baseColor = new THREE.Color(1.0, 1.0, 1.0);
+            const sunsetRed = new THREE.Color(1.0, 0.35, 0.05);
+            const currentSunColor = baseColor.clone().lerp(sunsetRed, progress);
+            
+            if (sunGlow) sunGlow.material.color.copy(currentSunColor);
+            if (sunAura) sunAura.material.color.copy(currentSunColor);
+            
+            let sunOpacity = 1.0;
+            if (sunY < 0) {
+                sunOpacity = Math.max(0.0, 1.0 - (-sunY / 15.0));
+            }
+            sunOpacity *= (1.0 - progress * 0.95);
+            
+            if (sunCore) sunCore.material.opacity = sunOpacity;
+            if (sunGlow) sunGlow.material.opacity = sunOpacity * 0.85;
+            if (sunAura) sunAura.material.opacity = sunOpacity * 0.45;
+        }
+        
+        // Track directional light position and color with the sun
+        if (directionalLight) {
+            directionalLight.position.set(sunX, sunY, sunZ);
+            
+            const baseSunColor = new THREE.Color(0xff7a3b);
+            const sunsetRedColor = new THREE.Color(0xff2200);
+            directionalLight.color.copy(baseSunColor.clone().lerp(sunsetRedColor, progress));
+        }
+        
+        // 3. Align god rays and apply shimmer
+        if (godRays.length > 0) {
+            const sunDirNeg = sunDir.clone().negate();
+            const alignQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sunDirNeg);
+            
+            godRays.forEach(ray => {
+                ray.mesh.quaternion.copy(alignQuat);
+                
+                const shimmer = Math.sin(time * 0.001 * ray.speed + ray.phase) * 0.12 + 0.88;
+                const fade = Math.max(0.0, 1.0 - progress);
+                
+                ray.mesh.material.opacity = ray.baseOpacity * shimmer * fade;
+                ray.mesh.visible = (ray.mesh.material.opacity > 0.01);
+            });
+        }
+    }
+
+    function updateBirds(time, delta) {
+        if (!isGameRunning || birds.length === 0) return;
+        
+        let transitionProgress = 0;
+        if (isTransitioningToNight) {
+            const totalSecondsPast6 = (gameHour === 6 ? (gameMinute * 60 + gameSecond) : 0);
+            transitionProgress = totalSecondsPast6 / 15.0;
+            transitionProgress = Math.min(1.0, Math.max(0.0, transitionProgress));
+        }
+        
+        birds.forEach(bird => {
+            // Flight movement
+            bird.angle += bird.orbitSpeed * (60 * delta) * 0.015;
+            
+            const yOffset = Math.sin(time * 0.001 * bird.waveSpeed + bird.phase) * 1.2;
+            const bx = bird.pathCenter.x + Math.cos(bird.angle) * bird.pathRadius;
+            const bz = bird.pathCenter.z + Math.sin(bird.angle) * bird.pathRadius;
+            const by = bird.height + yOffset;
+            
+            const nextAngle = bird.angle + bird.orbitSpeed * 0.05;
+            const nX = bird.pathCenter.x + Math.cos(nextAngle) * bird.pathRadius;
+            const nZ = bird.pathCenter.z + Math.sin(nextAngle) * bird.pathRadius;
+            
+            const currentPos = new THREE.Vector3(bx, by, bz);
+            const targetPos = new THREE.Vector3(nX, by, nZ);
+            
+            bird.mesh.position.copy(currentPos);
+            bird.mesh.lookAt(targetPos);
+            
+            // Banking inward on turns
+            const rollDirection = bird.orbitSpeed > 0 ? 1 : -1;
+            bird.mesh.rotateZ(rollDirection * 0.35);
+            
+            // Gliding behavior logic
+            bird.glideTimer -= delta;
+            if (bird.glideTimer <= 0) {
+                bird.isGliding = !bird.isGliding;
+                bird.glideTimer = bird.isGliding ? (1.5 + Math.random() * 1.5) : (3.0 + Math.random() * 3.0);
+            }
+            
+            let flapAngle = 0;
+            if (!bird.isGliding) {
+                flapAngle = Math.sin(time * 0.008 * bird.flapSpeed + bird.phase) * 0.65;
+            } else {
+                flapAngle = 0.08; // subtle wing lift during gliding
+            }
+            
+            bird.leftWing.rotation.z = flapAngle;
+            bird.rightWing.rotation.z = -flapAngle;
+            
+            // Shrink birds as they fly away/hide during sunset
+            if (transitionProgress > 0.0) {
+                const scale = Math.max(0.001, 1.0 - transitionProgress);
+                bird.mesh.scale.set(scale, scale, scale);
+            } else {
+                bird.mesh.scale.set(1.0, 1.0, 1.0);
+            }
+        });
+        
+        // Fade bird material opacity
+        if (birdMaterial) {
+            birdMaterial.opacity = transitionProgress > 0.8 ? Math.max(0.0, 1.0 - (transitionProgress - 0.8) / 0.2) : 1.0;
+        }
+    }
+
     function checkCollision(x, z) {
         if (Math.abs(x) > boundarySize || Math.abs(z) > boundarySize) {
             showDangerBoundaryPrompt();
@@ -2283,6 +2654,16 @@
             }
             scene = null;
             camera = null;
+            
+            // Clean up resources to prevent memory leaks
+            godRays = [];
+            birds = [];
+            skyDome = null;
+            sunGroup = null;
+            sunGlow = null;
+            sunCore = null;
+            sunAura = null;
+            birdMaterial = null;
             
             setTimeout(() => {
                 fade.classList.remove('active');
@@ -2505,6 +2886,8 @@
             
             updateHikersAndInteractions(delta);
             updateAtmosphere(delta);
+            updateSkySunAndGodRays(time, delta);
+            updateBirds(time, delta);
         }
         
         renderer.render(scene, camera);
