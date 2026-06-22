@@ -4207,7 +4207,6 @@ function renderSidebarShop() {
         html += `<div style="display:flex; flex-direction:column; gap: 15px; padding: 10px 0;">`;
         html += `<button class="shop-btn" ${disAttr} style="width: 100%; padding: 25px; font-size: 18px; background: #111; color: #FFF; border: 2px solid #333; border-radius: 8px; font-weight: 900; ${disStyle} transition: 0.3s;" onmouseover="this.style.borderColor='#39FF14'" onmouseout="this.style.borderColor='#333'" onclick="window.location.href='chess_transition.html';">♟️ CHESS</button>`;
         html += `<button class="shop-btn" ${disAttr} style="width: 100%; padding: 25px; font-size: 18px; background: #111; color: #FFF; border: 2px solid #333; border-radius: 8px; font-weight: 900; ${disStyle} transition: 0.3s;" onmouseover="this.style.borderColor='#FFD700'" onmouseout="this.style.borderColor='#333'" onclick="window.location.href='ludo_login.html';">🎲 LUDO</button>`;
-        html += `<button class="shop-btn" ${disAttr} style="width: 100%; padding: 25px; font-size: 18px; background: #111; color: #FFF; border: 2px solid #333; border-radius: 8px; font-weight: 900; ${disStyle} transition: 0.3s;" onmouseover="this.style.borderColor='#00f2ff'" onmouseout="this.style.borderColor='#333'" onclick="window.location.href='snake_intro.html';">🐍 SNAKE REALM</button>`;
         html += `<button class="shop-btn" ${disAttr} style="width: 100%; padding: 25px; font-size: 18px; background: #111; color: #FFF; border: 2px solid #333; border-radius: 8px; font-weight: 900; ${disStyle} transition: 0.3s;" onmouseover="this.style.borderColor='#FF4500'" onmouseout="this.style.borderColor='#333'" onclick="window.customAlert('Tic Tac Toe coming soon!', 'MORE GAMES');">❌ TIC TAC TOE</button>`;
         html += `<button class="shop-btn" ${disAttr} style="width: 100%; padding: 25px; font-size: 18px; background: #111; color: #FFF; border: 2px solid #333; border-radius: 8px; font-weight: 900; ${disStyle} transition: 0.3s;" onmouseover="this.style.borderColor='#ADFF2F'" onmouseout="this.style.borderColor='#333'" onclick="window.location.href='hand_cricket_transition.html';">🏏 HAND CRICKET</button>`;
         html += `<button class="shop-btn" ${disAttr} style="width: 100%; padding: 25px; font-size: 18px; background: #111; color: #FF3E3E; border: 2px solid #333; border-radius: 8px; font-weight: 900; ${disStyle} transition: 0.3s;" onmouseover="this.style.borderColor='#FF3E3E'; this.style.boxShadow='0 0 15px rgba(255, 62, 62, 0.3)';" onmouseout="this.style.borderColor='#333'; this.style.boxShadow='none';" onclick="window.switchToHorrorGame();">📱 PHONE MESSAGE HORROR</button>`;
@@ -8655,8 +8654,6 @@ window.launchGame = function(game) {
         window.location.href = 'ludo_login.html';
     } else if (game === 'cricket') {
         window.location.href = 'hand_cricket_login.html';
-    } else if (game === 'snake') {
-        window.location.href = 'snake_login.html';
     } else if (game === 'noexit') {
         window.location.href = 'no_exit.html';
     }
