@@ -1434,6 +1434,7 @@
     let godRays = [];
     let birds = [];
     let birdMaterial;
+    let waterFrameCount = 0; // Throttle counter for water mesh updates
     let lastFrameTime = 0;
     let playerSpeed = 0.06;
     let boundarySize = 150;
@@ -1579,7 +1580,8 @@
         
         renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        // Capped at 1.25 to prevent dynamic shadow/pixel rendering bottleneck on high-DPI/Retina screens
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
         renderer.shadowMap.enabled = true;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
@@ -1665,9 +1667,8 @@
         // Flashlight SpotLight
         spotLight = new THREE.SpotLight(0xffffff, 0, 45, Math.PI / 5.5, 0.5, 1);
         spotLight.position.set(0, 1.6, 0);
-        spotLight.castShadow = true;
-        spotLight.shadow.mapSize.width = 1024;
-        spotLight.shadow.mapSize.height = 1024;
+        // Disabled flashlight shadow-casting for massive FPS improvement while rotating flashlight
+        spotLight.castShadow = false; 
         scene.add(spotLight);
         scene.add(spotLight.target);
         
@@ -1697,7 +1698,7 @@
 
     function createForest() {
         colliders = [];
-        const treeCount = 480; // Reduced from 650 for better performance/smoothness
+        const treeCount = 320; // Reduced from 480 to 320 for significant rendering speedups
         
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2e1d0c, roughness: 0.95 });
         const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xdcdcdc, roughness: 0.85 }); // Light birch bark
@@ -1885,7 +1886,7 @@
             const rock = new THREE.Mesh(rockGeo, rockMat);
             rock.position.set(x, hVal + radius * 0.3, z);
             rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-            rock.castShadow = true;
+            rock.castShadow = false; // Rocks do not need to cast shadows in heavy forest fog
             rock.receiveShadow = true;
             scene.add(rock);
             
@@ -1937,7 +1938,7 @@
             // Put base at Y=0 locally, position on top of the terrain base
             mesh.position.set(x, terrainH + mHeight / 2 - 2, z);
             
-            mesh.castShadow = true;
+            mesh.castShadow = false; // Disable shadow casting for massive performance save on boundary mountains
             mesh.receiveShadow = true;
             
             scene.add(mesh);
@@ -2899,8 +2900,9 @@
                 }
             }
             
-            // Dynamic wave simulation on water geometry
-            if (waterMesh) {
+            // Throttled dynamic wave simulation on water geometry (runs every 3rd frame to reduce CPU wave calculation bottleneck)
+            waterFrameCount++;
+            if (waterMesh && waterFrameCount % 3 === 0) {
                 const pos = waterMesh.geometry.attributes.position;
                 const waterTime = time * 0.0016;
                 for (let i = 0; i < pos.count; i++) {
