@@ -1570,8 +1570,8 @@
         const canvas = document.getElementById('game-canvas');
         scene = new THREE.Scene();
         
-        // Evening orange/sunset fog
-        scene.fog = new THREE.FogExp2(0xe08b5e, 0.015);
+        // Evening orange/sunset fog (adjusted density for better visibility)
+        scene.fog = new THREE.FogExp2(0xe08b5e, 0.008);
         
         camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 1.6, 0);
@@ -1628,7 +1628,8 @@
         scene.add(floor);
 
         // Water Mesh (adds rivers and lakes where terrain is lower than waterLevel)
-        const waterGeo = new THREE.PlaneGeometry(380, 380, 32, 32);
+        // Optimized grid segments to 12x12 for game smoothness
+        const waterGeo = new THREE.PlaneGeometry(380, 380, 12, 12);
         const waterMat = new THREE.MeshStandardMaterial({
             color: 0x071e2b,
             roughness: 0.08,
@@ -1643,8 +1644,8 @@
         waterMesh.receiveShadow = true;
         scene.add(waterMesh);
         
-        // Sunset lights
-        ambientLight = new THREE.AmbientLight(0xe08b5e, 0.4);
+        // Sunset lights (increased ambient lighting for visibility)
+        ambientLight = new THREE.AmbientLight(0xe08b5e, 0.55);
         scene.add(ambientLight);
         
         directionalLight = new THREE.DirectionalLight(0xff7a3b, 1.2);
@@ -1695,7 +1696,7 @@
 
     function createForest() {
         colliders = [];
-        const treeCount = 650;
+        const treeCount = 480; // Reduced from 650 for better performance/smoothness
         
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2e1d0c, roughness: 0.95 });
         const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xdcdcdc, roughness: 0.85 }); // Light birch bark
@@ -1721,6 +1722,9 @@
             const treeGroup = new THREE.Group();
             treeGroup.position.set(x, hVal, z);
             
+            let swaySpeed = 0.5;
+            let maxSwayVal = 0.015;
+
             if (treeType === 'spruce') {
                 const height = 5.0 + Math.random() * 4.0;
                 const trunkRadius = 0.16 + Math.random() * 0.12;
@@ -1729,7 +1733,7 @@
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.8, trunkRadius, height, 6);
                 const trunk = new THREE.Mesh(trunkGeo, trunkMat);
                 trunk.position.y = height / 2;
-                trunk.castShadow = true;
+                trunk.castShadow = true; // Keep shadow casting on trunks for realistic ground shadows
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
@@ -1742,19 +1746,15 @@
                     const coneGeo = new THREE.ConeGeometry(coneRadius, coneHeight, 6);
                     const cone = new THREE.Mesh(coneGeo, leafMat);
                     cone.position.y = height * 0.6 + c * (coneHeight * 0.45);
-                    cone.castShadow = true;
+                    cone.castShadow = false; // Disable to dramatically improve FPS
                     cone.receiveShadow = true;
                     treeGroup.add(cone);
-                    
-                    windSwayObjects.push({
-                        mesh: cone,
-                        phase: Math.random() * Math.PI * 2,
-                        speed: 1.2 + Math.random() * 0.6,
-                        maxSway: 0.04 + Math.random() * 0.02
-                    });
                 }
                 colliders.push({ x: x, z: z, radius: trunkRadius * 1.8 });
                 
+                swaySpeed = 0.6 + Math.random() * 0.3;
+                maxSwayVal = 0.014 + Math.random() * 0.008;
+
             } else if (treeType === 'oak') {
                 const height = 4.0 + Math.random() * 3.0;
                 const trunkRadius = 0.25 + Math.random() * 0.15;
@@ -1780,19 +1780,15 @@
                     const oy = height * 0.95 + (Math.random() * 1.0);
                     
                     sphere.position.set(ox, oy, oz);
-                    sphere.castShadow = true;
+                    sphere.castShadow = false; // Disable to dramatically improve FPS
                     sphere.receiveShadow = true;
                     treeGroup.add(sphere);
-                    
-                    windSwayObjects.push({
-                        mesh: sphere,
-                        phase: Math.random() * Math.PI * 2,
-                        speed: 1.0 + Math.random() * 0.5,
-                        maxSway: 0.03 + Math.random() * 0.015
-                    });
                 }
                 colliders.push({ x: x, z: z, radius: trunkRadius * 2.0 });
                 
+                swaySpeed = 0.4 + Math.random() * 0.3;
+                maxSwayVal = 0.01 + Math.random() * 0.006;
+
             } else if (treeType === 'birch') {
                 const height = 6.0 + Math.random() * 3.0;
                 const trunkRadius = 0.12 + Math.random() * 0.06;
@@ -1811,19 +1807,15 @@
                 const foliage = new THREE.Mesh(leafGeo, leafMat);
                 foliage.position.y = height * 0.85;
                 foliage.scale.set(1, 1.6, 1);
-                foliage.castShadow = true;
+                foliage.castShadow = false; // Disable to dramatically improve FPS
                 foliage.receiveShadow = true;
                 treeGroup.add(foliage);
                 
-                windSwayObjects.push({
-                    mesh: foliage,
-                    phase: Math.random() * Math.PI * 2,
-                    speed: 1.4 + Math.random() * 0.8,
-                    maxSway: 0.05 + Math.random() * 0.02
-                });
-                
                 colliders.push({ x: x, z: z, radius: trunkRadius * 1.8 });
                 
+                swaySpeed = 0.7 + Math.random() * 0.4;
+                maxSwayVal = 0.016 + Math.random() * 0.01;
+
             } else if (treeType === 'dead') {
                 const height = 4.0 + Math.random() * 3.5;
                 const trunkRadius = 0.2 + Math.random() * 0.1;
@@ -1858,18 +1850,23 @@
                     pivot.rotation.y = Math.random() * Math.PI * 2;
                     
                     treeGroup.add(pivot);
-                    
-                    windSwayObjects.push({
-                        mesh: pivot,
-                        phase: Math.random() * Math.PI * 2,
-                        speed: 0.8 + Math.random() * 0.4,
-                        maxSway: 0.015 + Math.random() * 0.01
-                    });
                 }
                 colliders.push({ x: x, z: z, radius: trunkRadius * 1.8 });
+                
+                swaySpeed = 0.5 + Math.random() * 0.3;
+                maxSwayVal = 0.012 + Math.random() * 0.007;
             }
             
             scene.add(treeGroup);
+            
+            // Push the ENTIRE tree group to sway. Bends the tree naturally from the roots
+            // and avoids floating branches/foliage.
+            windSwayObjects.push({
+                mesh: treeGroup,
+                phase: Math.random() * Math.PI * 2,
+                speed: swaySpeed,
+                maxSway: maxSwayVal
+            });
         }
         
         // Spawn rocks
@@ -2079,9 +2076,9 @@
     function updateAtmosphere(delta) {
         if (!isTransitioningToNight) {
             scene.fog.color.setHex(0xe08b5e);
-            scene.fog.density = 0.015;
+            scene.fog.density = 0.008;
             ambientLight.color.setHex(0xe08b5e);
-            ambientLight.intensity = 0.4;
+            ambientLight.intensity = 0.55;
             directionalLight.color.setHex(0xff7a3b);
             directionalLight.intensity = 1.2;
             
@@ -2099,13 +2096,13 @@
         const endFogColor = new THREE.Color(0x030815);
         const currentFogColor = startFogColor.clone().lerp(endFogColor, progress);
         scene.fog.color.copy(currentFogColor);
-        scene.fog.density = 0.015 + progress * 0.025;
+        scene.fog.density = 0.008 + progress * 0.01; // Transition to 0.018 density max (clearer night)
         
         const startAmbientColor = new THREE.Color(0xe08b5e);
         const endAmbientColor = new THREE.Color(0x050c1e);
         const currentAmbientColor = startAmbientColor.clone().lerp(endAmbientColor, progress);
         ambientLight.color.copy(currentAmbientColor);
-        ambientLight.intensity = 0.4 - progress * 0.35;
+        ambientLight.intensity = 0.55 - progress * 0.5; // Smoothly fades to 0.05 ambient light
         
         directionalLight.intensity = 1.2 * (1.0 - progress);
         
