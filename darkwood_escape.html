@@ -3,81 +3,823 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon | ATC ARCADE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Darkwood Escape | ATC ARCADE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body, html {
             width: 100%; height: 100%;
-            background: #020204;
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: #000;
         }
 
-        .card {
-            background: rgba(15,15,20,0.9);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 50px 40px;
+        /* ─── PAGE WRAPPER ─── */
+        .page {
+            position: fixed;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        .page.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ═══════════════════════════════════
+           PAGE 1: LOADING SCREEN
+        ═══════════════════════════════════ */
+        #loading-page {
+            background: url('darkwood_loading_bg.png') center/cover no-repeat;
+        }
+
+        #loading-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.3) 0%,
+                rgba(0,0,0,0.15) 40%,
+                rgba(0,0,0,0.75) 80%,
+                rgba(0,0,0,0.97) 100%
+            );
+        }
+
+        /* Top title */
+        .loading-title {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
             text-align: center;
-            backdrop-filter: blur(20px);
-            max-width: 400px;
-            width: 90%;
         }
-
-        .icon { font-size: 60px; margin-bottom: 20px; }
-
-        h1 {
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        p {
+        .loading-title .project-tag {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            color: #555;
-            letter-spacing: 2px;
-            margin-bottom: 35px;
-            line-height: 1.6;
+            letter-spacing: 6px;
+            color: #5a8a5a;
             text-transform: uppercase;
+            margin-bottom: 8px;
         }
-
-        .btn {
-            background: transparent;
-            color: #888;
-            border: 1px solid #333;
-            padding: 12px 28px;
-            border-radius: 8px;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 12px;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
-        .btn:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: #555;
+        .loading-title h1 {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(36px, 7vw, 70px);
+            letter-spacing: 4px;
             color: #fff;
+            text-shadow: 0 0 40px rgba(80,200,80,0.3), 0 4px 20px rgba(0,0,0,0.8);
+        }
+
+        /* Flashlight hand overlay at bottom-left */
+        .hand-glow {
+            position: absolute;
+            bottom: 0;
+            left: -30px;
+            width: 280px;
+            height: 260px;
+            background: radial-gradient(ellipse at 80% 90%, rgba(255,230,140,0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Loading bar — bottom right */
+        .loading-bar-container {
+            position: absolute;
+            bottom: 36px;
+            right: 36px;
+            width: 260px;
+        }
+        .loading-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #6a9a6a;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .loading-label span { color: #8fcc8f; }
+        .bar-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2d7a2d, #6fcf6f, #a8ffa8);
+            border-radius: 4px;
+            transition: width 0.12s linear;
+            box-shadow: 0 0 8px rgba(111,207,111,0.6);
+        }
+        .bar-glow {
+            position: absolute;
+            top: -3px;
+            right: 0;
+            width: 20px;
+            height: 10px;
+            background: radial-gradient(circle, rgba(111,207,111,0.9), transparent);
+            pointer-events: none;
+        }
+
+        /* Tip at center-bottom */
+        .loading-tip {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+            white-space: nowrap;
+            animation: tipPulse 2s ease-in-out infinite;
+        }
+        @keyframes tipPulse { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+
+        /* Fog particle */
+        .fog-layer {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 100%, rgba(30,60,30,0.25) 0%, transparent 70%);
+            animation: fogDrift 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes fogDrift {
+            from { transform: scaleX(1) translateX(0); }
+            to   { transform: scaleX(1.08) translateX(2%); }
+        }
+
+
+        /* ═══════════════════════════════════
+           PAGE 2: INSTRUCTIONS
+        ═══════════════════════════════════ */
+        #instructions-page {
+            background: linear-gradient(135deg, #020f02 0%, #04160a 50%, #010d04 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0;
+        }
+
+        /* Animated tree silhouette bg */
+        #instructions-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Cpath d='M50 600 L80 300 L60 300 L100 100 L80 100 L120 0 L160 100 L140 100 L180 300 L160 300 L190 600Z' fill='rgba(0,20,0,0.4)'/%3E%3Cpath d='M700 600 L720 320 L705 320 L735 150 L718 150 L750 60 L782 150 L765 150 L795 320 L780 320 L800 600Z' fill='rgba(0,20,0,0.35)'/%3E%3Cpath d='M350 600 L375 400 L358 400 L390 230 L370 230 L400 130 L430 230 L410 230 L442 400 L425 400 L450 600Z' fill='rgba(0,15,0,0.3)'/%3E%3C/svg%3E") left bottom/cover no-repeat;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .instr-inner {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 700px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 24px 24px;
+        }
+
+        .instr-header {
+            text-align: center;
+            margin-bottom: 22px;
+            flex-shrink: 0;
+        }
+        .instr-header .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 5px;
+            color: #3a6a3a;
+            margin-bottom: 6px;
+        }
+        .instr-header h2 {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(28px, 5vw, 48px);
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(80,200,80,0.25);
+            line-height: 1;
+        }
+        .instr-header .sub {
+            font-size: 13px;
+            color: #4a7a4a;
+            margin-top: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 2px;
+        }
+
+        .divider-line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3a8a3a, transparent);
+            margin: 0 auto 20px;
+        }
+
+        /* Scrollable list area */
+        .instr-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #1a4a1a transparent;
+        }
+        .instr-scroll::-webkit-scrollbar { width: 3px; }
+        .instr-scroll::-webkit-scrollbar-track { background: transparent; }
+        .instr-scroll::-webkit-scrollbar-thumb { background: #1a4a1a; border-radius: 4px; }
+
+        .instr-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .instr-card {
+            background: rgba(5,20,5,0.7);
+            border: 1px solid rgba(50,120,50,0.2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: border-color 0.3s, background 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .instr-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px; height: 100%;
+            background: linear-gradient(to bottom, #2d7a2d, transparent);
+            border-radius: 10px 0 0 10px;
+        }
+        .instr-card:hover {
+            background: rgba(10,35,10,0.85);
+            border-color: rgba(80,180,80,0.35);
+        }
+        .instr-num {
+            font-family: 'Creepster', cursive;
+            font-size: 22px;
+            color: #2d7a2d;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .instr-body { flex: 1; }
+        .instr-body strong {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #9de89d;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+        .instr-body p {
+            font-size: 11px;
+            color: #5a8a5a;
+            line-height: 1.5;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .instr-footer {
+            flex-shrink: 0;
+            padding-top: 18px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .btn-continue {
+            background: linear-gradient(135deg, #1a5c1a, #2d8a2d);
+            color: #d0ffd0;
+            border: 1px solid #3aaa3a;
+            padding: 14px 50px;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(50,150,50,0.3);
+        }
+        .btn-continue:hover {
+            background: linear-gradient(135deg, #228822, #3aaa3a);
+            box-shadow: 0 0 30px rgba(80,200,80,0.45);
+            transform: translateY(-2px);
+        }
+        .btn-back-sm {
+            background: transparent;
+            color: #3a5a3a;
+            border: 1px solid #1a3a1a;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-back-sm:hover { color: #5a8a5a; border-color: #2a5a2a; }
+
+
+        /* ═══════════════════════════════════
+           PAGE 3: LOBBY
+        ═══════════════════════════════════ */
+        #lobby-page {
+            background: url('darkwood_lobby_bg.png') center/cover no-repeat;
+        }
+        #lobby-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.6) 0%,
+                rgba(0,5,0,0.3) 40%,
+                rgba(0,0,0,0.7) 75%,
+                rgba(0,0,0,0.95) 100%
+            );
+        }
+        /* Vignette */
+        #lobby-page::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 120px rgba(0,0,0,0.7);
+            pointer-events: none;
+        }
+
+        .lobby-inner {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: clamp(40px, 8vh, 90px);
+        }
+
+        .lobby-title-block {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .lobby-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 6px;
+            color: #5a8a5a;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            animation: tagFlicker 4s ease-in-out infinite;
+        }
+        @keyframes tagFlicker {
+            0%,100%{opacity:1} 48%{opacity:1} 50%{opacity:0.4} 52%{opacity:1}
+        }
+        .lobby-title {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(44px, 9vw, 90px);
+            letter-spacing: 6px;
+            color: #fff;
+            text-shadow:
+                0 0 30px rgba(80,200,80,0.2),
+                0 0 60px rgba(40,120,40,0.15),
+                0 4px 30px rgba(0,0,0,0.9);
+            line-height: 0.95;
+        }
+        .lobby-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 4px;
+            color: #3a6a3a;
+            margin-top: 12px;
+            text-transform: uppercase;
+        }
+
+        .lobby-divider {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, #2a5a2a, transparent);
+            margin: 0 auto 40px;
+        }
+
+        /* Lobby buttons */
+        .lobby-btns {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .lobby-btn {
+            width: 100%;
+            padding: 16px 30px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 15px;
+            letter-spacing: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .lobby-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        .lobby-btn:hover::before { transform: translateX(100%); }
+
+        .btn-start {
+            background: linear-gradient(135deg, #1a5c1a, #2d8a2d);
+            color: #c8ffc8;
+            border: 1px solid rgba(80,180,80,0.4);
+            box-shadow: 0 0 25px rgba(50,150,50,0.3), 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .btn-start:hover {
+            background: linear-gradient(135deg, #228822, #3aaa3a);
+            box-shadow: 0 0 40px rgba(80,200,80,0.5), 0 6px 20px rgba(0,0,0,0.6);
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .btn-settings {
+            background: rgba(10,25,10,0.7);
+            color: #7aaa7a;
+            border: 1px solid rgba(50,100,50,0.35);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+        }
+        .btn-settings:hover {
+            background: rgba(15,35,15,0.8);
+            color: #a8d8a8;
+            border-color: rgba(80,150,80,0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-quit {
+            background: transparent;
+            color: #3a5a3a;
+            border: 1px solid rgba(30,70,30,0.4);
+        }
+        .btn-quit:hover {
+            color: #7a9a7a;
+            border-color: rgba(60,100,60,0.6);
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            background: rgba(80,200,80,0.4);
+            animation: float linear infinite;
+        }
+        @keyframes float {
+            0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 0.5; }
+            100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
+        }
+
+        /* Settings modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #040f04;
+            border: 1px solid rgba(50,120,50,0.3);
+            border-radius: 16px;
+            padding: 40px 36px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+        }
+        .modal-box h3 {
+            font-family: 'Creepster', cursive;
+            font-size: 30px;
+            color: #9de89d;
+            letter-spacing: 3px;
+            margin-bottom: 24px;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(50,100,50,0.15);
+        }
+        .setting-row label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #5a8a5a;
+            text-transform: uppercase;
+        }
+        .toggle {
+            width: 44px;
+            height: 22px;
+            background: #1a4a1a;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid rgba(50,120,50,0.3);
+            transition: background 0.3s;
+        }
+        .toggle.on { background: #2d8a2d; }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.3s;
+        }
+        .toggle.on::after { transform: translateX(22px); }
+        .vol-slider {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 3px;
+            background: #1a4a1a;
+            border-radius: 2px;
+            outline: none;
+        }
+        .vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #3aaa3a;
+            cursor: pointer;
+        }
+        .modal-close {
+            margin-top: 24px;
+            background: transparent;
+            border: 1px solid #1a4a1a;
+            color: #5a8a5a;
+            padding: 10px 30px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .modal-close:hover { border-color: #3a8a3a; color: #8acc8a; }
+
+        /* Scanlines overlay */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.04) 2px,
+                rgba(0,0,0,0.04) 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @media (max-width: 600px) {
+            .instr-grid { grid-template-columns: 1fr; }
+            .instr-inner { padding: 20px 16px 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="icon">🎮</div>
-        <h1>COMING SOON</h1>
-        <p>New game concept loading...<br>Stay tuned.</p>
-        <button class="btn" onclick="location.href='arcade_hub.html'">← Back to Arcade</button>
+
+<!-- Scanlines -->
+<div class="scanlines"></div>
+
+<!-- Floating particles -->
+<div class="particles" id="particles"></div>
+
+<!-- ═══ PAGE 1: LOADING ═══ -->
+<div class="page active" id="loading-page">
+    <div class="fog-layer"></div>
+    <div class="loading-title">
+        <div class="project-tag">◈ ATC ARCADE — PROJECT WOODS ◈</div>
+        <h1>DARKWOOD<br>ESCAPE</h1>
     </div>
+    <div class="hand-glow"></div>
+    <div class="loading-tip">ENTERING THE FOREST…</div>
+    <div class="loading-bar-container">
+        <div class="loading-label">
+            <span>LOADING ENVIRONMENT</span>
+            <span id="pct">0%</span>
+        </div>
+        <div class="bar-track">
+            <div class="bar-fill" id="bar"></div>
+            <div class="bar-glow" id="bar-glow"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ PAGE 2: INSTRUCTIONS ═══ -->
+<div class="page" id="instructions-page">
+    <div class="instr-inner">
+        <div class="instr-header">
+            <div class="tag">◈ READ BEFORE YOU ENTER ◈</div>
+            <h2>DARKWOOD ESCAPE</h2>
+            <div class="sub">Alternative Instructions 🌲</div>
+        </div>
+        <div class="divider-line"></div>
+
+        <div class="instr-scroll">
+            <div class="instr-grid" id="instr-grid"></div>
+        </div>
+
+        <div class="instr-footer">
+            <button class="btn-back-sm" onclick="location.href='arcade_hub.html'">← ARCADE</button>
+            <button class="btn-continue" onclick="goLobby()">ENTER FOREST →</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ PAGE 3: LOBBY ═══ -->
+<div class="page" id="lobby-page">
+    <div class="lobby-inner">
+        <div class="lobby-title-block">
+            <div class="lobby-tag">◈ PROJECT WOODS ◈</div>
+            <div class="lobby-title">DARKWOOD<br>ESCAPE</div>
+            <div class="lobby-subtitle">Night 01 — Survive Until Dawn</div>
+        </div>
+        <div class="lobby-divider"></div>
+        <div class="lobby-btns">
+            <button class="lobby-btn btn-start" id="btn-start">▶  START</button>
+            <button class="lobby-btn btn-settings" onclick="openSettings()">⚙  SETTINGS</button>
+            <button class="lobby-btn btn-quit" onclick="location.href='arcade_hub.html'">✕  QUIT</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal-box">
+        <h3>SETTINGS</h3>
+        <div class="setting-row">
+            <label>Sound FX</label>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+            <label>Music</label>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+            <label>Volume</label>
+            <input type="range" class="vol-slider" min="0" max="100" value="75">
+        </div>
+        <div class="setting-row">
+            <label>Vibration</label>
+            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <button class="modal-close" onclick="closeSettings()">CLOSE</button>
+    </div>
+</div>
+
+<script>
+    /* ─── INSTRUCTIONS DATA ─── */
+    const instructions = [
+        { title: "Trust Nothing",           text: "Not everything you see in the forest is real." },
+        { title: "Follow the Path Carefully", text: "Some paths lead to safety, others lead to danger." },
+        { title: "Listen for Warnings",     text: "Unusual sounds may signal nearby threats." },
+        { title: "Use Your Stamina Wisely", text: "Running constantly can leave you vulnerable." },
+        { title: "Stay Out of Sight",        text: "Some creatures react when they spot you." },
+        { title: "Watch Environmental Clues",text: "The forest may reveal hints about approaching danger." },
+        { title: "Control Your Light",       text: "Bright lights can attract unwanted attention." },
+        { title: "React Quickly",            text: "Certain events require immediate action to survive." },
+        { title: "Learn Enemy Behaviors",    text: "Different entities have different weaknesses and patterns." },
+        { title: "The Forest Changes",       text: "Locations may not remain the same throughout the night." },
+        { title: "Check Behind You",         text: "Some dangers approach silently from the rear." },
+        { title: "Survival Requires Awareness", text: "Staying alert is more important than moving fast." }
+    ];
+
+    /* Render instruction cards */
+    const grid = document.getElementById('instr-grid');
+    instructions.forEach((ins, i) => {
+        const card = document.createElement('div');
+        card.className = 'instr-card';
+        card.innerHTML = `
+            <div class="instr-num">${String(i+1).padStart(2,'0')}</div>
+            <div class="instr-body">
+                <strong>${ins.title}</strong>
+                <p>${ins.text}</p>
+            </div>`;
+        grid.appendChild(card);
+    });
+
+    /* ─── PAGE TRANSITIONS ─── */
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function goLobby() { showPage('lobby-page'); }
+
+    /* ─── LOADING BAR ─── */
+    let pct = 0;
+    const bar     = document.getElementById('bar');
+    const barGlow = document.getElementById('bar-glow');
+    const pctEl   = document.getElementById('pct');
+
+    const speeds = [
+        { target: 30,  delay: 60  },
+        { target: 55,  delay: 90  },
+        { target: 70,  delay: 50  },
+        { target: 78,  delay: 200 }, // small pause
+        { target: 92,  delay: 70  },
+        { target: 100, delay: 55  }
+    ];
+    let sIdx = 0;
+
+    function animateBar() {
+        if (sIdx >= speeds.length) return;
+        const { target, delay } = speeds[sIdx];
+        if (pct < target) {
+            pct++;
+            bar.style.width = pct + '%';
+            barGlow.style.left = `calc(${pct}% - 10px)`;
+            pctEl.textContent  = pct + '%';
+            setTimeout(animateBar, delay);
+        } else {
+            sIdx++;
+            if (sIdx < speeds.length) {
+                setTimeout(animateBar, speeds[sIdx - 1].delay * 3);
+            } else {
+                // Done — wait then go to instructions
+                setTimeout(() => showPage('instructions-page'), 700);
+            }
+        }
+    }
+    setTimeout(animateBar, 600);
+
+    /* ─── SETTINGS MODAL ─── */
+    function openSettings()  { document.getElementById('settings-modal').classList.add('open'); }
+    function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+
+    /* START btn → placeholder (game not built yet) */
+    document.getElementById('btn-start').addEventListener('click', () => {
+        alert('Game coming soon! Stay tuned.');
+    });
+
+    /* ─── FLOATING PARTICLES ─── */
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 28; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const dur   = 10 + Math.random() * 20;
+        const delay = Math.random() * 20;
+        const left  = Math.random() * 100;
+        const drift = (Math.random() - 0.5) * 120;
+        p.style.cssText = `
+            left:${left}%;
+            bottom:${-5 + Math.random() * 10}px;
+            width:${1 + Math.random() * 3}px;
+            height:${1 + Math.random() * 3}px;
+            --drift:${drift}px;
+            animation-duration:${dur}s;
+            animation-delay:-${delay}s;
+            opacity:${0.2 + Math.random() * 0.5};
+        `;
+        pc.appendChild(p);
+    }
+</script>
 </body>
 </html>
