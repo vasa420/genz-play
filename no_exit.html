@@ -1384,8 +1384,29 @@
                         <span id="sens-val" class="lobby-slider-value">1.00</span>
                     </div>
                 </div>
-                <div style="font-size: 11px; color: #666; margin-top: 10px;">
-                    Adjust the responsiveness of your head movements. High sensitivity may trigger faster ghost awareness.
+                <div style="font-size: 11px; color: #888; margin-top: 5px;">
+                    Adjust the responsiveness of your head movements.
+                </div>
+                <hr style="border: none; border-top: 1px solid rgba(255, 59, 48, 0.2); margin: 15px 0;">
+                <div>
+                    <label for="mic-sens-range">Microphone Sensitivity</label>
+                    <div class="lobby-slider-container">
+                        <input type="range" id="mic-sens-range" class="lobby-slider" min="0.1" max="5.0" step="0.1" value="1.0" oninput="updateMicSensitivityVal(this.value)">
+                        <span id="mic-sens-val" class="lobby-slider-value">1.0x</span>
+                    </div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <div style="font-size: 10px; color: #aaa; margin-bottom: 3px; display: flex; justify-content: space-between;">
+                        <span>Live Microphone Level:</span>
+                        <span id="mic-calib-status" style="color: #0f0; font-weight: bold;">SAFE</span>
+                    </div>
+                    <div style="width: 100%; height: 10px; background: #111; border: 1px solid #ff3b30; border-radius: 4px; overflow: hidden; position: relative; box-shadow: inset 0 0 5px rgba(0,0,0,0.8);">
+                        <div id="mic-calib-bar" style="width: 0%; height: 100%; background: linear-gradient(to right, #00ff00 0%, #ffff00 65%, #ff0000 100%); transition: width 0.05s;"></div>
+                        <div style="position: absolute; left: 36%; top: 0; width: 2px; height: 100%; background: #ff0000; box-shadow: 0 0 6px #ff0000;" title="Danger Threshold"></div>
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: #888; margin-top: 10px;">
+                    Calibrate microphone gain. Noise crossing the red marker alerts the ghost immediately.
                 </div>
             </div>
         </div>
@@ -2002,6 +2023,7 @@
         let micDataArray = null;
         let micVolume = 0;
         let micVolumeThreshold = 18; // alert ghost if level > threshold
+        let micSensitivity = parseFloat(localStorage.getItem('micSensitivity')) || 1.0;
         let ghostStalking = false;
         let ghostAlertTimer = 0;
         
@@ -2262,6 +2284,9 @@
             // Add Floor Wall Signs
             addFloorWallSigns();
 
+            // Spawn 3D door frames and ajar doors at transitions
+            spawnDoors();
+
             // Spawn Ground Floor Props
             spawnGroundFloorProps();
 
@@ -2342,39 +2367,120 @@
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#1c1c1c';
+            // 1. Base plaster background
+            ctx.fillStyle = '#2d2722';
             ctx.fillRect(0, 0, 512, 512);
 
-            for (let i = 0; i < 5000; i++) {
-                ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.25})`;
-                ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 4 + 1, Math.random() * 4 + 1);
+            // 2. Wallpaper vertical stripes
+            ctx.fillStyle = '#221d19';
+            for (let x = 16; x < 512; x += 32) {
+                ctx.fillRect(x, 25, 6, 325);
             }
 
-            for (let i = 0; i < 25; i++) {
-                ctx.fillStyle = `rgba(15, 25, 15, ${Math.random() * 0.3})`;
+            // 3. Plaster noise / grain
+            for (let i = 0; i < 4000; i++) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.22})`;
+                ctx.fillRect(Math.random() * 512, Math.random() * 325 + 25, Math.random() * 3 + 1, Math.random() * 3 + 1);
+            }
+
+            // 4. Dirty cracks on plaster wall
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.lineWidth = 1.2;
+            for (let c = 0; c < 3; c++) {
+                let cx = Math.random() * 512;
+                let cy = Math.random() * 200 + 50;
                 ctx.beginPath();
-                ctx.arc(Math.random() * 512, Math.random() * 512, Math.random() * 60 + 20, 0, Math.PI * 2);
+                ctx.moveTo(cx, cy);
+                for (let j = 0; j < 5; j++) {
+                    cx += (Math.random() - 0.5) * 30;
+                    cy += Math.random() * 25 + 10;
+                    ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
+            }
+
+            // 5. Mold stains
+            for (let i = 0; i < 15; i++) {
+                ctx.fillStyle = `rgba(15, 25, 12, ${Math.random() * 0.25})`;
+                ctx.beginPath();
+                ctx.arc(Math.random() * 512, Math.random() * 250 + 50, Math.random() * 40 + 15, 0, Math.PI * 2);
                 ctx.fill();
             }
 
+            // 6. Blood drips and stains
             for (let i = 0; i < 6; i++) {
-                if (Math.random() > 0.4) {
+                if (Math.random() > 0.3) {
                     const bx = Math.random() * 512;
-                    const by = Math.random() * 300;
-                    ctx.fillStyle = 'rgba(120, 0, 0, 0.6)';
+                    const by = Math.random() * 150 + 50;
+                    ctx.fillStyle = 'rgba(110, 0, 0, 0.75)';
                     ctx.beginPath();
-                    ctx.arc(bx, by, Math.random() * 15 + 5, 0, Math.PI * 2);
+                    ctx.arc(bx, by, Math.random() * 8 + 3, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.beginPath();
-                    ctx.moveTo(bx - 3, by);
-                    ctx.lineTo(bx + 3, by);
-                    ctx.lineTo(bx + 1, by + Math.random() * 100 + 40);
-                    ctx.lineTo(bx - 1, by + Math.random() * 100 + 40);
+                    ctx.moveTo(bx - 1.5, by);
+                    ctx.lineTo(bx + 1.5, by);
+                    ctx.lineTo(bx + 0.5, by + Math.random() * 90 + 30);
+                    ctx.lineTo(bx - 0.5, by + Math.random() * 90 + 30);
                     ctx.closePath();
                     ctx.fill();
                 }
             }
+
+            // 7. Crown Molding (Trim at top, y: 0 to 25)
+            ctx.fillStyle = '#1c1714';
+            ctx.fillRect(0, 0, 512, 25);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 25, 512, 4);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fillRect(0, 2, 512, 3);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 21, 512, 4);
+
+            // 8. Chair Rail Trim (y: 350 to 365)
+            ctx.fillStyle = '#1e110d';
+            ctx.fillRect(0, 350, 512, 15);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, 351.5);
+            ctx.lineTo(512, 351.5);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 364);
+            ctx.lineTo(512, 364);
+            ctx.stroke();
+
+            // 9. Wainscoting / Wood Paneling (y: 365 to 485)
+            ctx.fillStyle = '#221510';
+            ctx.fillRect(0, 365, 512, 120);
+            
+            const panelWidth = 512 / 8;
+            for (let p = 0; p <= 8; p++) {
+                const px = p * panelWidth;
+                ctx.strokeStyle = '#0a0504';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(px, 365);
+                ctx.lineTo(px, 485);
+                ctx.stroke();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(px + 1.5, 365);
+                ctx.lineTo(px + 1.5, 485);
+                ctx.stroke();
+            }
+
+            // 10. Baseboard (y: 485 to 512)
+            ctx.fillStyle = '#150a08';
+            ctx.fillRect(0, 485, 512, 27);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 485, 512, 3);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+            ctx.fillRect(0, 488, 512, 2);
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
@@ -2389,37 +2495,73 @@
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#23150d';
+            ctx.fillStyle = '#180f0a';
             ctx.fillRect(0, 0, 512, 512);
 
-            ctx.strokeStyle = '#0d0704';
-            ctx.lineWidth = 4;
-            const plankWidth = 64;
-            for (let x = 0; x < 512; x += plankWidth) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, 512);
-                ctx.stroke();
+            const plankColumns = 8;
+            const colWidth = 512 / plankColumns;
+            const rowHeight = 128;
 
-                for (let y = 0; y < 512; y += 128) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(x + plankWidth, y);
-                    ctx.stroke();
+            for (let c = 0; c < plankColumns; c++) {
+                const px = c * colWidth;
+                const yShift = (c % 2) * 64; 
+                
+                for (let y = -64; y < 512; y += rowHeight) {
+                    const py = y + yShift;
+                    
+                    const baseR = 25 + Math.floor(Math.random() * 12);
+                    const baseG = 15 + Math.floor(Math.random() * 8);
+                    const baseB = 8 + Math.floor(Math.random() * 6);
+                    ctx.fillStyle = `rgb(${baseR}, ${baseG}, ${baseB})`;
+                    ctx.fillRect(px, py, colWidth, rowHeight);
 
-                    ctx.strokeStyle = 'rgba(13, 7, 4, 0.4)';
+                    ctx.strokeStyle = 'rgba(10, 5, 2, 0.15)';
                     ctx.lineWidth = 1;
-                    for (let g = 0; g < 4; g++) {
+                    for (let g = 0; g < 3; g++) {
                         ctx.beginPath();
-                        ctx.moveTo(x + Math.random() * plankWidth, y);
+                        ctx.moveTo(px + Math.random() * colWidth, py);
                         ctx.bezierCurveTo(
-                            x + Math.random() * plankWidth, y + 40,
-                            x + Math.random() * plankWidth, y + 80,
-                            x + Math.random() * plankWidth, y + 128
+                            px + Math.random() * colWidth, py + rowHeight * 0.3,
+                            px + Math.random() * colWidth, py + rowHeight * 0.6,
+                            px + Math.random() * colWidth, py + rowHeight
                         );
                         ctx.stroke();
                     }
+
+                    if (Math.random() > 0.7) {
+                        ctx.fillStyle = 'rgba(8, 4, 1, 0.35)';
+                        ctx.beginPath();
+                        ctx.arc(px + colWidth * 0.4 + Math.random() * 10, py + rowHeight * 0.3 + Math.random() * 30, Math.random() * 5 + 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                    ctx.lineWidth = 1.0;
+                    ctx.beginPath();
+                    ctx.moveTo(px, py + rowHeight);
+                    ctx.lineTo(px, py);
+                    ctx.lineTo(px + colWidth, py);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = '#050302';
+                    ctx.lineWidth = 2.0;
+                    ctx.beginPath();
+                    ctx.moveTo(px + colWidth, py);
+                    ctx.lineTo(px + colWidth, py + rowHeight);
+                    ctx.lineTo(px, py + rowHeight);
+                    ctx.stroke();
                 }
+            }
+
+            for (let i = 0; i < 15; i++) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+                ctx.lineWidth = 0.8;
+                ctx.beginPath();
+                const sx = Math.random() * 512;
+                const sy = Math.random() * 512;
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx + (Math.random() - 0.5) * 40, sy + (Math.random() - 0.5) * 40);
+                ctx.stroke();
             }
 
             const texture = new THREE.CanvasTexture(canvas);
@@ -2435,23 +2577,129 @@
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#3a3a35';
+            ctx.fillStyle = '#2f2f2a';
             ctx.fillRect(0, 0, 256, 256);
 
-            ctx.strokeStyle = '#22221e';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(0, 0, 256, 256);
+            const size = 64;
+            for (let x = 0; x < 256; x += size) {
+                for (let y = 0; y < 256; y += size) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+                    
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x + size, y);
+                    ctx.lineTo(x + size, y + size);
+                    ctx.lineTo(x, y + size);
+                    ctx.stroke();
+                }
+            }
 
-            for (let i = 0; i < 400; i++) {
-                ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.15})`;
-                ctx.fillRect(Math.random() * 256, Math.random() * 256, Math.random() * 3 + 1, Math.random() * 3 + 1);
+            for (let i = 0; i < 1500; i++) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.18})`;
+                ctx.fillRect(Math.random() * 256, Math.random() * 256, Math.random() * 2.5 + 1, Math.random() * 2.5 + 1);
+            }
+
+            for (let k = 0; k < 4; k++) {
+                const cx = Math.random() * 256;
+                const cy = Math.random() * 256;
+                const maxRad = Math.random() * 50 + 20;
+                for (let r = maxRad; r > 5; r -= 6) {
+                    ctx.fillStyle = `rgba(45, 30, 10, ${0.015 + Math.random() * 0.02})`;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 0.8;
+            for (let c = 0; c < 2; c++) {
+                let cx = Math.random() * 256;
+                let cy = Math.random() * 256;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                for (let j = 0; j < 4; j++) {
+                    cx += (Math.random() - 0.5) * 15;
+                    cy += Math.random() * 15 + 5;
+                    ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
             }
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(5, 5);
+            texture.repeat.set(4, 4);
             return texture;
+        }
+
+        function spawnDoors() {
+            const doorLocations = [
+                { floor: 0, cellX: 4.0, cellZ: 3.5, angleY: Math.PI / 2 },
+                { floor: 0, cellX: 1.5, cellZ: 2.0, angleY: 0 },
+                { floor: 0, cellX: 4.0, cellZ: 5.5, angleY: Math.PI / 2 },
+                { floor: 0, cellX: 1.5, cellZ: 6.0, angleY: 0 },
+                { floor: 1, cellX: 4.0, cellZ: 1.5, angleY: Math.PI / 2 },
+                { floor: 1, cellX: 7.0, cellZ: 8.5, angleY: Math.PI / 2 }
+            ];
+
+            doorLocations.forEach(d => {
+                const group = new THREE.Group();
+
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x1a0f0a, roughness: 0.85 });
+                const postGeo = new THREE.BoxGeometry(0.12, 3.0, 0.12);
+                
+                const leftPost = new THREE.Mesh(postGeo, frameMat);
+                leftPost.position.set(-0.85, 1.5, 0);
+                group.add(leftPost);
+
+                const rightPost = new THREE.Mesh(postGeo, frameMat);
+                rightPost.position.set(0.85, 1.5, 0);
+                group.add(rightPost);
+
+                const lintelGeo = new THREE.BoxGeometry(1.82, 0.12, 0.12);
+                const lintel = new THREE.Mesh(lintelGeo, frameMat);
+                lintel.position.set(0, 3.0, 0);
+                group.add(lintel);
+
+                const doorMat = new THREE.MeshStandardMaterial({ color: 0x341d11, roughness: 0.8, metalness: 0.1 });
+                const doorGeo = new THREE.BoxGeometry(1.6, 2.9, 0.08);
+                const doorPanel = new THREE.Mesh(doorGeo, doorMat);
+                
+                const hingeGroup = new THREE.Group();
+                hingeGroup.position.set(-0.8, 1.5, 0);
+                
+                doorPanel.position.set(0.8, 0, 0);
+                hingeGroup.add(doorPanel);
+                
+                const knobMat = new THREE.MeshStandardMaterial({ color: 0xc5a059, metalness: 0.8, roughness: 0.15 });
+                const knobGeo = new THREE.SphereGeometry(0.04, 8, 8);
+                
+                const knobFront = new THREE.Mesh(knobGeo, knobMat);
+                knobFront.position.set(1.45, -0.15, 0.055);
+                hingeGroup.add(knobFront);
+                
+                const knobBack = new THREE.Mesh(knobGeo, knobMat);
+                knobBack.position.set(1.45, -0.15, -0.055);
+                hingeGroup.add(knobBack);
+
+                hingeGroup.rotation.y = 0.6 + Math.random() * 0.6;
+                group.add(hingeGroup);
+
+                const worldX = d.cellX * CELL_SIZE - MAP_OFFSET;
+                const worldZ = d.cellZ * CELL_SIZE - MAP_OFFSET;
+                group.position.set(worldX, 0, worldZ);
+                group.rotation.y = d.angleY;
+
+                if (d.floor === 0) {
+                    groundFloorGroup.add(group);
+                } else {
+                    secondFloorGroup.add(group);
+                }
+            });
         }
 
         function addWallPaintings() {
@@ -2529,6 +2777,30 @@
                 );
                 group.add(stepMesh);
             }
+
+            // Balustrades (handrails) on both left and right edges of the stairs
+            const handrailMat = new THREE.MeshStandardMaterial({ color: 0x221510, roughness: 0.85 });
+            const postGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.95, 8);
+            const railGeo = new THREE.BoxGeometry(0.04, 0.04, 5.66); // diagonal handrail length
+
+            const sides = [0.15, CELL_SIZE - 0.15];
+            sides.forEach(xOffset => {
+                // Spawn posts at steps 1, 3, 5, 7
+                const postIndices = [1, 3, 5, 7];
+                postIndices.forEach(idx => {
+                    const post = new THREE.Mesh(postGeo, handrailMat);
+                    const stepY = (idx + 1) * stepHeight;
+                    const stepZ = zStart + (idx * stepDepth) + stepDepth / 2;
+                    post.position.set(xStart + xOffset, stepY + 0.475, stepZ);
+                    group.add(post);
+                });
+
+                // Spawn diagonal handrail
+                const handrail = new THREE.Mesh(railGeo, handrailMat);
+                handrail.position.set(xStart + xOffset, 3.0, zStart + CELL_SIZE / 2);
+                handrail.rotation.x = -Math.PI / 4;
+                group.add(handrail);
+            });
         }
 
         function addFloorWallSigns() {
@@ -2860,12 +3132,31 @@
             
             const bulbGroup = new THREE.Group();
             
+            // Ceiling Mount Plate
+            const mountGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.02, 8);
+            const mountMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const mount = new THREE.Mesh(mountGeo, mountMat);
+            mount.position.y = 4.0;
+            bulbGroup.add(mount);
+            
             // Hanging Wire (from ceiling y=4.0 down to y=3.2)
             const wireGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.8, 4);
             const wireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
             const wire = new THREE.Mesh(wireGeo, wireMat);
             wire.position.y = 3.6;
             bulbGroup.add(wire);
+            
+            // Rusted Metal Cone Lampshade (Industrial pendant design)
+            const shadeGeo = new THREE.CylinderGeometry(0.08, 0.28, 0.18, 12, 1, true);
+            const shadeMat = new THREE.MeshStandardMaterial({
+                color: 0x3a251c, // rusty dark brown
+                roughness: 0.85,
+                metalness: 0.6,
+                side: THREE.DoubleSide
+            });
+            const shade = new THREE.Mesh(shadeGeo, shadeMat);
+            shade.position.y = 3.25;
+            bulbGroup.add(shade);
             
             // Socket/Holder
             const socketGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.07, 6);
@@ -2885,7 +3176,13 @@
             const pointLight = new THREE.PointLight(0xffa54f, 0.55, 9.0, 1.5);
             pointLight.position.y = 3.0;
             pointLight.castShadow = false; // disable point light shadows to keep frame rate high
+            pointLight.flickerTimer = 0;
+            pointLight.baseIntensity = 0.55;
             bulbGroup.add(pointLight);
+            
+            // Track for flickering updates
+            if (!group.flickeringLights) group.flickeringLights = [];
+            group.flickeringLights.push(pointLight);
             
             bulbGroup.position.set(x, 0, z);
             group.add(bulbGroup);
@@ -3017,27 +3314,134 @@
         function createCockroachMesh() {
             const roachGroup = new THREE.Group();
             
-            // Body (flat dark brown box)
-            const bodyGeo = new THREE.BoxGeometry(0.06, 0.02, 0.12);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x221105, roughness: 0.6 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.01;
-            roachGroup.add(body);
+            // Extremely shiny, oily chitin material
+            const chitinMat = new THREE.MeshStandardMaterial({
+                color: 0x2c1409, // oily brown
+                roughness: 0.12, // high specular reflection
+                metalness: 0.1
+            });
+            const darkChitinMat = new THREE.MeshStandardMaterial({
+                color: 0x120703, // near-black
+                roughness: 0.1,
+                metalness: 0.1
+            });
+            const wingMat = new THREE.MeshStandardMaterial({
+                color: 0x3a190b,
+                roughness: 0.15,
+                metalness: 0.05,
+                transparent: true,
+                opacity: 0.95
+            });
+            const legMat = new THREE.MeshStandardMaterial({
+                color: 0x482414,
+                roughness: 0.3,
+                metalness: 0.1
+            });
+
+            // 1. Pronotum (Head Shield)
+            const headShieldGeo = new THREE.SphereGeometry(0.03, 8, 8);
+            const headShield = new THREE.Mesh(headShieldGeo, darkChitinMat);
+            headShield.scale.set(1.0, 0.5, 0.7);
+            headShield.position.set(0, 0.016, 0.045);
+            roachGroup.add(headShield);
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.016, 6, 6);
+            const head = new THREE.Mesh(headGeo, darkChitinMat);
+            head.position.set(0, 0.008, 0.065);
+            roachGroup.add(head);
+
+            // 2. Abdomen (segmented body)
+            const segGeo = new THREE.BoxGeometry(0.052, 0.014, 0.035);
+            for (let i = 0; i < 3; i++) {
+                const seg = new THREE.Mesh(segGeo, chitinMat);
+                seg.position.set(0, 0.008, 0.015 - i * 0.028);
+                if (i === 1) seg.scale.set(0.9, 0.9, 1.0);
+                if (i === 2) seg.scale.set(0.7, 0.8, 1.0);
+                roachGroup.add(seg);
+            }
+
+            // 3. Elytra Wings (overlapping protective wings on back)
+            const wingLGeo = new THREE.BoxGeometry(0.028, 0.005, 0.1);
+            const wingL = new THREE.Mesh(wingLGeo, wingMat);
+            wingL.position.set(-0.012, 0.018, -0.01);
+            wingL.rotation.z = -0.05;
+            wingL.rotation.y = 0.03;
+            roachGroup.add(wingL);
+
+            const wingRGeo = new THREE.BoxGeometry(0.028, 0.005, 0.1);
+            const wingR = new THREE.Mesh(wingRGeo, wingMat);
+            wingR.position.set(0.012, 0.018, -0.01);
+            wingR.rotation.z = 0.05;
+            wingR.rotation.y = -0.03;
+            roachGroup.add(wingR);
+
+            // 4. Cerci (small rear sensory spikes)
+            const cerciGeo = new THREE.CylinderGeometry(0.002, 0.0005, 0.025, 4);
+            const leftCerci = new THREE.Mesh(cerciGeo, legMat);
+            leftCerci.position.set(-0.015, 0.01, -0.05);
+            leftCerci.rotation.set(0.3, 0.4, -0.2);
+            roachGroup.add(leftCerci);
+
+            const rightCerci = new THREE.Mesh(cerciGeo, legMat);
+            rightCerci.position.set(0.015, 0.01, -0.05);
+            rightCerci.rotation.set(0.3, -0.4, 0.2);
+            roachGroup.add(rightCerci);
+
+            // 5. Antennae
+            const antGeo = new THREE.CylinderGeometry(0.002, 0.0005, 0.14, 4);
             
-            // Antennae
-            const antGeo = new THREE.BoxGeometry(0.005, 0.005, 0.08);
-            const antMat = new THREE.MeshBasicMaterial({ color: 0x150b03 });
-            
-            const leftAnt = new THREE.Mesh(antGeo, antMat);
-            leftAnt.position.set(-0.015, 0.02, 0.09);
-            leftAnt.rotation.y = 0.25;
+            const leftAnt = new THREE.Mesh(antGeo, legMat);
+            leftAnt.name = "leftAnt";
+            leftAnt.position.set(-0.008, 0.012, 0.13);
+            leftAnt.rotation.set(0.1, 0.45, -0.05);
             roachGroup.add(leftAnt);
             
-            const rightAnt = new THREE.Mesh(antGeo, antMat);
-            rightAnt.position.set(0.015, 0.02, 0.09);
-            rightAnt.rotation.y = -0.25;
+            const rightAnt = new THREE.Mesh(antGeo, legMat);
+            rightAnt.name = "rightAnt";
+            rightAnt.position.set(0.008, 0.012, 0.13);
+            rightAnt.rotation.set(0.1, -0.45, 0.05);
             roachGroup.add(rightAnt);
-            
+
+            // 6. Jointed Legs (6 legs, femur + tibia)
+            const legConfigs = [
+                { name: "leg_LF", x: -0.026, z: 0.035, yaw: Math.PI/4, len: 0.7 },
+                { name: "leg_LM", x: -0.028, z: 0.005, yaw: 0, len: 0.95 },
+                { name: "leg_LB", x: -0.026, z: -0.025, yaw: -Math.PI/4, len: 1.2 },
+                { name: "leg_RF", x: 0.026, z: 0.035, yaw: -Math.PI/4, len: 0.7 },
+                { name: "leg_RM", x: 0.028, z: 0.005, yaw: 0, len: 0.95 },
+                { name: "leg_RB", x: 0.026, z: -0.025, yaw: Math.PI/4, len: 1.2 }
+            ];
+
+            legConfigs.forEach(conf => {
+                const legGroup = new THREE.Group();
+                legGroup.name = conf.name;
+                legGroup.position.set(conf.x, 0.006, conf.z);
+                
+                const femurGeo = new THREE.CylinderGeometry(0.0035, 0.0025, 0.026 * conf.len, 4);
+                const femur = new THREE.Mesh(femurGeo, legMat);
+                femur.rotation.z = Math.PI / 2;
+                femur.position.x = (conf.x < 0 ? -0.013 : 0.013) * conf.len;
+                legGroup.add(femur);
+                
+                const tibiaGeo = new THREE.CylinderGeometry(0.002, 0.001, 0.034 * conf.len, 4);
+                const tibia = new THREE.Mesh(tibiaGeo, legMat);
+                tibia.position.set(
+                    (conf.x < 0 ? -0.03 : 0.03) * conf.len,
+                    -0.015 * conf.len,
+                    0
+                );
+                if (conf.x < 0) {
+                    tibia.rotation.z = Math.PI / 3;
+                } else {
+                    tibia.rotation.z = -Math.PI / 3;
+                }
+                legGroup.add(tibia);
+
+                legGroup.rotation.y = conf.yaw;
+                roachGroup.add(legGroup);
+            });
+
             return roachGroup;
         }
 
@@ -3139,8 +3543,24 @@
                         if (blLeg) blLeg.rotation.x *= 0.8;
                         if (brLeg) brLeg.rotation.x *= 0.8;
                     } else if (c.type === 'cockroach') {
+                        // Wiggle antennae
+                        const leftAnt = c.mesh.children.find(child => child.name === "leftAnt");
+                        const rightAnt = c.mesh.children.find(child => child.name === "rightAnt");
+                        if (leftAnt) leftAnt.rotation.y = 0.45 + Math.sin(t * 4.0) * 0.12;
+                        if (rightAnt) rightAnt.rotation.y = -0.45 + Math.cos(t * 4.0) * 0.12;
+                        
+                        // Dampen leg swings
+                        const legs = ["leg_LF", "leg_LM", "leg_LB", "leg_RF", "leg_RM", "leg_RB"];
+                        legs.forEach(legName => {
+                            const leg = c.mesh.children.find(child => child.name === legName);
+                            if (leg) {
+                                leg.rotation.z *= 0.8;
+                                leg.rotation.x *= 0.8;
+                            }
+                        });
+                        
                         // Wiggle body slightly
-                        c.mesh.rotation.y += Math.sin(t * 3) * 0.02;
+                        c.mesh.rotation.y += Math.sin(t * 3) * 0.01;
                     }
                     
                     if (c.stateTimer <= 0) {
@@ -3187,6 +3607,32 @@
                             // Scurry tail wagging
                             const tail = c.mesh.children.find(child => child.name === "tail");
                             if (tail) tail.rotation.y = Math.sin(animTime) * 0.25;
+                        } else if (c.type === 'cockroach') {
+                            const t = performance.now() * 0.01;
+                            // Scurry antennae wiggling
+                            const leftAnt = c.mesh.children.find(child => child.name === "leftAnt");
+                            const rightAnt = c.mesh.children.find(child => child.name === "rightAnt");
+                            if (leftAnt) leftAnt.rotation.y = 0.45 + Math.sin(t * 8.0) * 0.2;
+                            if (rightAnt) rightAnt.rotation.y = -0.45 + Math.cos(t * 8.0) * 0.2;
+
+                            // Alternating tripod gait leg swinging
+                            const walkCycle = performance.now() * 0.05 * c.speed * 20;
+                            const groupALegs = ["leg_LF", "leg_RM", "leg_LB"];
+                            const groupBLegs = ["leg_RF", "leg_LM", "leg_RB"];
+                            
+                            const angleSwing = Math.sin(walkCycle) * 0.35;
+                            
+                            groupALegs.forEach(legName => {
+                                const leg = c.mesh.children.find(child => child.name === legName);
+                                if (leg) leg.rotation.z = angleSwing;
+                            });
+                            groupBLegs.forEach(legName => {
+                                const leg = c.mesh.children.find(child => child.name === legName);
+                                if (leg) leg.rotation.z = -angleSwing;
+                            });
+
+                            // High frequency body vibration/wobble
+                            c.mesh.position.y = 0.005 + Math.sin(walkCycle * 2.0) * 0.002;
                         }
                     } else {
                         // Arrived at target, go idle
@@ -3879,7 +4325,7 @@
             }
             const average = sum / micDataArray.length;
             
-            micVolume = average;
+            micVolume = average * micSensitivity;
             const noiseEl = document.getElementById('hud-noise-level');
             
             if (micVolume > micVolumeThreshold) {
@@ -4509,6 +4955,22 @@
                 updateGhostAI();
                 updateDustParticles();
                 updateCreatures();
+
+                // Update flickering zero-watt bulbs
+                const activeGroup = activeFloor === 0 ? groundFloorGroup : secondFloorGroup;
+                if (activeGroup && activeGroup.flickeringLights) {
+                    activeGroup.flickeringLights.forEach(light => {
+                        if (light.flickerTimer > 0) {
+                            light.flickerTimer -= 0.016;
+                            light.intensity = Math.random() < 0.25 ? 0.02 : (Math.random() < 0.15 ? 0.75 : light.baseIntensity);
+                        } else {
+                            light.intensity = light.baseIntensity;
+                            if (Math.random() < 0.002) {
+                                light.flickerTimer = 0.1 + Math.random() * 0.45;
+                            }
+                        }
+                    });
+                }
             }
 
             // Increment global frameCount for staggered rendering
@@ -5289,6 +5751,18 @@
                 modal.offsetHeight;
                 modal.style.opacity = 1;
                 modal.querySelector('.lobby-modal').style.transform = 'scale(1)';
+
+                // Initialize Look Sensitivity
+                document.getElementById('sens-range').value = globalSensitivity;
+                document.getElementById('sens-val').textContent = globalSensitivity.toFixed(2);
+
+                // Initialize Mic Sensitivity
+                const savedMicSens = localStorage.getItem('micSensitivity') || '1.0';
+                micSensitivity = parseFloat(savedMicSens);
+                document.getElementById('mic-sens-range').value = micSensitivity;
+                document.getElementById('mic-sens-val').textContent = micSensitivity.toFixed(1) + "x";
+
+                startMicCalibrationMonitor();
             }
         }
 
@@ -5308,12 +5782,74 @@
                     modal.style.display = 'none';
                 }, 300);
             }
+            if (modalId === 'sensitivity-modal') {
+                stopMicCalibrationMonitor();
+            }
         }
 
         // Custom Look Sensitivity slider logic
         function updateSensitivityVal(val) {
             globalSensitivity = parseFloat(val);
             document.getElementById('sens-val').textContent = globalSensitivity.toFixed(2);
+        }
+
+        // Custom Microphone Sensitivity slider logic
+        function updateMicSensitivityVal(val) {
+            micSensitivity = parseFloat(val);
+            document.getElementById('mic-sens-val').textContent = micSensitivity.toFixed(1) + "x";
+            localStorage.setItem('micSensitivity', micSensitivity);
+        }
+
+        let micCalibrationInterval = null;
+        function startMicCalibrationMonitor() {
+            if (micCalibrationInterval) clearInterval(micCalibrationInterval);
+            
+            const bar = document.getElementById('mic-calib-bar');
+            const statusText = document.getElementById('mic-calib-status');
+            
+            if (!microphoneStream) {
+                setupMicrophone();
+            }
+            
+            micCalibrationInterval = setInterval(() => {
+                if (!micAnalyser || !micDataArray) {
+                    if (statusText) {
+                        statusText.textContent = "NO MICROPHONE";
+                        statusText.style.color = "#666";
+                    }
+                    if (bar) bar.style.width = '0%';
+                    return;
+                }
+                
+                micAnalyser.getByteFrequencyData(micDataArray);
+                let sum = 0;
+                for (let i = 0; i < micDataArray.length; i++) {
+                    sum += micDataArray[i];
+                }
+                const average = sum / micDataArray.length;
+                const finalVolume = average * micSensitivity;
+                
+                const percentage = Math.min(100, (finalVolume / 50) * 100);
+                
+                if (bar) bar.style.width = percentage + '%';
+                
+                if (statusText) {
+                    if (finalVolume > micVolumeThreshold) {
+                        statusText.textContent = "DANGER! NOISE";
+                        statusText.style.color = "#ff3b30";
+                    } else {
+                        statusText.textContent = "SAFE";
+                        statusText.style.color = "#0f0";
+                    }
+                }
+            }, 50);
+        }
+        
+        function stopMicCalibrationMonitor() {
+            if (micCalibrationInterval) {
+                clearInterval(micCalibrationInterval);
+                micCalibrationInterval = null;
+            }
         }
 
         // Adjust all sounds relative to settings master slider
