@@ -1483,6 +1483,12 @@
 
     // Global waterfall materials
     let waterfallMaterial, waterfallMistMat;
+
+    // Rain splash variables
+    let splashParticles, splashGeometry;
+    let splashData = [];
+    const maxSplashCount = 600;
+    let nextSplashIndex = 0;
     let activeHikerToRescue = null;
     let boundaryPromptTimeout;
 
@@ -1678,12 +1684,32 @@
         // Water Mesh (adds rivers and lakes where terrain is lower than waterLevel)
         // Optimized grid segments to 12x12 for game smoothness
         const waterGeo = new THREE.PlaneGeometry(380, 380, 12, 12);
+        // Procedural lake water texture for running currents
+        const waterCanvas = document.createElement('canvas');
+        waterCanvas.width = 128;
+        waterCanvas.height = 128;
+        const waterCtx = waterCanvas.getContext('2d');
+        waterCtx.fillStyle = '#081a28'; // Deep blue base
+        waterCtx.fillRect(0, 0, 128, 128);
+        
+        // Draw horizontal flow ripple lines
+        waterCtx.fillStyle = '#0f2c42';
+        for (let j = 0; j < 15; j++) {
+            waterCtx.fillRect(0, Math.random() * 128, 128, 2 + Math.random() * 4);
+        }
+        
+        const waterTexture = new THREE.CanvasTexture(waterCanvas);
+        waterTexture.wrapS = THREE.RepeatWrapping;
+        waterTexture.wrapT = THREE.RepeatWrapping;
+        waterTexture.repeat.set(12, 12);
+        
         const waterMat = new THREE.MeshStandardMaterial({
-            color: 0x071e2b,
-            roughness: 0.08,
-            metalness: 0.85,
+            color: 0x0a2d42,
+            map: waterTexture,
+            roughness: 0.05,
+            metalness: 0.8,
             transparent: true,
-            opacity: 0.72,
+            opacity: 0.78,
             flatShading: true
         });
         waterMesh = new THREE.Mesh(waterGeo, waterMat);
@@ -3264,18 +3290,18 @@
     }
 
     function createRainSystem() {
-        const rainCount = 1200;
+        const rainCount = 6000; // Increased to 6000 for full-forest rain
         rainGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(rainCount * 3);
         const velocities = new Float32Array(rainCount * 3);
         
         for (let i = 0; i < rainCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 80;
-            positions[i * 3 + 1] = Math.random() * 25 + 2;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+            positions[i * 3] = (Math.random() - 0.5) * 260; // Spans 260 units wide
+            positions[i * 3 + 1] = Math.random() * 45 + 2; // Height up to 47 units
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 260;
             
-            velocities[i * 3] = -0.5 + Math.random() * 1.0; // horizontal wind drift
-            velocities[i * 3 + 1] = 14 + Math.random() * 6; // falling speed
+            velocities[i * 3] = -0.5 + Math.random() * 1.0; 
+            velocities[i * 3 + 1] = 14 + Math.random() * 6; 
             velocities[i * 3 + 2] = -0.5 + Math.random() * 1.0;
         }
         
@@ -3309,6 +3335,41 @@
         
         rainParticles = new THREE.Points(rainGeometry, rainMat);
         scene.add(rainParticles);
+
+        // --- Rain Splashes particle system initialization ---
+        splashGeometry = new THREE.BufferGeometry();
+        const splashPositions = new Float32Array(maxSplashCount * 3);
+        const splashColors = new Float32Array(maxSplashCount * 3);
+        
+        splashData = [];
+        for (let i = 0; i < maxSplashCount; i++) {
+            splashPositions[i * 3] = 0;
+            splashPositions[i * 3 + 1] = -999; // below ground
+            splashPositions[i * 3 + 2] = 0;
+            
+            splashColors[i * 3] = 0.85;
+            splashColors[i * 3 + 1] = 0.92;
+            splashColors[i * 3 + 2] = 1.0;
+            
+            splashData.push({
+                vx: 0, vy: 0, vz: 0,
+                life: 0, maxLife: 0.15 + Math.random() * 0.15
+            });
+        }
+        
+        splashGeometry.setAttribute('position', new THREE.BufferAttribute(splashPositions, 3));
+        splashGeometry.setAttribute('color', new THREE.BufferAttribute(splashColors, 3));
+        
+        const splashMat = new THREE.PointsMaterial({
+            size: 0.22,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.0,
+            depthWrite: false
+        });
+        
+        splashParticles = new THREE.Points(splashGeometry, splashMat);
+        scene.add(splashParticles);
     }
 
     /* ─── LIGHTNING STRIKES AND FOREST FIRES ─── */
@@ -3791,7 +3852,7 @@
             });
         }
         
-        // 3. Update rain drops positions relative to camera
+        // 3. Update rain drops positions relative to camera and trigger ground splashes
         if (rainParticles && rainGeometry) {
             rainParticles.material.opacity = stormIntensity * 0.65;
             
@@ -3812,10 +3873,34 @@
                     
                     const dx = px - camera.position.x;
                     const dz = pz - camera.position.z;
-                    if (py < 0 || Math.abs(dx) > 40 || Math.abs(dz) > 40) {
-                        py = 22 + Math.random() * 6;
-                        px = camera.position.x + (Math.random() - 0.5) * 80 - windDriftX * 0.5;
-                        pz = camera.position.z + (Math.random() - 0.5) * 80 - windDriftZ * 0.5;
+                    
+                    let hitGround = false;
+                    let groundY = waterLevel;
+                    if (py < 6) {
+                        groundY = Math.max(waterLevel, getTerrainHeight(px, pz));
+                        if (py < groundY) hitGround = true;
+                    }
+                    
+                    if (hitGround || Math.abs(dx) > 130 || Math.abs(dz) > 130) {
+                        // Spawn splash particle at collision point
+                        if (hitGround && Math.abs(dx) <= 130 && Math.abs(dz) <= 130) {
+                            const idx = nextSplashIndex;
+                            nextSplashIndex = (nextSplashIndex + 1) % maxSplashCount;
+                            if (splashGeometry) {
+                                splashGeometry.attributes.position.setXYZ(idx, px, groundY, pz);
+                                const speed = 1.5 + Math.random() * 2.2;
+                                const angle = Math.random() * Math.PI * 2;
+                                splashData[idx].vx = Math.cos(angle) * speed;
+                                splashData[idx].vy = 2.0 + Math.random() * 3.0; // upward splash velocity
+                                splashData[idx].vz = Math.sin(angle) * speed;
+                                splashData[idx].life = 0;
+                            }
+                        }
+                        
+                        // Recycle droplet to the top sky box (260x260 units centered around camera)
+                        py = 42 + Math.random() * 15;
+                        px = camera.position.x + (Math.random() - 0.5) * 260 - windDriftX * 0.5;
+                        pz = camera.position.z + (Math.random() - 0.5) * 260 - windDriftZ * 0.5;
                     }
                     
                     pos.setX(i, px);
@@ -3823,6 +3908,38 @@
                     pos.setZ(i, pz);
                 }
                 pos.needsUpdate = true;
+                
+                // Update active splash particles
+                if (splashParticles && splashGeometry) {
+                    splashParticles.material.opacity = stormIntensity * 0.82;
+                    const posS = splashGeometry.attributes.position;
+                    const colS = splashGeometry.attributes.color;
+                    
+                    for (let i = 0; i < maxSplashCount; i++) {
+                        const p = splashData[i];
+                        const curY = posS.getY(i);
+                        if (curY < -500) continue; // inactive
+                        
+                        p.life += delta;
+                        if (p.life >= p.maxLife) {
+                            posS.setY(i, -999); // deactivate
+                        } else {
+                            let px = posS.getX(i) + p.vx * delta;
+                            let py = curY + p.vy * delta;
+                            let pz = posS.getZ(i) + p.vz * delta;
+                            p.vy -= 9.8 * delta; // gravity deceleration
+                            
+                            posS.setXYZ(i, px, py, pz);
+                            
+                            // Fade color over lifetime
+                            const ratio = p.life / p.maxLife;
+                            const alpha = 1.0 - ratio;
+                            colS.setXYZ(i, 0.7 * alpha, 0.85 * alpha, 1.0 * alpha);
+                        }
+                    }
+                    posS.needsUpdate = true;
+                    colS.needsUpdate = true;
+                }
             }
         }
         
@@ -4075,6 +4192,10 @@
             }
             rainParticles = null;
             rainGeometry = null;
+            splashParticles = null;
+            splashGeometry = null;
+            splashData = [];
+            nextSplashIndex = 0;
             
             // Clean up moon and clouds
             moonSprite = null;
@@ -4285,7 +4406,8 @@
                 for (let i = 0; i < pos.count; i++) {
                     const vx = pos.getX(i);
                     const vy = pos.getY(i);
-                    const zVal = Math.sin(vx * 0.14 + waterTime) * Math.cos(vy * 0.14 + waterTime) * 0.15;
+                    // travelling wave formula for dynamic flowing currents
+                    const zVal = Math.sin(vx * 0.12 - waterTime) * Math.cos(vy * 0.12 - waterTime * 0.7) * 0.15;
                     pos.setZ(i, zVal);
                 }
                 pos.needsUpdate = true;
@@ -4385,6 +4507,12 @@
             // Animate waterfall texture offset
             if (waterfallMaterial && waterfallMaterial.userData && waterfallMaterial.userData.texture) {
                 waterfallMaterial.userData.texture.offset.y -= delta * 1.6;
+            }
+            
+            // Animate lake water texture scroll to simulate currents
+            if (waterMesh && waterMesh.material && waterMesh.material.map) {
+                waterMesh.material.map.offset.x += delta * 0.12;
+                waterMesh.material.map.offset.y += delta * 0.08;
             }
             
             // Update active forest fires
