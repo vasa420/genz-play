@@ -6809,10 +6809,35 @@
             walkTimer = 0;
             stepsTimer = 0;
             activeFloor = 0;
+            ghostFloor = 0;
             groundFloorGroup.visible = true;
             secondFloorGroup.visible = false;
             if (mortuaryFloorGroup) {
                 mortuaryFloorGroup.visible = false;
+            }
+
+            // Reset camera rotations (pitch, yaw, roll)
+            mouseYaw = Math.PI / 4;
+            mousePitch = 0;
+            if (camera) {
+                camera.rotation.set(mousePitch, mouseYaw, 0);
+            }
+
+            // Reset fog density and ambient/flashlight lighting
+            if (scene && scene.fog) {
+                scene.fog.density = 0.15;
+            }
+            if (ambientLight) {
+                ambientLight.intensity = 0.003;
+            }
+            isFlashlightOn = true;
+            if (spotLight) {
+                spotLight.intensity = 2.5;
+            }
+            const statusEl = document.getElementById('hud-flashlight-status');
+            if (statusEl) {
+                statusEl.textContent = "ON";
+                statusEl.style.color = "#ffcc00";
             }
             
             // Reset doors to closed
