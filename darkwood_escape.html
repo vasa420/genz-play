@@ -1435,6 +1435,18 @@
     let birds = [];
     let birdMaterial;
     let waterFrameCount = 0; // Throttle counter for water mesh updates
+    
+    // Storm & Weather variables
+    let rainParticles, rainGeometry;
+    let stormIntensity = 0;
+    let isStorming = false;
+    let lightningFlashActive = false;
+    let lightningFlashTime = 0;
+    let lightningStage = 0;
+    let lastLightningStrikeTime = 0;
+    let stormAudioWind = null;
+    let stormAudioThunder = null;
+    let floorMat;
     let lastFrameTime = 0;
     let playerSpeed = 0.06;
     let boundarySize = 150;
@@ -1618,7 +1630,7 @@
         floorTexture.wrapT = THREE.RepeatWrapping;
         floorTexture.repeat.set(45, 45);
         
-        const floorMat = new THREE.MeshStandardMaterial({
+        floorMat = new THREE.MeshStandardMaterial({
             map: floorTexture,
             roughness: 0.95,
             metalness: 0.05
@@ -1681,6 +1693,7 @@
         createSkyAndSun();
         createGodRays();
         createBirds();
+        createRainSystem();
         
         // Attach controls
         window.addEventListener('resize', onWindowResize);
@@ -2547,6 +2560,192 @@
         }
     }
 
+    function createRainSystem() {
+        const rainCount = 1200;
+        rainGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(rainCount * 3);
+        const velocities = new Float32Array(rainCount * 3);
+        
+        for (let i = 0; i < rainCount; i++) {
+            positions[i * 3] = (Math.random() - 0.5) * 80;
+            positions[i * 3 + 1] = Math.random() * 25 + 2;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+            
+            velocities[i * 3] = -0.5 + Math.random() * 1.0; // horizontal wind drift
+            velocities[i * 3 + 1] = 14 + Math.random() * 6; // falling speed
+            velocities[i * 3 + 2] = -0.5 + Math.random() * 1.0;
+        }
+        
+        rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        rainGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+        
+        const rainMat = new THREE.PointsMaterial({
+            color: 0x8ab8cc,
+            size: 0.12,
+            transparent: true,
+            opacity: 0.0,
+            depthWrite: false
+        });
+        
+        rainParticles = new THREE.Points(rainGeometry, rainMat);
+        scene.add(rainParticles);
+    }
+
+    function updateWeather(time, delta) {
+        if (!isGameRunning) return;
+        
+        const elapsedSeconds = (gameMinute - 55) * 60 + gameSecond;
+        
+        // Storm timeline (6:04 PM to 6:07 PM)
+        isStorming = (elapsedSeconds >= 540 && elapsedSeconds < 720);
+        
+        // Calculate storm intensity with an 8-second fade in/out ramp
+        const rampTime = 8.0;
+        if (isStorming) {
+            if (elapsedSeconds < 540 + rampTime) {
+                stormIntensity = (elapsedSeconds - 540) / rampTime;
+            } else if (elapsedSeconds > 720 - rampTime) {
+                stormIntensity = (720 - elapsedSeconds) / rampTime;
+            } else {
+                stormIntensity = 1.0;
+            }
+        } else {
+            stormIntensity = 0.0;
+        }
+        
+        // Retrieve volume settings from HTML elements
+        const soundToggle = document.querySelector('.modal-box .setting-row:first-child .toggle');
+        const soundEnabled = soundToggle ? soundToggle.classList.contains('on') : true;
+        const volumeSlider = document.querySelector('.vol-slider');
+        const globalVolume = volumeSlider ? parseFloat(volumeSlider.value) / 100 : 0.75;
+        
+        // 1. Howling wind sound playback
+        if (soundEnabled && stormIntensity > 0.02) {
+            if (!stormAudioWind) {
+                stormAudioWind = new Audio('dragon-studio-howling-wind-and-snow-extended-515985.mp3');
+                stormAudioWind.loop = true;
+                stormAudioWind.volume = 0;
+                stormAudioWind.play().catch(() => {});
+            }
+            const targetVolume = stormIntensity * globalVolume * 0.75;
+            stormAudioWind.volume += (targetVolume - stormAudioWind.volume) * 0.05;
+        } else if (stormAudioWind) {
+            stormAudioWind.volume *= 0.9;
+            if (stormAudioWind.volume < 0.01) {
+                stormAudioWind.pause();
+                stormAudioWind = null;
+            }
+        }
+        
+        // 2. Wet soil graphics transition (ground remains wet/shiny after storm passes)
+        if (floorMat) {
+            if (elapsedSeconds >= 540) {
+                const wetProgress = Math.min(1.0, (elapsedSeconds - 540) / 25.0); // fully wet in 25 seconds
+                floorMat.roughness = 0.95 - wetProgress * 0.57; // drops to 0.38 (glossy/muddy)
+                floorMat.metalness = 0.05 + wetProgress * 0.23; // goes to 0.28 (reflective sheen)
+            } else {
+                floorMat.roughness = 0.95;
+                floorMat.metalness = 0.05;
+            }
+        }
+        
+        // 3. Update rain drops positions relative to camera
+        if (rainParticles && rainGeometry) {
+            rainParticles.material.opacity = stormIntensity * 0.65;
+            
+            if (stormIntensity > 0.01) {
+                const pos = rainGeometry.attributes.position;
+                const vel = rainGeometry.attributes.velocity;
+                const windDriftX = stormIntensity * 6.5;
+                const windDriftZ = stormIntensity * 1.5;
+                
+                for (let i = 0; i < pos.count; i++) {
+                    let px = pos.getX(i);
+                    let py = pos.getY(i);
+                    let pz = pos.getZ(i);
+                    
+                    py -= vel.getY(i) * delta * (1.0 + stormIntensity * 0.4);
+                    px += (vel.getX(i) + windDriftX) * delta;
+                    pz += (vel.getZ(i) + windDriftZ) * delta;
+                    
+                    const dx = px - camera.position.x;
+                    const dz = pz - camera.position.z;
+                    if (py < 0 || Math.abs(dx) > 40 || Math.abs(dz) > 40) {
+                        py = 22 + Math.random() * 6;
+                        px = camera.position.x + (Math.random() - 0.5) * 80 - windDriftX * 0.5;
+                        pz = camera.position.z + (Math.random() - 0.5) * 80 - windDriftZ * 0.5;
+                    }
+                    
+                    pos.setX(i, px);
+                    pos.setY(i, py);
+                    pos.setZ(i, pz);
+                }
+                pos.needsUpdate = true;
+            }
+        }
+        
+        // 4. Lightning visual logic
+        if (isGameRunning && stormIntensity > 0.4) {
+            const now = performance.now();
+            
+            if (!lightningFlashActive && (now - lastLightningStrikeTime > 8000 + Math.random() * 8000)) {
+                lightningFlashActive = true;
+                lightningFlashTime = now;
+                lightningStage = 0;
+                lastLightningStrikeTime = now;
+                
+                const delay = 350 + Math.random() * 1000;
+                setTimeout(() => {
+                    playThunderSound(soundEnabled, globalVolume);
+                }, delay);
+            }
+            
+            if (lightningFlashActive) {
+                const age = now - lightningFlashTime;
+                let flashIntensity = 0;
+                
+                if (age < 80) {
+                    flashIntensity = age / 80;
+                } else if (age < 180) {
+                    flashIntensity = 1.0 - (age - 80) / 100;
+                } else if (age < 230) {
+                    flashIntensity = (age - 180) / 50 * 0.7;
+                } else if (age < 450) {
+                    flashIntensity = 0.7 * (1.0 - (age - 230) / 220);
+                } else {
+                    lightningFlashActive = false;
+                }
+                
+                if (lightningFlashActive && ambientLight && directionalLight) {
+                    const flashColor = new THREE.Color(0xdceeff);
+                    const baseAmbientColor = ambientLight.color.clone();
+                    
+                    ambientLight.intensity = (0.55 - (elapsedSeconds - 300) / 60.0 * 0.5) + flashIntensity * 2.0;
+                    ambientLight.color.copy(baseAmbientColor.clone().lerp(flashColor, flashIntensity));
+                    
+                    directionalLight.intensity = flashIntensity * 3.5;
+                    directionalLight.color.copy(new THREE.Color(0xffffff).lerp(flashColor, 0.5));
+                    
+                    const fogNightColor = new THREE.Color(0x030815);
+                    const fogFlashColor = new THREE.Color(0x405575);
+                    scene.fog.color.copy(fogNightColor.clone().lerp(fogFlashColor, flashIntensity));
+                }
+            }
+        }
+    }
+
+    function playThunderSound(soundEnabled, globalVolume) {
+        if (!soundEnabled || !isGameRunning) return;
+        try {
+            if (stormAudioThunder) {
+                stormAudioThunder.pause();
+            }
+            stormAudioThunder = new Audio('johnbritton-thunder-156423 (1).mp3');
+            stormAudioThunder.volume = globalVolume * (0.8 + Math.random() * 0.2);
+            stormAudioThunder.play().catch(() => {});
+        } catch(e) {}
+    }
+
     function checkCollision(x, z) {
         if (Math.abs(x) > boundarySize || Math.abs(z) > boundarySize) {
             showDangerBoundaryPrompt();
@@ -2714,6 +2913,18 @@
             sunCore = null;
             sunAura = null;
             birdMaterial = null;
+            
+            // Clean up storm elements and pause loops
+            if (stormAudioWind) {
+                try { stormAudioWind.pause(); } catch(e) {}
+                stormAudioWind = null;
+            }
+            if (stormAudioThunder) {
+                try { stormAudioThunder.pause(); } catch(e) {}
+                stormAudioThunder = null;
+            }
+            rainParticles = null;
+            rainGeometry = null;
             
             setTimeout(() => {
                 fade.classList.remove('active');
@@ -2915,11 +3126,24 @@
                 waterMesh.geometry.computeVertexNormals();
             }
             
-            // Wind Sway Foliage
+            // Wind Sway Foliage (violently scales up and shakes during the peak of the storm)
             const windTime = time * 0.0012;
+            const stormWindSpeedMult = 1.0 + stormIntensity * 3.2; // up to 4.2x speed
+            const stormSwayMult = 1.0 + stormIntensity * 2.8;      // up to 3.8x sway amplitude
+            
             windSwayObjects.forEach(s => {
-                s.mesh.rotation.z = Math.sin(windTime * s.speed + s.phase) * s.maxSway;
-                s.mesh.rotation.x = Math.cos(windTime * s.speed * 0.85 + s.phase) * (s.maxSway * 0.7);
+                let rotZ = Math.sin(windTime * s.speed * stormWindSpeedMult + s.phase) * s.maxSway * stormSwayMult;
+                let rotX = Math.cos(windTime * s.speed * 0.85 * stormWindSpeedMult + s.phase) * (s.maxSway * 0.7) * stormSwayMult;
+                
+                // Add high-frequency dynamic jitter flutter when storm is active
+                if (stormIntensity > 0.05) {
+                    const jitter = Math.sin(time * 0.018 + s.phase) * (s.maxSway * 0.35) * stormIntensity;
+                    rotZ += jitter;
+                    rotX += jitter * 0.8;
+                }
+                
+                s.mesh.rotation.z = rotZ;
+                s.mesh.rotation.x = rotX;
             });
             
             mistParticles.forEach(p => {
@@ -2939,6 +3163,7 @@
             updateAtmosphere(delta);
             updateSkySunAndGodRays(time, delta);
             updateBirds(time, delta);
+            updateWeather(time, delta);
         }
         
         renderer.render(scene, camera);
