@@ -1717,16 +1717,27 @@
 
     function createForest() {
         colliders = [];
-        const treeCount = 320; // Reduced from 480 to 320 for significant rendering speedups
+        const treeCount = 520; // Increased from 320 to 520 for a dense, thick, realistic forest
         
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2e1d0c, roughness: 0.95 });
         const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xdcdcdc, roughness: 0.85 }); // Light birch bark
         const deadTrunkMat = new THREE.MeshStandardMaterial({ color: 0x25201d, roughness: 0.95 });
         
-        const leafMaterials = [
-            new THREE.MeshStandardMaterial({ color: 0x112b11, roughness: 0.85 }), // Spruce teal-green
-            new THREE.MeshStandardMaterial({ color: 0x183c18, roughness: 0.85 }), // Oak mid-green
-            new THREE.MeshStandardMaterial({ color: 0x224c1e, roughness: 0.85 })  // Birch light-green
+        // Multi-shaded leaf palettes to give rich forest variations and color depth
+        const spruceMats = [
+            new THREE.MeshStandardMaterial({ color: 0x112b11, roughness: 0.85 }),
+            new THREE.MeshStandardMaterial({ color: 0x0a220a, roughness: 0.88 }),
+            new THREE.MeshStandardMaterial({ color: 0x163516, roughness: 0.82 })
+        ];
+        const oakMats = [
+            new THREE.MeshStandardMaterial({ color: 0x183c18, roughness: 0.85 }),
+            new THREE.MeshStandardMaterial({ color: 0x112d11, roughness: 0.87 }),
+            new THREE.MeshStandardMaterial({ color: 0x224c22, roughness: 0.83 })
+        ];
+        const birchMats = [
+            new THREE.MeshStandardMaterial({ color: 0x224c1e, roughness: 0.85 }),
+            new THREE.MeshStandardMaterial({ color: 0x1a3d16, roughness: 0.88 }),
+            new THREE.MeshStandardMaterial({ color: 0x2a5925, roughness: 0.82 })
         ];
         
         const rockMat = new THREE.MeshStandardMaterial({ color: 0x2b2c2c, roughness: 0.9 });
@@ -1758,15 +1769,22 @@
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
-                // Spruce Cones
-                const coneCount = 3;
-                const leafMat = leafMaterials[0];
+                // Spruce Cones (slight random rotation & position offset to avoid sterile mathematical look)
+                const coneCount = 3 + Math.floor(Math.random() * 2); // 3 to 4 cones
+                const leafMat = spruceMats[Math.floor(Math.random() * spruceMats.length)];
                 for (let c = 0; c < coneCount; c++) {
-                    const coneRadius = trunkRadius * (6.0 - c * 1.2);
+                    const coneRadius = trunkRadius * (6.5 - c * 1.3);
                     const coneHeight = height * 0.45;
                     const coneGeo = new THREE.ConeGeometry(coneRadius, coneHeight, 6);
                     const cone = new THREE.Mesh(coneGeo, leafMat);
-                    cone.position.y = height * 0.6 + c * (coneHeight * 0.45);
+                    
+                    // Add subtle organic asymmetry
+                    const jX = (Math.random() - 0.5) * 0.08;
+                    const jZ = (Math.random() - 0.5) * 0.08;
+                    cone.position.set(jX, height * 0.5 + c * (coneHeight * 0.38), jZ);
+                    cone.rotation.y = Math.random() * Math.PI * 2;
+                    cone.rotation.x = (Math.random() - 0.5) * 0.05; // slight tilt
+                    
                     cone.castShadow = false; // Disable to dramatically improve FPS
                     cone.receiveShadow = true;
                     treeGroup.add(cone);
@@ -1778,7 +1796,7 @@
 
             } else if (treeType === 'oak') {
                 const height = 4.0 + Math.random() * 3.0;
-                const trunkRadius = 0.25 + Math.random() * 0.15;
+                const trunkRadius = 0.22 + Math.random() * 0.12;
                 
                 // Trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.9, trunkRadius, height, 6);
@@ -1788,23 +1806,52 @@
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
-                // Leaf spheres
-                const leafMat = leafMaterials[1];
-                const clusterCount = 4 + Math.floor(Math.random() * 3);
-                for (let c = 0; c < clusterCount; c++) {
-                    const sphereRadius = 1.2 + Math.random() * 0.8;
+                const leafMat = oakMats[Math.floor(Math.random() * oakMats.length)];
+                
+                // Realistic branches shooting out from the trunk, each carrying a leaf cluster at its tip
+                const branchCount = 3 + Math.floor(Math.random() * 2); // 3 to 4 branches
+                for (let b = 0; b < branchCount; b++) {
+                    const bLength = 1.0 + Math.random() * 1.2;
+                    const bRadius = trunkRadius * 0.45;
+                    const bGeo = new THREE.CylinderGeometry(bRadius * 0.6, bRadius, bLength, 5);
+                    const branch = new THREE.Mesh(bGeo, trunkMat);
+                    
+                    // Distribute around trunk pointing outwards/upwards
+                    const bAngle = (b / branchCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+                    const bPitch = 0.5 + Math.random() * 0.45; // angle upwards
+                    
+                    const startY = height * 0.5 + Math.random() * height * 0.25;
+                    branch.position.set(0, startY, 0);
+                    branch.rotation.y = bAngle;
+                    branch.rotation.z = bPitch;
+                    branch.translateY(bLength / 2); // align pivot at base
+                    
+                    branch.castShadow = false;
+                    branch.receiveShadow = true;
+                    treeGroup.add(branch);
+                    
+                    // Leaf cluster at branch tip
+                    const sphereRadius = 1.1 + Math.random() * 0.6;
                     const sphereGeo = new THREE.DodecahedronGeometry(sphereRadius, 0);
-                    const sphere = new THREE.Mesh(sphereGeo, leafMat);
+                    const leafCluster = new THREE.Mesh(sphereGeo, leafMat);
                     
-                    const ox = (Math.random() - 0.5) * 1.5;
-                    const oz = (Math.random() - 0.5) * 1.5;
-                    const oy = height * 0.95 + (Math.random() * 1.0);
+                    const tipOffset = new THREE.Vector3(0, bLength * 0.9, 0).applyEuler(branch.rotation);
+                    leafCluster.position.copy(branch.position).add(tipOffset);
                     
-                    sphere.position.set(ox, oy, oz);
-                    sphere.castShadow = false; // Disable to dramatically improve FPS
-                    sphere.receiveShadow = true;
-                    treeGroup.add(sphere);
+                    leafCluster.castShadow = false;
+                    leafCluster.receiveShadow = true;
+                    treeGroup.add(leafCluster);
                 }
+                
+                // Crown cluster at the top
+                const crownRadius = 1.6 + Math.random() * 0.8;
+                const crownGeo = new THREE.DodecahedronGeometry(crownRadius, 0);
+                const crown = new THREE.Mesh(crownGeo, leafMat);
+                crown.position.set(0, height * 0.98, 0);
+                crown.castShadow = false;
+                crown.receiveShadow = true;
+                treeGroup.add(crown);
+                
                 colliders.push({ x: x, z: z, radius: trunkRadius * 2.0 });
                 
                 swaySpeed = 0.4 + Math.random() * 0.3;
@@ -1814,7 +1861,7 @@
                 const height = 6.0 + Math.random() * 3.0;
                 const trunkRadius = 0.12 + Math.random() * 0.06;
                 
-                // Trunk
+                // White birch trunk
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.85, trunkRadius, height, 6);
                 const trunk = new THREE.Mesh(trunkGeo, birchTrunkMat);
                 trunk.position.y = height / 2;
@@ -1822,15 +1869,33 @@
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
                 
-                // Foliage
-                const leafMat = leafMaterials[2];
-                const leafGeo = new THREE.DodecahedronGeometry(trunkRadius * 8, 1);
-                const foliage = new THREE.Mesh(leafGeo, leafMat);
-                foliage.position.y = height * 0.85;
-                foliage.scale.set(1, 1.6, 1);
-                foliage.castShadow = false; // Disable to dramatically improve FPS
-                foliage.receiveShadow = true;
-                treeGroup.add(foliage);
+                // Add horizontal dark spots/rings to white bark for realistic birch texturing
+                const spotCount = 5 + Math.floor(Math.random() * 4);
+                for (let s = 0; s < spotCount; s++) {
+                    const spotHeight = 0.04 + Math.random() * 0.06;
+                    const spotGeo = new THREE.CylinderGeometry(trunkRadius * 1.03, trunkRadius * 1.03, spotHeight, 6);
+                    const spotMesh = new THREE.Mesh(spotGeo, deadTrunkMat);
+                    spotMesh.position.y = (s + 1) * (height / (spotCount + 2)) + (Math.random() - 0.5) * 0.25;
+                    spotMesh.rotation.y = Math.random() * Math.PI * 2;
+                    treeGroup.add(spotMesh);
+                }
+                
+                const leafMat = birchMats[Math.floor(Math.random() * birchMats.length)];
+                
+                // Foliage made of a main crown plus a secondary lower side cluster for organic variety
+                const foliageCrown = new THREE.Mesh(new THREE.DodecahedronGeometry(trunkRadius * 8.2, 1), leafMat);
+                foliageCrown.position.y = height * 0.88;
+                foliageCrown.scale.set(1, 1.4, 1);
+                foliageCrown.castShadow = false; // Disable to dramatically improve FPS
+                foliageCrown.receiveShadow = true;
+                treeGroup.add(foliageCrown);
+                
+                const sideFoliage = new THREE.Mesh(new THREE.DodecahedronGeometry(trunkRadius * 5.8, 1), leafMat);
+                sideFoliage.position.set(trunkRadius * 2.5, height * 0.72, 0);
+                sideFoliage.scale.set(1, 1.2, 1);
+                sideFoliage.castShadow = false;
+                sideFoliage.receiveShadow = true;
+                treeGroup.add(sideFoliage);
                 
                 colliders.push({ x: x, z: z, radius: trunkRadius * 1.8 });
                 
@@ -1841,10 +1906,12 @@
                 const height = 4.0 + Math.random() * 3.5;
                 const trunkRadius = 0.2 + Math.random() * 0.1;
                 
-                // Main trunk
+                // Main trunk (crooked/tilted dead trees look much creepier and realistic)
                 const trunkGeo = new THREE.CylinderGeometry(trunkRadius * 0.7, trunkRadius, height, 5);
                 const trunk = new THREE.Mesh(trunkGeo, deadTrunkMat);
                 trunk.position.y = height / 2;
+                trunk.rotation.z = (Math.random() - 0.5) * 0.16; // tilt the trunk
+                trunk.rotation.x = (Math.random() - 0.5) * 0.16;
                 trunk.castShadow = true;
                 trunk.receiveShadow = true;
                 treeGroup.add(trunk);
@@ -2742,12 +2809,29 @@
         rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         rainGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
         
+        // Procedurally generate a beautiful spherical water droplet texture
+        const createRainTexture = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 16;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');     // bright reflective core
+            grad.addColorStop(0.35, 'rgba(165, 205, 225, 0.85)');  // soft water drop body
+            grad.addColorStop(1.0, 'rgba(165, 205, 225, 0)');      // smooth fadeout
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 16, 16);
+            return new THREE.CanvasTexture(canvas);
+        };
+        
         const rainMat = new THREE.PointsMaterial({
-            color: 0x8ab8cc,
-            size: 0.12,
+            color: 0xffffff,
+            size: 0.32, // larger size so that spherical texture shape is clearly visible
+            map: createRainTexture(),
             transparent: true,
             opacity: 0.0,
-            depthWrite: false
+            depthWrite: false,
+            blending: THREE.AdditiveBlending // soft additive blending to make it glow in the dark/lightning
         });
         
         rainParticles = new THREE.Points(rainGeometry, rainMat);
