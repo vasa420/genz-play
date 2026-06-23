@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | Loading Simulation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.4);
+            --danger: #FF2200;
+            --danger-glow: rgba(255, 34, 0, 0.35);
+            --bg: #05050d;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Screen static & Scanlines overlays */
+        .overlay-effects {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .scanlines {
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18), rgba(0,0,0,0.18) 1.5px, transparent 1.5px, transparent 3px);
+            opacity: 0.85;
+        }
+
+        .noise {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            animation: noiseMove 0.2s infinite steps(4);
+        }
+
+        @keyframes noiseMove {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-10px, 10px); }
+            100% { transform: translate(10px, -10px); }
+        }
+
+        /* Stages container */
+        .stage-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 1.2s;
+            z-index: 10;
+        }
+
+        .stage.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Stage 1: Particle simulation canvas */
+        #canvas-stage {
+            z-index: 1;
+            background-color: #000;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+        }
+
+        .skip-prompt {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 2px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: color 0.3s;
+            border-bottom: 1px solid transparent;
+        }
+
+        .skip-prompt:hover {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Stage 2: Squad grid styling */
+        .squad-title {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #FFD700;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            animation: floatText 4s ease-in-out infinite alternate;
+        }
+
+        .squad-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 90%;
+            max-width: 950px;
+        }
+
+        @media (max-width: 768px) {
+            .squad-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .squad-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .friend-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ccc;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s, color 0.4s;
+        }
+
+        .friend-card.reveal {
+            animation: revealCard 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .friend-card:hover {
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(255, 100, 0, 0.3), 0 0 15px var(--primary-glow);
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        @keyframes revealCard {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatText {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+
+        /* Stage 3: Disclaimer styling */
+        .disclaimer-card {
+            background: rgba(15, 5, 5, 0.82);
+            border: 1px solid var(--danger-glow);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 650px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 30px var(--danger-glow);
+            backdrop-filter: blur(15px);
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        .disclaimer-header {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: var(--danger);
+            text-shadow: 0 0 15px var(--danger);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+
+        .disclaimer-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #ddd;
+            line-height: 1.8;
+            letter-spacing: 1px;
+            margin-bottom: 35px;
+        }
+
+        .btn-battle {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 14px 35px;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-battle:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 25px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        @keyframes pulseGlow {
+            0% { border-color: rgba(255, 34, 0, 0.25); box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 20px rgba(255, 34, 0, 0.2); }
+            100% { border-color: rgba(255, 34, 0, 0.55); box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 35px rgba(255, 34, 0, 0.4); }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay-effects">
+        <div class="scanlines"></div>
+        <div class="noise"></div>
+    </div>
+
+    <div class="stage-container">
+        <!-- STAGE 1: 3D Canvas particle simulation ("WELCOME TO ATC STUDIO") -->
+        <div id="canvas-stage" class="stage active">
+            <canvas id="particle-canvas"></canvas>
+            <div class="skip-prompt" onclick="skipIntro()">SKIP INTRO >></div>
+        </div>
+
+        <!-- STAGE 2: Welcome Squad members -->
+        <div id="squad-stage" class="stage">
+            <div class="squad-title">WELCOME YOU ALL MY FRIENDS:</div>
+            <div class="squad-grid" id="squad-grid">
+                <!-- Names will be dynamically generated and staggered -->
+            </div>
+            <div class="skip-prompt" onclick="skipToDisclaimer()">SKIP >></div>
+        </div>
+
+        <!-- STAGE 3: Disclaimer -->
+        <div id="disclaimer-stage" class="stage">
+            <div class="disclaimer-card">
+                <div class="disclaimer-header">⚠️ DISCLAIMER ⚠️</div>
+                <p class="disclaimer-text">
+                    THIS GAME IS DEVELOPED ONLY FOR ENJOYMENT PURPOSE ONLY. ALL EVENTS, CHARACTERS, AND SQUAD MEMBERS REPRESENTED IN THIS GAME ARE PURELY FOR RECREATION.
+                </p>
+                <button class="btn-battle" onclick="goToLobby()">CONTINUE TO ARENA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Web Audio API Atmospheric Synthesizer ---
+        let audioCtx = null;
+        let ambientOsc = null;
+        let noiseFilter = null;
+        let synthRiser = null;
+        let masterGain = null;
+
+        function startSynth() {
+            try {
+                // Initialize Audio Context on click/keypress
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+                masterGain.gain.linearRampToValueAtTime(0.65, audioCtx.currentTime + 1.5);
+                masterGain.connect(audioCtx.destination);
+
+                // LFO deep atmospheric rumble
+                ambientOsc = audioCtx.createOscillator();
+                ambientOsc.type = 'sawtooth';
+                ambientOsc.frequency.setValueAtTime(32.0, audioCtx.currentTime); // C1 low pitch
+                
+                const lpFilter = audioCtx.createBiquadFilter();
+                lpFilter.type = 'lowpass';
+                lpFilter.frequency.setValueAtTime(75.0, audioCtx.currentTime);
+                
+                ambientOsc.connect(lpFilter);
+                lpFilter.connect(masterGain);
+                ambientOsc.start();
+
+                // Wind sound synthesis using white noise and a modulated low-pass filter
+                const bufferSize = audioCtx.sampleRate * 2;
+                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                const whiteNoise = audioCtx.createBufferSource();
+                whiteNoise.buffer = noiseBuffer;
+                whiteNoise.loop = true;
+
+                noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(250.0, audioCtx.currentTime);
+                noiseFilter.Q.setValueAtTime(4.0, audioCtx.currentTime);
+
+                // Modulate bandpass frequency
+                const lfo = audioCtx.createOscillator();
+                lfo.frequency.setValueAtTime(0.2, audioCtx.currentTime); // Slow wave
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.setValueAtTime(120.0, audioCtx.currentTime);
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(noiseFilter.frequency);
+                
+                whiteNoise.connect(noiseFilter);
+                noiseFilter.connect(masterGain);
+                lfo.start();
+                whiteNoise.start();
+
+                // Suspense riser synth
+                synthRiser = audioCtx.createOscillator();
+                synthRiser.type = 'sine';
+                synthRiser.frequency.setValueAtTime(80.0, audioCtx.currentTime);
+                // Rise pitch over 8.5 seconds
+                synthRiser.frequency.exponentialRampToValueAtTime(750.0, audioCtx.currentTime + 8.5);
+                
+                const riserGain = audioCtx.createGain();
+                riserGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                riserGain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 8.5);
+                
+                synthRiser.connect(riserGain);
+                riserGain.connect(masterGain);
+                synthRiser.start();
+            } catch (e) {
+                console.warn("Web Audio API not supported or blocked: ", e);
+            }
+        }
+
+        function stopSynth(fadeSeconds = 1.0) {
+            if (audioCtx && masterGain) {
+                try {
+                    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+                    masterGain.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + fadeSeconds);
+                    setTimeout(() => {
+                        audioCtx.close();
+                    }, fadeSeconds * 1000 + 100);
+                } catch(e){}
+            }
+        }
+
+        // Trigger synth on first click/key
+        document.body.addEventListener('click', () => {
+            if (!audioCtx) startSynth();
+        }, { once: true });
+
+
+        // --- Stage Transition Coordinator ---
+        let currentTimer = null;
+
+        function startStageSequence() {
+            // Stage 1 -> Stage 2 after 10 seconds
+            currentTimer = setTimeout(() => {
+                transitionToStage2();
+            }, 10000);
+        }
+
+        function transitionToStage2() {
+            if (currentTimer) clearTimeout(currentTimer);
+
+            // Change active state to Stage 2 (Squad members list)
+            document.getElementById('canvas-stage').classList.remove('active');
+            document.getElementById('squad-stage').classList.add('active');
+
+            // Generate and render squad members with staggered animations
+            const squad = ["VAISAL", "GIRISH", "KISHOOR", "GIRI", "VASANTH", "LOGITH", "DHARNISH", "SURYA", "JD", "NITHISH", "SUDHISH", "THAYA"];
+            const grid = document.getElementById('squad-grid');
+            grid.innerHTML = '';
+            
+            squad.forEach((name, idx) => {
+                const card = document.createElement('div');
+                card.className = 'friend-card';
+                card.textContent = name;
+                grid.appendChild(card);
+                
+                // Stagger reveal card animation
+                setTimeout(() => {
+                    card.classList.add('reveal');
+                }, idx * 180 + 100);
+            });
+
+            // Stage 2 -> Stage 3 after 7 seconds
+            currentTimer = setTimeout(() => {
+                transitionToStage3();
+            }, 7000);
+        }
+
+        function transitionToStage3() {
+            if (currentTimer) clearTimeout(currentTimer);
+
+            // Fade ambient audio
+            stopSynth(1.2);
+
+            // Change active state to Stage 3 (Disclaimer)
+            document.getElementById('squad-stage').classList.remove('active');
+            document.getElementById('disclaimer-stage').classList.add('active');
+        }
+
+        function skipIntro() {
+            transitionToStage2();
+        }
+
+        function skipToDisclaimer() {
+            transitionToStage3();
+        }
+
+        function goToLobby() {
+            window.location.href = 'attacks_lobby.html';
+        }
+
+
+        // --- Canvas Particle Simulation ("WELCOME TO ATC STUDIO") ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            calculateTextCoordinates();
+        });
+
+        // Particle Class
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.z = Math.random() * 200 - 100; // 3D depth coordinate
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.vz = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2.8 + 1.0;
+                this.targetX = null;
+                this.targetY = null;
+                this.targetZ = 0;
+                this.alpha = Math.random() * 0.4 + 0.3;
+                this.color = '255, 100, 0'; // Red/orange smoke glow
+            }
+
+            update(time, stageTime) {
+                if (stageTime < 4000) {
+                    // Stage 1a (0s - 4s): Particles drift around as mist/smoke
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.z += this.vz;
+
+                    // Boundaries bounce
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                    if (this.z < -100 || this.z > 100) this.vz *= -1;
+                } else if (stageTime >= 4000 && stageTime < 8800) {
+                    // Stage 1b (4s - 8.8s): Attract to target text layout coordinates
+                    if (this.targetX !== null) {
+                        const progress = (stageTime - 4000) / 3800; // 3.8s transition
+                        const ease = easeInOutCubic(progress);
+
+                        // Calculate current target position including 3D rotation
+                        const yaw = time * 0.0003;
+                        const pitch = time * 0.00015;
+                        
+                        // Center offsets
+                        const cx = width / 2;
+                        const cy = height / 2;
+                        
+                        // Rotate text points relative to center
+                        let dx = this.origTargetX - cx;
+                        let dy = this.origTargetY - cy;
+                        let dz = this.targetZ;
+
+                        // Rotate Yaw (Y axis)
+                        let rx1 = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+                        let rz1 = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+                        
+                        // Rotate Pitch (X axis)
+                        let ry2 = dy * Math.cos(pitch) - rz1 * Math.sin(pitch);
+                        let rz2 = dy * Math.sin(pitch) + rz1 * Math.cos(pitch);
+
+                        // Project back to 2D
+                        const fov = 400;
+                        const scale = fov / (fov + rz2);
+                        const projX = cx + rx1 * scale;
+                        const projY = cy + ry2 * scale;
+
+                        this.x = this.x + (projX - this.x) * ease * 0.12;
+                        this.y = this.y + (projY - this.y) * ease * 0.12;
+                        this.z = this.z + (rz2 - this.z) * ease * 0.12;
+                        this.alpha = this.alpha + (0.85 - this.alpha) * ease * 0.05;
+                    } else {
+                        // Extra particles dissolve into thin air
+                        this.alpha -= 0.015;
+                        if (this.alpha < 0) this.alpha = 0;
+                    }
+                } else {
+                    // Stage 1c (8.8s - 10s): Dissolve text particles back to thin air
+                    this.x += (Math.random() - 0.5) * 5;
+                    this.y += (Math.random() - 0.5) * 5 - 2; // drift up
+                    this.alpha -= 0.035;
+                    if (this.alpha < 0) this.alpha = 0;
+                }
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                
+                // Add simple depth cues by scaling particle sizes
+                const sizeMult = (this.z + 100) / 200 + 0.5; // size scale based on depth
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * sizeMult, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        // Setup particles
+        const maxParticles = 1100;
+        const particles = [];
+        for (let i = 0; i < maxParticles; i++) {
+            particles.push(new Particle());
+        }
+
+        // Draw text offline to extract target points
+        let textPoints = [];
+        function calculateTextCoordinates() {
+            textPoints = [];
+            const offscreen = document.createElement('canvas');
+            const octx = offscreen.getContext('2d');
+            offscreen.width = width;
+            offscreen.height = height;
+
+            // Set size of text responsive to width
+            const fontSize = Math.min(width * 0.065, 52);
+            octx.font = `950 ${fontSize}px 'Outfit'`;
+            octx.fillStyle = '#fff';
+            octx.textAlign = 'center';
+            octx.textBaseline = 'middle';
+            octx.fillText("WELCOME TO ATC STUDIO", width / 2, height / 2);
+
+            const imgData = octx.getImageData(0, 0, width, height).data;
+            
+            // Sample pixels
+            const step = 4;
+            for (let y = 0; y < height; y += step) {
+                for (let x = 0; x < width; x += step) {
+                    const idx = (y * width + x) * 4;
+                    if (imgData[idx] > 128) {
+                        textPoints.push({ x, y });
+                    }
+                }
+            }
+
+            // Assign target points to particles
+            particles.forEach((p, idx) => {
+                if (idx < textPoints.length) {
+                    p.targetX = textPoints[idx].x;
+                    p.origTargetX = textPoints[idx].x;
+                    p.targetY = textPoints[idx].y;
+                    p.origTargetY = textPoints[idx].y;
+                    p.targetZ = (Math.random() - 0.5) * 40; // Add 3D thickness
+                    p.color = '255, 100, 0'; // Glow orange
+                } else {
+                    p.targetX = null;
+                    p.targetY = null;
+                }
+            });
+        }
+
+        function easeInOutCubic(x) {
+            return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+        }
+
+        // Initialize particles target
+        calculateTextCoordinates();
+
+        // Main animation loop
+        let startTime = Date.now();
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            const time = Date.now();
+            const stageTime = time - startTime;
+
+            particles.forEach(p => {
+                p.update(time, stageTime);
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start
+        animate();
+        startStageSequence();
+    </script>
+</body>
+</html>

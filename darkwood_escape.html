@@ -1356,7 +1356,10 @@
     });
 
     /* ─── FULLSCREEN ─── */
+    let fullscreenEntered = false;
     function enterFullscreen() {
+        if (fullscreenEntered) return;
+        fullscreenEntered = true;
         const splash = document.getElementById('fs-splash');
         // Request fullscreen
         const el = document.documentElement;
@@ -1498,7 +1501,7 @@
     // Rain splash variables
     let splashParticles, splashGeometry;
     let splashData = [];
-    const maxSplashCount = 600;
+    const maxSplashCount = 200;
     let nextSplashIndex = 0;
     let activeHikerToRescue = null;
     let boundaryPromptTimeout;
@@ -1635,10 +1638,10 @@
         camera.position.set(0, 1.6, 0);
         camera.rotation.order = 'YXZ';
         
-        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        // Capped at 1.25 to prevent dynamic shadow/pixel rendering bottleneck on high-DPI/Retina screens
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+        // Capped at 1.0 for consistent performance across all devices
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.autoUpdate = false;
         renderer.shadowMap.needsUpdate = true;
@@ -1657,7 +1660,7 @@
         rainBgAudio = null;
         
         // Ground Mesh (deformed according to heightmap)
-        const floorGeo = new THREE.PlaneGeometry(380, 380, 160, 160);
+        const floorGeo = new THREE.PlaneGeometry(380, 380, 80, 80);
         const posAttr = floorGeo.attributes.position;
         for (let i = 0; i < posAttr.count; i++) {
             const x = posAttr.getX(i);
@@ -1738,8 +1741,8 @@
         directionalLight = new THREE.DirectionalLight(0xff7a3b, 1.2);
         directionalLight.position.set(40, 15, 30);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 1024;
-        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.mapSize.width = 512;
+        directionalLight.shadow.mapSize.height = 512;
         directionalLight.shadow.camera.near = 0.5;
         directionalLight.shadow.camera.far = 150;
         const d = 50;
@@ -1787,7 +1790,7 @@
 
     function createForest() {
         colliders = [];
-        const treeCount = 1250; // Increased to 1250 for a denser realistic forest canopy
+        const treeCount = 180; // Reduced to 180 for smooth movement on all hardware
         
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2e1d0c, roughness: 0.95 });
         const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xdcdcdc, roughness: 0.85 }); // Light birch bark
@@ -1814,11 +1817,13 @@
         
         for (let i = 0; i < treeCount; i++) {
             let x, z, hVal;
+            let attempts = 0;
             do {
+                attempts++;
                 x = (Math.random() - 0.5) * 285;
                 z = (Math.random() - 0.5) * 285;
                 hVal = getTerrainHeight(x, z);
-            } while (Math.sqrt(x*x + z*z) < 8 || hVal < waterLevel - 0.4);
+            } while ((Math.sqrt(x*x + z*z) < 8 || hVal < waterLevel - 0.4) && attempts < 100);
             
             const treeType = ['spruce', 'oak', 'birch', 'dead'][Math.floor(Math.random() * 4)];
             const treeGroup = new THREE.Group();
@@ -2064,11 +2069,13 @@
         const rockCount = 80;
         for (let i = 0; i < rockCount; i++) {
             let x, z, hVal;
+            let attempts = 0;
             do {
+                attempts++;
                 x = (Math.random() - 0.5) * 285;
                 z = (Math.random() - 0.5) * 285;
                 hVal = getTerrainHeight(x, z);
-            } while (Math.sqrt(x*x + z*z) < 6 || hVal < waterLevel - 0.2);
+            } while ((Math.sqrt(x*x + z*z) < 6 || hVal < waterLevel - 0.2) && attempts < 100);
             
             const radius = 0.5 + Math.random() * 1.0;
             const rockGeo = new THREE.DodecahedronGeometry(radius);
@@ -2105,8 +2112,12 @@
                 `
                 #include <begin_vertex>
                 
-                // Get the instance position from the 4th column of instanceMatrix
+                // Get the instance position from the 4th column of instanceMatrix if instancing is used
+                #ifdef USE_INSTANCING
                 vec3 instancePos = instanceMatrix[3].xyz;
+                #else
+                vec3 instancePos = modelMatrix[3].xyz;
+                #endif
                 
                 float stormWindSpeedMult = 1.0 + uStormIntensity * 4.5;
                 float stormSwayMult = 1.0 + uStormIntensity * 4.0;
@@ -2121,8 +2132,8 @@
                     sway += jitter;
                 }
                 
-                // Sway vertices based on their vertical height relative to instance y
-                float heightAboveBase = transformed.y - instancePos.y;
+                // Sway vertices based on their vertical height in local space (tip of plant/blade sways, base does not)
+                float heightAboveBase = transformed.y;
                 if (heightAboveBase > 0.01) {
                     transformed.x += sway * heightAboveBase;
                     transformed.z += sway * 0.5 * heightAboveBase;
@@ -2135,8 +2146,8 @@
     function createGroundVegetation() {
         // --- GRASS BLADES ---
         const grassColors = [0x3a6b2a, 0x4a7a35, 0x2d5520, 0x567a3c, 0x3d6930];
-        const grassClumpsCount = 3000;
-        const bladesPerClump = 8;
+        const grassClumpsCount = 250;
+        const bladesPerClump = 5;
         const totalBlades = grassClumpsCount * bladesPerClump;
         
         const bladeGeo = new THREE.PlaneGeometry(1, 1);
@@ -2184,7 +2195,7 @@
         
         // --- WILDFLOWERS ---
         const flowerColors = [0xcc2222, 0xe8c030, 0x9b30d8, 0xffffff, 0xff8c42, 0xff69b4];
-        const flowerCount = 900;
+        const flowerCount = 80;
         
         const stemGeo = new THREE.CylinderGeometry(0.015, 0.022, 1, 4);
         stemGeo.translate(0, 0.5, 0); // pivot at base
@@ -2270,7 +2281,7 @@
         
         // --- FERNS ---
         const fernFrondCount = 6;
-        const fernTotalCount = 500;
+        const fernTotalCount = 50;
         const totalFronds = fernTotalCount * fernFrondCount;
         
         const frondGeo = new THREE.PlaneGeometry(1, 1);
@@ -2314,7 +2325,7 @@
         scene.add(fernMesh);
         
         // --- BUSHES ---
-        const bushCount = 100;
+        const bushCount = 25;
         const bushGeo = new THREE.DodecahedronGeometry(1.0, 0);
         bushMat = new THREE.MeshStandardMaterial({
             color: 0x244a1b,
@@ -2347,7 +2358,7 @@
         scene.add(bushMesh);
 
         // --- FALLEN LEAVES ---
-        const leafCount = 800;
+        const leafCount = 80;
         const leafGeo = new THREE.PlaneGeometry(0.3, 0.4);
         leafGeo.rotateX(-Math.PI / 2);
         
@@ -2604,27 +2615,31 @@
         for (let i = 0; i < hikerCount; i++) {
             let x, z, hVal;
             let tooClose = true;
-            while (tooClose) {
+            let attempts = 0;
+            while (tooClose && attempts < 150) {
+                attempts++;
                 x = (Math.random() - 0.5) * 230;
                 z = (Math.random() - 0.5) * 230;
                 hVal = getTerrainHeight(x, z);
                 tooClose = false;
                 
                 // Ensure starting area clear
-                if (Math.sqrt(x*x + z*z) < 15) {
+                if (Math.sqrt(x*x + z*z) < 15 && attempts < 80) {
                     tooClose = true;
                     continue;
                 }
                 // Ensure dry land
-                if (hVal < waterLevel) {
+                if (hVal < waterLevel && attempts < 120) {
                     tooClose = true;
                     continue;
                 }
                 // Check distance to other hikers
-                for (let h of hikers) {
-                    if (Math.sqrt((x - h.x)**2 + (z - h.z)**2) < 30) {
-                        tooClose = true;
-                        break;
+                if (attempts < 100) {
+                    for (let h of hikers) {
+                        if (Math.sqrt((x - h.x)**2 + (z - h.z)**2) < 30) {
+                            tooClose = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -2722,7 +2737,7 @@
 
     function createMistSystem() {
         mistParticles = [];
-        const mistCount = 90;
+        const mistCount = 30;
         const mistGeo = new THREE.PlaneGeometry(16, 16);
         
         const mistCanvas = document.createElement('canvas');
@@ -2979,11 +2994,13 @@
         
         for (let i = 0; i < rayCount; i++) {
             let x, z, hVal;
+            let attempts = 0;
             do {
+                attempts++;
                 x = (Math.random() - 0.5) * 260;
                 z = (Math.random() - 0.5) * 260;
                 hVal = getTerrainHeight(x, z);
-            } while (Math.sqrt(x*x + z*z) < 12 || hVal < waterLevel);
+            } while ((Math.sqrt(x*x + z*z) < 12 || hVal < waterLevel) && attempts < 100);
             
             const mat = new THREE.MeshBasicMaterial({
                 vertexColors: true,
@@ -3385,7 +3402,7 @@
     }
 
     function createRainSystem() {
-        const rainCount = 8000; // Heavy storm rain count
+        const rainCount = 800; // Further reduced to 800 for buttery-smooth movement
         rainGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(rainCount * 3);
         const velocities = new Float32Array(rainCount * 3);
@@ -4310,26 +4327,28 @@
             if (rainIntensity > 0.01) {
                 const pos = rainGeometry.attributes.position;
                 const vel = rainGeometry.attributes.velocity;
+                const posArr = pos.array;
+                const velArr = vel.array;
                 const windDriftX = stormIntensity * 6.5;
                 const windDriftZ = stormIntensity * 1.5;
                 
                 for (let i = 0; i < pos.count; i++) {
-                    let px = pos.getX(i);
-                    let py = pos.getY(i);
-                    let pz = pos.getZ(i);
+                    const i3 = i * 3;
+                    let px = posArr[i3];
+                    let py = posArr[i3 + 1];
+                    let pz = posArr[i3 + 2];
                     
-                    py -= vel.getY(i) * delta * (1.0 + stormIntensity * 0.4);
-                    px += (vel.getX(i) + windDriftX) * delta;
-                    pz += (vel.getZ(i) + windDriftZ) * delta;
+                    py -= velArr[i3 + 1] * delta * (1.0 + stormIntensity * 0.4);
+                    px += (velArr[i3] + windDriftX) * delta;
+                    pz += (velArr[i3 + 2] + windDriftZ) * delta;
                     
                     const dx = px - camera.position.x;
                     const dz = pz - camera.position.z;
                     
                     let hitGround = false;
-                    let groundY = waterLevel;
-                    if (py < 6) {
-                        groundY = Math.max(waterLevel, getTerrainHeight(px, pz));
-                        if (py < groundY) hitGround = true;
+                    const groundY = 0.0; // Approximate ground level for rain splashes (saves thousands of Math.sin/cos/sqrt calculations per frame)
+                    if (py < groundY) {
+                        hitGround = true;
                     }
                     
                     if (hitGround || Math.abs(dx) > 130 || Math.abs(dz) > 130) {
@@ -4338,7 +4357,13 @@
                             const idx = nextSplashIndex;
                             nextSplashIndex = (nextSplashIndex + 1) % maxSplashCount;
                             if (splashGeometry) {
-                                splashGeometry.attributes.position.setXYZ(idx, px, groundY, pz);
+                                const sPosArr = splashGeometry.attributes.position.array;
+                                const sIdx3 = idx * 3;
+                                sPosArr[sIdx3] = px;
+                                sPosArr[sIdx3 + 1] = groundY;
+                                sPosArr[sIdx3 + 2] = pz;
+                                splashGeometry.attributes.position.needsUpdate = true;
+                                
                                 const speed = 1.5 + Math.random() * 2.2;
                                 const angle = Math.random() * Math.PI * 2;
                                 splashData[idx].vx = Math.cos(angle) * speed;
@@ -4354,9 +4379,9 @@
                         pz = camera.position.z + (Math.random() - 0.5) * 260 - windDriftZ * 0.5;
                     }
                     
-                    pos.setX(i, px);
-                    pos.setY(i, py);
-                    pos.setZ(i, pz);
+                    posArr[i3] = px;
+                    posArr[i3 + 1] = py;
+                    posArr[i3 + 2] = pz;
                 }
                 pos.needsUpdate = true;
                 
@@ -4365,26 +4390,33 @@
                     splashParticles.material.opacity = rainIntensity * 0.82;
                     const posS = splashGeometry.attributes.position;
                     const colS = splashGeometry.attributes.color;
+                    const posSArr = posS.array;
+                    const colSArr = colS.array;
                     
                     for (let i = 0; i < maxSplashCount; i++) {
-                        const p = splashData[i];
-                        const curY = posS.getY(i);
+                        const i3 = i * 3;
+                        const curY = posSArr[i3 + 1];
                         if (curY < -500) continue;
                         
+                        const p = splashData[i];
                         p.life += delta;
                         if (p.life >= p.maxLife) {
-                            posS.setY(i, -999);
+                            posSArr[i3 + 1] = -999;
                         } else {
-                            let px = posS.getX(i) + p.vx * delta;
+                            let px = posSArr[i3] + p.vx * delta;
                             let py = curY + p.vy * delta;
-                            let pz = posS.getZ(i) + p.vz * delta;
+                            let pz = posSArr[i3 + 2] + p.vz * delta;
                             p.vy -= 9.8 * delta;
                             
-                            posS.setXYZ(i, px, py, pz);
+                            posSArr[i3] = px;
+                            posSArr[i3 + 1] = py;
+                            posSArr[i3 + 2] = pz;
                             
                             const ratio = p.life / p.maxLife;
                             const alpha = 1.0 - ratio;
-                            colS.setXYZ(i, 0.7 * alpha, 0.85 * alpha, 1.0 * alpha);
+                            colSArr[i3] = 0.7 * alpha;
+                            colSArr[i3 + 1] = 0.85 * alpha;
+                            colSArr[i3 + 2] = 1.0 * alpha;
                         }
                     }
                     posS.needsUpdate = true;
@@ -4821,9 +4853,9 @@
                 starsPoints.material.uniforms.uTime.value = time;
             }
             
-            // Throttled dynamic wave simulation on water geometry (runs every 3rd frame to reduce CPU wave calculation bottleneck)
+            // Throttled dynamic wave simulation on water geometry (runs every 8th frame for performance)
             waterFrameCount++;
-            if (waterMesh && waterFrameCount % 3 === 0) {
+            if (waterMesh && waterFrameCount % 8 === 0) {
                 const pos = waterMesh.geometry.attributes.position;
                 const waterTime = time * 0.0016;
                 for (let i = 0; i < pos.count; i++) {
@@ -4834,7 +4866,8 @@
                     pos.setZ(i, zVal);
                 }
                 pos.needsUpdate = true;
-                waterMesh.geometry.computeVertexNormals();
+                // Skip computeVertexNormals every other wave update for extra perf
+                if (waterFrameCount % 16 === 0) waterMesh.geometry.computeVertexNormals();
             }
             
             // Wind Sway Foliage (violently scales up and shakes during the peak of the storm)
@@ -4891,6 +4924,16 @@
                         m.userData.fallAngle = 0;
                         m.userData.fallTimer = 0;
                         m.userData.fallDelay = null;
+                    }
+                }
+                
+                // Distance check: only sway trees close to player (beyond 60 units, fog renders them invisible/black)
+                const isFalling = m.userData.isFalling || false;
+                if (!isFalling) {
+                    const dx = m.position.x - playerPos.x;
+                    const dz = m.position.z - playerPos.z;
+                    if (dx * dx + dz * dz > 3600) {
+                        return;
                     }
                 }
                 
@@ -4951,7 +4994,7 @@
         }
         
         frameCount++;
-        if (renderer && frameCount % 4 === 0) {
+        if (renderer && frameCount % 8 === 0) {
             renderer.shadowMap.needsUpdate = true;
         }
         
