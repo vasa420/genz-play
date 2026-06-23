@@ -183,30 +183,7 @@
             transform: scale(1.05);
         }
 
-        /* ── Hint chips ──────────────────────────────────────────── */
-        .chips {
-            display: flex; flex-wrap: wrap; gap: 10px;
-            justify-content: center; margin-bottom: 40px;
-        }
-
-        .chip {
-            background: rgba(255, 100, 0, 0.12);
-            border: 1.5px solid rgba(255, 100, 0, 0.45);
-            border-radius: 20px; padding: 7px 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; font-weight: 700;
-            color: #fff; letter-spacing: 2px;
-            cursor: pointer; transition: all 0.22s ease;
-            text-shadow: none;
-        }
-
-        .chip:hover {
-            border-color: var(--primary);
-            color: #000;
-            background: var(--primary);
-            box-shadow: 0 0 14px var(--primary-glow);
-            transform: translateY(-2px) scale(1.04);
-        }
+        /* chips removed — names are hidden in localStorage only */
 
         /* ── Result panel ────────────────────────────────────────── */
         .result-panel {
@@ -413,7 +390,6 @@
         <div class="db-status">
             <div class="db-dot"></div>
             <span class="db-label">DATABASE ONLINE</span>
-            <span class="db-count" id="db-count">— 14 RECORDS</span>
         </div>
 
         <!-- Search bar -->
@@ -432,8 +408,7 @@
             </div>
         </div>
 
-        <!-- Quick select chips -->
-        <div class="chips" id="chip-list"></div>
+        <!-- names stored in localStorage only, not shown to user -->
 
         <!-- Result panel -->
         <div class="result-panel" id="result-panel">
@@ -501,21 +476,7 @@
             } catch(e) { return SQUAD_DB; }
         }
 
-        // ── Build chips ──────────────────────────────────────────────
-        const chipList = document.getElementById('chip-list');
-        SQUAD_DB.forEach(name => {
-            const c = document.createElement('div');
-            c.className = 'chip';
-            c.textContent = name;
-            c.onclick = () => {
-                document.getElementById('search-input').value = name;
-                runSearch();
-            };
-            chipList.appendChild(c);
-        });
-
-        document.getElementById('db-count').textContent =
-            `— ${SQUAD_DB.length} RECORDS`;
+        // Names are hidden — only stored in localStorage, not shown to user
 
         // ── Keyboard enter ───────────────────────────────────────────
         document.getElementById('search-input').addEventListener('keydown', e => {
