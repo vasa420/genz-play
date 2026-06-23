@@ -185,6 +185,141 @@
 
         /* chips removed — names are hidden in localStorage only */
 
+        /* ── AI Scene Generator ──────────────────────────────────────── */
+        .scene-gen-block {
+            width: 100%; margin-top: 18px; display: flex;
+            flex-direction: column; align-items: center; gap: 16px;
+        }
+
+        .scene-divider {
+            width: 100%; display: flex; align-items: center; gap: 12px;
+            color: rgba(255,215,0,0.7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 3px;
+        }
+
+        .scene-divider::before, .scene-divider::after {
+            content: '';
+            flex: 1; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
+        }
+
+        /* Generating spinner */
+        .scene-generating {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            width: 100%;
+        }
+
+        .gen-spinner {
+            width: 48px; height: 48px;
+            border: 3px solid rgba(255,215,0,0.12);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            box-shadow: 0 0 16px rgba(255,215,0,0.25);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .gen-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; letter-spacing: 4px; color: var(--gold);
+            animation: blink-text 0.7s step-end infinite;
+        }
+
+        .gen-sub {
+            font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 1px;
+        }
+
+        .gen-progress-track {
+            width: 100%; height: 3px;
+            background: rgba(255,215,0,0.08); border-radius: 4px; overflow: hidden;
+        }
+
+        .gen-progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--gold), #ffaa00);
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+        }
+
+        /* Image result */
+        .scene-result {
+            display: none; flex-direction: column; align-items: center; gap: 14px;
+            width: 100%;
+        }
+
+        .scene-result.active { display: flex; }
+
+        .scene-img-wrapper {
+            position: relative; width: 100%; border-radius: 16px; overflow: hidden;
+            border: 2px solid rgba(255,215,0,0.25);
+            box-shadow: 0 0 30px rgba(255,215,0,0.15), 0 8px 32px rgba(0,0,0,0.6);
+        }
+
+        .scene-img-wrapper img {
+            width: 100%; display: block;
+            border-radius: 14px;
+            transition: transform 0.4s ease;
+        }
+
+        .scene-img-wrapper:hover img { transform: scale(1.02); }
+
+        .scene-img-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+            padding: 20px 16px 12px;
+            display: flex; justify-content: flex-end;
+        }
+
+        .scene-img-badge {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,215,0,0.3);
+            color: var(--gold); font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 2px;
+            padding: 4px 10px; border-radius: 20px;
+        }
+
+        .scene-caption {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 2px;
+            color: rgba(255,255,255,0.45); text-align: center;
+        }
+
+        .scene-actions {
+            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .btn-download, .btn-regen {
+            padding: 9px 20px; border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 2px;
+            cursor: pointer; transition: 0.22s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        .btn-download {
+            background: rgba(255,215,0,0.12);
+            border: 1.5px solid rgba(255,215,0,0.4);
+            color: var(--gold);
+        }
+
+        .btn-download:hover {
+            background: var(--gold); color: #000;
+            box-shadow: 0 0 14px rgba(255,215,0,0.5);
+        }
+
+        .btn-regen {
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.6);
+        }
+
+        .btn-regen:hover {
+            border-color: rgba(255,255,255,0.4);
+            color: #fff;
+        }
+
         /* ── Upload button ───────────────────────────────────────── */
         .btn-upload {
             width: 38px; height: 38px; border-radius: 10px;
@@ -517,6 +652,35 @@
                 <div class="result-query-value" id="found-name"></div>
                 <div class="result-badge found">✓ PRESENT IN DATABASE</div>
                 <div class="result-detail">This squad member is an active registered record in the ATC STUDIO database.</div>
+
+                <!-- AI Scene generation block (visible only when photo uploaded) -->
+                <div class="scene-gen-block" id="scene-gen-block">
+                    <div class="scene-divider"><span>⚡ AI SCENE GENERATOR</span></div>
+
+                    <!-- Generating spinner -->
+                    <div class="scene-generating" id="scene-generating">
+                        <div class="gen-spinner"></div>
+                        <div class="gen-label" id="gen-label">GENERATING 3D SCENE...</div>
+                        <div class="gen-sub">Crafting a cinematic world for this person</div>
+                        <div class="gen-progress-track"><div class="gen-progress-fill" id="gen-progress-fill"></div></div>
+                    </div>
+
+                    <!-- Generated image display -->
+                    <div class="scene-result" id="scene-result">
+                        <div class="scene-img-wrapper">
+                            <img id="scene-img" src="" alt="AI Generated Scene">
+                            <div class="scene-img-overlay">
+                                <span class="scene-img-badge">🤖 AI GENERATED · 3D SCENE</span>
+                            </div>
+                        </div>
+                        <div class="scene-caption" id="scene-caption"></div>
+                        <div class="scene-actions">
+                            <a class="btn-download" id="btn-download" href="#" download="atc_scene.jpg" target="_blank">⬇ DOWNLOAD IMAGE</a>
+                            <button class="btn-regen" onclick="regenScene()">🔄 REGENERATE</button>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="btn-search-again" onclick="resetSearch()">SEARCH AGAIN</button>
             </div>
 
@@ -661,6 +825,15 @@
                 if (found) {
                     document.getElementById('found-name').textContent = query;
                     foundBlock.classList.add('active');
+
+                    // If a photo was uploaded → trigger AI scene generation
+                    const uploadedImg = document.getElementById('preview-img').src;
+                    const hasPhoto = uploadedImg && uploadedImg.startsWith('data:image');
+                    if (hasPhoto) {
+                        triggerSceneGen(query);
+                    } else {
+                        document.getElementById('scene-gen-block').style.display = 'none';
+                    }
                 } else {
                     document.getElementById('notfound-name').textContent = query;
                     notfoundBlock.classList.add('active');
@@ -679,9 +852,117 @@
             document.getElementById('result-notfound').classList.remove('active');
             document.getElementById('progress-fill').style.width = '0%';
 
+            // Reset scene generator
+            document.getElementById('scene-gen-block').style.display = '';
+            document.getElementById('scene-generating').style.display = 'flex';
+            document.getElementById('scene-result').classList.remove('active');
+            document.getElementById('scene-img').src = '';
+            document.getElementById('gen-progress-fill').style.transition = 'none';
+            document.getElementById('gen-progress-fill').style.width = '0%';
+
             const inp = document.getElementById('search-input');
             inp.value = '';
             inp.focus();
+        }
+
+        // ── AI Scene Generator (Pollinations.ai) ─────────────────────
+        let currentQuery = '';
+
+        // Scene prompts cycling for variety
+        const SCENE_PROMPTS = [
+            (name) => `cinematic 3D realistic render of a young Indian man named ${name} confidently standing next to a modern city bus, golden hour lighting, photorealistic, ultra-detailed, dramatic cinematic composition, 8K`,
+            (name) => `photorealistic 3D illustration of a young man named ${name} driving a large bus on a highway, view from outside, motion blur background, dramatic sunset, cinematic, hyper-detailed`,
+            (name) => `ultra-realistic 3D scene of a young man named ${name} leaning against a red double decker bus in a city, street lights, cinematic lighting, film grain, professional photography style`,
+        ];
+
+        let scenePromptIdx = 0;
+
+        function triggerSceneGen(name) {
+            currentQuery = name;
+            scenePromptIdx = 0;
+            generateScene(name, scenePromptIdx);
+        }
+
+        function regenScene() {
+            scenePromptIdx = (scenePromptIdx + 1) % SCENE_PROMPTS.length;
+            // Reset to generating state
+            document.getElementById('scene-generating').style.display = 'flex';
+            document.getElementById('scene-result').classList.remove('active');
+            document.getElementById('gen-progress-fill').style.transition = 'none';
+            document.getElementById('gen-progress-fill').style.width = '0%';
+            generateScene(currentQuery, scenePromptIdx);
+        }
+
+        function generateScene(name, promptIdx) {
+            const genProgress = document.getElementById('gen-progress-fill');
+            const genLabel = document.getElementById('gen-label');
+            const sceneGenerating = document.getElementById('scene-generating');
+            const sceneResult = document.getElementById('scene-result');
+            const sceneImg = document.getElementById('scene-img');
+            const sceneCaption = document.getElementById('scene-caption');
+            const btnDownload = document.getElementById('btn-download');
+
+            // Animate progress bar over ~15s (image gen takes 10-20s)
+            genProgress.style.transition = 'none';
+            genProgress.style.width = '0%';
+            requestAnimationFrame(() => {
+                genProgress.style.transition = 'width 18s cubic-bezier(0.1, 0, 0.5, 1)';
+                genProgress.style.width = '92%';
+            });
+
+            // Label cycling
+            const genLabels = [
+                'GENERATING 3D SCENE...', 'BUILDING ENVIRONMENT...', 
+                'RENDERING LIGHTING...', 'APPLYING CINEMATIC FILTER...'
+            ];
+            let li = 0;
+            const labelInt = setInterval(() => {
+                genLabel.textContent = genLabels[li % genLabels.length];
+                li++;
+            }, 2200);
+
+            // Build Pollinations prompt
+            const prompt = SCENE_PROMPTS[promptIdx](name);
+            const seed = Math.floor(Math.random() * 999999);
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=500&seed=${seed}&nologo=true&enhance=true`;
+
+            // Load image
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                clearInterval(labelInt);
+                genProgress.style.transition = 'width 0.4s ease';
+                genProgress.style.width = '100%';
+
+                setTimeout(() => {
+                    sceneGenerating.style.display = 'none';
+                    sceneImg.src = img.src;
+                    btnDownload.href = img.src;
+                    sceneCaption.textContent = `⚡ ${name} · AI-GENERATED SCENE · BUS ENVIRONMENT`;
+                    sceneResult.classList.add('active');
+                }, 400);
+            };
+
+            img.onerror = () => {
+                clearInterval(labelInt);
+                genLabel.textContent = 'RETRYING...';
+                // Retry once with a different seed
+                const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=500&seed=${seed+1}&nologo=true`;
+                const img2 = new Image();
+                img2.onload = () => {
+                    sceneGenerating.style.display = 'none';
+                    sceneImg.src = img2.src;
+                    btnDownload.href = img2.src;
+                    sceneCaption.textContent = `⚡ ${name} · AI-GENERATED SCENE · BUS ENVIRONMENT`;
+                    sceneResult.classList.add('active');
+                };
+                img2.onerror = () => {
+                    genLabel.textContent = 'GENERATION FAILED — CHECK CONNECTION';
+                };
+                img2.src = retryUrl;
+            };
+
+            img.src = url;
         }
 
         // ── Microphone (Web Speech API) ──────────────────────────────
