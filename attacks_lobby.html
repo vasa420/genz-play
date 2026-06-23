@@ -10,8 +10,9 @@
             --primary: #FF6400;
             --primary-glow: rgba(255, 100, 0, 0.45);
             --bg: #070714;
-            --glass: rgba(10, 10, 25, 0.72);
-            --border: rgba(255, 100, 0, 0.18);
+            --glass: rgba(10, 10, 25, 0.82);
+            --border: rgba(255, 100, 0, 0.22);
+            --danger: #FF2200;
         }
 
         * {
@@ -29,38 +30,40 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: radial-gradient(circle at center, #141432 0%, #03030d 100%);
+            background: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.88)), url('attacks_lobby_bg.png') center/cover no-repeat;
         }
 
         /* Ambient scanlines overlay */
         .scanlines {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12) 1.5px, transparent 1.5px, transparent 3px);
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18), rgba(0,0,0,0.18) 1.5px, transparent 1.5px, transparent 3px);
             pointer-events: none;
             z-index: 1000;
+            opacity: 0.8;
         }
 
-        /* Glassmorphism panel */
+        /* Lobby panel */
         .lobby-panel {
             width: 90%;
-            max-width: 850px;
+            max-width: 500px;
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 40px;
+            padding: 45px 35px;
             text-align: center;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 30px var(--primary-glow);
+            backdrop-filter: blur(25px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px var(--primary-glow);
             position: relative;
             z-index: 10;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .title-glitch {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 44px;
+            font-size: 52px;
             font-weight: 900;
-            letter-spacing: 8px;
+            letter-spacing: 10px;
             color: var(--primary);
             text-shadow: 0 0 15px var(--primary-glow);
             margin: 0 0 10px 0;
@@ -68,106 +71,365 @@
         }
 
         .subtitle {
-            font-size: 13px;
-            color: #ff9d00;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 35px;
-            font-weight: 700;
-        }
-
-        /* Squad list status */
-        .status-container {
-            background: rgba(0,0,0,0.45);
-            border: 1px solid rgba(255, 100, 0, 0.1);
-            border-radius: 16px;
-            padding: 25px;
-            margin: 30px 0;
-            text-align: left;
-            font-family: 'JetBrains Mono', monospace;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .status-log {
             font-size: 12px;
-            color: rgba(255,255,255,0.7);
-            line-height: 1.8;
-            margin-bottom: 8px;
+            color: #ffaa00;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 45px;
+            font-weight: 700;
+            opacity: 0.85;
+        }
+
+        /* Action Menu Buttons */
+        .menu-list {
             display: flex;
+            flex-direction: column;
+            gap: 15px;
             align-items: center;
-            gap: 10px;
         }
 
-        .status-log.success {
-            color: #00FF66;
-            text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+        .menu-btn {
+            width: 100%;
+            padding: 18px 24px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1.5px solid rgba(255, 100, 0, 0.25);
+            color: #eee;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: left;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
 
-        .status-log.alert {
-            color: #FFD700;
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 100, 0, 0.15), transparent);
+            transition: 0.5s;
         }
 
-        .status-log span {
+        .menu-btn:hover::before {
+            left: 100%;
+        }
+
+        .menu-btn:hover {
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 25px var(--primary-glow), 0 0 10px rgba(255, 100, 0, 0.2);
+            transform: translateX(8px);
+            background: rgba(255, 100, 0, 0.05);
+        }
+
+        .menu-btn:active {
+            transform: scale(0.98) translateX(8px);
+        }
+
+        /* Interactive Dev Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px var(--primary-glow);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 4px;
             color: var(--primary);
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--primary-glow);
         }
 
-        .btn-action {
+        .modal-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #ffd700;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+
+        .squad-member-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        @media(max-width: 480px) {
+            .squad-member-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .squad-member-tag {
+            background: rgba(255, 100, 0, 0.04);
+            border: 1px solid rgba(255, 100, 0, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: #ddd;
+        }
+
+        .btn-close {
             background: transparent;
             border: 2px solid var(--primary);
             color: var(--primary);
-            padding: 12px 30px;
-            font-size: 13px;
+            padding: 12px 35px;
+            font-size: 12px;
             font-weight: 900;
             letter-spacing: 3px;
             border-radius: 8px;
             cursor: pointer;
             transition: 0.3s;
             text-transform: uppercase;
-            box-shadow: 0 0 15px var(--primary-glow);
-            margin: 10px;
+            margin-top: 20px;
         }
 
-        .btn-action:hover {
+        .btn-close:hover {
             background: var(--primary);
             color: #000;
-            box-shadow: 0 0 25px var(--primary);
-            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--primary);
         }
 
-        .btn-secondary {
-            border-color: #666;
-            color: #aaa;
-            box-shadow: none;
+        /* Matchmaking Simulator Overlay */
+        .match-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--glass);
+            border-radius: 24px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            padding: 20px;
         }
 
-        .btn-secondary:hover {
-            background: #444;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        .match-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 100, 0, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .match-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #ffaa00;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .match-countdown {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary-glow);
+            margin: 15px 0;
         }
     </style>
 </head>
 <body>
     <div class="scanlines"></div>
 
-    <div class="lobby-panel">
+    <!-- Main Lobby Panel -->
+    <div class="lobby-panel" id="main-panel">
+        <!-- Matchmaking screen inside panel -->
+        <div class="match-overlay" id="match-overlay">
+            <div class="spinner"></div>
+            <div class="match-status" id="match-status-text">Searching for servers...</div>
+            <div class="match-countdown" id="match-countdown-num"></div>
+            <button class="btn-close" style="margin-top: 15px; border-color: var(--danger); color: var(--danger);" onclick="cancelMatchmaking()">CANCEL</button>
+        </div>
+
         <h1 class="title-glitch">ATTACKS</h1>
         <div class="subtitle">TACTICAL SQUAD ARENA</div>
 
-        <div class="status-container">
-            <div class="status-log success">✓ [SYSTEM] Particle engine connection established.</div>
-            <div class="status-log success">✓ [DATABASE] Squad list loaded: 12 members online.</div>
-            <div class="status-log alert">⚡ [LOBBY] Waiting for game master to spin up game server.</div>
-            <div class="status-log">▶ <span>VAISAL, GIRISH, KISHOOR, GIRI</span> are syncing profiles...</div>
-            <div class="status-log">▶ <span>VASANTH, LOGITH, DHARNISH, SURYA</span> are in sandbox...</div>
-            <div class="status-log">▶ <span>JD, NITHISH, SUDHISH, THAYA</span> ready to attack...</div>
-        </div>
-
-        <div style="margin-top: 25px;">
-            <button class="btn-action" onclick="alert('Lobby servers are initializing. Battle will begin shortly!')">START MATCH</button>
-            <button class="btn-action btn-secondary" onclick="window.location.href='arcade_hub.html'">BACK TO HUB</button>
+        <div class="menu-list">
+            <button class="menu-btn" onclick="startSimulatedMatch()">1. START</button>
+            <button class="menu-btn" onclick="quitLobby()">2. QUIT</button>
+            <button class="menu-btn" onclick="showDevModal()">3. DEVELOPER NAME</button>
         </div>
     </div>
+
+    <!-- Developer Information Modal -->
+    <div class="modal-overlay" id="dev-modal" onclick="closeDevModal(event)">
+        <div class="modal-card">
+            <div class="modal-title">DEVELOPER INFO</div>
+            <div class="modal-subtitle">DEVELOPER NAME: ATC STUDIO</div>
+            
+            <p style="font-size: 13px; color: #aaa; line-height: 1.6; letter-spacing: 1px; max-width: 480px; margin: 0 auto 20px auto;">
+                ATTACKS is proudly built and maintained by **ATC STUDIO**, in collaboration with the official squad community.
+            </p>
+
+            <div style="font-size: 11px; letter-spacing: 3px; color: #ffaa00; font-weight: bold; text-transform: uppercase; margin-top: 25px;">SQUAD MEMBERS ONLINE:</div>
+            <div class="squad-member-grid">
+                <div class="squad-member-tag">VAISAL</div>
+                <div class="squad-member-tag">GIRISH</div>
+                <div class="squad-member-tag">KISHOOR</div>
+                <div class="squad-member-tag">GIRI</div>
+                <div class="squad-member-tag">VASANTH</div>
+                <div class="squad-member-tag">LOGITH</div>
+                <div class="squad-member-tag">DHARNISH</div>
+                <div class="squad-member-tag">SURYA</div>
+                <div class="squad-member-tag">JD</div>
+                <div class="squad-member-tag">NITHISH</div>
+                <div class="squad-member-tag">SUDHISH</div>
+                <div class="squad-member-tag">THAYA</div>
+            </div>
+
+            <button class="btn-close" onclick="closeDevModalDirect()">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        let matchInterval = null;
+        let matchTimeout = null;
+
+        function startSimulatedMatch() {
+            const overlay = document.getElementById('match-overlay');
+            const statusText = document.getElementById('match-status-text');
+            const countdownNum = document.getElementById('match-countdown-num');
+            
+            overlay.classList.add('active');
+            statusText.innerText = "Searching for servers...";
+            countdownNum.innerText = "";
+
+            // Phase 1: Search for 2 seconds
+            matchTimeout = setTimeout(() => {
+                statusText.innerText = "Arena match found! Syncing Squad...";
+                
+                // Phase 2: Start 5-second countdown
+                let count = 5;
+                countdownNum.innerText = count;
+                
+                matchInterval = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        countdownNum.innerText = count;
+                    } else {
+                        clearInterval(matchInterval);
+                        statusText.innerText = "ENTERING BATTLE ARENA";
+                        countdownNum.innerText = "⚔";
+                        
+                        setTimeout(() => {
+                            overlay.classList.remove('active');
+                            alert("Battle Initiated! Welcome to Tactical Arena.");
+                        }, 800);
+                    }
+                }, 1000);
+
+            }, 2000);
+        }
+
+        function cancelMatchmaking() {
+            const overlay = document.getElementById('match-overlay');
+            overlay.classList.remove('active');
+            if (matchTimeout) clearTimeout(matchTimeout);
+            if (matchInterval) clearInterval(matchInterval);
+        }
+
+        function quitLobby() {
+            window.location.href = 'arcade_hub.html';
+        }
+
+        // Add keyboard key listener for buttons: 1, 2, 3
+        document.addEventListener('keydown', (e) => {
+            // If dev modal is active, ignore number presses or allow Escape to close it
+            const devModal = document.getElementById('dev-modal');
+            const matchOverlay = document.getElementById('match-overlay');
+            
+            if (e.key === 'Escape') {
+                closeDevModalDirect();
+                cancelMatchmaking();
+                return;
+            }
+
+            if (devModal.classList.contains('active') || matchOverlay.classList.contains('active')) {
+                return;
+            }
+
+            if (e.key === '1') {
+                startSimulatedMatch();
+            } else if (e.key === '2') {
+                quitLobby();
+            } else if (e.key === '3') {
+                showDevModal();
+            }
+        });
+
+        function showDevModal() {
+            document.getElementById('dev-modal').classList.add('active');
+        }
+
+        function closeDevModalDirect() {
+            document.getElementById('dev-modal').classList.remove('active');
+        }
+
+        function closeDevModal(e) {
+            if (e.target.id === 'dev-modal') {
+                closeDevModalDirect();
+            }
+        }
+    </script>
 </body>
 </html>
