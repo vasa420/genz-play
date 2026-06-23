@@ -120,7 +120,7 @@
         }
 
         .search-bar {
-            width: 100%; padding: 18px 110px 18px 24px;
+            width: 100%; padding: 18px 152px 18px 24px;
             background: rgba(255,255,255,0.03);
             border: 1.5px solid rgba(255,100,0,0.25);
             border-radius: 14px;
@@ -184,6 +184,73 @@
         }
 
         /* chips removed — names are hidden in localStorage only */
+
+        /* ── Upload button ───────────────────────────────────────── */
+        .btn-upload {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: rgba(255,100,0,0.1);
+            border: 1.5px solid rgba(255,100,0,0.25);
+            color: var(--primary);
+            font-size: 20px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.25s; line-height: 1;
+        }
+
+        .btn-upload:hover {
+            background: rgba(255,100,0,0.22);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+            transform: scale(1.08);
+        }
+
+        /* ── Image preview panel ─────────────────────────────────── */
+        .upload-preview {
+            width: 100%; display: none;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,100,0,0.22);
+            border-radius: 14px; padding: 16px 18px;
+            margin-bottom: 20px;
+            flex-direction: row; align-items: center; gap: 16px;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .upload-preview.active { display: flex; }
+
+        .upload-preview img {
+            width: 64px; height: 64px;
+            object-fit: cover; border-radius: 10px;
+            border: 2px solid rgba(255,100,0,0.35);
+            box-shadow: 0 0 10px rgba(255,100,0,0.2);
+        }
+
+        .upload-preview-info {
+            flex: 1; display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .upload-preview-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; color: #fff; letter-spacing: 1px;
+            word-break: break-all;
+        }
+
+        .upload-preview-size {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 1px;
+        }
+
+        .btn-remove-upload {
+            background: rgba(255,34,68,0.1);
+            border: 1.5px solid rgba(255,34,68,0.3);
+            color: var(--red); width: 30px; height: 30px;
+            border-radius: 8px; font-size: 14px;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; transition: 0.2s;
+        }
+
+        .btn-remove-upload:hover {
+            background: var(--red); color: #fff;
+            box-shadow: 0 0 10px var(--red-glow);
+        }
 
         /* ── Result panel ────────────────────────────────────────── */
         .result-panel {
@@ -392,6 +459,9 @@
             <span class="db-label">DATABASE ONLINE</span>
         </div>
 
+        <!-- Hidden file input -->
+        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(event)">
+
         <!-- Search bar -->
         <div class="search-wrapper">
             <input
@@ -403,9 +473,20 @@
                 spellcheck="false"
             >
             <div class="search-btns">
+                <button class="btn-upload" title="Upload photo" onclick="document.getElementById('file-input').click()">+</button>
                 <button class="btn-mic" id="mic-btn" title="Search by voice" onclick="toggleMic()">🎤</button>
                 <button class="btn-search" title="Search" onclick="runSearch()">⏎</button>
             </div>
+        </div>
+
+        <!-- Upload preview -->
+        <div class="upload-preview" id="upload-preview">
+            <img id="preview-img" src="" alt="uploaded">
+            <div class="upload-preview-info">
+                <div class="upload-preview-name" id="preview-name"></div>
+                <div class="upload-preview-size" id="preview-size"></div>
+            </div>
+            <button class="btn-remove-upload" title="Remove" onclick="removeUpload()">✕</button>
         </div>
 
         <!-- names stored in localStorage only, not shown to user -->
@@ -477,6 +558,31 @@
         }
 
         // Names are hidden — only stored in localStorage, not shown to user
+
+        // ── Upload photo handler ─────────────────────────────────────
+        function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('preview-name').textContent = file.name;
+                const kb = (file.size / 1024).toFixed(1);
+                document.getElementById('preview-size').textContent = `${kb} KB · IMAGE UPLOADED`;
+                document.getElementById('upload-preview').classList.add('active');
+            };
+            reader.readAsDataURL(file);
+            // Reset input so same file can be re-selected
+            event.target.value = '';
+        }
+
+        function removeUpload() {
+            document.getElementById('preview-img').src = '';
+            document.getElementById('preview-name').textContent = '';
+            document.getElementById('preview-size').textContent = '';
+            document.getElementById('upload-preview').classList.remove('active');
+        }
 
         // ── Keyboard enter ───────────────────────────────────────────
         document.getElementById('search-input').addEventListener('keydown', e => {
