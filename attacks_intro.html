@@ -323,7 +323,7 @@
                 <p class="disclaimer-text">
                     THIS GAME IS DEVELOPED ONLY FOR ENJOYMENT PURPOSE ONLY. ALL EVENTS, CHARACTERS, AND SQUAD MEMBERS REPRESENTED IN THIS GAME ARE PURELY FOR RECREATION.
                 </p>
-                <button class="btn-battle" onclick="goToLobby()">CONTINUE TO ARENA</button>
+                <button class="btn-battle" onclick="goToLobby()">CONTINUE TO ARENA [K]</button>
             </div>
         </div>
     </div>
@@ -554,6 +554,26 @@
         function goToLobby() {
             window.location.href = 'attacks_lobby.html';
         }
+
+        // Handle K keypress to trigger continue
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'k' || e.key === 'K') {
+                const disclaimerStage = document.getElementById('disclaimer-stage');
+                if (disclaimerStage && disclaimerStage.classList.contains('active')) {
+                    const btn = disclaimerStage.querySelector('.btn-battle');
+                    if (btn) {
+                        btn.style.background = 'var(--primary)';
+                        btn.style.color = '#000';
+                        btn.style.boxShadow = '0 0 25px var(--primary)';
+                        btn.style.transform = 'translateY(1px)';
+                    }
+                    setTimeout(() => {
+                        goToLobby();
+                    }, 150);
+                }
+            }
+        });
+
         // Start typing on page load
         startStageSequence();
     </script>
