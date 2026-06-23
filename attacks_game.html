@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | Search Engine v1.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.45);
+            --green: #00FF88;
+            --green-glow: rgba(0, 255, 136, 0.35);
+            --red: #FF2244;
+            --red-glow: rgba(255, 34, 68, 0.35);
+            --gold: #FFD700;
+            --bg: #04040c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* ── Scanline overlay ───────────────────────────────────── */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.7;
+        }
+
+        /* ── Ambient particles bg ────────────────────────────────── */
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+
+        /* ── Header ─────────────────────────────────────────────── */
+        .header {
+            width: 100%; padding: 22px 30px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 100, 0, 0.12);
+            background: rgba(4,4,12,0.9);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px; font-weight: 900; letter-spacing: 6px;
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .header-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 3px; color: #555;
+            text-transform: uppercase;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid rgba(255,100,0,0.3);
+            color: rgba(255,100,0,0.7);
+            padding: 8px 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 2px;
+            border-radius: 6px; cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .btn-back:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* ── Main content ────────────────────────────────────────── */
+        .main {
+            width: 100%; max-width: 720px;
+            padding: 50px 20px 80px;
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .engine-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(11px, 2vw, 13px);
+            letter-spacing: 5px; color: rgba(255,100,0,0.55);
+            text-transform: uppercase; margin-bottom: 12px;
+        }
+
+        .engine-heading {
+            font-size: clamp(28px, 6vw, 48px);
+            font-weight: 900; letter-spacing: 3px;
+            background: linear-gradient(135deg, #FF6400 30%, #FF9D00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center; margin-bottom: 8px;
+        }
+
+        .engine-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: #444; letter-spacing: 3px;
+            text-align: center; margin-bottom: 50px;
+        }
+
+        /* ── Search bar ──────────────────────────────────────────── */
+        .search-wrapper {
+            width: 100%; position: relative; margin-bottom: 20px;
+        }
+
+        .search-bar {
+            width: 100%; padding: 18px 110px 18px 24px;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,100,0,0.25);
+            border-radius: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px; letter-spacing: 2px;
+            color: #fff; outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            caret-color: var(--primary);
+        }
+
+        .search-bar::placeholder {
+            color: rgba(255,255,255,0.18);
+            letter-spacing: 2px;
+        }
+
+        .search-bar:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(255,100,0,0.2), 0 0 0 3px rgba(255,100,0,0.06);
+        }
+
+        .search-btns {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            display: flex; gap: 8px; align-items: center;
+        }
+
+        .btn-mic, .btn-search {
+            width: 38px; height: 38px; border-radius: 10px; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 17px; transition: 0.25s;
+        }
+
+        .btn-mic {
+            background: rgba(255,100,0,0.1);
+            border: 1.5px solid rgba(255,100,0,0.25);
+            color: var(--primary);
+        }
+
+        .btn-mic:hover { background: rgba(255,100,0,0.2); box-shadow: 0 0 12px var(--primary-glow); }
+
+        .btn-mic.listening {
+            background: rgba(255,34,68,0.2);
+            border-color: var(--red);
+            color: var(--red);
+            animation: mic-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes mic-pulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(255,34,68,0.5); }
+            50% { box-shadow: 0 0 20px rgba(255,34,68,0.9); }
+        }
+
+        .btn-search {
+            background: var(--primary);
+            color: #000; font-size: 16px; font-weight: 900;
+        }
+
+        .btn-search:hover {
+            background: #ff7a1a;
+            box-shadow: 0 0 15px var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* ── Hint chips ──────────────────────────────────────────── */
+        .chips {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            justify-content: center; margin-bottom: 40px;
+        }
+
+        .chip {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 5px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: #555; letter-spacing: 1px;
+            cursor: pointer; transition: 0.25s;
+        }
+
+        .chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(255,100,0,0.07);
+        }
+
+        /* ── Result panel ────────────────────────────────────────── */
+        .result-panel {
+            width: 100%;
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px; padding: 35px 30px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-panel.visible { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Analyzing spinner */
+        .analyzing-block { display: none; flex-direction: column; align-items: center; gap: 18px; }
+        .analyzing-block.active { display: flex; }
+
+        .radar {
+            width: 70px; height: 70px; position: relative;
+        }
+
+        .radar-ring {
+            position: absolute; border-radius: 50%;
+            border: 2px solid rgba(255,100,0,0.2);
+            top: 50%; left: 50%; transform: translate(-50%,-50%);
+        }
+
+        .radar-ring:nth-child(1) { width: 70px; height: 70px; animation: ripple 1.8s linear infinite; }
+        .radar-ring:nth-child(2) { width: 50px; height: 50px; animation: ripple 1.8s linear 0.6s infinite; }
+        .radar-ring:nth-child(3) { width: 30px; height: 30px; animation: ripple 1.8s linear 1.2s infinite; }
+
+        @keyframes ripple {
+            0%   { border-color: rgba(255,100,0,0.6); transform: translate(-50%,-50%) scale(0.8); }
+            70%  { border-color: rgba(255,100,0,0.2); transform: translate(-50%,-50%) scale(1.4); }
+            100% { border-color: rgba(255,100,0,0);   transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+        }
+
+        .radar-dot {
+            width: 10px; height: 10px; background: var(--primary);
+            border-radius: 50%; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%,-50%);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .analyzing-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px; letter-spacing: 5px; color: var(--primary);
+            text-transform: uppercase;
+            animation: blink-text 0.6s step-end infinite;
+        }
+
+        @keyframes blink-text {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+
+        .analyzing-query {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; letter-spacing: 3px; color: #555;
+        }
+
+        /* Progress bar */
+        .progress-bar-track {
+            width: 100%; height: 4px;
+            background: rgba(255,100,0,0.1);
+            border-radius: 4px; overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #FF6400, #FFD700);
+            border-radius: 4px;
+            transition: width linear;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        /* Result states */
+        .result-block { display: none; flex-direction: column; align-items: center; gap: 14px; }
+        .result-block.active { display: flex; }
+
+        .result-icon { font-size: 48px; line-height: 1; }
+
+        .result-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(12px, 3vw, 16px);
+            font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
+        }
+
+        .result-status.found    { color: var(--green); text-shadow: 0 0 15px var(--green-glow); }
+        .result-status.notfound { color: var(--red);   text-shadow: 0 0 15px var(--red-glow); }
+
+        .result-query-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: #555; letter-spacing: 3px;
+        }
+
+        .result-query-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px; font-weight: 900; letter-spacing: 4px;
+            color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.4);
+        }
+
+        .result-badge {
+            padding: 6px 18px; border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 2px; font-weight: 700;
+        }
+
+        .result-badge.found    { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--green); }
+        .result-badge.notfound { background: rgba(255,34,68,0.1);  border: 1px solid rgba(255,34,68,0.3);  color: var(--red); }
+
+        .result-detail {
+            font-size: 13px; color: #666; line-height: 1.6; max-width: 400px;
+        }
+
+        .btn-search-again {
+            margin-top: 8px; padding: 10px 28px;
+            background: transparent;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 3px;
+            border-radius: 8px; cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .btn-search-again:hover {
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* ── Mic status toast ────────────────────────────────────── */
+        .mic-toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(20,0,0,0.9); border: 1px solid var(--red);
+            padding: 12px 24px; border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; letter-spacing: 2px; color: var(--red);
+            display: none; z-index: 9999;
+            animation: toastUp 0.3s ease;
+        }
+
+        .mic-toast.active { display: block; }
+
+        @keyframes toastUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(15px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ── Database status bar ─────────────────────────────────── */
+        .db-status {
+            width: 100%; display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-bottom: 35px;
+        }
+
+        .db-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: db-pulse 2s ease-in-out infinite; }
+
+        @keyframes db-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .db-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 3px; color: #444;
+            text-transform: uppercase;
+        }
+
+        .db-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 1px; color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <!-- Floating particles bg -->
+    <canvas id="particle-bg"></canvas>
+
+    <!-- Header -->
+    <header class="header">
+        <div>
+            <div class="header-logo">ATTACKS</div>
+            <div class="header-tag">Search Engine v1.0</div>
+        </div>
+        <button class="btn-back" onclick="goBack()">← LOBBY</button>
+    </header>
+
+    <!-- Main content -->
+    <main class="main">
+        <div class="engine-title">⚔ ATC STUDIO INTELLIGENCE</div>
+        <h1 class="engine-heading">SQUAD ANALYZER</h1>
+        <p class="engine-sub">ENTER A NAME · PRESS ENTER OR CLICK SEARCH</p>
+
+        <!-- DB online status -->
+        <div class="db-status">
+            <div class="db-dot"></div>
+            <span class="db-label">DATABASE ONLINE</span>
+            <span class="db-count" id="db-count">— 14 RECORDS</span>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-wrapper">
+            <input
+                type="text"
+                id="search-input"
+                class="search-bar"
+                placeholder="TYPE A SQUAD MEMBER NAME..."
+                autocomplete="off"
+                spellcheck="false"
+            >
+            <div class="search-btns">
+                <button class="btn-mic" id="mic-btn" title="Search by voice" onclick="toggleMic()">🎤</button>
+                <button class="btn-search" title="Search" onclick="runSearch()">⏎</button>
+            </div>
+        </div>
+
+        <!-- Quick select chips -->
+        <div class="chips" id="chip-list"></div>
+
+        <!-- Result panel -->
+        <div class="result-panel" id="result-panel">
+
+            <!-- Analyzing state -->
+            <div class="analyzing-block" id="analyzing-block">
+                <div class="radar">
+                    <div class="radar-ring"></div>
+                    <div class="radar-ring"></div>
+                    <div class="radar-ring"></div>
+                    <div class="radar-dot"></div>
+                </div>
+                <div class="analyzing-text" id="analyzing-label">ANALYZING</div>
+                <div class="analyzing-query" id="analyzing-query-text"></div>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Found state -->
+            <div class="result-block" id="result-found">
+                <div class="result-icon">✅</div>
+                <div class="result-status found">ANALYSED — RECORD FOUND</div>
+                <div class="result-query-label">SEARCHED QUERY</div>
+                <div class="result-query-value" id="found-name"></div>
+                <div class="result-badge found">✓ PRESENT IN DATABASE</div>
+                <div class="result-detail">This squad member is an active registered record in the ATC STUDIO database.</div>
+                <button class="btn-search-again" onclick="resetSearch()">SEARCH AGAIN</button>
+            </div>
+
+            <!-- Not Found state -->
+            <div class="result-block" id="result-notfound">
+                <div class="result-icon">❌</div>
+                <div class="result-status notfound">ANALYSED — NOT FOUND</div>
+                <div class="result-query-label">SEARCHED QUERY</div>
+                <div class="result-query-value" id="notfound-name"></div>
+                <div class="result-badge notfound">✗ SEARCHED WORD IS NOT ADDED TO DATABASE</div>
+                <div class="result-detail">No matching entry was located in the ATC STUDIO squad database. Verify the name and try again.</div>
+                <button class="btn-search-again" onclick="resetSearch()">SEARCH AGAIN</button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Mic listening toast -->
+    <div class="mic-toast" id="mic-toast">🎤 LISTENING... SPEAK NOW</div>
+
+    <script>
+        // ── DATABASE ────────────────────────────────────────────────
+        const SQUAD_DB = [
+            'VAISAL','GIRISH','KISHOOR','GIRI','VASANTH','LOGITH',
+            'DHARNISH','SURYA','JD','NITHISH','SUDHISH','THAYA',
+            'TKG','CTD'
+        ];
+
+        // Seed into localStorage on first load
+        if (!localStorage.getItem('atcdb_seeded')) {
+            localStorage.setItem('atcdb_records', JSON.stringify(SQUAD_DB));
+            localStorage.setItem('atcdb_seeded', '1');
+        }
+
+        function getDB() {
+            try {
+                return JSON.parse(localStorage.getItem('atcdb_records')) || SQUAD_DB;
+            } catch(e) { return SQUAD_DB; }
+        }
+
+        // ── Build chips ──────────────────────────────────────────────
+        const chipList = document.getElementById('chip-list');
+        SQUAD_DB.forEach(name => {
+            const c = document.createElement('div');
+            c.className = 'chip';
+            c.textContent = name;
+            c.onclick = () => {
+                document.getElementById('search-input').value = name;
+                runSearch();
+            };
+            chipList.appendChild(c);
+        });
+
+        document.getElementById('db-count').textContent =
+            `— ${SQUAD_DB.length} RECORDS`;
+
+        // ── Keyboard enter ───────────────────────────────────────────
+        document.getElementById('search-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') runSearch();
+        });
+
+        // ── State ────────────────────────────────────────────────────
+        let analyzing = false;
+        let analyzeTimer = null;
+        let progressTimer = null;
+
+        // ── Main search runner ───────────────────────────────────────
+        function runSearch() {
+            if (analyzing) return;
+            const raw = document.getElementById('search-input').value.trim().toUpperCase();
+            if (!raw) {
+                shakeInput(); return;
+            }
+            startAnalyzing(raw);
+        }
+
+        function shakeInput() {
+            const inp = document.getElementById('search-input');
+            inp.style.animation = 'none';
+            inp.style.borderColor = '#FF2244';
+            inp.style.boxShadow = '0 0 15px rgba(255,34,68,0.4)';
+            setTimeout(() => {
+                inp.style.borderColor = '';
+                inp.style.boxShadow = '';
+            }, 800);
+        }
+
+        function startAnalyzing(query) {
+            analyzing = true;
+            const panel = document.getElementById('result-panel');
+            const analyzeBlock = document.getElementById('analyzing-block');
+            const foundBlock = document.getElementById('result-found');
+            const notfoundBlock = document.getElementById('result-notfound');
+            const analyzeLabel = document.getElementById('analyzing-label');
+            const analyzeQueryText = document.getElementById('analyzing-query-text');
+            const progressFill = document.getElementById('progress-fill');
+
+            // Reset states
+            panel.classList.add('visible');
+            analyzeBlock.classList.add('active');
+            foundBlock.classList.remove('active');
+            notfoundBlock.classList.remove('active');
+
+            analyzeQueryText.textContent = `» ${query}`;
+            progressFill.style.transition = 'none';
+            progressFill.style.width = '0%';
+
+            // Animate label stages
+            const labels = ['ANALYZING', 'ANALYZING.', 'ANALYZING..', 'ANALYZING...'];
+            let labelIdx = 0;
+            const labelInterval = setInterval(() => {
+                analyzeLabel.textContent = labels[labelIdx % labels.length];
+                labelIdx++;
+            }, 400);
+
+            // Progress bar animation over 5 seconds
+            requestAnimationFrame(() => {
+                progressFill.style.transition = 'width 5s linear';
+                progressFill.style.width = '100%';
+            });
+
+            // After 5 seconds → show result
+            analyzeTimer = setTimeout(() => {
+                clearInterval(labelInterval);
+                analyzeLabel.textContent = 'ANALYSED';
+                analyzeBlock.classList.remove('active');
+
+                const db = getDB();
+                const found = db.some(n => n === query || n.includes(query) || query.includes(n));
+
+                if (found) {
+                    document.getElementById('found-name').textContent = query;
+                    foundBlock.classList.add('active');
+                } else {
+                    document.getElementById('notfound-name').textContent = query;
+                    notfoundBlock.classList.add('active');
+                }
+                analyzing = false;
+            }, 5000);
+        }
+
+        function resetSearch() {
+            analyzing = false;
+            if (analyzeTimer) clearTimeout(analyzeTimer);
+
+            document.getElementById('result-panel').classList.remove('visible');
+            document.getElementById('analyzing-block').classList.remove('active');
+            document.getElementById('result-found').classList.remove('active');
+            document.getElementById('result-notfound').classList.remove('active');
+            document.getElementById('progress-fill').style.width = '0%';
+
+            const inp = document.getElementById('search-input');
+            inp.value = '';
+            inp.focus();
+        }
+
+        // ── Microphone (Web Speech API) ──────────────────────────────
+        let recognition = null;
+        let isListening = false;
+        const micBtn = document.getElementById('mic-btn');
+        const micToast = document.getElementById('mic-toast');
+
+        function toggleMic() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Your browser does not support microphone input. Please use Chrome.');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                micBtn.classList.add('listening');
+                micToast.classList.add('active');
+            };
+
+            recognition.onresult = (event) => {
+                const spoken = event.results[0][0].transcript.trim().toUpperCase();
+                document.getElementById('search-input').value = spoken;
+                stopMic();
+                setTimeout(() => runSearch(), 400);
+            };
+
+            recognition.onerror = () => stopMic();
+            recognition.onend  = () => stopMic();
+            recognition.start();
+        }
+
+        function stopMic() {
+            isListening = false;
+            micBtn.classList.remove('listening');
+            micToast.classList.remove('active');
+        }
+
+        // ── Back button ──────────────────────────────────────────────
+        function goBack() {
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = 'attacks_lobby.html'; }, 900);
+            }));
+        }
+
+        // ── Particle canvas background ───────────────────────────────
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 55; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.4 + 0.4,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    alpha: Math.random() * 0.35 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // ── Entrance fade-in ─────────────────────────────────────────
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.8s ease';
+        window.addEventListener('load', () => {
+            requestAnimationFrame(() => { document.body.style.opacity = '1'; });
+        });
+    </script>
+</body>
+</html>

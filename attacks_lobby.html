@@ -346,39 +346,28 @@
         let matchTimeout = null;
 
         function startSimulatedMatch() {
-            const overlay = document.getElementById('match-overlay');
-            const statusText = document.getElementById('match-status-text');
-            const countdownNum = document.getElementById('match-countdown-num');
-            
-            overlay.classList.add('active');
-            statusText.innerText = "Searching for servers...";
-            countdownNum.innerText = "";
-
-            // Phase 1: Search for 2 seconds
-            matchTimeout = setTimeout(() => {
-                statusText.innerText = "Arena match found! Syncing Squad...";
-                
-                // Phase 2: Start 5-second countdown
-                let count = 5;
-                countdownNum.innerText = count;
-                
-                matchInterval = setInterval(() => {
-                    count--;
-                    if (count > 0) {
-                        countdownNum.innerText = count;
-                    } else {
-                        clearInterval(matchInterval);
-                        statusText.innerText = "ENTERING BATTLE ARENA";
-                        countdownNum.innerText = "⚔";
-                        
-                        setTimeout(() => {
-                            overlay.classList.remove('active');
-                            alert("Battle Initiated! Welcome to Tactical Arena.");
-                        }, 800);
-                    }
-                }, 1000);
-
-            }, 2000);
+            // Create a full-screen black dim overlay for cinematic transition
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                display: flex; align-items: center; justify-content: center;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 13px; letter-spacing: 4px; color: rgba(255,100,0,0.8);
+                text-transform: uppercase;
+            `;
+            dimmer.innerText = 'ENTERING ARENA...';
+            document.body.appendChild(dimmer);
+            // Trigger fade
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    dimmer.style.opacity = '1';
+                    setTimeout(() => {
+                        window.location.href = 'attacks_game.html';
+                    }, 1300);
+                });
+            });
         }
 
         function cancelMatchmaking() {
