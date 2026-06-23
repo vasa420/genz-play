@@ -359,7 +359,7 @@
                 
                 const riserGain = audioCtx.createGain();
                 riserGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-                riserGain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 8.5);
+                riserGain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 13.5);
                 
                 synthRiser.connect(riserGain);
                 riserGain.connect(masterGain);
@@ -392,10 +392,10 @@
         let currentTimer = null;
 
         function startStageSequence() {
-            // Stage 1 -> Stage 2 after 10 seconds
+            // Stage 1 -> Stage 2 after 15 seconds
             currentTimer = setTimeout(() => {
                 transitionToStage2();
-            }, 10000);
+            }, 15000);
         }
 
         function transitionToStage2() {
@@ -487,8 +487,8 @@
             }
 
             update(time, stageTime) {
-                if (stageTime < 4000) {
-                    // Stage 1a (0s - 4s): Particles drift around as mist/smoke
+                if (stageTime < 5000) {
+                    // Stage 1a (0s - 5s): Particles drift around as mist/smoke
                     this.x += this.vx;
                     this.y += this.vy;
                     this.z += this.vz;
@@ -497,10 +497,10 @@
                     if (this.x < 0 || this.x > width) this.vx *= -1;
                     if (this.y < 0 || this.y > height) this.vy *= -1;
                     if (this.z < -100 || this.z > 100) this.vz *= -1;
-                } else if (stageTime >= 4000 && stageTime < 8800) {
-                    // Stage 1b (4s - 8.8s): Attract to target text layout coordinates
+                } else if (stageTime >= 5000 && stageTime < 13500) {
+                    // Stage 1b (5s - 13.5s): Attract to target text layout coordinates
                     if (this.targetX !== null) {
-                        const progress = (stageTime - 4000) / 3800; // 3.8s transition
+                        const progress = (stageTime - 5000) / 8500; // 8.5s transition
                         const ease = easeInOutCubic(progress);
 
                         // Calculate current target position including 3D rotation
@@ -540,7 +540,7 @@
                         if (this.alpha < 0) this.alpha = 0;
                     }
                 } else {
-                    // Stage 1c (8.8s - 10s): Dissolve text particles back to thin air
+                    // Stage 1c (13.5s - 15s): Dissolve text particles back to thin air
                     this.x += (Math.random() - 0.5) * 5;
                     this.y += (Math.random() - 0.5) * 5 - 2; // drift up
                     this.alpha -= 0.035;
@@ -577,13 +577,14 @@
             offscreen.width = width;
             offscreen.height = height;
 
-            // Set size of text responsive to width
-            const fontSize = Math.min(width * 0.065, 52);
+            // Set size of text responsive to width (drawn on two lines to fit mobile/desktop)
+            const fontSize = Math.min(width * 0.055, 46);
             octx.font = `950 ${fontSize}px 'Outfit'`;
             octx.fillStyle = '#fff';
             octx.textAlign = 'center';
             octx.textBaseline = 'middle';
-            octx.fillText("WELCOME TO ATC STUDIO", width / 2, height / 2);
+            octx.fillText("WELCOME TO", width / 2, height / 2 - fontSize * 0.7);
+            octx.fillText("ATC STUDIO", width / 2, height / 2 + fontSize * 0.7);
 
             const imgData = octx.getImageData(0, 0, width, height).data;
             
