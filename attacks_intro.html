@@ -90,16 +90,51 @@
             visibility: visible;
         }
 
-        /* Stage 1: Particle simulation canvas */
+        /* Stage 1: Typewriter intro stage */
         #canvas-stage {
             z-index: 1;
             background-color: #000;
         }
 
-        #particle-canvas {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2;
+        .typewriter-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 90%;
+        }
+
+        .typewriter-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(24px, 6.5vw, 56px);
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 100, 0, 0.45), 0 0 25px var(--primary-glow);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            min-height: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 12px;
+            height: clamp(24px, 6.5vw, 56px);
+            background-color: var(--primary);
+            margin-left: 5px;
+            animation: blink 0.75s step-end infinite;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        @keyframes blink {
+            from, to { background-color: transparent; }
+            50% { background-color: var(--primary); }
         }
 
         .skip-prompt {
@@ -263,9 +298,12 @@
     </div>
 
     <div class="stage-container">
-        <!-- STAGE 1: 3D Canvas particle simulation ("WELCOME TO ATC STUDIO") -->
+        <!-- STAGE 1: Typewriter Effect ("WELCOME TO ATC STUDIO") -->
         <div id="canvas-stage" class="stage active">
-            <canvas id="particle-canvas"></canvas>
+            <div class="typewriter-container">
+                <div id="line1" class="typewriter-line"></div>
+                <div id="line2" class="typewriter-line"></div>
+            </div>
             <div class="skip-prompt" onclick="skipIntro()">SKIP INTRO >></div>
         </div>
 
@@ -391,11 +429,77 @@
         // --- Stage Transition Coordinator ---
         let currentTimer = null;
 
+        function playTypeSound() {
+            if (!audioCtx || audioCtx.state === 'suspended') return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const freq = 450 + Math.random() * 150;
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } catch(e){}
+        }
+
+        const line1Text = "WELCOME TO";
+        const line2Text = "ATC STUDIO";
+        const typingSpeed = 100; // ms per character
+
+        function typeText(element, text, index, callback) {
+            let cursorSpan = element.querySelector('.cursor');
+            if (!cursorSpan) {
+                cursorSpan = document.createElement('span');
+                cursorSpan.className = 'cursor';
+                element.appendChild(cursorSpan);
+            }
+            
+            if (index < text.length) {
+                const char = text.charAt(index);
+                const charNode = document.createTextNode(char);
+                element.insertBefore(charNode, cursorSpan);
+                
+                playTypeSound();
+                
+                setTimeout(() => {
+                    typeText(element, text, index + 1, callback);
+                }, typingSpeed);
+            } else {
+                if (callback) callback();
+            }
+        }
+
         function startStageSequence() {
-            // Stage 1 -> Stage 2 after 15 seconds
-            currentTimer = setTimeout(() => {
-                transitionToStage2();
-            }, 15000);
+            const line1El = document.getElementById('line1');
+            const line2El = document.getElementById('line2');
+            
+            if (!line1El || !line2El) return;
+            
+            line1El.innerHTML = '';
+            line2El.innerHTML = '';
+            
+            // Start typing line 1
+            typeText(line1El, line1Text, 0, () => {
+                setTimeout(() => {
+                    const cursor1 = line1El.querySelector('.cursor');
+                    if (cursor1) cursor1.remove();
+                    
+                    // Start typing line 2
+                    typeText(line2El, line2Text, 0, () => {
+                        // Once typing is fully complete, wait 1.5 seconds and transition
+                        currentTimer = setTimeout(() => {
+                            transitionToStage2();
+                        }, 1500);
+                    });
+                }, 400);
+            });
         }
 
         function transitionToStage2() {
@@ -450,204 +554,7 @@
         function goToLobby() {
             window.location.href = 'attacks_lobby.html';
         }
-
-
-        // --- Canvas Particle Simulation ("WELCOME TO ATC STUDIO") ---
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            calculateTextCoordinates();
-        });
-
-        // Particle Class
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.z = Math.random() * 200 - 100; // 3D depth coordinate
-                this.vx = (Math.random() - 0.5) * 1.5;
-                this.vy = (Math.random() - 0.5) * 1.5;
-                this.vz = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 3.4 + 1.4; // Slightly larger for clear readability
-                this.targetX = null;
-                this.targetY = null;
-                this.targetZ = 0;
-                this.alpha = Math.random() * 0.45 + 0.35;
-                this.color = '255, 110, 0'; // Red/orange smoke glow
-            }
-
-            update(time, stageTime) {
-                if (stageTime < 5000) {
-                    // Stage 1a (0s - 5s): Particles drift around as mist/smoke
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.z += this.vz;
-
-                    // Boundaries bounce
-                    if (this.x < 0 || this.x > width) this.vx *= -1;
-                    if (this.y < 0 || this.y > height) this.vy *= -1;
-                    if (this.z < -100 || this.z > 100) this.vz *= -1;
-                } else if (stageTime >= 5000 && stageTime < 13500) {
-                    // Stage 1b (5s - 13.5s): Attract to target text layout coordinates
-                    if (this.targetX !== null) {
-                        const progress = (stageTime - 5000) / 8500; // 8.5s transition
-                        const ease = easeInOutCubic(progress);
-
-                        // Calculate current target position including 3D rotation
-                        const yaw = time * 0.0003;
-                        const pitch = time * 0.00015;
-                        
-                        // Center offsets
-                        const cx = width / 2;
-                        const cy = height / 2;
-                        
-                        // Rotate text points relative to center
-                        let dx = this.origTargetX - cx;
-                        let dy = this.origTargetY - cy;
-                        let dz = this.targetZ;
-
-                        // Rotate Yaw (Y axis)
-                        let rx1 = dx * Math.cos(yaw) - dz * Math.sin(yaw);
-                        let rz1 = dx * Math.sin(yaw) + dz * Math.cos(yaw);
-                        
-                        // Rotate Pitch (X axis)
-                        let ry2 = dy * Math.cos(pitch) - rz1 * Math.sin(pitch);
-                        let rz2 = dy * Math.sin(pitch) + rz1 * Math.cos(pitch);
-
-                        // Project back to 2D
-                        const fov = 400;
-                        const scale = fov / (fov + rz2);
-                        const projX = cx + rx1 * scale;
-                        const projY = cy + ry2 * scale;
-
-                        this.x = this.x + (projX - this.x) * ease * 0.12;
-                        this.y = this.y + (projY - this.y) * ease * 0.12;
-                        this.z = this.z + (rz2 - this.z) * ease * 0.12;
-                        this.alpha = this.alpha + (0.85 - this.alpha) * ease * 0.05;
-                    } else {
-                        // Extra particles dissolve into thin air
-                        this.alpha -= 0.015;
-                        if (this.alpha < 0) this.alpha = 0;
-                    }
-                } else {
-                    // Stage 1c (13.5s - 15s): Dissolve text particles back to thin air
-                    this.x += (Math.random() - 0.5) * 5;
-                    this.y += (Math.random() - 0.5) * 5 - 2; // drift up
-                    this.alpha -= 0.035;
-                    if (this.alpha < 0) this.alpha = 0;
-                }
-            }
-
-            draw() {
-                if (this.alpha <= 0) return;
-                
-                // Add simple depth cues by scaling particle sizes
-                const sizeMult = (this.z + 100) / 200 + 0.75; // size scale based on depth
-                
-                // 1. Draw outer halo (glowing mist effect)
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * sizeMult * 1.8, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${this.color}, ${this.alpha * 0.22})`;
-                ctx.fill();
-                
-                // 2. Draw inner core
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * sizeMult, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
-                ctx.fill();
-            }
-        }
-
-        // Setup particles
-        const maxParticles = 2500; // Increased to cover both rows of text fully and clearly
-        const particles = [];
-        for (let i = 0; i < maxParticles; i++) {
-            particles.push(new Particle());
-        }
-
-        // Draw text offline to extract target points
-        let textPoints = [];
-        function calculateTextCoordinates() {
-            textPoints = [];
-            const offscreen = document.createElement('canvas');
-            const octx = offscreen.getContext('2d');
-            offscreen.width = width;
-            offscreen.height = height;
-
-            // Set size of text responsive to width (drawn on two lines to fit mobile/desktop)
-            const fontSize = Math.min(width * 0.055, 46);
-            octx.font = `950 ${fontSize}px 'Outfit'`;
-            octx.fillStyle = '#fff';
-            octx.textAlign = 'center';
-            octx.textBaseline = 'middle';
-            octx.fillText("WELCOME TO", width / 2, height / 2 - fontSize * 0.7);
-            octx.fillText("ATC STUDIO", width / 2, height / 2 + fontSize * 0.7);
-
-            const imgData = octx.getImageData(0, 0, width, height).data;
-            
-            // Sample pixels
-            const step = 4;
-            for (let y = 0; y < height; y += step) {
-                for (let x = 0; x < width; x += step) {
-                    const idx = (y * width + x) * 4;
-                    if (imgData[idx] > 128) {
-                        textPoints.push({ x, y });
-                    }
-                }
-            }
-
-            // Assign target points to particles
-            particles.forEach((p, idx) => {
-                if (idx < textPoints.length) {
-                    p.targetX = textPoints[idx].x;
-                    p.origTargetX = textPoints[idx].x;
-                    p.targetY = textPoints[idx].y;
-                    p.origTargetY = textPoints[idx].y;
-                    p.targetZ = (Math.random() - 0.5) * 40; // Add 3D thickness
-                    p.color = '255, 100, 0'; // Glow orange
-                } else {
-                    p.targetX = null;
-                    p.targetY = null;
-                }
-            });
-        }
-
-        function easeInOutCubic(x) {
-            return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-        }
-
-        // Initialize particles target
-        calculateTextCoordinates();
-
-        // Main animation loop
-        let startTime = Date.now();
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-
-            const time = Date.now();
-            const stageTime = time - startTime;
-
-            particles.forEach(p => {
-                p.update(time, stageTime);
-                p.draw();
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        // Start
-        animate();
+        // Start typing on page load
         startStageSequence();
     </script>
 </body>
