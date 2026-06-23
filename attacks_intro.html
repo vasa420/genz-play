@@ -478,12 +478,12 @@
                 this.vx = (Math.random() - 0.5) * 1.5;
                 this.vy = (Math.random() - 0.5) * 1.5;
                 this.vz = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2.8 + 1.0;
+                this.size = Math.random() * 3.4 + 1.4; // Slightly larger for clear readability
                 this.targetX = null;
                 this.targetY = null;
                 this.targetZ = 0;
-                this.alpha = Math.random() * 0.4 + 0.3;
-                this.color = '255, 100, 0'; // Red/orange smoke glow
+                this.alpha = Math.random() * 0.45 + 0.35;
+                this.color = '255, 110, 0'; // Red/orange smoke glow
             }
 
             update(time, stageTime) {
@@ -552,8 +552,15 @@
                 if (this.alpha <= 0) return;
                 
                 // Add simple depth cues by scaling particle sizes
-                const sizeMult = (this.z + 100) / 200 + 0.5; // size scale based on depth
+                const sizeMult = (this.z + 100) / 200 + 0.75; // size scale based on depth
                 
+                // 1. Draw outer halo (glowing mist effect)
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * sizeMult * 1.8, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.color}, ${this.alpha * 0.22})`;
+                ctx.fill();
+                
+                // 2. Draw inner core
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size * sizeMult, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
@@ -562,7 +569,7 @@
         }
 
         // Setup particles
-        const maxParticles = 1100;
+        const maxParticles = 2500; // Increased to cover both rows of text fully and clearly
         const particles = [];
         for (let i = 0; i < maxParticles; i++) {
             particles.push(new Particle());
