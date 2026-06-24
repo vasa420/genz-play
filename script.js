@@ -8657,6 +8657,7 @@ window.launchGame = function(game) {
         window.location.href = 'hand_cricket_login.html';
     } else if (game === 'noexit') {
         window.location.href = 'no_exit.html';
-
+    } else if (game === 'survive_it') {
+        window.location.href = 'survive_it.html';
     }
 };
