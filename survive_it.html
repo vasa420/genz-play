@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SURVIVE IT</title>
+    <title>SURVIVE IT | Forest Lobby</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #39ff14; /* Cyber neon green */
+            --primary: #39ff14;
             --primary-glow: rgba(57, 255, 20, 0.4);
             --danger: #FF007F;
             --danger-glow: rgba(255, 0, 127, 0.45);
             --secondary: #7F00FF;
             --cyan: #00F6FF;
-            --bg: #000;
         }
 
         * {
@@ -26,11 +25,10 @@
         body {
             background: #000;
             color: #fff;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             overflow: hidden;
             position: relative;
         }
@@ -38,14 +36,12 @@
         /* Scanlines Overlay */
         .scanlines {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: repeating-linear-gradient(
                 0deg,
-                rgba(0, 0, 0, 0.2),
-                rgba(0, 0, 0, 0.2) 1.5px,
+                rgba(0, 0, 0, 0.18),
+                rgba(0, 0, 0, 0.18) 1.5px,
                 transparent 1.5px,
                 transparent 3px
             );
@@ -58,9 +54,22 @@
         .crt-glow {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, transparent 60%, rgba(57, 255, 20, 0.03) 100%);
+            background: radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
             pointer-events: none;
             z-index: 9998;
+        }
+
+        /* Forest Background */
+        .forest-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.45) 0%,
+                rgba(0, 10, 5, 0.55) 60%,
+                rgba(0, 0, 0, 0.75) 100%
+            ), url('survive_forest_lobby.png') center/cover no-repeat;
+            z-index: 0;
         }
 
         /* CRT Shutter Collapse / Expand Effects */
@@ -68,13 +77,11 @@
             width: 100%;
             height: 100%;
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             transform-origin: center center;
+            z-index: 1;
         }
 
         .crt-collapse {
@@ -82,203 +89,114 @@
         }
 
         .crt-expand {
-            animation: crtExpandEffect 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation: crtExpandEffect 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
 
         @keyframes crtCollapseEffect {
-            0% {
-                transform: scaleY(1) scaleX(1);
-                filter: brightness(1) contrast(1);
-            }
-            40% {
-                transform: scaleY(0.01) scaleX(1.1);
-                filter: brightness(2) contrast(1.5);
-            }
-            80% {
-                transform: scaleY(0.01) scaleX(0.02);
-                filter: brightness(5);
-            }
-            100% {
-                transform: scaleY(0) scaleX(0);
-                filter: brightness(10);
-                opacity: 0;
-            }
+            0%   { transform: scaleY(1) scaleX(1); filter: brightness(1); }
+            40%  { transform: scaleY(0.01) scaleX(1.1); filter: brightness(2); }
+            80%  { transform: scaleY(0.01) scaleX(0.02); filter: brightness(5); }
+            100% { transform: scaleY(0) scaleX(0); filter: brightness(10); opacity: 0; }
         }
 
         @keyframes crtExpandEffect {
-            0% {
-                transform: scaleY(0) scaleX(0);
-                filter: brightness(10);
-                opacity: 0;
-            }
-            40% {
-                transform: scaleY(0.01) scaleX(1.1);
-                filter: brightness(5);
-                opacity: 1;
-            }
-            80% {
-                transform: scaleY(1) scaleX(1.02);
-                filter: brightness(1.5);
-            }
-            100% {
-                transform: scaleY(1) scaleX(1);
-                filter: brightness(1) contrast(1);
-                opacity: 1;
-            }
+            0%   { transform: scaleY(0) scaleX(0); filter: brightness(10); opacity: 0; }
+            40%  { transform: scaleY(0.01) scaleX(1.1); filter: brightness(5); opacity: 1; }
+            80%  { transform: scaleY(1) scaleX(1.02); filter: brightness(1.5); }
+            100% { transform: scaleY(1) scaleX(1); filter: brightness(1); opacity: 1; }
         }
 
-        /* STAGES STYLES */
-        .stage {
-            display: none;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            box-sizing: border-box;
-        }
-
-        .stage.active {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Stage 1: Bug Warning */
-        #stage-1 {
-            background: #020205;
-            padding: 40px;
-        }
-
-        .terminal-text {
-            color: var(--primary);
-            font-size: clamp(14px, 2.5vw, 22px);
-            letter-spacing: 2px;
-            line-height: 1.8;
-            max-width: 800px;
-            text-align: center;
-            text-shadow: 0 0 10px var(--primary-glow);
-            word-wrap: break-word;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 10px;
-            height: 1.2em;
-            background: var(--primary);
-            margin-left: 5px;
-            animation: blink 0.8s infinite steps(2);
-            vertical-align: middle;
-            box-shadow: 0 0 8px var(--primary-glow);
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* Stage 2: Developer Credits */
-        #stage-2 {
-            background: #020205;
-            padding: 40px;
+        /* Main Layout */
+        .lobby-layout {
+            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+            padding: 30px 20px;
+            min-height: 100vh;
         }
 
-        .dev-middle {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .dev-footer {
-            margin-bottom: 50px;
-            text-align: center;
-        }
-
-        .dev-text {
-            color: var(--cyan);
-            font-size: clamp(16px, 3vw, 28px);
-            font-weight: 700;
-            letter-spacing: 4px;
-            text-shadow: 0 0 12px rgba(0, 246, 255, 0.4);
-            text-align: center;
-        }
-
-        .studio-text {
-            color: var(--primary);
-            font-size: clamp(12px, 2vw, 18px);
-            letter-spacing: 6px;
-            text-shadow: 0 0 10px var(--primary-glow);
-            text-transform: uppercase;
-        }
-
-        /* Stage 3: Lobby Page */
-        #stage-3 {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8)), url('survive_forest_lobby.png') center/cover no-repeat;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 40px;
-            font-family: 'Outfit', sans-serif;
-        }
-
+        /* Header */
         .lobby-header {
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 10;
         }
 
-        .lobby-title {
-            font-size: 26px;
+        .lobby-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(20px, 4vw, 30px);
             font-weight: 900;
-            letter-spacing: 5px;
+            letter-spacing: 6px;
             background: linear-gradient(135deg, var(--danger), var(--secondary));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(255, 0, 127, 0.3);
         }
 
+        .btn-return {
+            background: transparent;
+            border: 1px solid rgba(255, 0, 127, 0.3);
+            color: rgba(255, 0, 127, 0.8);
+            padding: 10px 22px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-return:hover {
+            border-color: var(--danger);
+            color: #fff;
+            background: rgba(255, 0, 127, 0.1);
+            box-shadow: 0 0 15px var(--danger-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Menu Card */
         .menu-container {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            min-width: 320px;
+            gap: 18px;
+            width: 100%;
+            max-width: 360px;
             background: rgba(4, 4, 12, 0.82);
             border: 1px solid rgba(255, 0, 127, 0.2);
             border-radius: 20px;
             padding: 40px 30px;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-            z-index: 10;
-            transform: translateY(20px);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.5);
             opacity: 0;
-            animation: slideUp 0.8s 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+            transform: translateY(30px);
+            animation: slideUp 0.9s 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
         @keyframes slideUp {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .menu-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: rgba(255, 0, 127, 0.6);
+            text-transform: uppercase;
+            margin-bottom: 5px;
         }
 
         .menu-option {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
             color: #fff;
-            padding: 16px 20px;
+            padding: 18px 22px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             letter-spacing: 3px;
             text-align: left;
@@ -292,34 +210,31 @@
         }
 
         .menu-option:hover {
-            background: rgba(255, 0, 127, 0.08);
+            background: rgba(255, 0, 127, 0.1);
             border-color: var(--danger);
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
-            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.2);
             transform: translateX(10px);
         }
 
         .menu-option::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
+            left: 0; top: 0;
+            height: 100%; width: 4px;
             background: var(--danger);
             transform: scaleY(0);
             transition: transform 0.3s;
+            border-radius: 14px 0 0 14px;
         }
 
-        .menu-option:hover::before {
-            transform: scaleY(1);
-        }
+        .menu-option:hover::before { transform: scaleY(1); }
 
         .menu-arrow {
             opacity: 0;
             transform: translateX(-10px);
             transition: all 0.3s;
             color: var(--danger);
+            font-size: 18px;
         }
 
         .menu-option:hover .menu-arrow {
@@ -327,76 +242,85 @@
             transform: translateX(0);
         }
 
-        /* Overlay Modals */
+        /* Footer */
+        .lobby-footer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .lobby-footer span { color: var(--danger); }
+
+        /* ── MODALS ─────────────────────────────────── */
         .overlay-modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.88);
             z-index: 100;
             display: none;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
         }
 
         .modal-card {
-            background: rgba(8, 8, 20, 0.85);
-            border: 2px solid rgba(255, 0, 127, 0.3);
+            background: rgba(8, 8, 20, 0.92);
+            border: 2px solid rgba(255, 0, 127, 0.25);
             border-radius: 24px;
             padding: 40px;
-            max-width: 600px;
+            max-width: 580px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 0 40px rgba(255, 0, 127, 0.2);
+            box-shadow: 0 0 50px rgba(255, 0, 127, 0.15);
             animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
         }
 
         @keyframes modalIn {
             from { transform: scale(0.85); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            to   { transform: scale(1); opacity: 1; }
         }
 
         .modal-title {
-            font-size: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
             font-weight: 900;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
             color: var(--danger);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             text-transform: uppercase;
         }
 
         .modal-desc {
-            font-size: 14px;
-            color: rgba(255,255,255,0.6);
-            line-height: 1.8;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.9;
             margin-bottom: 30px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
-        /* Countdown Elements */
+        /* Countdown */
         .countdown-wrapper {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 35px;
+            gap: 12px;
+            margin-bottom: 30px;
         }
 
         .countdown-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            min-width: 75px;
-            padding: 15px 5px;
+            min-width: 72px;
+            padding: 14px 6px;
         }
 
         .countdown-num {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
             color: #fff;
             display: block;
@@ -404,15 +328,15 @@
 
         .countdown-label {
             font-size: 8px;
-            color: #888;
+            color: #666;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
         .btn-close {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #bbb;
             padding: 12px 30px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
@@ -429,25 +353,25 @@
             background: rgba(255,255,255,0.05);
         }
 
-        /* Settings Card specifics */
+        /* Settings */
         .settings-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
+            margin-bottom: 22px;
+            padding-bottom: 14px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             text-align: left;
         }
 
         .settings-label {
-            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
             letter-spacing: 2px;
-            color: #eee;
+            color: #ccc;
             text-transform: uppercase;
         }
 
-        /* Toggle switch */
         .switch {
             position: relative;
             display: inline-block;
@@ -455,11 +379,7 @@
             height: 26px;
         }
 
-        .switch input { 
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+        .switch input { opacity: 0; width: 0; height: 0; }
 
         .slider {
             position: absolute;
@@ -473,28 +393,19 @@
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
+            height: 18px; width: 18px;
+            left: 4px; bottom: 4px;
             background-color: white;
             transition: .4s;
             border-radius: 50%;
         }
 
-        input:checked + .slider {
-            background-color: var(--danger);
-        }
+        input:checked + .slider { background-color: var(--danger); }
+        input:checked + .slider:before { transform: translateX(24px); }
 
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-
-        /* Audio Volume Slider */
         .volume-slider {
             -webkit-appearance: none;
-            width: 120px;
-            height: 6px;
+            width: 120px; height: 6px;
             background: #333;
             border-radius: 3px;
             outline: none;
@@ -502,212 +413,155 @@
 
         .volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 16px; height: 16px;
             border-radius: 50%;
             background: var(--danger);
             cursor: pointer;
             box-shadow: 0 0 10px var(--danger-glow);
         }
-
-        .lobby-footer {
-            font-size: 9px;
-            color: rgba(255,255,255,0.3);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            z-index: 10;
-        }
-
-        .lobby-footer span {
-            color: var(--danger);
-        }
     </style>
 </head>
 <body>
 
+    <div class="forest-bg"></div>
     <div class="scanlines" id="scanlines-overlay"></div>
     <div class="crt-glow"></div>
 
+    <!-- Main CRT Screen Container (expand on load) -->
     <div class="crt-container crt-expand" id="screen-container">
+        <div class="lobby-layout">
 
-        <!-- STAGE 1: Disclaimer Warning -->
-        <div class="stage active" id="stage-1">
-            <div class="terminal-text">
-                <span id="type-disclaimer"></span><span class="cursor" id="disclaimer-cursor"></span>
-            </div>
-        </div>
-
-        <!-- STAGE 2: Developer Credits -->
-        <div class="stage" id="stage-2">
-            <div></div> <!-- top empty block -->
-            <div class="dev-middle">
-                <div class="dev-text">
-                    <span id="type-dev"></span><span class="cursor" id="dev-cursor"></span>
-                </div>
-            </div>
-            <div class="dev-footer">
-                <div class="studio-text">
-                    <span id="type-studio"></span><span class="cursor" id="studio-cursor" style="display:none;"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- STAGE 3: Main Forest Lobby Page -->
-        <div class="stage" id="stage-3">
+            <!-- Header -->
             <header class="lobby-header">
-                <div class="lobby-title">SURVIVE IT</div>
-                <button class="btn-lobby" onclick="quitToHub()">← Return</button>
+                <div class="lobby-logo">SURVIVE IT</div>
+                <button class="btn-return" onclick="quitToHub()">← QUIT</button>
             </header>
 
+            <!-- Menu Options -->
             <div class="menu-container">
+                <div class="menu-label">— SELECT ACTION —</div>
+
                 <div class="menu-option" onmouseenter="playBeep('hover')" onclick="menuAction('survive')">
                     <span>1. SERVIVE</span>
                     <span class="menu-arrow">➔</span>
                 </div>
+
                 <div class="menu-option" onmouseenter="playBeep('hover')" onclick="menuAction('settings')">
                     <span>2. SETTINGS</span>
                     <span class="menu-arrow">➔</span>
                 </div>
+
                 <div class="menu-option" onmouseenter="playBeep('hover')" onclick="menuAction('quit')">
                     <span>3. QUIT</span>
                     <span class="menu-arrow">➔</span>
                 </div>
             </div>
 
+            <!-- Footer -->
             <div class="lobby-footer">
                 SURVIVE IT · POWERED BY <span>ATC STUDIO</span>
             </div>
-        </div>
 
+        </div>
     </div>
 
-    <!-- MODAL 1: SURVIVE / COMING SOON -->
+    <!-- MODAL: SURVIVE — Coming Soon -->
     <div class="overlay-modal" id="modal-survive">
         <div class="modal-card">
             <div class="modal-title">FOREST DEPLOYMENT</div>
             <p class="modal-desc">
-                The database connection is currently establishing. Prepare your pulse emitters. A tactical wave survival gameplay forest is currently undergoing synchronization.
+                The forest server database connection is currently establishing. Prepare your pulse emitters. The tactical wave survival gameplay forest is undergoing synchronization.
             </p>
-            
             <div class="countdown-wrapper">
                 <div class="countdown-box">
-                    <span class="countdown-num" id="days">02</span>
+                    <span class="countdown-num" id="days">00</span>
                     <span class="countdown-label">Days</span>
                 </div>
                 <div class="countdown-box">
-                    <span class="countdown-num" id="hours">14</span>
+                    <span class="countdown-num" id="hours">00</span>
                     <span class="countdown-label">Hours</span>
                 </div>
                 <div class="countdown-box">
-                    <span class="countdown-num" id="minutes">59</span>
+                    <span class="countdown-num" id="minutes">00</span>
                     <span class="countdown-label">Mins</span>
                 </div>
                 <div class="countdown-box">
-                    <span class="countdown-num" id="seconds">42</span>
+                    <span class="countdown-num" id="seconds">00</span>
                     <span class="countdown-label">Secs</span>
                 </div>
             </div>
-
-            <button class="btn-close" onclick="closeModal('survive')">CLOSE DEPLOYMENT</button>
+            <button class="btn-close" onclick="closeModal('survive')">CLOSE</button>
         </div>
     </div>
 
-    <!-- MODAL 2: SETTINGS -->
+    <!-- MODAL: SETTINGS -->
     <div class="overlay-modal" id="modal-settings">
         <div class="modal-card">
             <div class="modal-title">SYSTEM SETTINGS</div>
-            
             <div class="settings-row">
-                <span class="settings-label">SYNTH AUDIO BEATER</span>
-                <input type="range" class="volume-slider" id="vol-control" min="0" max="100" value="50" onchange="updateVolume(this.value)">
+                <span class="settings-label">MASTER VOLUME</span>
+                <input type="range" class="volume-slider" min="0" max="100" value="50" onchange="updateVolume(this.value)">
             </div>
-
             <div class="settings-row">
-                <span class="settings-label">CRT SCANLINE MATRIX</span>
+                <span class="settings-label">CRT SCANLINES</span>
                 <label class="switch">
                     <input type="checkbox" id="scanline-switch" checked onchange="toggleScanlines(this.checked)">
                     <span class="slider"></span>
                 </label>
             </div>
-
             <div class="settings-row">
-                <span class="settings-label">GRAPHICS OVERLAY</span>
-                <span class="settings-label" style="color: var(--danger)">ULTRA 120FPS</span>
+                <span class="settings-label">GRAPHICS</span>
+                <span class="settings-label" style="color: var(--danger);">ULTRA</span>
             </div>
-
-            <button class="btn-close" style="margin-top: 15px;" onclick="closeModal('settings')">SAVE OPTIONS</button>
+            <button class="btn-close" style="margin-top:10px;" onclick="closeModal('settings')">SAVE</button>
         </div>
     </div>
 
     <script>
-        // Retro audio synthesiser using Web Audio API
+        // ── Audio Engine ──────────────────────────────────────────────
         let audioCtx = null;
         let masterVolume = 0.08;
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
         function playBeep(type) {
             initAudio();
             if (!audioCtx) return;
-            
             try {
-                // Ensure audio context is active
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
+                if (audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
 
-                if (type === 'typewriter') {
-                    // Quick high-pass click noise
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(160 + Math.random() * 80, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(masterVolume * 0.4, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.04);
-                } else if (type === 'hover') {
-                    // Smooth rising blip
+                if (type === 'hover') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(650, audioCtx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(850, audioCtx.currentTime + 0.08);
-                    gain.gain.setValueAtTime(masterVolume * 0.8, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(masterVolume, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.08);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.09);
                 } else if (type === 'click') {
-                    // Bright chime/click
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, audioCtx.currentTime);
                     osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.05);
-                    gain.gain.setValueAtTime(masterVolume * 1.2, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(masterVolume * 1.5, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.15);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.15);
                 } else if (type === 'transition') {
-                    // Dark sci-fi swoosh Sweep
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(80, audioCtx.currentTime);
                     osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.5);
-                    gain.gain.setValueAtTime(masterVolume * 0.8, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(masterVolume, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.65);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.65);
                 }
-            } catch (e) {
-                console.warn("Audio error: ", e);
-            }
+            } catch(e) { console.warn(e); }
         }
 
-        // Settings actions
+        // ── Settings ──────────────────────────────────────────────────
         function updateVolume(val) {
             masterVolume = (val / 100) * 0.15;
             playBeep('click');
@@ -718,71 +572,13 @@
             playBeep('click');
         }
 
-        // Typewriter Animation Engine
-        function typeWriter(text, elementId, speed, onComplete) {
-            const el = document.getElementById(elementId);
-            el.innerText = "";
-            let i = 0;
-            
-            function type() {
-                if (i < text.length) {
-                    el.innerText += text.charAt(i);
-                    playBeep('typewriter');
-                    i++;
-                    setTimeout(type, speed);
-                } else {
-                    if (onComplete) onComplete();
-                }
-            }
-            type();
-        }
-
-        // Navigation Flow logic
+        // ── CRT Transition ────────────────────────────────────────────
         const screenContainer = document.getElementById('screen-container');
 
-        window.onload = function() {
-            // Start Stage 1 Typing Disclaimer
-            setTimeout(() => {
-                const text = "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
-                typeWriter(text, "type-disclaimer", 55, () => {
-                    // When disclaimer typing finishes
-                    setTimeout(() => {
-                        // Fade cursor out
-                        document.getElementById('disclaimer-cursor').style.display = 'none';
-                        triggerScreenTransition(() => {
-                            // Move to Stage 2
-                            document.getElementById('stage-1').classList.remove('active');
-                            document.getElementById('stage-2').classList.add('active');
-                            
-                            // Start Stage 2 Developer Credits Typing
-                            typeWriter("DEVELOPER NAME: VASANTH", "type-dev", 70, () => {
-                                document.getElementById('dev-cursor').style.display = 'none';
-                                document.getElementById('studio-cursor').style.display = 'inline-block';
-                                
-                                typeWriter("ATC STUDIO", "type-studio", 90, () => {
-                                    // When developer credit finishes
-                                    setTimeout(() => {
-                                        document.getElementById('studio-cursor').style.display = 'none';
-                                        triggerScreenTransition(() => {
-                                            // Move to Stage 3 (Lobby Page)
-                                            document.getElementById('stage-2').classList.remove('active');
-                                            document.getElementById('stage-3').classList.add('active');
-                                        });
-                                    }, 1500);
-                                });
-                            });
-                        });
-                    }, 1800);
-                });
-            }, 800);
-        };
-
-        // Realistic Shutter transition trigger
         function triggerScreenTransition(onMidPoint) {
             playBeep('transition');
             screenContainer.classList.remove('crt-expand');
             screenContainer.classList.add('crt-collapse');
-            
             setTimeout(() => {
                 if (onMidPoint) onMidPoint();
                 screenContainer.classList.remove('crt-collapse');
@@ -790,7 +586,7 @@
             }, 600);
         }
 
-        // Menu buttons handlers
+        // ── Menu Actions ──────────────────────────────────────────────
         function menuAction(option) {
             playBeep('click');
             if (option === 'survive') {
@@ -802,9 +598,9 @@
             }
         }
 
-        function closeModal(modalId) {
+        function closeModal(id) {
             playBeep('click');
-            document.getElementById('modal-' + modalId).style.display = 'none';
+            document.getElementById('modal-' + id).style.display = 'none';
         }
 
         function quitToHub() {
@@ -813,36 +609,24 @@
             });
         }
 
-        // Countdown Timer Engine (Target: 3 days from now)
+        // ── Countdown Timer ────────────────────────────────────────────
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + 3);
         targetDate.setHours(targetDate.getHours() + 4);
 
         function updateCountdown() {
-            const now = new Date().getTime();
-            const distance = targetDate.getTime() - now;
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('days').innerText = String(days).padStart(2, '0');
-            document.getElementById('hours').innerText = String(hours).padStart(2, '0');
-            document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
-            document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
-
-            if (distance < 0) {
-                clearInterval(countdownInterval);
-                document.getElementById('days').innerText = "00";
-                document.getElementById('hours').innerText = "00";
-                document.getElementById('minutes').innerText = "00";
-                document.getElementById('seconds').innerText = "00";
-            }
+            const distance = targetDate.getTime() - new Date().getTime();
+            const days    = Math.max(0, Math.floor(distance / 86400000));
+            const hours   = Math.max(0, Math.floor((distance % 86400000) / 3600000));
+            const minutes = Math.max(0, Math.floor((distance % 3600000) / 60000));
+            const seconds = Math.max(0, Math.floor((distance % 60000) / 1000));
+            document.getElementById('days').innerText    = String(days).padStart(2,'0');
+            document.getElementById('hours').innerText   = String(hours).padStart(2,'0');
+            document.getElementById('minutes').innerText = String(minutes).padStart(2,'0');
+            document.getElementById('seconds').innerText = String(seconds).padStart(2,'0');
         }
-
         updateCountdown();
-        const countdownInterval = setInterval(updateCountdown, 1000);
+        setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>

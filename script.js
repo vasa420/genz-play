@@ -8658,6 +8658,6 @@ window.launchGame = function(game) {
     } else if (game === 'noexit') {
         window.location.href = 'no_exit.html';
     } else if (game === 'survive_it') {
-        window.location.href = 'survive_it.html';
+        window.location.href = 'survive_it_intro.html';
     }
 };

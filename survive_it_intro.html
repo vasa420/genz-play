@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SURVIVE IT | Launching...</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #39ff14; /* Cyber neon green */
+            --primary-glow: rgba(57, 255, 20, 0.4);
+            --cyan: #00F6FF;
+            --bg: #000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanlines Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.2),
+                rgba(0, 0, 0, 0.2) 1.5px,
+                transparent 1.5px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.85;
+        }
+
+        /* CRT Screen Glow Tint */
+        .crt-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 60%, rgba(57, 255, 20, 0.03) 100%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* CRT Shutter Collapse / Expand Effects */
+        .crt-container {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+        }
+
+        .crt-collapse {
+            animation: crtCollapseEffect 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .crt-expand {
+            animation: crtExpandEffect 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes crtCollapseEffect {
+            0% {
+                transform: scaleY(1) scaleX(1);
+                filter: brightness(1) contrast(1);
+            }
+            40% {
+                transform: scaleY(0.01) scaleX(1.1);
+                filter: brightness(2) contrast(1.5);
+            }
+            80% {
+                transform: scaleY(0.01) scaleX(0.02);
+                filter: brightness(5);
+            }
+            100% {
+                transform: scaleY(0) scaleX(0);
+                filter: brightness(10);
+                opacity: 0;
+            }
+        }
+
+        @keyframes crtExpandEffect {
+            0% {
+                transform: scaleY(0) scaleX(0);
+                filter: brightness(10);
+                opacity: 0;
+            }
+            40% {
+                transform: scaleY(0.01) scaleX(1.1);
+                filter: brightness(5);
+                opacity: 1;
+            }
+            80% {
+                transform: scaleY(1) scaleX(1.02);
+                filter: brightness(1.5);
+            }
+            100% {
+                transform: scaleY(1) scaleX(1);
+                filter: brightness(1) contrast(1);
+                opacity: 1;
+            }
+        }
+
+        /* STAGES STYLES */
+        .stage {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-sizing: border-box;
+        }
+
+        .stage.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Stage 1: Bug Warning */
+        #stage-1 {
+            background: #020205;
+            padding: 40px;
+        }
+
+        .terminal-text {
+            color: var(--primary);
+            font-size: clamp(14px, 2.5vw, 22px);
+            letter-spacing: 2px;
+            line-height: 1.8;
+            max-width: 800px;
+            text-align: center;
+            text-shadow: 0 0 10px var(--primary-glow);
+            word-wrap: break-word;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background: var(--primary);
+            margin-left: 5px;
+            animation: blink 0.8s infinite steps(2);
+            vertical-align: middle;
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Stage 2: Developer Credits */
+        #stage-2 {
+            background: #020205;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dev-middle {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dev-footer {
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .dev-text {
+            color: var(--cyan);
+            font-size: clamp(16px, 3vw, 28px);
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-shadow: 0 0 12px rgba(0, 246, 255, 0.4);
+            text-align: center;
+        }
+
+        .studio-text {
+            color: var(--primary);
+            font-size: clamp(12px, 2vw, 18px);
+            letter-spacing: 6px;
+            text-shadow: 0 0 10px var(--primary-glow);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="crt-glow"></div>
+
+    <div class="crt-container crt-expand" id="screen-container">
+
+        <!-- STAGE 1: Disclaimer Warning -->
+        <div class="stage active" id="stage-1">
+            <div class="terminal-text">
+                <span id="type-disclaimer"></span><span class="cursor" id="disclaimer-cursor"></span>
+            </div>
+        </div>
+
+        <!-- STAGE 2: Developer Credits -->
+        <div class="stage" id="stage-2">
+            <div></div> <!-- top empty block -->
+            <div class="dev-middle">
+                <div class="dev-text">
+                    <span id="type-dev"></span><span class="cursor" id="dev-cursor"></span>
+                </div>
+            </div>
+            <div class="dev-footer">
+                <div class="studio-text">
+                    <span id="type-studio"></span><span class="cursor" id="studio-cursor" style="display:none;"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Retro audio synthesiser using Web Audio API
+        let audioCtx = null;
+        let masterVolume = 0.08;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playBeep(type) {
+            initAudio();
+            if (!audioCtx) return;
+            
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'typewriter') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(160 + Math.random() * 80, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(masterVolume * 0.4, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.04);
+                } else if (type === 'transition') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(masterVolume * 0.8, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.65);
+                }
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        // Typewriter Animation Engine
+        function typeWriter(text, elementId, speed, onComplete) {
+            const el = document.getElementById(elementId);
+            el.innerText = "";
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    el.innerText += text.charAt(i);
+                    playBeep('typewriter');
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    if (onComplete) onComplete();
+                }
+            }
+            type();
+        }
+
+        // Navigation Flow logic
+        const screenContainer = document.getElementById('screen-container');
+
+        window.onload = function() {
+            setTimeout(() => {
+                const text = "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                typeWriter(text, "type-disclaimer", 55, () => {
+                    setTimeout(() => {
+                        document.getElementById('disclaimer-cursor').style.display = 'none';
+                        triggerScreenTransition(() => {
+                            document.getElementById('stage-1').classList.remove('active');
+                            document.getElementById('stage-2').classList.add('active');
+                            
+                            typeWriter("DEVELOPER NAME: VASANTH", "type-dev", 70, () => {
+                                document.getElementById('dev-cursor').style.display = 'none';
+                                document.getElementById('studio-cursor').style.display = 'inline-block';
+                                
+                                typeWriter("ATC STUDIO", "type-studio", 90, () => {
+                                    setTimeout(() => {
+                                        document.getElementById('studio-cursor').style.display = 'none';
+                                        triggerScreenTransition(() => {
+                                            // Redirect to Lobby
+                                            location.href = 'survive_it.html';
+                                        });
+                                    }, 1500);
+                                });
+                            });
+                        });
+                    }, 1800);
+                });
+            }, 800);
+        };
+
+        function triggerScreenTransition(onMidPoint) {
+            playBeep('transition');
+            screenContainer.classList.remove('crt-expand');
+            screenContainer.classList.add('crt-collapse');
+            
+            setTimeout(() => {
+                if (onMidPoint) onMidPoint();
+                screenContainer.classList.remove('crt-collapse');
+                screenContainer.classList.add('crt-expand');
+            }, 600);
+        }
+    </script>
+</body>
+</html>
