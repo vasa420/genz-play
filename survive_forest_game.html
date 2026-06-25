@@ -254,7 +254,7 @@
     <div class="timer-hud" id="timer-display">30.00 KM (PAUSED)</div>
 
     <div class="controls-help" id="controls-text">
-        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer)
+        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn)
     </div>
 
     <canvas id="game-canvas"></canvas>
@@ -410,9 +410,73 @@
             }
         }
 
+        let hornOsc1 = null;
+        let hornOsc2 = null;
+        let hornGain = null;
+        let hornActive = false;
+
+        function startHorn() {
+            initAudio();
+            if (!audioCtx || hornActive) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                hornActive = true;
+                
+                const now = audioCtx.currentTime;
+                hornOsc1 = audioCtx.createOscillator();
+                hornOsc2 = audioCtx.createOscillator();
+                hornGain = audioCtx.createGain();
+                
+                hornOsc1.type = 'triangle';
+                hornOsc1.frequency.setValueAtTime(395, now);
+                
+                hornOsc2.type = 'sawtooth';
+                hornOsc2.frequency.setValueAtTime(445, now);
+                
+                hornGain.gain.setValueAtTime(0, now);
+                hornGain.gain.linearRampToValueAtTime(masterVolume * 2.2, now + 0.04);
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(420, now);
+                filter.Q.setValueAtTime(2.0, now);
+                
+                hornOsc1.connect(filter);
+                hornOsc2.connect(filter);
+                filter.connect(hornGain);
+                hornGain.connect(audioCtx.destination);
+                
+                hornOsc1.start(now);
+                hornOsc2.start(now);
+            } catch(e) { console.warn(e); }
+        }
+
+        function stopHorn() {
+            if (hornActive) {
+                hornActive = false;
+                if (hornGain && audioCtx) {
+                    const now = audioCtx.currentTime;
+                    hornGain.gain.cancelScheduledValues(now);
+                    hornGain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+                }
+                const o1 = hornOsc1;
+                const o2 = hornOsc2;
+                setTimeout(() => {
+                    try {
+                        if (o1) o1.stop();
+                        if (o2) o2.stop();
+                    } catch(e) {}
+                }, 100);
+                hornOsc1 = null;
+                hornOsc2 = null;
+                hornGain = null;
+            }
+        }
+
         // Return to Lobby trigger
         function returnToLobby() {
             stopPlayerEngine();
+            stopHorn();
             trafficVehicles.forEach(stopTrafficSound);
             document.getElementById('fade-overlay').style.opacity = '1';
             setTimeout(() => {
@@ -425,11 +489,13 @@
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = true;
+            if (key === 'g' && stage === 1) startHorn();
             if (key === 'q') returnToLobby();
         });
         window.addEventListener('keyup', (e) => {
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = false;
+            if (key === 'g') stopHorn();
         });
 
         // ── Three.js Scene Setup ──────────────────────────────
