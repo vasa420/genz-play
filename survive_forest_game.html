@@ -237,7 +237,7 @@
             <div id="dashcam-time">2026-06-25 06:30:00 AM</div>
         </div>
         <div class="dashcam-bottom">
-            <div>CAM_01 · DRIVER_POV</div>
+            <div>CAM_01 · COPILOT_POV</div>
             <div class="dashcam-speed">
                 <span>SPEED: <span id="dashcam-speed-val">0</span> MPH</span> · GPS: 35.6192° N, 82.4419° W
             </div>
@@ -356,7 +356,7 @@
 
         // Low sunrise light (direction of sunset/sunrise cast orange shadows)
         const sunLight = new THREE.DirectionalLight(0xffa570, 1.4);
-        sunLight.position.set(-100, 18, -40);
+        sunLight.position.set(-80, 16, 200); // Rises in front of the car over the mountains
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 1024;
         sunLight.shadow.mapSize.height = 1024;
@@ -395,9 +395,9 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Road (Stage 1 Highway)
-        const roadGeo = new THREE.PlaneGeometry(16, 500);
-        const roadMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
+        // Road (Stage 1 Highway - thick gray road)
+        const roadGeo = new THREE.PlaneGeometry(24, 500);
+        const roadMat = new THREE.MeshLambertMaterial({ color: 0x4a4a52 });
         const road = new THREE.Mesh(roadGeo, roadMat);
         road.rotation.x = -Math.PI / 2;
         road.position.y = 0.08; // slightly above ground
@@ -429,9 +429,9 @@
             let tx = (Math.random() - 0.5) * 360;
             let tz = (Math.random() - 0.5) * 360;
 
-            // Prevent trees on road (X: -14 to 14) and river (X: 55 to 95)
-            if (tx > -16 && tx < 16) {
-                tx += tx >= 0 ? 18 : -18;
+            // Prevent trees on road (X: -20 to 20) and river (X: 55 to 95)
+            if (tx > -20 && tx < 20) {
+                tx += tx >= 0 ? 22 : -22;
             }
             if (tx > 50 && tx < 100) {
                 tx += 50;
@@ -485,8 +485,8 @@
             const peak = new THREE.Mesh(snowGeo, snowMat);
             mountGroup.add(peak);
 
-            const mx = -200 + i * 70 + (Math.random() - 0.5) * 20;
-            const mz = -220 + (Math.random() - 0.5) * 30;
+            const mx = -200 + i * 60 + (Math.random() - 0.5) * 20;
+            const mz = 250 + (Math.random() - 0.5) * 30; // Move mountains ahead of the driving path
             const scale = 0.75 + Math.random() * 0.5;
             
             mountGroup.scale.set(scale, scale, scale);
@@ -786,18 +786,18 @@
                 if (keys.d) targetWheelRot = -1.1; // turn right
                 steeringWheel.rotation.z += (targetWheelRot - steeringWheel.rotation.z) * 0.15;
 
-                // Driver Seat POV (inside cabin, left-hand side, looking out the windshield)
-                let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
-                let camZ = carGroup.position.z + Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
+                // Copilot / Passenger Seat POV (inside cabin, right-hand side, looking out the windshield)
+                let camX = carGroup.position.x + Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
+                let camZ = carGroup.position.z - Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
                 let camY = carGroup.position.y + 1.25;
                 
                 camera.position.set(camX, camY, camZ);
                 
-                // Camera looks forward along the car's heading
+                // Camera looks forward, slightly angled towards the front-center road view
                 let lookTarget = new THREE.Vector3(
-                    camX + Math.sin(carAngle) * 15,
+                    camX + Math.sin(carAngle) * 15 - Math.cos(carAngle) * 0.15,
                     camY - 0.08,
-                    camZ + Math.cos(carAngle) * 15
+                    camZ + Math.cos(carAngle) * 15 + Math.sin(carAngle) * 0.15
                 );
                 camera.lookAt(lookTarget);
             }
