@@ -970,16 +970,16 @@
 
         // ── Sun Waking Up over Mountains ──────────────────────
         const sunGeo = new THREE.SphereGeometry(15, 24, 24);
-        const sunMat = new THREE.MeshBasicMaterial({ color: 0xff1100 });
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(-40, 2, 280);
         
-        // Sun outer glow
-        const glowGeo = new THREE.SphereGeometry(28, 24, 24);
+        // Sun outer glow (thick red glow)
+        const glowGeo = new THREE.SphereGeometry(30, 24, 24);
         const glowMat = new THREE.MeshBasicMaterial({ 
-            color: 0xff3300, 
+            color: 0xff0000, 
             transparent: true, 
-            opacity: 0.18, 
+            opacity: 0.32, 
             blending: THREE.AdditiveBlending 
         });
         const sunGlow = new THREE.Mesh(glowGeo, glowMat);
@@ -1701,7 +1701,7 @@
         const cloudMat = new THREE.MeshLambertMaterial({ color: 0xe0e6ed, transparent: true, opacity: 0.9 });
         const sphereGeo = new THREE.SphereGeometry(6, 6, 6);
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 35; i++) {
             const cloudGroup = new THREE.Group();
             const numSpheres = 3 + Math.floor(Math.random() * 3);
             for (let j = 0; j < numSpheres; j++) {
@@ -1887,7 +1887,7 @@
 
         // ── Game Logic & Loop ────────────────────────────────
         let stage = 1; // 1: Driving, 2: Dimming Transition, 3: Walking
-        let kilometersRemaining = 30.0;
+        let kilometersRemaining = 80.0;
         let parkedCarX = 0;
         let parkedCarZ = 0;
         let carSpeed = 0;
@@ -1984,16 +1984,16 @@
                 else if (relZ > 250) cloud.mesh.position.z -= 500;
             });
 
-            // Dynamic Sunrise & Sun Waking Up over Mountains
-            const sunriseProgress = Math.min(1.0, time / 180.0); // full sunrise over 3 minutes
+            // Dynamic Sunrise & Sun Waking Up over Mountains (rising slowly over 10 minutes)
+            const sunriseProgress = Math.min(1.0, time / 600.0); 
             
-            // Sky & Fog color transition (navy -> warm magenta/orange gradient)
-            const skyColor = new THREE.Color(0x120c18).lerp(new THREE.Color(0x3d212a), sunriseProgress);
+            // Sky & Fog color transition (navy -> thick warm crimson/dark violet gradient)
+            const skyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
             renderer.setClearColor(skyColor);
             scene.fog.color.copy(skyColor);
             
-            // Sun movement & color change (deep red -> bright golden-orange)
-            const sunColor = new THREE.Color(0xff1100).lerp(new THREE.Color(0xffaa22), sunriseProgress);
+            // Sun color (stays thick, vibrant red and shifts to slightly brighter deep red)
+            const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xcc1100), sunriseProgress);
             sunMat.color.copy(sunColor);
             glowMat.color.copy(sunColor);
             
@@ -2004,7 +2004,7 @@
             
             // Sun lighting adjusts accordingly
             sunLight.color.copy(sunColor);
-            sunLight.intensity = 0.5 + sunriseProgress * 1.5;
+            sunLight.intensity = 0.6 + sunriseProgress * 1.2;
             sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z - 20);
 
             // Flap and fly crows in circular soaring patterns
@@ -2260,6 +2260,9 @@
                     if (kilometersRemaining <= 0) {
                         kilometersRemaining = 0;
                         stage = 2; // Transition mode
+                        
+                        // Slowly dim the page over 3.5 seconds
+                        fadeOverlay.style.transition = 'opacity 3.5s ease-in-out';
                         fadeOverlay.style.opacity = '1';
                         
                         setTimeout(() => {
@@ -2285,8 +2288,11 @@
                             hudTitle.style.boxShadow = "0 0 15px rgba(57,255,20,0.45)";
                             controlsHelp.innerHTML = "WALK WITH: <span>W / S</span> (Walk) · <span>A / D</span> (Turn Camera)";
                             timerDisplay.style.display = "none";
+                            
+                            // Reset transition and fade in slowly
+                            fadeOverlay.style.transition = 'opacity 1.5s ease-in-out';
                             fadeOverlay.style.opacity = '0';
-                        }, 1500);
+                        }, 3500);
                     }
                 }
                 
