@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SURVIVE IT | Forest Road</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary: #39ff14;
+            --primary-glow: rgba(57, 255, 20, 0.4);
+            --danger: #ff3333;
+            --danger-glow: rgba(255, 51, 51, 0.45);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        html, body {
+            background: #020205;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            width: 100%; height: 100%;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Scanlines Overlay */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1.5px,
+                transparent 1.5px, transparent 3px
+            );
+            pointer-events: none; z-index: 9999; opacity: 0.85;
+        }
+
+        /* CRT Screen Glow */
+        .crt-glow {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 65%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none; z-index: 9998;
+        }
+
+        /* Dimming transition overlay */
+        #fade-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        /* UI Overlays */
+        .hud-container {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .hud-title {
+            background: rgba(2, 2, 5, 0.8);
+            border: 1px solid var(--danger);
+            box-shadow: 0 0 15px var(--danger-glow);
+            padding: 8px 24px;
+            border-radius: 4px;
+            font-size: clamp(12px, 2.5vw, 16px);
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--danger);
+            text-transform: uppercase;
+        }
+
+        .hud-sub {
+            background: rgba(2, 2, 5, 0.7);
+            padding: 4px 16px;
+            border-radius: 4px;
+            font-size: clamp(10px, 2vw, 12px);
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        /* Timer HUD */
+        .timer-hud {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(2, 2, 5, 0.8);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 4px;
+            letter-spacing: 2px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* Controls Help Footer */
+        .controls-help {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(2, 2, 5, 0.75);
+            padding: 10px 24px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: clamp(10px, 2.2vw, 13px);
+            letter-spacing: 2px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.85);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .controls-help span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Lobby Return button (always visible) */
+        .btn-lobby {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            background: rgba(2, 2, 5, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 5;
+            transition: 0.3s;
+        }
+        .btn-lobby:hover {
+            border-color: var(--danger);
+            color: #fff;
+            box-shadow: 0 0 10px var(--danger-glow);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="crt-glow"></div>
+    <div id="fade-overlay"></div>
+
+    <button class="btn-lobby" onclick="returnToLobby()">← LOBBY</button>
+
+    <div class="hud-container">
+        <div class="hud-title" id="hud-mode-title">ACT I: FOREST HIGHWAY</div>
+        <div class="hud-sub" id="hud-sub-title">TIME: 06:30 AM</div>
+    </div>
+
+    <div class="timer-hud" id="timer-display">10.0s</div>
+
+    <div class="controls-help" id="controls-text">
+        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer)
+    </div>
+
+    <canvas id="game-canvas"></canvas>
+
+    <script>
+        // ── Audio Engine ──────────────────────────────────────
+        let audioCtx = null;
+        const masterVolume = 0.06;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playFootstep() {
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                // Synthesize grass/leaf crunch noise
+                const bufferSize = audioCtx.sampleRate * 0.12; 
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = buffer;
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 650 + Math.random() * 150; // Crunch frequency variation
+                filter.Q.value = 2.5;
+                
+                const crunchGain = audioCtx.createGain();
+                crunchGain.gain.setValueAtTime(masterVolume * 0.7, audioCtx.currentTime);
+                crunchGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                
+                noiseSource.connect(filter);
+                filter.connect(crunchGain);
+                crunchGain.connect(audioCtx.destination);
+                noiseSource.start();
+                
+                // Low thud (heavy boot impact)
+                const osc = audioCtx.createOscillator();
+                const thudGain = audioCtx.createGain();
+                osc.connect(thudGain);
+                thudGain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(55, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.09);
+                thudGain.gain.setValueAtTime(masterVolume * 1.5, audioCtx.currentTime);
+                thudGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.09);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) { console.warn(e); }
+        }
+
+        // Return to Lobby trigger
+        function returnToLobby() {
+            document.getElementById('fade-overlay').style.opacity = '1';
+            setTimeout(() => {
+                location.href = 'survive_it.html';
+            }, 1000);
+        }
+
+        // ── Keyboard Input ────────────────────────────────────
+        const keys = { w: false, a: false, s: false, d: false };
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (key in keys) keys[key] = true;
+            if (key === 'q') returnToLobby();
+        });
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (key in keys) keys[key] = false;
+        });
+
+        // ── Three.js Scene Setup ──────────────────────────────
+        const canvas = document.getElementById('game-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        // Early morning light sky (clear morning 6:30 AM mist/sunlight tint)
+        renderer.setClearColor(0x192230);
+        scene.fog = new THREE.FogExp2(0x192230, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // ── Lighting ──────────────────────────────────────────
+        // Ambient morning glow
+        const ambientLight = new THREE.AmbientLight(0x2d3a4d, 0.7);
+        scene.add(ambientLight);
+
+        // Low sunrise light (direction of sunset/sunrise cast orange shadows)
+        const sunLight = new THREE.DirectionalLight(0xffa570, 1.4);
+        sunLight.position.set(-100, 18, -40);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 300;
+        const d = 150;
+        sunLight.shadow.camera.left = -d;
+        sunLight.shadow.camera.right = d;
+        sunLight.shadow.camera.top = d;
+        sunLight.shadow.camera.bottom = -d;
+        scene.add(sunLight);
+
+        // Soft yellow fill light from opposite sky direction
+        const skyLight = new THREE.DirectionalLight(0xa5c5e0, 0.4);
+        skyLight.position.set(100, 50, 40);
+        scene.add(skyLight);
+
+        // ── Create Landscape Assets ───────────────────────────
+        
+        // Grass Ground
+        const groundGeo = new THREE.PlaneGeometry(500, 500, 32, 32);
+        // Deform ground vertices to make small terrain bumps
+        const pos = groundGeo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+            const vx = pos.getX(i);
+            const vy = pos.getY(i);
+            // Height formula
+            const zVal = Math.sin(vx * 0.05) * Math.cos(vy * 0.05) * 1.5 + Math.sin(vx * 0.01) * 3;
+            pos.setZ(i, zVal);
+        }
+        groundGeo.computeVertexNormals();
+
+        const groundMat = new THREE.MeshLambertMaterial({ color: 0x1f3422 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Road (Stage 1 Highway)
+        const roadGeo = new THREE.PlaneGeometry(16, 500);
+        const roadMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
+        const road = new THREE.Mesh(roadGeo, roadMat);
+        road.rotation.x = -Math.PI / 2;
+        road.position.y = 0.08; // slightly above ground
+        road.receiveShadow = true;
+        scene.add(road);
+
+        // River (Flowing water at the side of the forest)
+        const riverGeo = new THREE.PlaneGeometry(28, 500, 10, 50);
+        const riverMat = new THREE.MeshLambertMaterial({ color: 0x1a384b, transparent: true, opacity: 0.85 });
+        const river = new THREE.Mesh(riverGeo, riverMat);
+        river.rotation.x = -Math.PI / 2;
+        river.position.set(75, 0.05, 0); // river coordinates
+        scene.add(river);
+
+        // 80+ Forest Trees
+        const trees = [];
+        const numTrees = 95;
+        const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 18, 5);
+        const foliageGeo = new THREE.ConeGeometry(5, 14, 5);
+
+        trunkGeo.translate(0, 9, 0); // move pivot to bottom
+        foliageGeo.translate(0, 18, 0);
+
+        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
+        const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
+
+        for (let i = 0; i < numTrees; i++) {
+            // Pick random coordinates
+            let tx = (Math.random() - 0.5) * 360;
+            let tz = (Math.random() - 0.5) * 360;
+
+            // Prevent trees on road (X: -14 to 14) and river (X: 55 to 95)
+            if (tx > -16 && tx < 16) {
+                tx += tx >= 0 ? 18 : -18;
+            }
+            if (tx > 50 && tx < 100) {
+                tx += 50;
+            }
+
+            const treeGroup = new THREE.Group();
+            
+            // Trunk
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.castShadow = true;
+            trunk.receiveShadow = true;
+            treeGroup.add(trunk);
+
+            // Foliage
+            const foliageColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
+            const foliageMat = new THREE.MeshLambertMaterial({ color: foliageColor });
+            const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+            foliage.castShadow = true;
+            foliage.receiveShadow = true;
+            treeGroup.add(foliage);
+
+            // Tree Height Randomization
+            const scaleY = 0.85 + Math.random() * 0.45;
+            const scaleXZ = 0.9 + Math.random() * 0.3;
+            treeGroup.scale.set(scaleXZ, scaleY, scaleXZ);
+            
+            // Align to terrain height approx
+            const terrainHeight = Math.sin(tx * 0.05) * Math.cos(tz * 0.05) * 1.5 + Math.sin(tx * 0.01) * 3;
+            treeGroup.position.set(tx, terrainHeight, tz);
+
+            scene.add(treeGroup);
+            trees.push(treeGroup);
+        }
+
+        // Realistic Mountain Range (far background)
+        const mountains = [];
+        const mountainMat = new THREE.MeshLambertMaterial({ color: 0x22262d });
+        const snowMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const mountGeo = new THREE.ConeGeometry(50, 110, 5);
+        const snowGeo = new THREE.ConeGeometry(15, 33, 5);
+
+        mountGeo.translate(0, 55, 0);
+        snowGeo.translate(0, 93.5, 0);
+
+        for (let i = 0; i < 7; i++) {
+            const mountGroup = new THREE.Group();
+            
+            const base = new THREE.Mesh(mountGeo, mountainMat);
+            mountGroup.add(base);
+
+            const peak = new THREE.Mesh(snowGeo, snowMat);
+            mountGroup.add(peak);
+
+            const mx = -200 + i * 70 + (Math.random() - 0.5) * 20;
+            const mz = -220 + (Math.random() - 0.5) * 30;
+            const scale = 0.75 + Math.random() * 0.5;
+            
+            mountGroup.scale.set(scale, scale, scale);
+            mountGroup.position.set(mx, -5, mz);
+            scene.add(mountGroup);
+            mountains.push(mountGroup);
+        }
+
+        // Floating Clouds
+        const clouds = [];
+        const cloudMat = new THREE.MeshLambertMaterial({ color: 0xe0e6ed, transparent: true, opacity: 0.9 });
+        const sphereGeo = new THREE.SphereGeometry(6, 6, 6);
+
+        for (let i = 0; i < 10; i++) {
+            const cloudGroup = new THREE.Group();
+            const numSpheres = 3 + Math.floor(Math.random() * 3);
+            for (let j = 0; j < numSpheres; j++) {
+                const sphere = new THREE.Mesh(sphereGeo, cloudMat);
+                sphere.position.set(
+                    (j - numSpheres/2) * 6 + (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2
+                );
+                const cloudScale = 0.7 + Math.random() * 0.6;
+                sphere.scale.set(cloudScale, cloudScale * 0.7, cloudScale);
+                cloudGroup.add(sphere);
+            }
+
+            const cx = (Math.random() - 0.5) * 300;
+            const cy = 55 + Math.random() * 15;
+            const cz = -200 + Math.random() * 400;
+            
+            cloudGroup.position.set(cx, cy, cz);
+            scene.add(cloudGroup);
+            clouds.push({ mesh: cloudGroup, speed: 0.02 + Math.random() * 0.03 });
+        }
+
+        // Flying Birds
+        const birds = [];
+        const birdWingGeo = new THREE.PlaneGeometry(2, 0.6);
+        const birdBodyGeo = new THREE.BoxGeometry(0.8, 0.2, 1.2);
+        const birdMat = new THREE.MeshBasicMaterial({ color: 0x101317, side: THREE.DoubleSide });
+
+        for (let i = 0; i < 6; i++) {
+            const birdGroup = new THREE.Group();
+            
+            const body = new THREE.Mesh(birdBodyGeo, birdMat);
+            birdGroup.add(body);
+
+            // Left Wing
+            const leftWing = new THREE.Mesh(birdWingGeo, birdMat);
+            leftWing.position.set(-1.1, 0, 0);
+            birdGroup.add(leftWing);
+
+            // Right Wing
+            const rightWing = new THREE.Mesh(birdWingGeo, birdMat);
+            rightWing.position.set(1.1, 0, 0);
+            birdGroup.add(rightWing);
+
+            const bx = -100 + Math.random() * 200;
+            const by = 28 + Math.random() * 10;
+            const bz = -120 + Math.random() * 240;
+
+            birdGroup.position.set(bx, by, bz);
+            scene.add(birdGroup);
+            birds.push({
+                mesh: birdGroup,
+                leftWing: leftWing,
+                rightWing: rightWing,
+                speed: 0.15 + Math.random() * 0.1,
+                flapOffset: Math.random() * 10
+            });
+        }
+
+        // ── 3D Car Asset ──────────────────────────────────────
+        const carGroup = new THREE.Group();
+
+        // Car main body
+        const carBodyGeo = new THREE.BoxGeometry(2.4, 0.8, 4.8);
+        const carBodyMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.2, metalness: 0.8 }); // Cherry red metallic
+        const carBody = new THREE.Mesh(carBodyGeo, carBodyMat);
+        carBody.position.y = 0.5;
+        carBody.castShadow = true;
+        carBody.receiveShadow = true;
+        carGroup.add(carBody);
+
+        // Car cabin (glass/roof)
+        const carCabinGeo = new THREE.BoxGeometry(2.0, 0.7, 2.4);
+        const carCabinMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.1, transparent: true, opacity: 0.95 });
+        const carCabin = new THREE.Mesh(carCabinGeo, carCabinMat);
+        carCabin.position.set(0, 1.25, -0.2);
+        carCabin.castShadow = true;
+        carGroup.add(carCabin);
+
+        // Wheels
+        const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 12);
+        wheelGeo.rotateZ(Math.PI / 2);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
+        
+        const wheels = [];
+        const wheelOffsets = [
+            { x: -1.25, z: 1.4 },  // front-left
+            { x: 1.25, z: 1.4 },   // front-right
+            { x: -1.25, z: -1.4 }, // back-left
+            { x: 1.25, z: -1.4 }   // back-right
+        ];
+
+        wheelOffsets.forEach((offset) => {
+            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+            wheel.position.set(offset.x, 0.5, offset.z);
+            wheel.castShadow = true;
+            carGroup.add(wheel);
+            wheels.push(wheel);
+        });
+
+        // Headlights (glow cylinders)
+        const lightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+        const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        
+        const headlightLeft = new THREE.Mesh(lightGeo, lightMat);
+        headlightLeft.position.set(-0.8, 0.55, 2.41);
+        carGroup.add(headlightLeft);
+
+        const headlightRight = new THREE.Mesh(lightGeo, lightMat);
+        headlightRight.position.set(0.8, 0.55, 2.41);
+        carGroup.add(headlightRight);
+
+        // Spotlights casting actual light
+        const spotLeft = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
+        spotLeft.position.set(-0.8, 0.55, 2.5);
+        spotLeft.target.position.set(-0.8, 0.2, 20);
+        carGroup.add(spotLeft);
+        carGroup.add(spotLeft.target);
+
+        const spotRight = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
+        spotRight.position.set(0.8, 0.55, 2.5);
+        spotRight.target.position.set(0.8, 0.2, 20);
+        carGroup.add(spotRight);
+        carGroup.add(spotRight.target);
+
+        carGroup.position.set(0, 0.1, -120); // start position
+        scene.add(carGroup);
+
+        // ── Game Logic & Loop ────────────────────────────────
+        let stage = 1; // 1: Driving, 2: Dimming Transition, 3: Walking
+        let stageTimer = 10.0;
+        let carSpeed = 0;
+        let carAngle = 0;
+        const maxCarSpeed = 1.6;
+        const carAccel = 0.035;
+        const friction = 0.97;
+        const carTurnSpeed = 0.032;
+
+        // Player walking variables
+        const playerPos = new THREE.Vector3(0, 2, -100);
+        let playerAngle = Math.PI; // looking down the road / forest
+        const walkSpeed = 0.24;
+        let isWalking = false;
+        let footstepTimeAcc = 0;
+
+        const clock = new THREE.Clock();
+
+        const timerDisplay = document.getElementById('timer-display');
+        const hudTitle = document.getElementById('hud-mode-title');
+        const controlsHelp = document.getElementById('controls-text');
+        const fadeOverlay = document.getElementById('fade-overlay');
+
+        function updateGame(delta, time) {
+            // ── Animate Environment ──────────────────────────
+            // Drift clouds
+            clouds.forEach(cloud => {
+                cloud.mesh.position.x += cloud.speed;
+                if (cloud.mesh.position.x > 200) cloud.mesh.position.x = -200;
+            });
+
+            // Flap and fly birds
+            birds.forEach(bird => {
+                bird.mesh.position.z += bird.speed;
+                // Flapping
+                const wingRot = Math.sin(time * 15 + bird.flapOffset) * 0.45;
+                bird.leftWing.rotation.z = -wingRot;
+                bird.rightWing.rotation.z = wingRot;
+                
+                if (bird.mesh.position.z > 250) bird.mesh.position.z = -250;
+            });
+
+            // Animate river waves slightly
+            const riverPos = riverGeo.attributes.position;
+            for (let i = 0; i < riverPos.count; i++) {
+                const zVal = riverPos.getY(i); // Plane Y is Three.js Z
+                const wave = Math.sin(time * 2.5 + zVal * 0.15) * 0.15;
+                riverPos.setZ(i, wave);
+            }
+            riverGeo.computeVertexNormals();
+            riverPos.needsUpdate = true;
+
+            // ── STAGE 1: DRIVING ─────────────────────────────
+            if (stage === 1) {
+                // Update countdown
+                stageTimer -= delta;
+                if (stageTimer <= 0) {
+                    stageTimer = 0;
+                    // Trigger Transition to Walking
+                    stage = 2; // Transition mode
+                    fadeOverlay.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        // Position Player next to the parked car
+                        carSpeed = 0;
+                        playerPos.set(carGroup.position.x - 3, 2, carGroup.position.z);
+                        playerAngle = carAngle - Math.PI / 2; // look towards forest
+                        camera.rotation.set(0, playerAngle, 0);
+
+                        // Park the car off the road slightly
+                        carGroup.position.x -= 1.8;
+                        spotLeft.intensity = 0.5; // dim lights
+                        spotRight.intensity = 0.5;
+
+                        // Switch HUD labels
+                        stage = 3; // Walking mode
+                        hudTitle.innerText = "ACT I: INTO THE WILDERNESS";
+                        hudTitle.style.borderColor = "#39ff14";
+                        hudTitle.style.color = "#39ff14";
+                        hudTitle.style.boxShadow = "0 0 15px rgba(57,255,20,0.45)";
+                        controlsHelp.innerHTML = "WALK WITH: <span>W / S</span> (Walk) · <span>A / D</span> (Turn Camera)";
+                        timerDisplay.style.display = "none";
+                        
+                        // Fade in
+                        fadeOverlay.style.opacity = '0';
+                    }, 1500);
+                }
+                
+                timerDisplay.innerText = stageTimer.toFixed(1) + "s";
+
+                // Car physics
+                if (keys.w) carSpeed += carAccel;
+                if (keys.s) carSpeed -= carAccel;
+
+                carSpeed *= friction;
+                carSpeed = Math.max(Math.min(carSpeed, maxCarSpeed), -maxCarSpeed * 0.4);
+
+                if (Math.abs(carSpeed) > 0.05) {
+                    const direction = carSpeed > 0 ? 1 : -1;
+                    if (keys.a) carAngle += carTurnSpeed * direction;
+                    if (keys.d) carAngle -= carTurnSpeed * direction;
+                }
+
+                carGroup.position.x += Math.sin(carAngle) * carSpeed;
+                carGroup.position.z += Math.cos(carAngle) * carSpeed;
+                carGroup.rotation.y = carAngle;
+
+                // Rotate wheels
+                wheels.forEach(wheel => {
+                    wheel.rotation.x += carSpeed * 0.7;
+                });
+
+                // Camera follows car
+                const targetCamX = carGroup.position.x - Math.sin(carAngle) * 16;
+                const targetCamZ = carGroup.position.z - Math.cos(carAngle) * 16;
+                const targetCamY = carGroup.position.y + 4.8;
+                
+                camera.position.set(targetCamX, targetCamY, targetCamZ);
+                camera.lookAt(new THREE.Vector3(carGroup.position.x, carGroup.position.y + 1, carGroup.position.z));
+            }
+            // ── STAGE 3: WALKING ─────────────────────────────
+            else if (stage === 3) {
+                isWalking = false;
+                
+                // Rotational turning
+                if (keys.a) playerAngle += 0.035;
+                if (keys.d) playerAngle -= 0.035;
+
+                // Move forward / backward
+                if (keys.w) {
+                    playerPos.x += Math.sin(playerAngle) * walkSpeed;
+                    playerPos.z += Math.cos(playerAngle) * walkSpeed;
+                    isWalking = true;
+                }
+                if (keys.s) {
+                    playerPos.x -= Math.sin(playerAngle) * walkSpeed;
+                    playerPos.z -= Math.cos(playerAngle) * walkSpeed;
+                    isWalking = true;
+                }
+
+                // Prevent walking off limits (keep player in bounds)
+                playerPos.x = Math.max(Math.min(playerPos.x, 240), -240);
+                playerPos.z = Math.max(Math.min(playerPos.z, 240), -240);
+
+                // Attach player Y height to approximate landscape height
+                const terrainHeight = Math.sin(playerPos.x * 0.05) * Math.cos(playerPos.z * 0.05) * 1.5 + Math.sin(playerPos.x * 0.01) * 3;
+                playerPos.y = 1.9 + terrainHeight; // eye level height offset
+
+                // Move camera to player head
+                camera.position.copy(playerPos);
+                
+                // Camera looking target
+                const lookTarget = new THREE.Vector3(
+                    playerPos.x + Math.sin(playerAngle),
+                    playerPos.y,
+                    playerPos.z + Math.cos(playerAngle)
+                );
+                camera.lookAt(lookTarget);
+
+                // Play crunch footsteps sounds
+                if (isWalking) {
+                    footstepTimeAcc += delta;
+                    if (footstepTimeAcc > 0.42) {
+                        playFootstep();
+                        footstepTimeAcc = 0;
+                    }
+                } else {
+                    footstepTimeAcc = 0.35; // prepare next thud instantly on start walking
+                }
+            }
+        }
+
+        // Render loop
+        function tick() {
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            updateGame(delta, time);
+            renderer.render(scene, camera);
+
+            requestAnimationFrame(tick);
+        }
+        
+        // Start game loop
+        tick();
+
+        // Responsive window size
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
