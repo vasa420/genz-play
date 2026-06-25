@@ -13,6 +13,8 @@
             --danger-glow: rgba(255, 0, 127, 0.45);
             --secondary: #7F00FF;
             --cyan: #00F6FF;
+            --yellow: #ffff33;
+            --yellow-glow: rgba(255, 255, 51, 0.45);
         }
 
         * {
@@ -130,10 +132,26 @@
             font-size: clamp(20px, 4vw, 30px);
             font-weight: 900;
             letter-spacing: 6px;
-            background: linear-gradient(135deg, var(--danger), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            animation: logo-color-change 15s infinite ease-in-out;
+        }
+
+        @keyframes logo-color-change {
+            0%, 28% {
+                color: #ffffff;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+            }
+            33.33%, 61.33% {
+                color: var(--primary);
+                text-shadow: 0 0 10px var(--primary-glow), 0 0 20px rgba(57, 255, 20, 0.2);
+            }
+            66.66%, 94.66% {
+                color: var(--yellow);
+                text-shadow: 0 0 10px var(--yellow-glow), 0 0 20px rgba(255, 255, 51, 0.2);
+            }
+            100% {
+                color: #ffffff;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+            }
         }
 
         .btn-return {
