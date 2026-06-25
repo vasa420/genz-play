@@ -548,7 +548,7 @@
         }
 
         // Procedural Vehicle Meshes
-        function createCarMesh(color) {
+        function createCarMesh(color, isParked = false) {
             const car = new THREE.Group();
             
             const bodyGeo = new THREE.BoxGeometry(1.8, 0.6, 4.0);
@@ -585,7 +585,9 @@
             
             // Lights
             const headlightGeo = new THREE.BoxGeometry(0.2, 0.15, 0.05);
-            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const headlightMat = isParked 
+                ? new THREE.MeshStandardMaterial({ color: 0x555544, roughness: 0.5 })
+                : new THREE.MeshBasicMaterial({ color: 0xffffff });
             const hl = new THREE.Mesh(headlightGeo, headlightMat);
             hl.position.set(-0.6, 0.45, 2.01);
             car.add(hl);
@@ -594,13 +596,31 @@
             car.add(hr);
             
             const taillightGeo = new THREE.BoxGeometry(0.2, 0.15, 0.05);
-            const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const taillightMat = isParked 
+                ? new THREE.MeshStandardMaterial({ color: 0x441111, roughness: 0.5 })
+                : new THREE.MeshBasicMaterial({ color: 0xff0000 });
             const tl = new THREE.Mesh(taillightGeo, taillightMat);
             tl.position.set(-0.6, 0.45, -2.01);
             car.add(tl);
             const tr = new THREE.Mesh(taillightGeo, taillightMat);
             tr.position.set(0.6, 0.45, -2.01);
             car.add(tr);
+            
+            if (!isParked) {
+                // Front spotlight casting light beam forward
+                const spot = new THREE.SpotLight(0xfff5d0, 1.6, 45, Math.PI / 6, 0.5, 1);
+                spot.position.set(0, 0.45, 2.05);
+                const spotTarget = new THREE.Object3D();
+                spotTarget.position.set(0, 0.2, 15);
+                spot.target = spotTarget;
+                car.add(spot);
+                car.add(spotTarget);
+
+                // Taillight glow
+                const tailGlow = new THREE.PointLight(0xff0000, 0.6, 6, 1.5);
+                tailGlow.position.set(0, 0.45, -2.05);
+                car.add(tailGlow);
+            }
             
             return car;
         }
@@ -662,10 +682,25 @@
             const tr = new THREE.Mesh(headlightGeo, taillightMat);
             tr.position.set(0.7, 0.4, -3.71);
             truck.add(tr);
+
+            // Front spotlight casting light beam forward
+            const spot = new THREE.SpotLight(0xfff5d0, 1.8, 50, Math.PI / 6, 0.5, 1);
+            spot.position.set(0, 0.5, 2.05);
+            const spotTarget = new THREE.Object3D();
+            spotTarget.position.set(0, 0.2, 15);
+            spot.target = spotTarget;
+            truck.add(spot);
+            truck.add(spotTarget);
+
+            // Taillight glow
+            const tailGlow = new THREE.PointLight(0xff0000, 0.8, 8, 1.5);
+            tailGlow.position.set(0, 0.4, -3.75);
+            truck.add(tailGlow);
             
             return truck;
         }
 
+        // Procedural Bus Mesh Creator
         function createBusMesh() {
             const bus = new THREE.Group();
             
@@ -722,6 +757,20 @@
             const tr = new THREE.Mesh(headlightGeo, taillightMat);
             tr.position.set(0.7, 0.5, -4.26);
             bus.add(tr);
+
+            // Front spotlight casting light beam forward
+            const spot = new THREE.SpotLight(0xfff5d0, 1.8, 55, Math.PI / 6, 0.5, 1);
+            spot.position.set(0, 0.6, 4.3);
+            const spotTarget = new THREE.Object3D();
+            spotTarget.position.set(0, 0.2, 20);
+            spot.target = spotTarget;
+            bus.add(spot);
+            bus.add(spotTarget);
+
+            // Taillight glow
+            const tailGlow = new THREE.PointLight(0xff0000, 0.8, 8, 1.5);
+            tailGlow.position.set(0, 0.5, -4.3);
+            bus.add(tailGlow);
             
             return bus;
         }
@@ -778,18 +827,18 @@
             shopGroup.add(signboard);
             
             if (isBakery) {
-                const car1 = createCarMesh(0x0055ff);
+                const car1 = createCarMesh(0x0055ff, true);
                 car1.position.set(buildWidth / 2 + 3.5, 0.1, -4.0);
                 car1.rotation.y = Math.PI / 6;
                 shopGroup.add(car1);
                 
-                const car2 = createCarMesh(0xffffff);
+                const car2 = createCarMesh(0xffffff, true);
                 car2.position.set(buildWidth / 2 + 3.5, 0.1, 4.0);
                 car2.rotation.y = -Math.PI / 6;
                 shopGroup.add(car2);
             } else if (Math.random() > 0.5) {
                 const carColors = [0xbb0000, 0x333333, 0x00aa55, 0xffaa00];
-                const car = createCarMesh(carColors[Math.floor(Math.random() * carColors.length)]);
+                const car = createCarMesh(carColors[Math.floor(Math.random() * carColors.length)], true);
                 car.position.set(buildWidth / 2 + 3.5, 0.1, (Math.random() - 0.5) * 8);
                 car.rotation.y = (Math.random() - 0.5) * 0.5;
                 shopGroup.add(car);
