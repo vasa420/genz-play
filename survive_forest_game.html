@@ -274,6 +274,20 @@
                 opacity: 0;
             }
         }
+        .windshield-rain-drop {
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(160,205,255,0.75), rgba(100,150,220,0));
+            width: 2px;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(0.5px);
+        }
+        @keyframes rainSlide {
+            0% { transform: translateY(0) scaleY(1); opacity: 0; }
+            10% { opacity: 0.85; }
+            90% { opacity: 0.85; }
+            100% { transform: translateY(140px) scaleY(0.65); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -283,6 +297,8 @@
     <div id="fade-overlay"></div>
     <!-- Windshield Blood Overlay Container -->
     <div id="windshield-blood-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9997; overflow: hidden;"></div>
+    <!-- Windshield Rain Overlay Container -->
+    <div id="windshield-rain-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9996; overflow: hidden;"></div>
 
     <!-- Dashcam HUD overlay -->
     <div class="dashcam-overlay" id="dashcam-hud">
@@ -311,7 +327,7 @@
     <div class="timer-hud" id="timer-display">30.00 KM (PAUSED)</div>
 
     <div class="controls-help" id="controls-text">
-        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn)
+        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers)
     </div>
 
     <canvas id="game-canvas"></canvas>
@@ -683,6 +699,106 @@
             chunkGroup.add(rippleGroup);
         }
 
+        let lightningLine = null;
+
+        function triggerLightning() {
+            if (lightningLine) {
+                scene.remove(lightningLine);
+                lightningLine = null;
+            }
+            
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+            const points = [];
+            
+            const startX = (Math.random() - 0.5) * 140 + carGroup.position.x;
+            const startY = 65;
+            const startZ = carGroup.position.z + 180 + (Math.random() - 0.5) * 50;
+            
+            points.push(new THREE.Vector3(startX, startY, startZ));
+            let curX = startX;
+            let curY = startY;
+            let curZ = startZ;
+            
+            const segments = 7;
+            for (let i = 0; i < segments; i++) {
+                curY -= 65 / segments;
+                curX += (Math.random() - 0.5) * 18;
+                curZ += (Math.random() - 0.5) * 14;
+                points.push(new THREE.Vector3(curX, curY, curZ));
+            }
+            
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            lightningLine = new THREE.Line(geometry, material);
+            scene.add(lightningLine);
+            
+            ambientLight.intensity = 3.8;
+            sunLight.intensity = 4.2;
+            
+            playThunderSound();
+            
+            setTimeout(() => {
+                if (lightningLine) {
+                    scene.remove(lightningLine);
+                    lightningLine = null;
+                }
+            }, 180);
+        }
+
+        function playThunderSound() {
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const now = audioCtx.currentTime;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(45, now);
+                osc.frequency.linearRampToValueAtTime(10, now + 2.0);
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(130, now);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                gain.gain.setValueAtTime(masterVolume * 7.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+                
+                osc.start(now);
+                osc.stop(now + 2.1);
+                
+                const bufferSize = audioCtx.sampleRate * 0.45;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(260, now);
+                noiseFilter.Q.setValueAtTime(3.5, now);
+                
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(masterVolume * 5.2, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                
+                noise.start(now);
+                noise.stop(now + 0.5);
+            } catch(e) {}
+        }
+
         function playFootstep() {
             initAudio();
             if (!audioCtx) return;
@@ -907,6 +1023,9 @@
             if (key in keys) keys[key] = true;
             if (key === 'g' && stage === 1) startHorn();
             if (key === 'q') returnToLobby();
+            if (key === 'z' && stage === 1) {
+                wipersOn = !wipersOn;
+            }
             
             initAudio();
             if (stage === 1 && !radioActive) {
@@ -1582,6 +1701,8 @@
                 const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
                 const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
                 
+                const trees = [];
+                const fallingTrees = [];
                 for (let i = 0; i < 30; i++) {
                     let tx = (Math.random() - 0.5) * 360;
                     let tz = (Math.random() - 0.5) * CHUNK_SIZE;
@@ -1603,6 +1724,20 @@
                     treeGroup.scale.set(0.9 + Math.random() * 0.3, 0.85 + Math.random() * 0.45, 0.9 + Math.random() * 0.3);
                     treeGroup.position.set(tx, 0, tz);
                     chunkGroup.add(treeGroup);
+                    trees.push(treeGroup);
+                    
+                    // Identify trees near road to fall during storm
+                    const absX = Math.abs(tx);
+                    if (absX > 16.0 && absX < 21.0 && fallingTrees.length < 2 && index !== 0) {
+                        treeGroup.userData = {
+                            isFallingTree: true,
+                            hasFallen: false,
+                            originalX: tx,
+                            fallDirection: tx > 0 ? -1 : 1,
+                            fallAngle: 0
+                        };
+                        fallingTrees.push(treeGroup);
+                    }
                 }
                 
                 // Shops
@@ -1661,6 +1796,8 @@
                     riverMesh: riverMesh,
                     riverGeo: riverGeo,
                     pedestrians: peds,
+                    trees: trees,
+                    fallingTrees: fallingTrees,
                     index: index
                 });
             }
@@ -1724,6 +1861,27 @@
             scene.add(cloudGroup);
             clouds.push({ mesh: cloudGroup, speed: 0.02 + Math.random() * 0.03 });
         }
+
+        // ── Rain Particle System ──────────────────────────────
+        const rainCount = 1800;
+        const rainGeometry = new THREE.BufferGeometry();
+        const rainPosArray = new Float32Array(rainCount * 3);
+        for (let i = 0; i < rainCount * 3; i += 3) {
+            rainPosArray[i] = (Math.random() - 0.5) * 160;     // X
+            rainPosArray[i + 1] = Math.random() * 80;          // Y
+            rainPosArray[i + 2] = (Math.random() - 0.5) * 160; // Z
+        }
+        rainGeometry.setAttribute('position', new THREE.BufferAttribute(rainPosArray, 3));
+        
+        const rainMat = new THREE.PointsMaterial({
+            color: 0x7799bb,
+            size: 0.22,
+            transparent: true,
+            opacity: 0.0
+        });
+        
+        const rainParticles = new THREE.Points(rainGeometry, rainMat);
+        scene.add(rainParticles);
 
         // Procedural Crow Mesh
         function createCrowMesh() {
@@ -1882,6 +2040,21 @@
         gauge.rotation.x = -Math.PI / 10;
         carGroup.add(gauge);
 
+        // Cockpit Wipers
+        const wiperGroupL = new THREE.Group();
+        wiperGroupL.position.set(-0.55, 1.15, 0.65); // pivot point L
+        const wiperArmL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.48, 0.02), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
+        wiperArmL.position.y = 0.24;
+        wiperGroupL.add(wiperArmL);
+        carGroup.add(wiperGroupL);
+        
+        const wiperGroupR = new THREE.Group();
+        wiperGroupR.position.set(0.55, 1.15, 0.65); // pivot point R
+        const wiperArmR = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.48, 0.02), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
+        wiperArmR.position.y = 0.24;
+        wiperGroupR.add(wiperArmR);
+        carGroup.add(wiperGroupR);
+
         carGroup.position.set(0, 0.1, -120); // start position
         scene.add(carGroup);
 
@@ -1896,6 +2069,9 @@
         const carAccel = 0.048;
         const friction = 0.972;
         const carTurnSpeed = 0.032;
+
+        let wipersOn = false;
+        let wiperTime = 0;
 
         // Player walking variables
         const playerPos = new THREE.Vector3(0, 2, -100);
@@ -1973,6 +2149,9 @@
                 hudSub.innerText = `TIME: ${hrStr}:${minStr} AM`;
             }
 
+            const traveledKm = 80.0 - kilometersRemaining;
+            const isStormActive = (traveledKm >= 45.0 && traveledKm <= 65.0);
+
             // ── Animate Environment ──────────────────────────
             // Drift clouds
             clouds.forEach(cloud => {
@@ -1988,9 +2167,44 @@
             const sunriseProgress = Math.min(1.0, time / 600.0); 
             
             // Sky & Fog color transition (navy -> thick warm crimson/dark violet gradient)
-            const skyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
-            renderer.setClearColor(skyColor);
-            scene.fog.color.copy(skyColor);
+            let targetSkyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
+            let targetAmbient = 0.65;
+            let targetSunLight = 0.6 + sunriseProgress * 1.2;
+            
+            if (isStormActive) {
+                // Storm interpolation (dark black sky, low lights)
+                targetSkyColor.lerp(new THREE.Color(0x020204), 1.0);
+                targetAmbient = 0.12;
+                targetSunLight = 0.08;
+                
+                // Random lightning strikes (about every 3-5 seconds)
+                if (Math.random() < 0.0055 && !lightningLine) {
+                    triggerLightning();
+                }
+                
+                // Muffle other environment lights
+                if (!lightningLine) {
+                    ambientLight.intensity = targetAmbient;
+                    sunLight.intensity = targetSunLight;
+                }
+                
+                // Lerp clouds color to dark storm black
+                cloudMat.color.lerp(new THREE.Color(0x101015), delta * 2.0);
+            } else {
+                // Return to normal ambient light levels
+                if (!lightningLine) {
+                    ambientLight.intensity = targetAmbient;
+                    sunLight.intensity = targetSunLight;
+                }
+                
+                // Lerp clouds color back to bright morning clouds
+                cloudMat.color.lerp(new THREE.Color(0xe0e6ed), delta * 2.0);
+            }
+            
+            renderer.setClearColor(targetSkyColor);
+            scene.fog.color.copy(targetSkyColor);
+            
+            ambientLight.color.copy(targetSkyColor);
             
             // Sun color (stays thick, vibrant red and shifts to slightly brighter deep red)
             const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xcc1100), sunriseProgress);
@@ -2004,18 +2218,19 @@
             
             // Sun lighting adjusts accordingly
             sunLight.color.copy(sunColor);
-            sunLight.intensity = 0.6 + sunriseProgress * 1.2;
             sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z - 20);
 
-            // Flap and fly crows in circular soaring patterns
+            // Flap and fly crows in circular soaring patterns (frantic during storm)
             birds.forEach(crow => {
-                crow.angle += crow.rotSpeed * delta;
+                const currentRotSpeed = isStormActive ? crow.rotSpeed * 2.2 : crow.rotSpeed;
+                const currentFlapSpeed = isStormActive ? 22 : 12;
+                crow.angle += currentRotSpeed * delta;
                 crow.mesh.position.x = crow.centerX + Math.cos(crow.angle) * crow.radius;
-                crow.mesh.position.z += crow.speed;
+                crow.mesh.position.z += crow.speed * (isStormActive ? 1.8 : 1.0);
                 crow.mesh.position.y = crow.baseY + Math.sin(time * 0.8 + crow.angle) * 3;
                 
                 // Wing flap animation
-                const flap = Math.sin(time * 12 + crow.flapOffset) * 0.5;
+                const flap = Math.sin(time * currentFlapSpeed + crow.flapOffset) * 0.5;
                 crow.mesh.userData.wingLeft.rotation.z = flap;
                 crow.mesh.userData.wingRight.rotation.z = -flap;
                 
@@ -2031,6 +2246,66 @@
                     crow.centerX = carGroup.position.x + (Math.random() - 0.5) * 150;
                 }
             });
+
+            // Update Rain Particles
+            if (isStormActive) {
+                rainMat.opacity = Math.min(0.68, rainMat.opacity + delta * 0.45);
+            } else {
+                rainMat.opacity = Math.max(0.0, rainMat.opacity - delta * 0.45);
+            }
+            
+            if (rainMat.opacity > 0) {
+                const positions = rainGeometry.attributes.position.array;
+                const camPos = camera.position;
+                
+                const windX = -28.0; // blowing left
+                const fallSpeed = -55.0; // falling down fast
+                
+                for (let i = 0; i < rainCount * 3; i += 3) {
+                    positions[i] += windX * delta;
+                    positions[i + 1] += fallSpeed * delta;
+                    positions[i + 2] += carSpeed * 40 * delta; // keep up with car
+                    
+                    if (positions[i + 1] < 0) {
+                        positions[i] = camPos.x + (Math.random() - 0.5) * 160;
+                        positions[i + 1] = 80;
+                        positions[i + 2] = camPos.z + (Math.random() - 0.5) * 160;
+                    }
+                    if (Math.abs(positions[i] - camPos.x) > 80) {
+                        positions[i] = camPos.x + (Math.random() - 0.5) * 160;
+                    }
+                    if (Math.abs(positions[i + 2] - camPos.z) > 80) {
+                        positions[i + 2] = camPos.z + (Math.random() - 0.5) * 160;
+                    }
+                }
+                rainGeometry.attributes.position.needsUpdate = true;
+            }
+
+            // Windshield rain overlay generator
+            if (isStormActive && stage === 1 && !wipersOn) {
+                const containerRain = document.getElementById('windshield-rain-container');
+                if (containerRain && Math.random() < 0.28) {
+                    const drop = document.createElement('div');
+                    drop.className = 'windshield-rain-drop';
+                    
+                    const left = Math.random() * 100;
+                    const top = Math.random() * 70;
+                    drop.style.left = left + '%';
+                    drop.style.top = top + '%';
+                    
+                    const height = 15 + Math.random() * 20;
+                    drop.style.height = height + 'px';
+                    
+                    const duration = 0.6 + Math.random() * 0.6;
+                    drop.style.animation = `rainSlide ${duration}s linear forwards`;
+                    
+                    containerRain.appendChild(drop);
+                    
+                    setTimeout(() => {
+                        try { containerRain.removeChild(drop); } catch(e) {}
+                    }, duration * 1000);
+                }
+            }
 
             // Parallax Mountains
             mountains.forEach(mount => {
@@ -2180,6 +2455,54 @@
                         ped.group.userData.rightLeg.rotation.x = -swing;
                     }
                 });
+
+                // Wind bending other trees in the chunk
+                if (chunk.trees) {
+                    chunk.trees.forEach(tree => {
+                        if (!tree.userData.isFallingTree) {
+                            const bend = isStormActive ? (Math.sin(time * 5.0 + tree.position.z * 0.05) * 0.12 + 0.08) : 0.0;
+                            tree.rotation.z = bend;
+                        }
+                    });
+                }
+
+                // Update falling trees during storm
+                if (chunk.fallingTrees) {
+                    chunk.fallingTrees.forEach(tree => {
+                        const worldTreeZ = chunk.group.position.z + tree.position.z;
+                        const distZ = worldTreeZ - carGroup.position.z;
+                        
+                        // Trigger fall if car is close and approaching
+                        if (isStormActive && distZ > 0 && distZ < 140 && !tree.userData.hasFallen && !tree.userData.isFalling) {
+                            tree.userData.isFalling = true;
+                        }
+                        
+                        if (tree.userData.isFalling) {
+                            const targetAngle = (Math.PI / 2) * 0.85; // fall flat
+                            const fallSpeed = 2.2 * delta;
+                            tree.userData.fallAngle = Math.min(targetAngle, tree.userData.fallAngle + fallSpeed);
+                            
+                            tree.rotation.z = tree.userData.fallDirection * tree.userData.fallAngle;
+                            
+                            if (tree.userData.fallAngle >= targetAngle) {
+                                tree.userData.isFalling = false;
+                                tree.userData.hasFallen = true;
+                            }
+                        }
+                        
+                        // Collision check
+                        if (stage === 1 && (tree.userData.hasFallen || tree.userData.isFalling)) {
+                            const carRelX = carGroup.position.x;
+                            const isBlockedLeft = (tree.userData.fallDirection === 1 && carRelX < 4);
+                            const isBlockedRight = (tree.userData.fallDirection === -1 && carRelX > -4);
+                            
+                            if (Math.abs(distZ) < 3.2 && (isBlockedLeft || isBlockedRight)) {
+                                carSpeed = -0.2; // bounce back
+                                playThudSound();
+                            }
+                        }
+                    });
+                }
             });
 
             // Update traffic vehicles
@@ -2328,6 +2651,25 @@
                 if (keys.a) targetWheelRot = 1.1;
                 if (keys.d) targetWheelRot = -1.1;
                 steeringWheel.rotation.z += (targetWheelRot - steeringWheel.rotation.z) * 0.15;
+
+                // Wiper animation
+                if (wipersOn) {
+                    wiperTime += delta * 5.0;
+                    const sweepAngle = Math.sin(wiperTime) * 1.1;
+                    wiperGroupL.rotation.z = sweepAngle;
+                    wiperGroupR.rotation.z = sweepAngle;
+                    
+                    const containerBlood = document.getElementById('windshield-blood-container');
+                    const containerRain = document.getElementById('windshield-rain-container');
+                    
+                    if (Math.abs(sweepAngle) > 0.75) {
+                        if (containerBlood) containerBlood.innerHTML = '';
+                        if (containerRain) containerRain.innerHTML = '';
+                    }
+                } else {
+                    wiperGroupL.rotation.z = -1.3;
+                    wiperGroupR.rotation.z = -1.3;
+                }
 
                 // Driver Seat POV (left-hand side)
                 let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
