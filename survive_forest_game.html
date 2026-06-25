@@ -237,7 +237,7 @@
             <div id="dashcam-time">2026-06-25 06:30:00 AM</div>
         </div>
         <div class="dashcam-bottom">
-            <div>CAM_01 · COPILOT_POV</div>
+            <div>CAM_01 · DRIVER_POV</div>
             <div class="dashcam-speed">
                 <span>SPEED: <span id="dashcam-speed-val">0</span> MPH</span> · GPS: 35.6192° N, 82.4419° W
             </div>
@@ -251,7 +251,7 @@
         <div class="hud-sub" id="hud-sub-title">TIME: 06:30 AM</div>
     </div>
 
-    <div class="timer-hud" id="timer-display">10.0s</div>
+    <div class="timer-hud" id="timer-display">30.00 KM (PAUSED)</div>
 
     <div class="controls-help" id="controls-text">
         DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer)
@@ -374,96 +374,489 @@
         skyLight.position.set(100, 50, 40);
         scene.add(skyLight);
 
-        // ── Create Landscape Assets ───────────────────────────
-        
-        // Grass Ground
-        const groundGeo = new THREE.PlaneGeometry(500, 500, 32, 32);
-        // Deform ground vertices to make small terrain bumps
-        const pos = groundGeo.attributes.position;
-        for (let i = 0; i < pos.count; i++) {
-            const vx = pos.getX(i);
-            const vy = pos.getY(i);
-            // Height formula
-            const zVal = Math.sin(vx * 0.05) * Math.cos(vy * 0.05) * 1.5 + Math.sin(vx * 0.01) * 3;
-            pos.setZ(i, zVal);
+        // ── Endless Road Chunk System ─────────────────────────
+        const CHUNK_SIZE = 400;
+        const chunks = new Map();
+
+        const SHOP_NAMES = [
+            "COZY CRUMB BAKERY",
+            "FOREST EDGE CAFE",
+            "PINEWOOD MOTEL",
+            "ALPINE MART",
+            "PINECONE BOOKS",
+            "WILDERNESS OUTFITTERS",
+            "SUMMIT DINER",
+            "CABIN FEVER SHOP",
+            "RUSTIC REPAIRS",
+            "HUNTER'S LODGE"
+        ];
+
+        // Signboard canvas texture cache
+        const signCanvasCache = new Map();
+        function getSignMaterial(text) {
+            if (signCanvasCache.has(text)) {
+                return signCanvasCache.get(text);
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#39ff14';
+            ctx.lineWidth = 6;
+            ctx.shadowColor = '#39ff14';
+            ctx.shadowBlur = 10;
+            ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.MeshLambertMaterial({ 
+                map: texture, 
+                emissive: 0x39ff14, 
+                emissiveMap: texture,
+                emissiveIntensity: 0.8
+            });
+            
+            signCanvasCache.set(text, material);
+            return material;
         }
-        groundGeo.computeVertexNormals();
 
-        const groundMat = new THREE.MeshLambertMaterial({ color: 0x1f3422 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        // Road (Stage 1 Highway - thick gray road)
-        const roadGeo = new THREE.PlaneGeometry(24, 500);
-        const roadMat = new THREE.MeshLambertMaterial({ color: 0x4a4a52 });
-        const road = new THREE.Mesh(roadGeo, roadMat);
-        road.rotation.x = -Math.PI / 2;
-        road.position.y = 0.08; // slightly above ground
-        road.receiveShadow = true;
-        scene.add(road);
-
-        // River (Flowing water at the side of the forest)
-        const riverGeo = new THREE.PlaneGeometry(28, 500, 10, 50);
-        const riverMat = new THREE.MeshLambertMaterial({ color: 0x1a384b, transparent: true, opacity: 0.85 });
-        const river = new THREE.Mesh(riverGeo, riverMat);
-        river.rotation.x = -Math.PI / 2;
-        river.position.set(75, 0.05, 0); // river coordinates
-        scene.add(river);
-
-        // 80+ Forest Trees
-        const trees = [];
-        const numTrees = 300;
-        const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 18, 5);
-        const foliageGeo = new THREE.ConeGeometry(5, 14, 5);
-
-        trunkGeo.translate(0, 9, 0); // move pivot to bottom
-        foliageGeo.translate(0, 18, 0);
-
-        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
-        const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
-
-        for (let i = 0; i < numTrees; i++) {
-            // Pick random coordinates
-            let tx = (Math.random() - 0.5) * 360;
-            let tz = (Math.random() - 0.5) * 360;
-
-            // Prevent trees on road (X: -20 to 20) and river (X: 55 to 95)
-            if (tx > -20 && tx < 20) {
-                tx += tx >= 0 ? 22 : -22;
-            }
-            if (tx > 50 && tx < 100) {
-                tx += 50;
-            }
-
-            const treeGroup = new THREE.Group();
+        // Procedural Vehicle Meshes
+        function createCarMesh(color) {
+            const car = new THREE.Group();
             
-            // Trunk
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.castShadow = true;
-            trunk.receiveShadow = true;
-            treeGroup.add(trunk);
-
-            // Foliage
-            const foliageColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
-            const foliageMat = new THREE.MeshLambertMaterial({ color: foliageColor });
-            const foliage = new THREE.Mesh(foliageGeo, foliageMat);
-            foliage.castShadow = true;
-            foliage.receiveShadow = true;
-            treeGroup.add(foliage);
-
-            // Tree Height Randomization
-            const scaleY = 0.85 + Math.random() * 0.45;
-            const scaleXZ = 0.9 + Math.random() * 0.3;
-            treeGroup.scale.set(scaleXZ, scaleY, scaleXZ);
+            const bodyGeo = new THREE.BoxGeometry(1.8, 0.6, 4.0);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.2, metalness: 0.8 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.4;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            car.add(body);
             
-            // Align to terrain height approx
-            const terrainHeight = Math.sin(tx * 0.05) * Math.cos(tz * 0.05) * 1.5 + Math.sin(tx * 0.01) * 3;
-            treeGroup.position.set(tx, terrainHeight, tz);
+            const cabinGeo = new THREE.BoxGeometry(1.5, 0.6, 2.0);
+            const cabinMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.1, transparent: true, opacity: 0.9 });
+            const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+            cabin.position.set(0, 0.9, -0.2);
+            cabin.castShadow = true;
+            car.add(cabin);
+            
+            const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 10);
+            wheelGeo.rotateZ(Math.PI / 2);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
+            
+            const offsets = [
+                { x: -0.95, z: 1.1 },
+                { x: 0.95, z: 1.1 },
+                { x: -0.95, z: -1.1 },
+                { x: 0.95, z: -1.1 }
+            ];
+            offsets.forEach(offset => {
+                const wh = new THREE.Mesh(wheelGeo, wheelMat);
+                wh.position.set(offset.x, 0.35, offset.z);
+                wh.castShadow = true;
+                car.add(wh);
+            });
+            
+            // Lights
+            const headlightGeo = new THREE.BoxGeometry(0.2, 0.15, 0.05);
+            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const hl = new THREE.Mesh(headlightGeo, headlightMat);
+            hl.position.set(-0.6, 0.45, 2.01);
+            car.add(hl);
+            const hr = new THREE.Mesh(headlightGeo, headlightMat);
+            hr.position.set(0.6, 0.45, 2.01);
+            car.add(hr);
+            
+            const taillightGeo = new THREE.BoxGeometry(0.2, 0.15, 0.05);
+            const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const tl = new THREE.Mesh(taillightGeo, taillightMat);
+            tl.position.set(-0.6, 0.45, -2.01);
+            car.add(tl);
+            const tr = new THREE.Mesh(taillightGeo, taillightMat);
+            tr.position.set(0.6, 0.45, -2.01);
+            car.add(tr);
+            
+            return car;
+        }
 
-            scene.add(treeGroup);
-            trees.push(treeGroup);
+        function createTruckMesh() {
+            const truck = new THREE.Group();
+            
+            // Cabin
+            const cabGeo = new THREE.BoxGeometry(2.0, 1.2, 1.6);
+            const cabMat = new THREE.MeshStandardMaterial({ color: 0x1a3a5c, roughness: 0.3 });
+            const cab = new THREE.Mesh(cabGeo, cabMat);
+            cab.position.set(0, 0.8, 1.2);
+            cab.castShadow = true;
+            truck.add(cab);
+            
+            // Cargo bed
+            const cargoGeo = new THREE.BoxGeometry(2.1, 1.6, 4.4);
+            const cargoMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.7 });
+            const cargo = new THREE.Mesh(cargoGeo, cargoMat);
+            cargo.position.set(0, 1.0, -1.5);
+            cargo.castShadow = true;
+            cargo.receiveShadow = true;
+            truck.add(cargo);
+            
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 10);
+            wheelGeo.rotateZ(Math.PI / 2);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
+            
+            const offsets = [
+                { x: -1.05, z: 1.2 },
+                { x: 1.05, z: 1.2 },
+                { x: -1.05, z: -1.0 },
+                { x: 1.05, z: -1.0 },
+                { x: -1.05, z: -2.4 },
+                { x: 1.05, z: -2.4 }
+            ];
+            offsets.forEach(offset => {
+                const wh = new THREE.Mesh(wheelGeo, wheelMat);
+                wh.position.set(offset.x, 0.45, offset.z);
+                wh.castShadow = true;
+                truck.add(wh);
+            });
+            
+            // Lights
+            const headlightGeo = new THREE.BoxGeometry(0.25, 0.2, 0.05);
+            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xfff5d0 });
+            const hl = new THREE.Mesh(headlightGeo, headlightMat);
+            hl.position.set(-0.7, 0.5, 2.01);
+            truck.add(hl);
+            const hr = new THREE.Mesh(headlightGeo, headlightMat);
+            hr.position.set(0.7, 0.5, 2.01);
+            truck.add(hr);
+            
+            const taillightMat = new THREE.MeshBasicMaterial({ color: 0xcc0000 });
+            const tl = new THREE.Mesh(headlightGeo, taillightMat);
+            tl.position.set(-0.7, 0.4, -3.71);
+            truck.add(tl);
+            const tr = new THREE.Mesh(headlightGeo, taillightMat);
+            tr.position.set(0.7, 0.4, -3.71);
+            truck.add(tr);
+            
+            return truck;
+        }
+
+        function createBusMesh() {
+            const bus = new THREE.Group();
+            
+            // Main body
+            const bodyGeo = new THREE.BoxGeometry(2.1, 1.9, 8.5);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.4 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 1.1;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            bus.add(body);
+            
+            // Windows strip
+            const winGeo = new THREE.BoxGeometry(2.14, 0.5, 7.5);
+            const winMat = new THREE.MeshStandardMaterial({ color: 0xffdd55, emissive: 0x553300, roughness: 0.1 });
+            const win = new THREE.Mesh(winGeo, winMat);
+            win.position.set(0, 1.3, -0.2);
+            bus.add(win);
+            
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.5, 10);
+            wheelGeo.rotateZ(Math.PI / 2);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
+            
+            const offsets = [
+                { x: -1.05, z: 2.8 },
+                { x: 1.05, z: 2.8 },
+                { x: -1.05, z: -1.5 },
+                { x: 1.05, z: -1.5 },
+                { x: -1.05, z: -3.3 },
+                { x: 1.05, z: -3.3 }
+            ];
+            offsets.forEach(offset => {
+                const wh = new THREE.Mesh(wheelGeo, wheelMat);
+                wh.position.set(offset.x, 0.5, offset.z);
+                wh.castShadow = true;
+                bus.add(wh);
+            });
+            
+            // Lights
+            const headlightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.05);
+            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const hl = new THREE.Mesh(headlightGeo, headlightMat);
+            hl.position.set(-0.7, 0.6, 4.26);
+            bus.add(hl);
+            const hr = new THREE.Mesh(headlightGeo, headlightMat);
+            hr.position.set(0.7, 0.6, 4.26);
+            bus.add(hr);
+            
+            const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const tl = new THREE.Mesh(headlightGeo, taillightMat);
+            tl.position.set(-0.7, 0.5, -4.26);
+            bus.add(tl);
+            const tr = new THREE.Mesh(headlightGeo, taillightMat);
+            tr.position.set(0.7, 0.5, -4.26);
+            bus.add(tr);
+            
+            return bus;
+        }
+
+        // Procedural Shop Mesh Creator
+        function createShopMesh(name, isBakery) {
+            const shopGroup = new THREE.Group();
+            
+            const buildWidth = 14;
+            const buildHeight = 9;
+            const buildDepth = 18;
+            
+            const colors = [0x5c4033, 0x4a5d4e, 0x6e7f80, 0x8a7f80, 0x5e5061, 0x3d4a5d];
+            const buildMat = new THREE.MeshStandardMaterial({ 
+                color: colors[Math.floor(Math.random() * colors.length)], 
+                roughness: 0.8 
+            });
+            const mainBuilding = new THREE.Mesh(new THREE.BoxGeometry(buildWidth, buildHeight, buildDepth), buildMat);
+            mainBuilding.position.y = buildHeight / 2;
+            mainBuilding.castShadow = true;
+            mainBuilding.receiveShadow = true;
+            shopGroup.add(mainBuilding);
+            
+            const roofWidth = buildWidth + 2;
+            const roofHeight = 3;
+            const roofDepth = buildDepth + 2;
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(roofWidth, roofHeight, roofDepth), new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.9 }));
+            roof.position.y = buildHeight + roofHeight / 2 - 0.8;
+            roof.castShadow = true;
+            shopGroup.add(roof);
+            
+            const door = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.8 }));
+            door.position.set(buildWidth / 2 + 0.05, 2.1, 0);
+            shopGroup.add(door);
+            
+            const winMat = new THREE.MeshStandardMaterial({ 
+                color: 0xffcc33, 
+                emissive: 0xffaa00, 
+                emissiveIntensity: 1.2,
+                roughness: 0.1 
+            });
+            const winGeo = new THREE.BoxGeometry(0.1, 2.0, 3.0);
+            const winLeft = new THREE.Mesh(winGeo, winMat);
+            winLeft.position.set(buildWidth / 2 + 0.05, 3.0, -4.0);
+            shopGroup.add(winLeft);
+            
+            const winRight = new THREE.Mesh(winGeo, winMat);
+            winRight.position.set(buildWidth / 2 + 0.05, 3.0, 4.0);
+            shopGroup.add(winRight);
+            
+            const signboard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.0, 8.0), getSignMaterial(name));
+            signboard.position.set(buildWidth / 2 + 0.2, buildHeight - 1.0, 0);
+            signboard.castShadow = true;
+            shopGroup.add(signboard);
+            
+            if (isBakery) {
+                const car1 = createCarMesh(0x0055ff);
+                car1.position.set(buildWidth / 2 + 3.5, 0.1, -4.0);
+                car1.rotation.y = Math.PI / 6;
+                shopGroup.add(car1);
+                
+                const car2 = createCarMesh(0xffffff);
+                car2.position.set(buildWidth / 2 + 3.5, 0.1, 4.0);
+                car2.rotation.y = -Math.PI / 6;
+                shopGroup.add(car2);
+            } else if (Math.random() > 0.5) {
+                const carColors = [0xbb0000, 0x333333, 0x00aa55, 0xffaa00];
+                const car = createCarMesh(carColors[Math.floor(Math.random() * carColors.length)]);
+                car.position.set(buildWidth / 2 + 3.5, 0.1, (Math.random() - 0.5) * 8);
+                car.rotation.y = (Math.random() - 0.5) * 0.5;
+                shopGroup.add(car);
+            }
+            
+            return shopGroup;
+        }
+
+        // Procedural Pedestrian Mesh
+        function createPedestrianMesh() {
+            const group = new THREE.Group();
+            
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.4), new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
+            torso.position.y = 1.0;
+            torso.castShadow = true;
+            group.add(torso);
+            
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshLambertMaterial({ color: 0xffcc99 }));
+            head.position.y = 1.7;
+            head.castShadow = true;
+            group.add(head);
+            
+            const legGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.8);
+            const legMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            
+            const leftLeg = new THREE.Mesh(legGeo, legMat);
+            leftLeg.position.set(-0.2, 0.4, 0);
+            leftLeg.castShadow = true;
+            group.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeo, legMat);
+            rightLeg.position.set(0.2, 0.4, 0);
+            rightLeg.castShadow = true;
+            group.add(rightLeg);
+            
+            group.userData = { leftLeg, rightLeg };
+            return group;
+        }
+
+        // Chunk builder
+        function createChunk(index) {
+            const chunkGroup = new THREE.Group();
+            chunkGroup.position.z = index * CHUNK_SIZE;
+            scene.add(chunkGroup);
+            
+            // Road
+            const roadMesh = new THREE.Mesh(new THREE.PlaneGeometry(24, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x4a4a52 }));
+            roadMesh.rotation.x = -Math.PI / 2;
+            roadMesh.position.y = 0.08;
+            roadMesh.receiveShadow = true;
+            chunkGroup.add(roadMesh);
+            
+            // Lanes dashes
+            const dashGeo = new THREE.PlaneGeometry(0.3, 12);
+            const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const numDashes = 10;
+            const spacing = CHUNK_SIZE / numDashes;
+            for (let i = 0; i < numDashes; i++) {
+                const dash = new THREE.Mesh(dashGeo, dashMat);
+                dash.rotation.x = -Math.PI / 2;
+                dash.position.set(0, 0.09, -CHUNK_SIZE / 2 + i * spacing + spacing / 2);
+                chunkGroup.add(dash);
+            }
+            
+            // Sidewalks
+            const leftSidewalk = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x777777 }));
+            leftSidewalk.position.set(-14, 0.05, 0);
+            leftSidewalk.receiveShadow = true;
+            chunkGroup.add(leftSidewalk);
+            
+            const rightSidewalk = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x777777 }));
+            rightSidewalk.position.set(14, 0.05, 0);
+            rightSidewalk.receiveShadow = true;
+            chunkGroup.add(rightSidewalk);
+            
+            // Grass
+            const leftGround = new THREE.Mesh(new THREE.PlaneGeometry(200, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x1f3422 }));
+            leftGround.rotation.x = -Math.PI / 2;
+            leftGround.position.set(-116, 0, 0);
+            leftGround.receiveShadow = true;
+            chunkGroup.add(leftGround);
+            
+            const rightGround = new THREE.Mesh(new THREE.PlaneGeometry(200, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x1f3422 }));
+            rightGround.rotation.x = -Math.PI / 2;
+            rightGround.position.set(116, 0, 0);
+            rightGround.receiveShadow = true;
+            chunkGroup.add(rightGround);
+            
+            // River
+            const riverGeo = new THREE.PlaneGeometry(28, CHUNK_SIZE, 10, 20);
+            const riverMesh = new THREE.Mesh(riverGeo, new THREE.MeshLambertMaterial({ color: 0x1a384b, transparent: true, opacity: 0.85 }));
+            riverMesh.rotation.x = -Math.PI / 2;
+            riverMesh.position.set(75, 0.05, 0);
+            chunkGroup.add(riverMesh);
+            
+            // Trees
+            const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 18, 5);
+            const foliageGeo = new THREE.ConeGeometry(5, 14, 5);
+            trunkGeo.translate(0, 9, 0);
+            foliageGeo.translate(0, 18, 0);
+            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
+            const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
+            
+            for (let i = 0; i < 30; i++) {
+                let tx = (Math.random() - 0.5) * 360;
+                let tz = (Math.random() - 0.5) * CHUNK_SIZE;
+                if (tx > -20 && tx < 20) tx += tx >= 0 ? 22 : -22;
+                if (tx > 50 && tx < 100) tx += 50;
+                
+                const treeGroup = new THREE.Group();
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.castShadow = true;
+                trunk.receiveShadow = true;
+                treeGroup.add(trunk);
+                
+                const fMat = new THREE.MeshLambertMaterial({ color: foliageColors[Math.floor(Math.random() * foliageColors.length)] });
+                const foliage = new THREE.Mesh(foliageGeo, fMat);
+                foliage.castShadow = true;
+                foliage.receiveShadow = true;
+                treeGroup.add(foliage);
+                
+                treeGroup.scale.set(0.9 + Math.random() * 0.3, 0.85 + Math.random() * 0.45, 0.9 + Math.random() * 0.3);
+                treeGroup.position.set(tx, 0, tz);
+                chunkGroup.add(treeGroup);
+            }
+            
+            // Shops
+            let nameLeft = SHOP_NAMES[Math.abs(index * 2) % SHOP_NAMES.length];
+            let nameRight = SHOP_NAMES[Math.abs(index * 2 + 1) % SHOP_NAMES.length];
+            if (index === 0) nameLeft = "COZY CRUMB BAKERY";
+            
+            const shopLeft = createShopMesh(nameLeft, nameLeft === "COZY CRUMB BAKERY");
+            shopLeft.position.set(-20, 0, -80);
+            chunkGroup.add(shopLeft);
+            
+            const shopRight = createShopMesh(nameRight, nameRight === "COZY CRUMB BAKERY");
+            shopRight.position.set(20, 0, 80);
+            shopRight.rotation.y = Math.PI;
+            chunkGroup.add(shopRight);
+            
+            const nameLeft2 = SHOP_NAMES[Math.abs(index * 2 + 4) % SHOP_NAMES.length];
+            const nameRight2 = SHOP_NAMES[Math.abs(index * 2 + 5) % SHOP_NAMES.length];
+            
+            const shopLeft2 = createShopMesh(nameLeft2, false);
+            shopLeft2.position.set(-20, 0, 80);
+            chunkGroup.add(shopLeft2);
+            
+            const shopRight2 = createShopMesh(nameRight2, false);
+            shopRight2.position.set(20, 0, -80);
+            shopRight2.rotation.y = Math.PI;
+            chunkGroup.add(shopRight2);
+            
+            // Pedestrians
+            const peds = [];
+            const ped1 = createPedestrianMesh();
+            ped1.position.set(-13.5, 0.1, (Math.random() - 0.5) * 300);
+            chunkGroup.add(ped1);
+            
+            const ped2 = createPedestrianMesh();
+            ped2.position.set(13.5, 0.1, (Math.random() - 0.5) * 300);
+            chunkGroup.add(ped2);
+            
+            peds.push({
+                group: ped1,
+                localZ: ped1.position.z,
+                direction: Math.random() > 0.5 ? 1 : -1,
+                speed: 8.0 + Math.random() * 8.0,
+                offset: Math.random() * 10
+            });
+            peds.push({
+                group: ped2,
+                localZ: ped2.position.z,
+                direction: Math.random() > 0.5 ? 1 : -1,
+                speed: 8.0 + Math.random() * 8.0,
+                offset: Math.random() * 10
+            });
+            
+            chunks.set(index, {
+                group: chunkGroup,
+                riverMesh: riverMesh,
+                riverGeo: riverGeo,
+                pedestrians: peds,
+                index: index
+            });
         }
 
         // Realistic Mountain Range (far background)
@@ -491,6 +884,7 @@
             
             mountGroup.scale.set(scale, scale, scale);
             mountGroup.position.set(mx, -5, mz);
+            mountGroup.userData = { relativeZ: mz - (-120) };
             scene.add(mountGroup);
             mountains.push(mountGroup);
         }
@@ -656,7 +1050,9 @@
 
         // ── Game Logic & Loop ────────────────────────────────
         let stage = 1; // 1: Driving, 2: Dimming Transition, 3: Walking
-        let stageTimer = 10.0;
+        let kilometersRemaining = 30.0;
+        let parkedCarX = 0;
+        let parkedCarZ = 0;
         let carSpeed = 0;
         let carAngle = 0;
         const maxCarSpeed = 1.6;
@@ -671,6 +1067,49 @@
         let isWalking = false;
         let footstepTimeAcc = 0;
 
+        // Traffic Management
+        const trafficVehicles = [];
+        const trafficTypes = ['car', 'truck', 'bus'];
+        const carColors = [0x1a73e8, 0xf15a24, 0x00a896, 0x8e44ad, 0xf1c40f, 0x34495e, 0x7f8c8d];
+
+        function spawnTrafficVehicles() {
+            const numTraffic = 6;
+            for (let i = 0; i < numTraffic; i++) {
+                const zPos = carGroup.position.z + 100 + i * 80 + (Math.random() - 0.5) * 40;
+                const lane = Math.random() > 0.5 ? 4 : -4;
+                const type = trafficTypes[Math.floor(Math.random() * trafficTypes.length)];
+                
+                let mesh;
+                let speed;
+                if (lane === 4) {
+                    speed = 0.3 + Math.random() * 0.4;
+                } else {
+                    speed = -(0.8 + Math.random() * 0.6);
+                }
+
+                if (type === 'car') {
+                    mesh = createCarMesh(carColors[Math.floor(Math.random() * carColors.length)]);
+                } else if (type === 'truck') {
+                    mesh = createTruckMesh();
+                } else {
+                    mesh = createBusMesh();
+                }
+
+                mesh.position.set(lane, 0.1, zPos);
+                if (speed < 0) {
+                    mesh.rotation.y = Math.PI;
+                }
+                scene.add(mesh);
+                trafficVehicles.push({ group: mesh, speed: speed, lane: lane, type: type });
+            }
+        }
+
+        // Initialize Chunks & Traffic
+        for (let i = -1; i <= 1; i++) {
+            createChunk(i);
+        }
+        spawnTrafficVehicles();
+
         const clock = new THREE.Clock();
 
         const timerDisplay = document.getElementById('timer-display');
@@ -684,71 +1123,148 @@
             clouds.forEach(cloud => {
                 cloud.mesh.position.x += cloud.speed;
                 if (cloud.mesh.position.x > 200) cloud.mesh.position.x = -200;
+                
+                const relZ = cloud.mesh.position.z - carGroup.position.z;
+                if (relZ < -250) cloud.mesh.position.z += 500;
+                else if (relZ > 250) cloud.mesh.position.z -= 500;
             });
 
             // Flap and fly birds
             birds.forEach(bird => {
                 bird.mesh.position.z += bird.speed;
-                // Flapping
                 const wingRot = Math.sin(time * 15 + bird.flapOffset) * 0.45;
                 bird.leftWing.rotation.z = -wingRot;
                 bird.rightWing.rotation.z = wingRot;
                 
-                if (bird.mesh.position.z > 250) bird.mesh.position.z = -250;
+                const relZ = bird.mesh.position.z - carGroup.position.z;
+                if (relZ < -200) bird.mesh.position.z += 400;
+                else if (relZ > 200) bird.mesh.position.z -= 400;
             });
 
-            // Animate river waves slightly
-            const riverPos = riverGeo.attributes.position;
-            for (let i = 0; i < riverPos.count; i++) {
-                const zVal = riverPos.getY(i); // Plane Y is Three.js Z
-                const wave = Math.sin(time * 2.5 + zVal * 0.15) * 0.15;
-                riverPos.setZ(i, wave);
+            // Parallax Mountains
+            mountains.forEach(mount => {
+                mount.position.z = carGroup.position.z + mount.userData.relativeZ;
+            });
+
+            // Update endless chunks
+            const viewZ = (stage === 1) ? carGroup.position.z : camera.position.z;
+            const currentChunkIndex = Math.floor((viewZ + CHUNK_SIZE/2) / CHUNK_SIZE);
+            
+            for (let i = currentChunkIndex - 1; i <= currentChunkIndex + 1; i++) {
+                if (!chunks.has(i)) {
+                    createChunk(i);
+                }
             }
-            riverGeo.computeVertexNormals();
-            riverPos.needsUpdate = true;
+            
+            chunks.forEach((chunk, index) => {
+                if (index < currentChunkIndex - 1 || index > currentChunkIndex + 1) {
+                    scene.remove(chunk.group);
+                    chunk.group.traverse(node => {
+                        if (node.isMesh) {
+                            node.geometry.dispose();
+                            if (Array.isArray(node.material)) {
+                                node.material.forEach(mat => mat.dispose());
+                            } else if (node.material) {
+                                node.material.dispose();
+                            }
+                        }
+                    });
+                    chunks.delete(index);
+                }
+            });
+
+            // Animate river waves in all active chunks
+            chunks.forEach(chunk => {
+                const riverPos = chunk.riverGeo.attributes.position;
+                for (let i = 0; i < riverPos.count; i++) {
+                    const zVal = riverPos.getY(i);
+                    const worldZ = chunk.group.position.z + zVal;
+                    const wave = Math.sin(time * 2.5 + worldZ * 0.15) * 0.15;
+                    riverPos.setZ(i, wave);
+                }
+                chunk.riverGeo.computeVertexNormals();
+                riverPos.needsUpdate = true;
+
+                // Update pedestrians
+                chunk.pedestrians.forEach(ped => {
+                    ped.localZ += ped.direction * ped.speed * delta;
+                    if (ped.localZ > CHUNK_SIZE / 2 - 10) {
+                        ped.localZ = CHUNK_SIZE / 2 - 10;
+                        ped.direction = -1;
+                    } else if (ped.localZ < -CHUNK_SIZE / 2 + 10) {
+                        ped.localZ = -CHUNK_SIZE / 2 + 10;
+                        ped.direction = 1;
+                    }
+                    ped.group.position.z = ped.localZ;
+                    ped.group.rotation.y = ped.direction > 0 ? 0 : Math.PI;
+                    if (ped.group.userData.leftLeg && ped.group.userData.rightLeg) {
+                        const swing = Math.sin(time * 8 + ped.offset) * 0.45;
+                        ped.group.userData.leftLeg.rotation.x = swing;
+                        ped.group.userData.rightLeg.rotation.x = -swing;
+                    }
+                });
+            });
+
+            // Update traffic vehicles
+            if (stage === 1) {
+                trafficVehicles.forEach(vehicle => {
+                    vehicle.group.position.z += vehicle.speed;
+                    const relZ = vehicle.group.position.z - carGroup.position.z;
+                    if (vehicle.speed > 0) {
+                        if (relZ < -150) {
+                            vehicle.group.position.z = carGroup.position.z + 300 + Math.random() * 100;
+                            vehicle.group.position.x = Math.random() > 0.5 ? 4 : -4;
+                            vehicle.speed = 0.3 + Math.random() * 0.4;
+                        }
+                    } else {
+                        if (relZ < -100) {
+                            vehicle.group.position.z = carGroup.position.z + 300 + Math.random() * 100;
+                            vehicle.group.position.x = Math.random() > 0.5 ? 4 : -4;
+                            vehicle.speed = -(0.8 + Math.random() * 0.6);
+                        }
+                    }
+                    vehicle.group.rotation.y = vehicle.speed > 0 ? 0 : Math.PI;
+                });
+            }
 
             // ── STAGE 1: DRIVING ─────────────────────────────
             if (stage === 1) {
-                // Update countdown
-                stageTimer -= delta;
-                if (stageTimer <= 0) {
-                    stageTimer = 0;
-                    // Trigger Transition to Walking
-                    stage = 2; // Transition mode
-                    fadeOverlay.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        // Position Player next to the parked car
-                        carSpeed = 0;
-                        playerPos.set(carGroup.position.x - 3, 2, carGroup.position.z);
-                        playerAngle = carAngle - Math.PI / 2; // look towards forest
-                        camera.rotation.set(0, playerAngle, 0);
-
-                        // Park the car off the road slightly
-                        carGroup.position.x -= 1.8;
-                        spotLeft.intensity = 0.5; // dim lights
-                        spotRight.intensity = 0.5;
-
-                        // Hide Dashcam HUD
-                        document.getElementById('dashcam-hud').style.display = 'none';
-
-                        // Switch HUD labels
-                        stage = 3; // Walking mode
-                        hudTitle.innerText = "ACT I: INTO THE WILDERNESS";
-                        hudTitle.style.borderColor = "#39ff14";
-                        hudTitle.style.color = "#39ff14";
-                        hudTitle.style.boxShadow = "0 0 15px rgba(57,255,20,0.45)";
-                        controlsHelp.innerHTML = "WALK WITH: <span>W / S</span> (Walk) · <span>A / D</span> (Turn Camera)";
-                        timerDisplay.style.display = "none";
+                const isDriving = (keys.w || keys.s) && Math.abs(carSpeed) > 0.05;
+                if (isDriving) {
+                    kilometersRemaining -= delta / 10.0;
+                    if (kilometersRemaining <= 0) {
+                        kilometersRemaining = 0;
+                        stage = 2; // Transition mode
+                        fadeOverlay.style.opacity = '1';
                         
-                        // Fade in
-                        fadeOverlay.style.opacity = '0';
-                    }, 1500);
+                        setTimeout(() => {
+                            carSpeed = 0;
+                            parkedCarX = carGroup.position.x;
+                            parkedCarZ = carGroup.position.z;
+                            playerPos.set(carGroup.position.x - 3, 2, carGroup.position.z);
+                            playerAngle = carAngle - Math.PI / 2;
+                            camera.rotation.set(0, playerAngle, 0);
+
+                            carGroup.position.x -= 1.8;
+                            spotLeft.intensity = 0.5;
+                            spotRight.intensity = 0.5;
+
+                            document.getElementById('dashcam-hud').style.display = 'none';
+
+                            stage = 3; // Walking mode
+                            hudTitle.innerText = "ACT I: INTO THE WILDERNESS";
+                            hudTitle.style.borderColor = "#39ff14";
+                            hudTitle.style.color = "#39ff14";
+                            hudTitle.style.boxShadow = "0 0 15px rgba(57,255,20,0.45)";
+                            controlsHelp.innerHTML = "WALK WITH: <span>W / S</span> (Walk) · <span>A / D</span> (Turn Camera)";
+                            timerDisplay.style.display = "none";
+                            fadeOverlay.style.opacity = '0';
+                        }, 1500);
+                    }
                 }
                 
-                timerDisplay.innerText = stageTimer.toFixed(1) + "s";
+                timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
 
-                // Update Dashcam HUD values
                 let speedMph = Math.abs(carSpeed * 42).toFixed(0);
                 document.getElementById('dashcam-speed-val').innerText = speedMph;
                 
@@ -758,7 +1274,6 @@
                 let timeStr = `2026-06-25 06:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} AM`;
                 document.getElementById('dashcam-time').innerText = timeStr;
 
-                // Car physics
                 if (keys.w) carSpeed += carAccel;
                 if (keys.s) carSpeed -= carAccel;
 
@@ -775,29 +1290,26 @@
                 carGroup.position.z += Math.cos(carAngle) * carSpeed;
                 carGroup.rotation.y = carAngle;
 
-                // Rotate wheels
                 wheels.forEach(wheel => {
                     wheel.rotation.x += carSpeed * 0.7;
                 });
 
-                // Rotate steering wheel smoothly based on turn input
                 let targetWheelRot = 0;
-                if (keys.a) targetWheelRot = 1.1; // turn left
-                if (keys.d) targetWheelRot = -1.1; // turn right
+                if (keys.a) targetWheelRot = 1.1;
+                if (keys.d) targetWheelRot = -1.1;
                 steeringWheel.rotation.z += (targetWheelRot - steeringWheel.rotation.z) * 0.15;
 
-                // Copilot / Passenger Seat POV (inside cabin, right-hand side, looking out the windshield)
-                let camX = carGroup.position.x + Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
-                let camZ = carGroup.position.z - Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
+                // Driver Seat POV (left-hand side)
+                let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
+                let camZ = carGroup.position.z + Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
                 let camY = carGroup.position.y + 1.25;
                 
                 camera.position.set(camX, camY, camZ);
                 
-                // Camera looks forward, slightly angled towards the front-center road view
                 let lookTarget = new THREE.Vector3(
-                    camX + Math.sin(carAngle) * 15 - Math.cos(carAngle) * 0.15,
+                    camX + Math.sin(carAngle) * 15 + Math.cos(carAngle) * 0.15,
                     camY - 0.08,
-                    camZ + Math.cos(carAngle) * 15 + Math.sin(carAngle) * 0.15
+                    camZ + Math.cos(carAngle) * 15 - Math.sin(carAngle) * 0.15
                 );
                 camera.lookAt(lookTarget);
             }
@@ -805,11 +1317,9 @@
             else if (stage === 3) {
                 isWalking = false;
                 
-                // Rotational turning
                 if (keys.a) playerAngle += 0.035;
                 if (keys.d) playerAngle -= 0.035;
 
-                // Move forward / backward
                 if (keys.w) {
                     playerPos.x += Math.sin(playerAngle) * walkSpeed;
                     playerPos.z += Math.cos(playerAngle) * walkSpeed;
@@ -821,18 +1331,14 @@
                     isWalking = true;
                 }
 
-                // Prevent walking off limits (keep player in bounds)
-                playerPos.x = Math.max(Math.min(playerPos.x, 240), -240);
-                playerPos.z = Math.max(Math.min(playerPos.z, 240), -240);
+                playerPos.x = Math.max(Math.min(playerPos.x, parkedCarX + 150), parkedCarX - 150);
+                playerPos.z = Math.max(Math.min(playerPos.z, parkedCarZ + 200), parkedCarZ - 200);
 
-                // Attach player Y height to approximate landscape height
                 const terrainHeight = Math.sin(playerPos.x * 0.05) * Math.cos(playerPos.z * 0.05) * 1.5 + Math.sin(playerPos.x * 0.01) * 3;
-                playerPos.y = 1.9 + terrainHeight; // eye level height offset
+                playerPos.y = 1.9 + terrainHeight;
 
-                // Move camera to player head
                 camera.position.copy(playerPos);
                 
-                // Camera looking target
                 const lookTarget = new THREE.Vector3(
                     playerPos.x + Math.sin(playerAngle),
                     playerPos.y,
@@ -840,7 +1346,6 @@
                 );
                 camera.lookAt(lookTarget);
 
-                // Play crunch footsteps sounds
                 if (isWalking) {
                     footstepTimeAcc += delta;
                     if (footstepTimeAcc > 0.42) {
@@ -848,7 +1353,7 @@
                         footstepTimeAcc = 0;
                     }
                 } else {
-                    footstepTimeAcc = 0.35; // prepare next thud instantly on start walking
+                    footstepTimeAcc = 0.35;
                 }
             }
         }
