@@ -441,20 +441,21 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         const scene = new THREE.Scene();
-        // Early morning light sky (clear morning 6:30 AM mist/sunlight tint)
-        renderer.setClearColor(0x192230);
-        scene.fog = new THREE.FogExp2(0x192230, 0.015);
+        // Early morning light sky (dusty dark morning 6:30 AM before sunrise)
+        const initialSkyColor = 0x120c18; 
+        renderer.setClearColor(initialSkyColor);
+        scene.fog = new THREE.FogExp2(initialSkyColor, 0.012);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
         // ── Lighting ──────────────────────────────────────────
-        // Ambient morning glow
-        const ambientLight = new THREE.AmbientLight(0x2d3a4d, 0.7);
+        // Ambient morning glow (starts dark purple/blue)
+        const ambientLight = new THREE.AmbientLight(0x251a2d, 0.55);
         scene.add(ambientLight);
 
-        // Low sunrise light (direction of sunset/sunrise cast orange shadows)
-        const sunLight = new THREE.DirectionalLight(0xffa570, 1.4);
-        sunLight.position.set(-80, 16, 200); // Rises in front of the car over the mountains
+        // Low sunrise light (starts low intensity red-orange)
+        const sunLight = new THREE.DirectionalLight(0xff3300, 0.8);
+        sunLight.position.set(-60, 2, 260); // Rises in front of the car over the mountains
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 1024;
         sunLight.shadow.mapSize.height = 1024;
@@ -466,6 +467,24 @@
         sunLight.shadow.camera.top = d;
         sunLight.shadow.camera.bottom = -d;
         scene.add(sunLight);
+
+        // ── Sun Waking Up over Mountains ──────────────────────
+        const sunGeo = new THREE.SphereGeometry(15, 24, 24);
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xff1100 });
+        const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+        sunMesh.position.set(-40, 2, 280);
+        
+        // Sun outer glow
+        const glowGeo = new THREE.SphereGeometry(28, 24, 24);
+        const glowMat = new THREE.MeshBasicMaterial({ 
+            color: 0xff3300, 
+            transparent: true, 
+            opacity: 0.18, 
+            blending: THREE.AdditiveBlending 
+        });
+        const sunGlow = new THREE.Mesh(glowGeo, glowMat);
+        sunMesh.add(sunGlow);
+        scene.add(sunMesh);
 
         // Soft yellow fill light from opposite sky direction
         const skyLight = new THREE.DirectionalLight(0xa5c5e0, 0.4);
@@ -1016,39 +1035,69 @@
             clouds.push({ mesh: cloudGroup, speed: 0.02 + Math.random() * 0.03 });
         }
 
-        // Flying Birds
-        const birds = [];
-        const birdWingGeo = new THREE.PlaneGeometry(2, 0.6);
-        const birdBodyGeo = new THREE.BoxGeometry(0.8, 0.2, 1.2);
-        const birdMat = new THREE.MeshBasicMaterial({ color: 0x101317, side: THREE.DoubleSide });
-
-        for (let i = 0; i < 6; i++) {
-            const birdGroup = new THREE.Group();
+        // Procedural Crow Mesh
+        function createCrowMesh() {
+            const crow = new THREE.Group();
+            const crowMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.9 });
             
-            const body = new THREE.Mesh(birdBodyGeo, birdMat);
-            birdGroup.add(body);
+            // Body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 1.3), crowMat);
+            body.castShadow = true;
+            crow.add(body);
+            
+            // Head
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), crowMat);
+            head.position.set(0, 0.22, 0.65);
+            head.castShadow = true;
+            crow.add(head);
+            
+            // Beak
+            const beak = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.45, 4), crowMat);
+            beak.rotation.x = Math.PI / 2;
+            beak.position.set(0, 0.16, 0.95);
+            crow.add(beak);
+            
+            // Left Wing Pivoting Group
+            const wingLeft = new THREE.Group();
+            const wingLMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.05, 0.65), crowMat);
+            wingLMesh.position.x = -0.8;
+            wingLeft.add(wingLMesh);
+            wingLeft.position.set(-0.35, 0.1, 0);
+            crow.add(wingLeft);
+            
+            // Right Wing Pivoting Group
+            const wingRight = new THREE.Group();
+            const wingRMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.05, 0.65), crowMat);
+            wingRMesh.position.x = 0.8;
+            wingRight.add(wingRMesh);
+            wingRight.position.set(0.35, 0.1, 0);
+            crow.add(wingRight);
+            
+            crow.userData = { wingLeft, wingRight };
+            return crow;
+        }
 
-            // Left Wing
-            const leftWing = new THREE.Mesh(birdWingGeo, birdMat);
-            leftWing.position.set(-1.1, 0, 0);
-            birdGroup.add(leftWing);
-
-            // Right Wing
-            const rightWing = new THREE.Mesh(birdWingGeo, birdMat);
-            rightWing.position.set(1.1, 0, 0);
-            birdGroup.add(rightWing);
-
-            const bx = -100 + Math.random() * 200;
-            const by = 28 + Math.random() * 10;
+        // Flying Crows
+        const birds = [];
+        for (let i = 0; i < 10; i++) {
+            const crowMesh = createCrowMesh();
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 35 + Math.random() * 45;
+            const centerX = (Math.random() - 0.5) * 220;
+            const baseY = 25 + Math.random() * 22;
             const bz = -120 + Math.random() * 240;
 
-            birdGroup.position.set(bx, by, bz);
-            scene.add(birdGroup);
+            crowMesh.position.set(centerX + Math.cos(angle) * radius, baseY, bz);
+            scene.add(crowMesh);
+            
             birds.push({
-                mesh: birdGroup,
-                leftWing: leftWing,
-                rightWing: rightWing,
-                speed: 0.15 + Math.random() * 0.1,
+                mesh: crowMesh,
+                centerX: centerX,
+                baseY: baseY,
+                radius: radius,
+                angle: angle,
+                rotSpeed: 0.15 + Math.random() * 0.25,
+                speed: 0.35 + Math.random() * 0.4,
                 flapOffset: Math.random() * 10
             });
         }
@@ -1227,16 +1276,52 @@
                 else if (relZ > 250) cloud.mesh.position.z -= 500;
             });
 
-            // Flap and fly birds
-            birds.forEach(bird => {
-                bird.mesh.position.z += bird.speed;
-                const wingRot = Math.sin(time * 15 + bird.flapOffset) * 0.45;
-                bird.leftWing.rotation.z = -wingRot;
-                bird.rightWing.rotation.z = wingRot;
+            // Dynamic Sunrise & Sun Waking Up over Mountains
+            const sunriseProgress = Math.min(1.0, time / 180.0); // full sunrise over 3 minutes
+            
+            // Sky & Fog color transition (navy -> warm magenta/orange gradient)
+            const skyColor = new THREE.Color(0x120c18).lerp(new THREE.Color(0x3d212a), sunriseProgress);
+            renderer.setClearColor(skyColor);
+            scene.fog.color.copy(skyColor);
+            
+            // Sun movement & color change (deep red -> bright golden-orange)
+            const sunColor = new THREE.Color(0xff1100).lerp(new THREE.Color(0xffaa22), sunriseProgress);
+            sunMat.color.copy(sunColor);
+            glowMat.color.copy(sunColor);
+            
+            // Sun rises behind the mountains
+            sunMesh.position.z = carGroup.position.z + 280;
+            sunMesh.position.y = 2 + sunriseProgress * 45; // rises from 2 to 47
+            sunMesh.position.x = -40 + Math.sin(time * 0.05) * 5;
+            
+            // Sun lighting adjusts accordingly
+            sunLight.color.copy(sunColor);
+            sunLight.intensity = 0.5 + sunriseProgress * 1.5;
+            sunLight.position.set(sunMesh.position.x, sunMesh.position.y, sunMesh.position.z - 20);
+
+            // Flap and fly crows in circular soaring patterns
+            birds.forEach(crow => {
+                crow.angle += crow.rotSpeed * delta;
+                crow.mesh.position.x = crow.centerX + Math.cos(crow.angle) * crow.radius;
+                crow.mesh.position.z += crow.speed;
+                crow.mesh.position.y = crow.baseY + Math.sin(time * 0.8 + crow.angle) * 3;
                 
-                const relZ = bird.mesh.position.z - carGroup.position.z;
-                if (relZ < -200) bird.mesh.position.z += 400;
-                else if (relZ > 200) bird.mesh.position.z -= 400;
+                // Wing flap animation
+                const flap = Math.sin(time * 12 + crow.flapOffset) * 0.5;
+                crow.mesh.userData.wingLeft.rotation.z = flap;
+                crow.mesh.userData.wingRight.rotation.z = -flap;
+                
+                // Face the flight heading
+                crow.mesh.rotation.y = -crow.angle + Math.PI / 2;
+                
+                const relZ = crow.mesh.position.z - carGroup.position.z;
+                if (relZ < -200) {
+                    crow.mesh.position.z += 400;
+                    crow.centerX = carGroup.position.x + (Math.random() - 0.5) * 150;
+                } else if (relZ > 200) {
+                    crow.mesh.position.z -= 400;
+                    crow.centerX = carGroup.position.x + (Math.random() - 0.5) * 150;
+                }
             });
 
             // Parallax Mountains
