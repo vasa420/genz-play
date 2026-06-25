@@ -1892,9 +1892,9 @@
         let parkedCarZ = 0;
         let carSpeed = 0;
         let carAngle = 0;
-        const maxCarSpeed = 1.6;
-        const carAccel = 0.035;
-        const friction = 0.97;
+        const maxCarSpeed = 1.9;
+        const carAccel = 0.048;
+        const friction = 0.972;
         const carTurnSpeed = 0.032;
 
         // Player walking variables
@@ -1955,6 +1955,24 @@
         const fadeOverlay = document.getElementById('fade-overlay');
 
         function updateGame(delta, time) {
+            // ── Update running clock globally ───────────────────
+            let elapsedSec = Math.floor(time);
+            let s = elapsedSec % 60;
+            let m = 30 + Math.floor(elapsedSec / 60);
+            let hr = 6;
+            if (m >= 60) {
+                hr += Math.floor(m / 60);
+                m = m % 60;
+            }
+            const hrStr = hr.toString().padStart(2, '0');
+            const minStr = m.toString().padStart(2, '0');
+            const secStr = s.toString().padStart(2, '0');
+            
+            const hudSub = document.getElementById('hud-sub-title');
+            if (hudSub) {
+                hudSub.innerText = `TIME: ${hrStr}:${minStr} AM`;
+            }
+
             // ── Animate Environment ──────────────────────────
             // Drift clouds
             clouds.forEach(cloud => {
@@ -2274,13 +2292,10 @@
                 
                 timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
 
-                let speedMph = Math.abs(carSpeed * 42).toFixed(0);
+                let speedMph = Math.min(80, Math.abs(carSpeed * (80 / maxCarSpeed))).toFixed(0);
                 document.getElementById('dashcam-speed-val').innerText = speedMph;
                 
-                let elapsedSec = Math.floor(time);
-                let s = elapsedSec % 60;
-                let m = 30 + Math.floor(elapsedSec / 60);
-                let timeStr = `2026-06-25 06:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} AM`;
+                let timeStr = `2026-06-25 ${hrStr}:${minStr}:${secStr} AM`;
                 document.getElementById('dashcam-time').innerText = timeStr;
 
                 if (keys.w) carSpeed += carAccel;
