@@ -219,6 +219,61 @@
             color: var(--primary);
             font-weight: 700;
         }
+
+        /* Windshield Blood Overlay Effects */
+        .windshield-blood-splat {
+            position: absolute;
+            background: radial-gradient(circle, #8a0303 10%, #5c0202 55%, rgba(92,2,2,0) 75%);
+            border-radius: 50% 38% 62% 45% / 48% 65% 35% 52%;
+            transform-origin: center;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,0.85)) blur(1px);
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .windshield-blood-drip {
+            position: absolute;
+            width: 3px;
+            background: linear-gradient(to bottom, rgba(92,2,2,0.95), rgba(50,0,0,0));
+            filter: blur(0.5px);
+            pointer-events: none;
+            opacity: 0;
+            transform-origin: top;
+        }
+
+        @keyframes bloodDrip {
+            0% {
+                transform: scale(0.3) translateY(0);
+                opacity: 0;
+            }
+            8% {
+                transform: scale(1.1) translateY(0);
+                opacity: 0.98;
+            }
+            15% {
+                transform: scale(1.0) translateY(0);
+                opacity: 0.95;
+            }
+            100% {
+                transform: scale(0.95) translateY(140px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes bloodDripLine {
+            0% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+            8% {
+                transform: scaleY(0.1);
+                opacity: 0.9;
+            }
+            100% {
+                transform: scaleY(1) translateY(140px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -226,6 +281,8 @@
     <div class="scanlines"></div>
     <div class="crt-glow"></div>
     <div id="fade-overlay"></div>
+    <!-- Windshield Blood Overlay Container -->
+    <div id="windshield-blood-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9997; overflow: hidden;"></div>
 
     <!-- Dashcam HUD overlay -->
     <div class="dashcam-overlay" id="dashcam-hud">
@@ -264,8 +321,366 @@
         let audioCtx = null;
         const masterVolume = 0.06;
 
+        let radioActive = false;
+        let radioGainNode = null;
+        let radioFilterNode = null;
+        let radioInterval = null;
+        let currentRadioBeat = 0;
+
+        const bassRoots = [55.00, 43.65, 65.41, 49.00]; // A1, F1, C2, G1
+        const leadNotes = [
+            [220, 246.94, 261.63, 329.63, 440],
+            [174.61, 196.00, 220.00, 261.63, 349.23],
+            [130.81, 146.83, 164.81, 196.00, 261.63],
+            [196.00, 220.00, 246.94, 293.66, 392.00]
+        ];
+
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function initCarRadio() {
+            if (!audioCtx) initAudio();
+            if (!audioCtx) return;
+            if (radioActive) return;
+            
+            radioActive = true;
+            
+            // Create nodes
+            radioFilterNode = audioCtx.createBiquadFilter();
+            radioFilterNode.type = 'lowpass';
+            radioFilterNode.frequency.setValueAtTime(20000, audioCtx.currentTime);
+            
+            radioGainNode = audioCtx.createGain();
+            radioGainNode.gain.setValueAtTime(0.0, audioCtx.currentTime);
+            
+            radioFilterNode.connect(radioGainNode);
+            radioGainNode.connect(audioCtx.destination);
+            
+            // Start scheduler (120 BPM synthwave beat)
+            const tempo = 120;
+            const beatLen = 60 / tempo; // 0.5s
+            const stepLen = beatLen / 2; // 0.25s (eighth notes)
+            
+            let nextNoteTime = audioCtx.currentTime;
+            
+            function scheduleNextNotes() {
+                while (nextNoteTime < audioCtx.currentTime + 0.15) {
+                    playRadioStep(nextNoteTime, stepLen);
+                    nextNoteTime += stepLen;
+                    currentRadioBeat++;
+                }
+            }
+            
+            radioInterval = setInterval(scheduleNextNotes, 50);
+        }
+
+        function playRadioStep(time, stepLen) {
+            if (!audioCtx || !radioActive) return;
+            
+            const measure = Math.floor(currentRadioBeat / 16);
+            const stepInMeasure = currentRadioBeat % 16;
+            const chordIndex = Math.floor((currentRadioBeat % 64) / 16);
+            
+            const baseFreq = bassRoots[chordIndex];
+            
+            // ── Bassline ──
+            const bassOctave = (stepInMeasure % 2 === 0) ? 1 : 2;
+            const bFreq = baseFreq * bassOctave;
+            
+            try {
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                const bassFilter = audioCtx.createBiquadFilter();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(bFreq, time);
+                
+                bassFilter.type = 'lowpass';
+                bassFilter.frequency.setValueAtTime(320, time);
+                
+                oscGain.gain.setValueAtTime(0.001, time);
+                oscGain.gain.linearRampToValueAtTime(masterVolume * 1.5, time + 0.02);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, time + stepLen - 0.02);
+                
+                osc.connect(bassFilter);
+                bassFilter.connect(oscGain);
+                oscGain.connect(radioFilterNode);
+                
+                osc.start(time);
+                osc.stop(time + stepLen);
+            } catch(e) {}
+            
+            // ── Drum Beat ──
+            // Kick
+            if (stepInMeasure % 4 === 0) {
+                try {
+                    const kickOsc = audioCtx.createOscillator();
+                    const kickGain = audioCtx.createGain();
+                    kickOsc.connect(kickGain);
+                    kickGain.connect(radioFilterNode);
+                    
+                    kickOsc.type = 'sine';
+                    kickOsc.frequency.setValueAtTime(140, time);
+                    kickOsc.frequency.exponentialRampToValueAtTime(0.01, time + 0.15);
+                    
+                    kickGain.gain.setValueAtTime(masterVolume * 2.8, time);
+                    kickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+                    
+                    kickOsc.start(time);
+                    kickOsc.stop(time + 0.16);
+                } catch(e) {}
+            }
+            
+            // Snare
+            if (stepInMeasure % 8 === 4) {
+                try {
+                    const snBufferSize = audioCtx.sampleRate * 0.15;
+                    const snBuffer = audioCtx.createBuffer(1, snBufferSize, audioCtx.sampleRate);
+                    const snData = snBuffer.getChannelData(0);
+                    for (let i = 0; i < snBufferSize; i++) snData[i] = Math.random() * 2 - 1;
+                    
+                    const snNoise = audioCtx.createBufferSource();
+                    snNoise.buffer = snBuffer;
+                    
+                    const snFilter = audioCtx.createBiquadFilter();
+                    snFilter.type = 'bandpass';
+                    snFilter.frequency.setValueAtTime(1000, time);
+                    snFilter.Q.setValueAtTime(2.0, time);
+                    
+                    const snGain = audioCtx.createGain();
+                    snGain.gain.setValueAtTime(masterVolume * 1.8, time);
+                    snGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+                    
+                    snNoise.connect(snFilter);
+                    snFilter.connect(snGain);
+                    snGain.connect(radioFilterNode);
+                    
+                    snNoise.start(time);
+                    snNoise.stop(time + 0.15);
+                } catch(e) {}
+            }
+            
+            // Hihat
+            if (stepInMeasure % 2 === 1) {
+                try {
+                    const hatBufferSize = audioCtx.sampleRate * 0.04;
+                    const hatBuffer = audioCtx.createBuffer(1, hatBufferSize, audioCtx.sampleRate);
+                    const hatData = hatBuffer.getChannelData(0);
+                    for (let i = 0; i < hatBufferSize; i++) hatData[i] = Math.random() * 2 - 1;
+                    
+                    const hatNoise = audioCtx.createBufferSource();
+                    hatNoise.buffer = hatBuffer;
+                    
+                    const hatFilter = audioCtx.createBiquadFilter();
+                    hatFilter.type = 'highpass';
+                    hatFilter.frequency.setValueAtTime(7000, time);
+                    
+                    const hatGain = audioCtx.createGain();
+                    hatGain.gain.setValueAtTime(masterVolume * 0.8, time);
+                    hatGain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
+                    
+                    hatNoise.connect(hatFilter);
+                    hatFilter.connect(hatGain);
+                    hatGain.connect(radioFilterNode);
+                    
+                    hatNoise.start(time);
+                    hatNoise.stop(time + 0.04);
+                } catch(e) {}
+            }
+            
+            // ── Melody Lead ──
+            const arpeggioSteps = [0, 3, 6, 8, 11, 14];
+            if (arpeggioSteps.includes(stepInMeasure)) {
+                try {
+                    const melodySet = leadNotes[chordIndex];
+                    const noteIdx = (stepInMeasure + Math.floor(measure / 2)) % melodySet.length;
+                    const noteFreq = melodySet[noteIdx] * 2.0;
+                    
+                    const leadOsc = audioCtx.createOscillator();
+                    const leadGain = audioCtx.createGain();
+                    
+                    leadOsc.type = 'triangle';
+                    leadOsc.frequency.setValueAtTime(noteFreq, time);
+                    
+                    // Pitch LFO
+                    const lfo = audioCtx.createOscillator();
+                    const lfoGain = audioCtx.createGain();
+                    lfo.frequency.setValueAtTime(6.5, time);
+                    lfoGain.gain.setValueAtTime(4.0, time);
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(leadOsc.frequency);
+                    lfo.start(time);
+                    lfo.stop(time + stepLen * 1.5);
+                    
+                    leadGain.gain.setValueAtTime(0.001, time);
+                    leadGain.gain.linearRampToValueAtTime(masterVolume * 1.1, time + 0.03);
+                    leadGain.gain.exponentialRampToValueAtTime(0.001, time + stepLen * 1.5 - 0.03);
+                    
+                    leadOsc.connect(leadGain);
+                    leadGain.connect(radioFilterNode);
+                    
+                    leadOsc.start(time);
+                    leadOsc.stop(time + stepLen * 1.5);
+                } catch(e) {}
+            }
+        }
+
+        function stopCarRadio() {
+            radioActive = false;
+            if (radioInterval) {
+                clearInterval(radioInterval);
+                radioInterval = null;
+            }
+            if (radioGainNode) {
+                try { radioGainNode.disconnect(); } catch(e) {}
+                radioGainNode = null;
+            }
+            radioFilterNode = null;
+        }
+
+        function playThudSound() {
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const now = audioCtx.currentTime;
+                
+                // Heavy sub thud
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(75, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.28);
+                
+                gain.gain.setValueAtTime(masterVolume * 4.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                
+                osc.start(now);
+                osc.stop(now + 0.3);
+                
+                // Crunch noise
+                const bufferSize = audioCtx.sampleRate * 0.18; 
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(160, now);
+                filter.Q.setValueAtTime(2.5, now);
+                
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(masterVolume * 3.2, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                
+                noise.start(now);
+            } catch(e) { console.warn(e); }
+        }
+
+        function triggerWindshieldBlood() {
+            const container = document.getElementById('windshield-blood-container');
+            if (!container) return;
+            
+            const count = 7 + Math.floor(Math.random() * 5);
+            for (let i = 0; i < count; i++) {
+                const splat = document.createElement('div');
+                splat.className = 'windshield-blood-splat';
+                
+                const size = 35 + Math.random() * 70;
+                splat.style.width = size + 'px';
+                splat.style.height = size + 'px';
+                
+                // Concentrated in the driver's front view
+                const left = 15 + Math.random() * 70;
+                const top = 10 + Math.random() * 55;
+                splat.style.left = left + '%';
+                splat.style.top = top + '%';
+                
+                const duration = 3.2 + Math.random() * 1.5;
+                const delay = Math.random() * 0.25;
+                splat.style.animation = `bloodDrip ${duration}s cubic-bezier(0.12, 0.65, 0.22, 1) ${delay}s forwards`;
+                
+                container.appendChild(splat);
+                
+                if (Math.random() > 0.4) {
+                    const drip = document.createElement('div');
+                    drip.className = 'windshield-blood-drip';
+                    drip.style.left = (left + (size / 2) / window.innerWidth * 100) + '%';
+                    drip.style.top = (top + (size / 2) / window.innerHeight * 100) + '%';
+                    
+                    const dripHeight = 35 + Math.random() * 90;
+                    drip.style.height = dripHeight + 'px';
+                    drip.style.animation = `bloodDripLine ${duration}s ease-in ${delay}s forwards`;
+                    
+                    container.appendChild(drip);
+                }
+            }
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 6000);
+        }
+
+        function createRoadBloodSplat(chunkGroup, x, z, isBridge) {
+            const bloodGroup = new THREE.Group();
+            const yPos = isBridge ? 0.81 : 0.09;
+            bloodGroup.position.set(x, yPos, z);
+            
+            const bloodMat = new THREE.MeshLambertMaterial({ 
+                color: 0x8a0303, 
+                transparent: true, 
+                opacity: 0.85,
+                roughness: 0.9
+            });
+            
+            const mainSplat = new THREE.Mesh(new THREE.CircleGeometry(1.2 + Math.random() * 0.6, 8), bloodMat);
+            mainSplat.rotation.x = -Math.PI / 2;
+            bloodGroup.add(mainSplat);
+            
+            const numDroplets = 5 + Math.floor(Math.random() * 5);
+            for (let i = 0; i < numDroplets; i++) {
+                const r = 1.0 + Math.random() * 2.0;
+                const theta = Math.random() * Math.PI * 2;
+                const dx = Math.cos(theta) * r;
+                const dz = Math.sin(theta) * r;
+                
+                const drop = new THREE.Mesh(new THREE.CircleGeometry(0.15 + Math.random() * 0.3, 5), bloodMat);
+                drop.rotation.x = -Math.PI / 2;
+                drop.position.set(dx, 0, dz);
+                bloodGroup.add(drop);
+            }
+            
+            chunkGroup.add(bloodGroup);
+        }
+
+        function createWaterBloodRipple(chunkGroup, x, z) {
+            const rippleGroup = new THREE.Group();
+            rippleGroup.position.set(x, -23.7, z);
+            
+            const circleGeo = new THREE.CircleGeometry(2.2, 10);
+            const circleMat = new THREE.MeshBasicMaterial({ 
+                color: 0x5c0202, 
+                transparent: true, 
+                opacity: 0.8,
+                blending: THREE.NormalBlending
+            });
+            const circle = new THREE.Mesh(circleGeo, circleMat);
+            circle.rotation.x = -Math.PI / 2;
+            rippleGroup.add(circle);
+            
+            chunkGroup.add(rippleGroup);
         }
 
         function playFootstep() {
@@ -477,6 +892,7 @@
         function returnToLobby() {
             stopPlayerEngine();
             stopHorn();
+            stopCarRadio();
             trafficVehicles.forEach(stopTrafficSound);
             document.getElementById('fade-overlay').style.opacity = '1';
             setTimeout(() => {
@@ -491,11 +907,29 @@
             if (key in keys) keys[key] = true;
             if (key === 'g' && stage === 1) startHorn();
             if (key === 'q') returnToLobby();
+            
+            initAudio();
+            if (stage === 1 && !radioActive) {
+                initCarRadio();
+            }
         });
         window.addEventListener('keyup', (e) => {
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = false;
             if (key === 'g') stopHorn();
+        });
+        
+        window.addEventListener('click', () => {
+            initAudio();
+            if (stage === 1 && !radioActive) {
+                initCarRadio();
+            }
+        });
+        window.addEventListener('touchstart', () => {
+            initAudio();
+            if (stage === 1 && !radioActive) {
+                initCarRadio();
+            }
         });
 
         // ── Three.js Scene Setup ──────────────────────────────
@@ -946,149 +1380,290 @@
 
         // Chunk builder
         function createChunk(index) {
+            const isBridge = (Math.abs(index) % 24 === 0 && index !== 0);
             const chunkGroup = new THREE.Group();
             chunkGroup.position.z = index * CHUNK_SIZE;
             scene.add(chunkGroup);
             
-            // Road
-            const roadMesh = new THREE.Mesh(new THREE.PlaneGeometry(24, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x4a4a52 }));
-            roadMesh.rotation.x = -Math.PI / 2;
-            roadMesh.position.y = 0.08;
-            roadMesh.receiveShadow = true;
-            chunkGroup.add(roadMesh);
-            
-            // Lanes dashes
-            const dashGeo = new THREE.PlaneGeometry(0.3, 12);
-            const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const numDashes = 10;
-            const spacing = CHUNK_SIZE / numDashes;
-            for (let i = 0; i < numDashes; i++) {
-                const dash = new THREE.Mesh(dashGeo, dashMat);
-                dash.rotation.x = -Math.PI / 2;
-                dash.position.set(0, 0.09, -CHUNK_SIZE / 2 + i * spacing + spacing / 2);
-                chunkGroup.add(dash);
+            if (isBridge) {
+                // ── BRIDGE ROAD DECK ──
+                const roadMesh = new THREE.Mesh(new THREE.PlaneGeometry(24, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x3b3b40 }));
+                roadMesh.rotation.x = -Math.PI / 2;
+                roadMesh.position.y = 0.08;
+                roadMesh.receiveShadow = true;
+                chunkGroup.add(roadMesh);
+                
+                // Lanes dashes
+                const dashGeo = new THREE.PlaneGeometry(0.3, 12);
+                const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const numDashes = 10;
+                const spacing = CHUNK_SIZE / numDashes;
+                for (let i = 0; i < numDashes; i++) {
+                    const dash = new THREE.Mesh(dashGeo, dashMat);
+                    dash.rotation.x = -Math.PI / 2;
+                    dash.position.set(0, 0.09, -CHUNK_SIZE / 2 + i * spacing + spacing / 2);
+                    chunkGroup.add(dash);
+                }
+                
+                // Concrete side barriers (guardrails)
+                const leftBarrier = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x77777d }));
+                leftBarrier.position.set(-12, 0.4, 0);
+                leftBarrier.castShadow = true;
+                leftBarrier.receiveShadow = true;
+                chunkGroup.add(leftBarrier);
+                
+                const rightBarrier = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x77777d }));
+                rightBarrier.position.set(12, 0.4, 0);
+                rightBarrier.castShadow = true;
+                rightBarrier.receiveShadow = true;
+                chunkGroup.add(rightBarrier);
+                
+                // Vertical railing posts
+                const railPostGeo = new THREE.BoxGeometry(0.15, 0.9, 0.15);
+                const railPostMat = new THREE.MeshLambertMaterial({ color: 0x99999f });
+                const railTubeGeo = new THREE.CylinderGeometry(0.06, 0.06, CHUNK_SIZE, 6);
+                railTubeGeo.rotateX(Math.PI / 2);
+                const railTubeMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+                
+                for (let z = -CHUNK_SIZE / 2; z <= CHUNK_SIZE / 2; z += 16) {
+                    const postL = new THREE.Mesh(railPostGeo, railPostMat);
+                    postL.position.set(-12, 1.25, z);
+                    postL.castShadow = true;
+                    chunkGroup.add(postL);
+                    
+                    const postR = new THREE.Mesh(railPostGeo, railPostMat);
+                    postR.position.set(12, 1.25, z);
+                    postR.castShadow = true;
+                    chunkGroup.add(postR);
+                }
+                
+                // Top metal tubes
+                const topRailL = new THREE.Mesh(railTubeGeo, railTubeMat);
+                topRailL.position.set(-12, 1.6, 0);
+                topRailL.castShadow = true;
+                chunkGroup.add(topRailL);
+                
+                const topRailR = new THREE.Mesh(railTubeGeo, railTubeMat);
+                topRailR.position.set(12, 1.6, 0);
+                topRailR.castShadow = true;
+                chunkGroup.add(topRailR);
+                
+                // Concrete pillars & horizontal support beams
+                const pillarGeo = new THREE.CylinderGeometry(1.8, 2.2, 24, 8);
+                const concreteMat = new THREE.MeshLambertMaterial({ color: 0x55555c });
+                const beamGeo = new THREE.BoxGeometry(24, 2.0, 3.0);
+                
+                for (let z = -CHUNK_SIZE / 2 + 40; z < CHUNK_SIZE / 2; z += 80) {
+                    const pL = new THREE.Mesh(pillarGeo, concreteMat);
+                    pL.position.set(-8, -12, z);
+                    pL.castShadow = true;
+                    pL.receiveShadow = true;
+                    chunkGroup.add(pL);
+                    
+                    const pR = new THREE.Mesh(pillarGeo, concreteMat);
+                    pR.position.set(8, -12, z);
+                    pR.castShadow = true;
+                    pR.receiveShadow = true;
+                    chunkGroup.add(pR);
+                    
+                    const beam = new THREE.Mesh(beamGeo, concreteMat);
+                    beam.position.set(0, -1.0, z);
+                    beam.castShadow = true;
+                    beam.receiveShadow = true;
+                    chunkGroup.add(beam);
+                }
+                
+                // Gorge water plane
+                const waterGeo = new THREE.PlaneGeometry(300, CHUNK_SIZE, 30, 20);
+                const waterMat = new THREE.MeshStandardMaterial({ 
+                    color: 0x0a2838, 
+                    emissive: 0x051822,
+                    roughness: 0.15,
+                    metalness: 0.8,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+                waterMesh.rotation.x = -Math.PI / 2;
+                waterMesh.position.set(0, -23.8, 0);
+                waterMesh.receiveShadow = true;
+                chunkGroup.add(waterMesh);
+                
+                // Bridge Pedestrians (walking inside the guardrails on a path)
+                const peds = [];
+                const ped1 = createPedestrianMesh();
+                ped1.position.set(-10.8, 0.8, (Math.random() - 0.5) * 300);
+                chunkGroup.add(ped1);
+                
+                const ped2 = createPedestrianMesh();
+                ped2.position.set(10.8, 0.8, (Math.random() - 0.5) * 300);
+                chunkGroup.add(ped2);
+                
+                peds.push({
+                    group: ped1,
+                    localZ: ped1.position.z,
+                    direction: Math.random() > 0.5 ? 1 : -1,
+                    speed: 8.0 + Math.random() * 8.0,
+                    offset: Math.random() * 10
+                });
+                peds.push({
+                    group: ped2,
+                    localZ: ped2.position.z,
+                    direction: Math.random() > 0.5 ? 1 : -1,
+                    speed: 8.0 + Math.random() * 8.0,
+                    offset: Math.random() * 10
+                });
+                
+                chunks.set(index, {
+                    group: chunkGroup,
+                    waterMesh: waterMesh,
+                    waterGeo: waterGeo,
+                    pedestrians: peds,
+                    index: index,
+                    isBridge: true
+                });
+            } else {
+                // ── REGULAR CHUNK BUILDER ──
+                // Road
+                const roadMesh = new THREE.Mesh(new THREE.PlaneGeometry(24, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x4a4a52 }));
+                roadMesh.rotation.x = -Math.PI / 2;
+                roadMesh.position.y = 0.08;
+                roadMesh.receiveShadow = true;
+                chunkGroup.add(roadMesh);
+                
+                // Lanes dashes
+                const dashGeo = new THREE.PlaneGeometry(0.3, 12);
+                const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const numDashes = 10;
+                const spacing = CHUNK_SIZE / numDashes;
+                for (let i = 0; i < numDashes; i++) {
+                    const dash = new THREE.Mesh(dashGeo, dashMat);
+                    dash.rotation.x = -Math.PI / 2;
+                    dash.position.set(0, 0.09, -CHUNK_SIZE / 2 + i * spacing + spacing / 2);
+                    chunkGroup.add(dash);
+                }
+                
+                // Sidewalks
+                const leftSidewalk = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x777777 }));
+                leftSidewalk.position.set(-14, 0.05, 0);
+                leftSidewalk.receiveShadow = true;
+                chunkGroup.add(leftSidewalk);
+                
+                const rightSidewalk = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x777777 }));
+                rightSidewalk.position.set(14, 0.05, 0);
+                rightSidewalk.receiveShadow = true;
+                chunkGroup.add(rightSidewalk);
+                
+                // Grass
+                const leftGround = new THREE.Mesh(new THREE.PlaneGeometry(200, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x1f3422 }));
+                leftGround.rotation.x = -Math.PI / 2;
+                leftGround.position.set(-116, 0, 0);
+                leftGround.receiveShadow = true;
+                chunkGroup.add(leftGround);
+                
+                const rightGround = new THREE.Mesh(new THREE.PlaneGeometry(200, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x1f3422 }));
+                rightGround.rotation.x = -Math.PI / 2;
+                rightGround.position.set(116, 0, 0);
+                rightGround.receiveShadow = true;
+                chunkGroup.add(rightGround);
+                
+                // River
+                const riverGeo = new THREE.PlaneGeometry(28, CHUNK_SIZE, 10, 20);
+                const riverMesh = new THREE.Mesh(riverGeo, new THREE.MeshLambertMaterial({ color: 0x1a384b, transparent: true, opacity: 0.85 }));
+                riverMesh.rotation.x = -Math.PI / 2;
+                riverMesh.position.set(75, 0.05, 0);
+                chunkGroup.add(riverMesh);
+                
+                // Trees
+                const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 18, 5);
+                const foliageGeo = new THREE.ConeGeometry(5, 14, 5);
+                trunkGeo.translate(0, 9, 0);
+                foliageGeo.translate(0, 18, 0);
+                const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
+                const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
+                
+                for (let i = 0; i < 30; i++) {
+                    let tx = (Math.random() - 0.5) * 360;
+                    let tz = (Math.random() - 0.5) * CHUNK_SIZE;
+                    if (tx > -20 && tx < 20) tx += tx >= 0 ? 22 : -22;
+                    if (tx > 50 && tx < 100) tx += 50;
+                    
+                    const treeGroup = new THREE.Group();
+                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                    trunk.castShadow = true;
+                    trunk.receiveShadow = true;
+                    treeGroup.add(trunk);
+                    
+                    const fMat = new THREE.MeshLambertMaterial({ color: foliageColors[Math.floor(Math.random() * foliageColors.length)] });
+                    const foliage = new THREE.Mesh(foliageGeo, fMat);
+                    foliage.castShadow = true;
+                    foliage.receiveShadow = true;
+                    treeGroup.add(foliage);
+                    
+                    treeGroup.scale.set(0.9 + Math.random() * 0.3, 0.85 + Math.random() * 0.45, 0.9 + Math.random() * 0.3);
+                    treeGroup.position.set(tx, 0, tz);
+                    chunkGroup.add(treeGroup);
+                }
+                
+                // Shops
+                let nameLeft = SHOP_NAMES[Math.abs(index * 2) % SHOP_NAMES.length];
+                let nameRight = SHOP_NAMES[Math.abs(index * 2 + 1) % SHOP_NAMES.length];
+                if (index === 0) nameLeft = "COZY CRUMB BAKERY";
+                
+                const shopLeft = createShopMesh(nameLeft, nameLeft === "COZY CRUMB BAKERY");
+                shopLeft.position.set(-20, 0, -80);
+                chunkGroup.add(shopLeft);
+                
+                const shopRight = createShopMesh(nameRight, nameRight === "COZY CRUMB BAKERY");
+                shopRight.position.set(20, 0, 80);
+                shopRight.rotation.y = Math.PI;
+                chunkGroup.add(shopRight);
+                
+                const nameLeft2 = SHOP_NAMES[Math.abs(index * 2 + 4) % SHOP_NAMES.length];
+                const nameRight2 = SHOP_NAMES[Math.abs(index * 2 + 5) % SHOP_NAMES.length];
+                
+                const shopLeft2 = createShopMesh(nameLeft2, false);
+                shopLeft2.position.set(-20, 0, 80);
+                chunkGroup.add(shopLeft2);
+                
+                const shopRight2 = createShopMesh(nameRight2, false);
+                shopRight2.position.set(20, 0, -80);
+                shopRight2.rotation.y = Math.PI;
+                chunkGroup.add(shopRight2);
+                
+                // Pedestrians
+                const peds = [];
+                const ped1 = createPedestrianMesh();
+                ped1.position.set(-13.5, 0.1, (Math.random() - 0.5) * 300);
+                chunkGroup.add(ped1);
+                
+                const ped2 = createPedestrianMesh();
+                ped2.position.set(13.5, 0.1, (Math.random() - 0.5) * 300);
+                chunkGroup.add(ped2);
+                
+                peds.push({
+                    group: ped1,
+                    localZ: ped1.position.z,
+                    direction: Math.random() > 0.5 ? 1 : -1,
+                    speed: 8.0 + Math.random() * 8.0,
+                    offset: Math.random() * 10
+                });
+                peds.push({
+                    group: ped2,
+                    localZ: ped2.position.z,
+                    direction: Math.random() > 0.5 ? 1 : -1,
+                    speed: 8.0 + Math.random() * 8.0,
+                    offset: Math.random() * 10
+                });
+                
+                chunks.set(index, {
+                    group: chunkGroup,
+                    riverMesh: riverMesh,
+                    riverGeo: riverGeo,
+                    pedestrians: peds,
+                    index: index
+                });
             }
-            
-            // Sidewalks
-            const leftSidewalk = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x777777 }));
-            leftSidewalk.position.set(-14, 0.05, 0);
-            leftSidewalk.receiveShadow = true;
-            chunkGroup.add(leftSidewalk);
-            
-            const rightSidewalk = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x777777 }));
-            rightSidewalk.position.set(14, 0.05, 0);
-            rightSidewalk.receiveShadow = true;
-            chunkGroup.add(rightSidewalk);
-            
-            // Grass
-            const leftGround = new THREE.Mesh(new THREE.PlaneGeometry(200, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x1f3422 }));
-            leftGround.rotation.x = -Math.PI / 2;
-            leftGround.position.set(-116, 0, 0);
-            leftGround.receiveShadow = true;
-            chunkGroup.add(leftGround);
-            
-            const rightGround = new THREE.Mesh(new THREE.PlaneGeometry(200, CHUNK_SIZE), new THREE.MeshLambertMaterial({ color: 0x1f3422 }));
-            rightGround.rotation.x = -Math.PI / 2;
-            rightGround.position.set(116, 0, 0);
-            rightGround.receiveShadow = true;
-            chunkGroup.add(rightGround);
-            
-            // River
-            const riverGeo = new THREE.PlaneGeometry(28, CHUNK_SIZE, 10, 20);
-            const riverMesh = new THREE.Mesh(riverGeo, new THREE.MeshLambertMaterial({ color: 0x1a384b, transparent: true, opacity: 0.85 }));
-            riverMesh.rotation.x = -Math.PI / 2;
-            riverMesh.position.set(75, 0.05, 0);
-            chunkGroup.add(riverMesh);
-            
-            // Trees
-            const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 18, 5);
-            const foliageGeo = new THREE.ConeGeometry(5, 14, 5);
-            trunkGeo.translate(0, 9, 0);
-            foliageGeo.translate(0, 18, 0);
-            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
-            const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
-            
-            for (let i = 0; i < 30; i++) {
-                let tx = (Math.random() - 0.5) * 360;
-                let tz = (Math.random() - 0.5) * CHUNK_SIZE;
-                if (tx > -20 && tx < 20) tx += tx >= 0 ? 22 : -22;
-                if (tx > 50 && tx < 100) tx += 50;
-                
-                const treeGroup = new THREE.Group();
-                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                trunk.castShadow = true;
-                trunk.receiveShadow = true;
-                treeGroup.add(trunk);
-                
-                const fMat = new THREE.MeshLambertMaterial({ color: foliageColors[Math.floor(Math.random() * foliageColors.length)] });
-                const foliage = new THREE.Mesh(foliageGeo, fMat);
-                foliage.castShadow = true;
-                foliage.receiveShadow = true;
-                treeGroup.add(foliage);
-                
-                treeGroup.scale.set(0.9 + Math.random() * 0.3, 0.85 + Math.random() * 0.45, 0.9 + Math.random() * 0.3);
-                treeGroup.position.set(tx, 0, tz);
-                chunkGroup.add(treeGroup);
-            }
-            
-            // Shops
-            let nameLeft = SHOP_NAMES[Math.abs(index * 2) % SHOP_NAMES.length];
-            let nameRight = SHOP_NAMES[Math.abs(index * 2 + 1) % SHOP_NAMES.length];
-            if (index === 0) nameLeft = "COZY CRUMB BAKERY";
-            
-            const shopLeft = createShopMesh(nameLeft, nameLeft === "COZY CRUMB BAKERY");
-            shopLeft.position.set(-20, 0, -80);
-            chunkGroup.add(shopLeft);
-            
-            const shopRight = createShopMesh(nameRight, nameRight === "COZY CRUMB BAKERY");
-            shopRight.position.set(20, 0, 80);
-            shopRight.rotation.y = Math.PI;
-            chunkGroup.add(shopRight);
-            
-            const nameLeft2 = SHOP_NAMES[Math.abs(index * 2 + 4) % SHOP_NAMES.length];
-            const nameRight2 = SHOP_NAMES[Math.abs(index * 2 + 5) % SHOP_NAMES.length];
-            
-            const shopLeft2 = createShopMesh(nameLeft2, false);
-            shopLeft2.position.set(-20, 0, 80);
-            chunkGroup.add(shopLeft2);
-            
-            const shopRight2 = createShopMesh(nameRight2, false);
-            shopRight2.position.set(20, 0, -80);
-            shopRight2.rotation.y = Math.PI;
-            chunkGroup.add(shopRight2);
-            
-            // Pedestrians
-            const peds = [];
-            const ped1 = createPedestrianMesh();
-            ped1.position.set(-13.5, 0.1, (Math.random() - 0.5) * 300);
-            chunkGroup.add(ped1);
-            
-            const ped2 = createPedestrianMesh();
-            ped2.position.set(13.5, 0.1, (Math.random() - 0.5) * 300);
-            chunkGroup.add(ped2);
-            
-            peds.push({
-                group: ped1,
-                localZ: ped1.position.z,
-                direction: Math.random() > 0.5 ? 1 : -1,
-                speed: 8.0 + Math.random() * 8.0,
-                offset: Math.random() * 10
-            });
-            peds.push({
-                group: ped2,
-                localZ: ped2.position.z,
-                direction: Math.random() > 0.5 ? 1 : -1,
-                speed: 8.0 + Math.random() * 8.0,
-                offset: Math.random() * 10
-            });
-            
-            chunks.set(index, {
-                group: chunkGroup,
-                riverMesh: riverMesh,
-                riverGeo: riverGeo,
-                pedestrians: peds,
-                index: index
-            });
         }
 
         // Realistic Mountain Range (far background)
@@ -1472,19 +2047,105 @@
             });
 
             // Animate river waves in all active chunks
+            // Animate river or bridge water waves in all active chunks
             chunks.forEach(chunk => {
-                const riverPos = chunk.riverGeo.attributes.position;
-                for (let i = 0; i < riverPos.count; i++) {
-                    const zVal = riverPos.getY(i);
-                    const worldZ = chunk.group.position.z + zVal;
-                    const wave = Math.sin(time * 2.5 + worldZ * 0.15) * 0.15;
-                    riverPos.setZ(i, wave);
+                if (chunk.isBridge && chunk.waterGeo && chunk.waterMesh) {
+                    const waterPos = chunk.waterGeo.attributes.position;
+                    for (let i = 0; i < waterPos.count; i++) {
+                        const xVal = waterPos.getX(i);
+                        const zVal = waterPos.getY(i);
+                        const worldZ = chunk.group.position.z + zVal;
+                        const wave = Math.sin(time * 3.0 + xVal * 0.1 + worldZ * 0.05) * 0.45;
+                        waterPos.setZ(i, wave);
+                    }
+                    chunk.waterGeo.computeVertexNormals();
+                    waterPos.needsUpdate = true;
+                } else if (chunk.riverGeo && chunk.riverMesh) {
+                    const riverPos = chunk.riverGeo.attributes.position;
+                    for (let i = 0; i < riverPos.count; i++) {
+                        const zVal = riverPos.getY(i);
+                        const worldZ = chunk.group.position.z + zVal;
+                        const wave = Math.sin(time * 2.5 + worldZ * 0.15) * 0.15;
+                        riverPos.setZ(i, wave);
+                    }
+                    chunk.riverGeo.computeVertexNormals();
+                    riverPos.needsUpdate = true;
                 }
-                chunk.riverGeo.computeVertexNormals();
-                riverPos.needsUpdate = true;
 
-                // Update pedestrians
+                // Update pedestrians (including physics for hit ragdolls)
                 chunk.pedestrians.forEach(ped => {
+                    if (ped.isDead) {
+                        if (ped.isFlying) {
+                            ped.velY -= 36.0 * delta; // gravity
+                            
+                            ped.group.position.x += ped.velX * delta;
+                            ped.group.position.y += ped.velY * delta;
+                            ped.group.position.z += ped.velZ * delta;
+                            
+                            ped.group.rotation.x += ped.rotX * delta;
+                            ped.group.rotation.y += ped.rotY * delta;
+                            ped.group.rotation.z += ped.rotZ * delta;
+                            
+                            let landingHeight = 0.1;
+                            let isSplash = false;
+                            if (chunk.isBridge) {
+                                if (Math.abs(ped.group.position.x) <= 12) {
+                                    landingHeight = 0.8;
+                                } else {
+                                    landingHeight = -23.8;
+                                    isSplash = true;
+                                }
+                            }
+                            
+                            if (ped.group.position.y <= landingHeight) {
+                                ped.group.position.y = landingHeight;
+                                ped.isFlying = false;
+                                
+                                if (isSplash) {
+                                    ped.group.rotation.set(Math.PI / 2, 0, Math.random() * Math.PI * 2);
+                                    createWaterBloodRipple(chunk.group, ped.group.position.x, ped.group.position.z);
+                                } else {
+                                    ped.group.rotation.set(Math.PI / 2, 0, Math.random() * Math.PI * 2);
+                                    createRoadBloodSplat(chunk.group, ped.group.position.x, ped.group.position.z, chunk.isBridge);
+                                }
+                            }
+                        }
+                        return;
+                    }
+                    
+                    // Collision check
+                    if (stage === 1) {
+                        const pedWorldX = ped.group.position.x;
+                        const pedWorldZ = chunk.group.position.z + ped.group.position.z;
+                        
+                        const dx = pedWorldX - carGroup.position.x;
+                        const dz = pedWorldZ - carGroup.position.z;
+                        
+                        const rx = dx * Math.cos(-carAngle) - dz * Math.sin(-carAngle);
+                        const rz = dx * Math.sin(-carAngle) + dz * Math.cos(-carAngle);
+                        
+                        if (Math.abs(rx) < 1.6 && Math.abs(rz) < 2.8) {
+                            const hitSpeed = Math.abs(carSpeed);
+                            if (hitSpeed > 0.18) {
+                                ped.isDead = true;
+                                ped.isFlying = true;
+                                
+                                playThudSound();
+                                triggerWindshieldBlood();
+                                
+                                ped.velY = 12.0 + Math.random() * 8.0;
+                                const sideDir = ped.group.position.x > 0 ? 1.0 : -1.0;
+                                ped.velX = sideDir * (8.0 + Math.random() * 10.0);
+                                ped.velZ = carSpeed * 50.0 + (Math.random() - 0.5) * 6.0;
+                                
+                                ped.rotX = (Math.random() - 0.5) * 15;
+                                ped.rotY = (Math.random() - 0.5) * 15;
+                                ped.rotZ = (Math.random() - 0.5) * 15;
+                            }
+                        }
+                    }
+                    
+                    // Normal walking
                     ped.localZ += ped.direction * ped.speed * delta;
                     if (ped.localZ > CHUNK_SIZE / 2 - 10) {
                         ped.localZ = CHUNK_SIZE / 2 - 10;
@@ -1702,6 +2363,27 @@
                     }
                 } else {
                     footstepTimeAcc = 0.35;
+                }
+            }
+
+            // Update car radio parameters (muffle/attenuate on distance when on foot)
+            if (radioActive && radioGainNode && radioFilterNode && audioCtx) {
+                if (stage === 1) {
+                    radioGainNode.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.15);
+                    radioFilterNode.frequency.setTargetAtTime(20000, audioCtx.currentTime, 0.15);
+                } else if (stage === 3) {
+                    const dx = camera.position.x - parkedCarX;
+                    const dz = camera.position.z - parkedCarZ;
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    
+                    const maxDist = 85.0;
+                    const factor = Math.max(0, 1.0 - dist / maxDist);
+                    
+                    const targetVol = factor * factor * 0.45; // quadratic falloff
+                    const targetCutoff = 120 + factor * 680;  // 120Hz to 800Hz
+                    
+                    radioGainNode.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.15);
+                    radioFilterNode.frequency.setTargetAtTime(targetCutoff, audioCtx.currentTime, 0.15);
                 }
             }
         }
