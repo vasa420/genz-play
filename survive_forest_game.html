@@ -162,6 +162,63 @@
             box-shadow: 0 0 10px var(--danger-glow);
             transform: translateY(-2px);
         }
+
+        /* Dashcam HUD style */
+        .dashcam-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 4;
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 4px #000;
+        }
+
+        .dashcam-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(10px, 2vw, 14px);
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .dashcam-rec {
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashcam-dot {
+            width: 10px; height: 10px;
+            background: var(--danger);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--danger-glow);
+            animation: recBlink 1s infinite alternate;
+        }
+
+        @keyframes recBlink {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        .dashcam-bottom {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(10px, 1.8vw, 13px);
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .dashcam-speed span {
+            color: var(--primary);
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -169,6 +226,23 @@
     <div class="scanlines"></div>
     <div class="crt-glow"></div>
     <div id="fade-overlay"></div>
+
+    <!-- Dashcam HUD overlay -->
+    <div class="dashcam-overlay" id="dashcam-hud">
+        <div class="dashcam-top">
+            <div class="dashcam-rec">
+                <div class="dashcam-dot"></div>
+                <span>● REC</span>
+            </div>
+            <div id="dashcam-time">2026-06-25 06:30:00 AM</div>
+        </div>
+        <div class="dashcam-bottom">
+            <div>CAM_01 · DRIVER_POV</div>
+            <div class="dashcam-speed">
+                <span>SPEED: <span id="dashcam-speed-val">0</span> MPH</span> · GPS: 35.6192° N, 82.4419° W
+            </div>
+        </div>
+    </div>
 
     <button class="btn-lobby" onclick="returnToLobby()">← LOBBY</button>
 
@@ -553,6 +627,30 @@
         carGroup.add(spotRight);
         carGroup.add(spotRight.target);
 
+        // ── Driver seat Cockpit Dashboard & Steering Wheel ──
+        // Dashboard
+        const dashGeo = new THREE.BoxGeometry(2.2, 0.4, 0.5);
+        const dashMat = new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.7 });
+        const dashboard = new THREE.Mesh(dashGeo, dashMat);
+        dashboard.position.set(0, 0.9, 0.7);
+        carGroup.add(dashboard);
+
+        // Steering Wheel
+        const steeringWheelGeo = new THREE.TorusGeometry(0.24, 0.035, 6, 20);
+        const steeringWheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.8 });
+        const steeringWheel = new THREE.Mesh(steeringWheelGeo, steeringWheelMat);
+        steeringWheel.position.set(-0.55, 1.0, 0.55);
+        steeringWheel.rotation.x = -Math.PI / 6;
+        carGroup.add(steeringWheel);
+
+        // Glowing cyan speedometer gauge
+        const gaugeGeo = new THREE.CircleGeometry(0.08, 12);
+        const gaugeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+        const gauge = new THREE.Mesh(gaugeGeo, gaugeMat);
+        gauge.position.set(-0.55, 0.95, 0.96);
+        gauge.rotation.x = -Math.PI / 10;
+        carGroup.add(gauge);
+
         carGroup.position.set(0, 0.1, -120); // start position
         scene.add(carGroup);
 
@@ -631,6 +729,9 @@
                         spotLeft.intensity = 0.5; // dim lights
                         spotRight.intensity = 0.5;
 
+                        // Hide Dashcam HUD
+                        document.getElementById('dashcam-hud').style.display = 'none';
+
                         // Switch HUD labels
                         stage = 3; // Walking mode
                         hudTitle.innerText = "ACT I: INTO THE WILDERNESS";
@@ -646,6 +747,16 @@
                 }
                 
                 timerDisplay.innerText = stageTimer.toFixed(1) + "s";
+
+                // Update Dashcam HUD values
+                let speedMph = Math.abs(carSpeed * 42).toFixed(0);
+                document.getElementById('dashcam-speed-val').innerText = speedMph;
+                
+                let elapsedSec = Math.floor(time);
+                let s = elapsedSec % 60;
+                let m = 30 + Math.floor(elapsedSec / 60);
+                let timeStr = `2026-06-25 06:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} AM`;
+                document.getElementById('dashcam-time').innerText = timeStr;
 
                 // Car physics
                 if (keys.w) carSpeed += carAccel;
@@ -669,13 +780,26 @@
                     wheel.rotation.x += carSpeed * 0.7;
                 });
 
-                // Camera follows car
-                const targetCamX = carGroup.position.x - Math.sin(carAngle) * 16;
-                const targetCamZ = carGroup.position.z - Math.cos(carAngle) * 16;
-                const targetCamY = carGroup.position.y + 4.8;
+                // Rotate steering wheel smoothly based on turn input
+                let targetWheelRot = 0;
+                if (keys.a) targetWheelRot = 1.1; // turn left
+                if (keys.d) targetWheelRot = -1.1; // turn right
+                steeringWheel.rotation.z += (targetWheelRot - steeringWheel.rotation.z) * 0.15;
+
+                // Driver Seat POV (inside cabin, left-hand side, looking out the windshield)
+                let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
+                let camZ = carGroup.position.z + Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
+                let camY = carGroup.position.y + 1.25;
                 
-                camera.position.set(targetCamX, targetCamY, targetCamZ);
-                camera.lookAt(new THREE.Vector3(carGroup.position.x, carGroup.position.y + 1, carGroup.position.z));
+                camera.position.set(camX, camY, camZ);
+                
+                // Camera looks forward along the car's heading
+                let lookTarget = new THREE.Vector3(
+                    camX + Math.sin(carAngle) * 15,
+                    camY - 0.08,
+                    camZ + Math.cos(carAngle) * 15
+                );
+                camera.lookAt(lookTarget);
             }
             // ── STAGE 3: WALKING ─────────────────────────────
             else if (stage === 3) {
