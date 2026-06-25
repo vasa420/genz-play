@@ -102,6 +102,7 @@
             text-shadow: 0 0 10px var(--warning-glow);
             word-wrap: break-word;
             text-transform: uppercase;
+            white-space: pre-wrap;
         }
 
         .cursor {
@@ -146,7 +147,7 @@
                 <span id="type-text"></span><span class="cursor" id="text-cursor"></span>
             </div>
         </div>
-        <div class="hint" id="hint-text">TAP ANYWHERE TO SKIP ▶</div>
+        <div class="hint" id="hint-text">PRESS Q OR CLICK TO SKIP ▶</div>
     </div>
 
     <script>
@@ -206,21 +207,30 @@
             }, 620);
         }
 
-        // Tap/click handler
-        document.addEventListener('click', () => {
+        // Input handler for Q key or Click
+        function handleContinue() {
             if (skipLocked) return;
             if (!typingFinished) {
                 // Skip typing
                 typingFinished = true;
                 typeSpan.innerText = textToType;
                 document.getElementById('text-cursor').style.display = 'none';
-                hintEl.innerText = "TAP ANYWHERE TO CONTINUE ▶";
+                hintEl.innerText = "PRESS Q OR CLICK TO CONTINUE ▶";
                 
                 // Start 5 second timer to next page
+                if (autoTimeout) clearTimeout(autoTimeout);
                 autoTimeout = setTimeout(startNextPage, 5000);
             } else {
                 // Skip the 5 second wait and go immediately
                 startNextPage();
+            }
+        }
+
+        document.addEventListener('click', handleContinue);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'q') {
+                handleContinue();
             }
         });
 
@@ -237,7 +247,7 @@
                 } else {
                     typingFinished = true;
                     document.getElementById('text-cursor').style.display = 'none';
-                    hintEl.innerText = "TAP ANYWHERE TO CONTINUE ▶";
+                    hintEl.innerText = "PRESS Q OR CLICK TO CONTINUE ▶";
                     
                     // Stay 5 seconds and automatically proceed
                     autoTimeout = setTimeout(startNextPage, 5000);

@@ -93,8 +93,10 @@
             font-size: clamp(20px, 3.5vw, 32px);
             font-weight: 900;
             letter-spacing: 6px;
+            word-spacing: 18px;
             text-shadow: 0 0 15px var(--danger-glow);
             text-transform: uppercase;
+            white-space: pre-wrap;
         }
 
         .header-subtitle {
@@ -102,7 +104,9 @@
             font-size: clamp(14px, 2.2vw, 18px);
             font-weight: 400;
             letter-spacing: 4px;
+            word-spacing: 12px;
             margin-top: 5px;
+            white-space: pre-wrap;
         }
 
         .divider {
@@ -168,7 +172,7 @@
                 <span id="type-body"></span><span class="cursor" id="body-cursor"></span>
             </div>
         </div>
-        <div class="hint" id="hint-text">TAP ANYWHERE TO SKIP ▶</div>
+        <div class="hint" id="hint-text">PRESS Q OR CLICK TO SKIP ▶</div>
     </div>
 
     <script>
@@ -234,8 +238,8 @@
             }, 620);
         }
 
-        // Tap/click handler
-        document.addEventListener('click', () => {
+        // Input handler for Q key or Click
+        function handleContinue() {
             if (skipLocked) return;
             if (!typingFinished) {
                 // Skip all typing animations
@@ -244,13 +248,22 @@
                 subtitleEl.innerText = subtitleText;
                 bodyEl.innerText = bodyText;
                 document.getElementById('body-cursor').style.display = 'none';
-                hintEl.innerText = "TAP ANYWHERE TO CONTINUE ▶";
+                hintEl.innerText = "PRESS Q OR CLICK TO CONTINUE ▶";
                 
                 // Automatically redirect to lobby after 5 seconds
+                if (autoTimeout) clearTimeout(autoTimeout);
                 autoTimeout = setTimeout(goToLobby, 5000);
             } else {
                 // Go immediately
                 goToLobby();
+            }
+        }
+
+        document.addEventListener('click', handleContinue);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'q') {
+                handleContinue();
             }
         });
 
@@ -294,7 +307,7 @@
                 } else {
                     typingFinished = true;
                     document.getElementById('body-cursor').style.display = 'none';
-                    hintEl.innerText = "TAP ANYWHERE TO CONTINUE ▶";
+                    hintEl.innerText = "PRESS Q OR CLICK TO CONTINUE ▶";
                     
                     // Stay 5 seconds and automatically redirect to lobby
                     autoTimeout = setTimeout(goToLobby, 5000);
