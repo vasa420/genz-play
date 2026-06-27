@@ -342,6 +342,7 @@
         let radioFilterNode = null;
         let radioInterval = null;
         let currentRadioBeat = 0;
+        let rainAudio = null;
 
         const bassRoots = [55.00, 43.65, 65.41, 49.00]; // A1, F1, C2, G1
         const leadNotes = [
@@ -353,206 +354,23 @@
 
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!rainAudio) {
+                rainAudio = new Audio('johnbritton-thunder-156423 (1).mp3');
+                rainAudio.loop = true;
+                rainAudio.volume = 0.0;
+            }
         }
 
         function initCarRadio() {
-            if (!audioCtx) initAudio();
-            if (!audioCtx) return;
-            if (radioActive) return;
-            
-            radioActive = true;
-            
-            // Create nodes
-            radioFilterNode = audioCtx.createBiquadFilter();
-            radioFilterNode.type = 'lowpass';
-            radioFilterNode.frequency.setValueAtTime(20000, audioCtx.currentTime);
-            
-            radioGainNode = audioCtx.createGain();
-            radioGainNode.gain.setValueAtTime(0.0, audioCtx.currentTime);
-            
-            radioFilterNode.connect(radioGainNode);
-            radioGainNode.connect(audioCtx.destination);
-            
-            // Start scheduler (120 BPM synthwave beat)
-            const tempo = 120;
-            const beatLen = 60 / tempo; // 0.5s
-            const stepLen = beatLen / 2; // 0.25s (eighth notes)
-            
-            let nextNoteTime = audioCtx.currentTime;
-            
-            function scheduleNextNotes() {
-                while (nextNoteTime < audioCtx.currentTime + 0.15) {
-                    playRadioStep(nextNoteTime, stepLen);
-                    nextNoteTime += stepLen;
-                    currentRadioBeat++;
-                }
-            }
-            
-            radioInterval = setInterval(scheduleNextNotes, 50);
+            // Permanently disabled
         }
 
         function playRadioStep(time, stepLen) {
-            if (!audioCtx || !radioActive) return;
-            
-            const measure = Math.floor(currentRadioBeat / 16);
-            const stepInMeasure = currentRadioBeat % 16;
-            const chordIndex = Math.floor((currentRadioBeat % 64) / 16);
-            
-            const baseFreq = bassRoots[chordIndex];
-            
-            // ── Bassline ──
-            const bassOctave = (stepInMeasure % 2 === 0) ? 1 : 2;
-            const bFreq = baseFreq * bassOctave;
-            
-            try {
-                const osc = audioCtx.createOscillator();
-                const oscGain = audioCtx.createGain();
-                const bassFilter = audioCtx.createBiquadFilter();
-                
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(bFreq, time);
-                
-                bassFilter.type = 'lowpass';
-                bassFilter.frequency.setValueAtTime(320, time);
-                
-                oscGain.gain.setValueAtTime(0.001, time);
-                oscGain.gain.linearRampToValueAtTime(masterVolume * 1.5, time + 0.02);
-                oscGain.gain.exponentialRampToValueAtTime(0.001, time + stepLen - 0.02);
-                
-                osc.connect(bassFilter);
-                bassFilter.connect(oscGain);
-                oscGain.connect(radioFilterNode);
-                
-                osc.start(time);
-                osc.stop(time + stepLen);
-            } catch(e) {}
-            
-            // ── Drum Beat ──
-            // Kick
-            if (stepInMeasure % 4 === 0) {
-                try {
-                    const kickOsc = audioCtx.createOscillator();
-                    const kickGain = audioCtx.createGain();
-                    kickOsc.connect(kickGain);
-                    kickGain.connect(radioFilterNode);
-                    
-                    kickOsc.type = 'sine';
-                    kickOsc.frequency.setValueAtTime(140, time);
-                    kickOsc.frequency.exponentialRampToValueAtTime(0.01, time + 0.15);
-                    
-                    kickGain.gain.setValueAtTime(masterVolume * 2.8, time);
-                    kickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
-                    
-                    kickOsc.start(time);
-                    kickOsc.stop(time + 0.16);
-                } catch(e) {}
-            }
-            
-            // Snare
-            if (stepInMeasure % 8 === 4) {
-                try {
-                    const snBufferSize = audioCtx.sampleRate * 0.15;
-                    const snBuffer = audioCtx.createBuffer(1, snBufferSize, audioCtx.sampleRate);
-                    const snData = snBuffer.getChannelData(0);
-                    for (let i = 0; i < snBufferSize; i++) snData[i] = Math.random() * 2 - 1;
-                    
-                    const snNoise = audioCtx.createBufferSource();
-                    snNoise.buffer = snBuffer;
-                    
-                    const snFilter = audioCtx.createBiquadFilter();
-                    snFilter.type = 'bandpass';
-                    snFilter.frequency.setValueAtTime(1000, time);
-                    snFilter.Q.setValueAtTime(2.0, time);
-                    
-                    const snGain = audioCtx.createGain();
-                    snGain.gain.setValueAtTime(masterVolume * 1.8, time);
-                    snGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
-                    
-                    snNoise.connect(snFilter);
-                    snFilter.connect(snGain);
-                    snGain.connect(radioFilterNode);
-                    
-                    snNoise.start(time);
-                    snNoise.stop(time + 0.15);
-                } catch(e) {}
-            }
-            
-            // Hihat
-            if (stepInMeasure % 2 === 1) {
-                try {
-                    const hatBufferSize = audioCtx.sampleRate * 0.04;
-                    const hatBuffer = audioCtx.createBuffer(1, hatBufferSize, audioCtx.sampleRate);
-                    const hatData = hatBuffer.getChannelData(0);
-                    for (let i = 0; i < hatBufferSize; i++) hatData[i] = Math.random() * 2 - 1;
-                    
-                    const hatNoise = audioCtx.createBufferSource();
-                    hatNoise.buffer = hatBuffer;
-                    
-                    const hatFilter = audioCtx.createBiquadFilter();
-                    hatFilter.type = 'highpass';
-                    hatFilter.frequency.setValueAtTime(7000, time);
-                    
-                    const hatGain = audioCtx.createGain();
-                    hatGain.gain.setValueAtTime(masterVolume * 0.8, time);
-                    hatGain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
-                    
-                    hatNoise.connect(hatFilter);
-                    hatFilter.connect(hatGain);
-                    hatGain.connect(radioFilterNode);
-                    
-                    hatNoise.start(time);
-                    hatNoise.stop(time + 0.04);
-                } catch(e) {}
-            }
-            
-            // ── Melody Lead ──
-            const arpeggioSteps = [0, 3, 6, 8, 11, 14];
-            if (arpeggioSteps.includes(stepInMeasure)) {
-                try {
-                    const melodySet = leadNotes[chordIndex];
-                    const noteIdx = (stepInMeasure + Math.floor(measure / 2)) % melodySet.length;
-                    const noteFreq = melodySet[noteIdx] * 2.0;
-                    
-                    const leadOsc = audioCtx.createOscillator();
-                    const leadGain = audioCtx.createGain();
-                    
-                    leadOsc.type = 'triangle';
-                    leadOsc.frequency.setValueAtTime(noteFreq, time);
-                    
-                    // Pitch LFO
-                    const lfo = audioCtx.createOscillator();
-                    const lfoGain = audioCtx.createGain();
-                    lfo.frequency.setValueAtTime(6.5, time);
-                    lfoGain.gain.setValueAtTime(4.0, time);
-                    lfo.connect(lfoGain);
-                    lfoGain.connect(leadOsc.frequency);
-                    lfo.start(time);
-                    lfo.stop(time + stepLen * 1.5);
-                    
-                    leadGain.gain.setValueAtTime(0.001, time);
-                    leadGain.gain.linearRampToValueAtTime(masterVolume * 1.1, time + 0.03);
-                    leadGain.gain.exponentialRampToValueAtTime(0.001, time + stepLen * 1.5 - 0.03);
-                    
-                    leadOsc.connect(leadGain);
-                    leadGain.connect(radioFilterNode);
-                    
-                    leadOsc.start(time);
-                    leadOsc.stop(time + stepLen * 1.5);
-                } catch(e) {}
-            }
+            // Permanently disabled
         }
 
         function stopCarRadio() {
-            radioActive = false;
-            if (radioInterval) {
-                clearInterval(radioInterval);
-                radioInterval = null;
-            }
-            if (radioGainNode) {
-                try { radioGainNode.disconnect(); } catch(e) {}
-                radioGainNode = null;
-            }
-            radioFilterNode = null;
+            // Permanently disabled
         }
 
         function playThudSound() {
@@ -707,28 +525,54 @@
                 lightningLine = null;
             }
             
-            const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+            const basePos = (stage === 1) ? carGroup.position : camera.position;
+            const angle = (stage === 1) ? carAngle : playerAngle;
+            
+            const dx = Math.sin(angle);
+            const dz = Math.cos(angle);
+            
+            const distance = 40 + Math.random() * 50; // 40-90 units ahead of camera
+            const lateral = (Math.random() - 0.5) * 60; // offset left/right
+            
+            const startX = basePos.x + dx * distance + Math.cos(angle) * lateral;
+            const startZ = basePos.z + dz * distance - Math.sin(angle) * lateral;
+            const startY = 60 + Math.random() * 20; // high in the sky
+            
             const points = [];
-            
-            const startX = (Math.random() - 0.5) * 140 + carGroup.position.x;
-            const startY = 65;
-            const startZ = carGroup.position.z + 180 + (Math.random() - 0.5) * 50;
-            
             points.push(new THREE.Vector3(startX, startY, startZ));
+            
             let curX = startX;
             let curY = startY;
             let curZ = startZ;
             
             const segments = 7;
             for (let i = 0; i < segments; i++) {
-                curY -= 65 / segments;
-                curX += (Math.random() - 0.5) * 18;
-                curZ += (Math.random() - 0.5) * 14;
+                curY -= startY / segments;
+                curX += (Math.random() - 0.5) * 16;
+                curZ += (Math.random() - 0.5) * 12;
                 points.push(new THREE.Vector3(curX, curY, curZ));
             }
             
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            lightningLine = new THREE.Line(geometry, material);
+            // Render a thick, glowing bolt by drawing 5 slightly offset lines that ignore fog
+            const lightningGroup = new THREE.Group();
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, fog: false });
+            
+            const offsets = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0.12, 0.05, -0.12),
+                new THREE.Vector3(-0.12, -0.05, 0.12),
+                new THREE.Vector3(0.24, -0.1, 0.0),
+                new THREE.Vector3(-0.24, 0.1, 0.0)
+            ];
+            
+            offsets.forEach(offset => {
+                const offsetPoints = points.map(p => p.clone().add(offset));
+                const geometry = new THREE.BufferGeometry().setFromPoints(offsetPoints);
+                const line = new THREE.Line(geometry, material);
+                lightningGroup.add(line);
+            });
+            
+            lightningLine = lightningGroup;
             scene.add(lightningLine);
             
             ambientLight.intensity = 3.8;
@@ -850,48 +694,15 @@
         let playerEngineFilter = null;
 
         function startPlayerEngine() {
-            if (!audioCtx || playerEngineOsc) return;
-            try {
-                playerEngineOsc = audioCtx.createOscillator();
-                playerEngineGain = audioCtx.createGain();
-                playerEngineFilter = audioCtx.createBiquadFilter();
-                
-                playerEngineOsc.type = 'sawtooth';
-                playerEngineOsc.frequency.setValueAtTime(45, audioCtx.currentTime); // Idle pitch
-                
-                playerEngineFilter.type = 'lowpass';
-                playerEngineFilter.frequency.setValueAtTime(200, audioCtx.currentTime);
-                
-                playerEngineGain.gain.setValueAtTime(0, audioCtx.currentTime);
-                
-                playerEngineOsc.connect(playerEngineFilter);
-                playerEngineFilter.connect(playerEngineGain);
-                playerEngineGain.connect(audioCtx.destination);
-                
-                playerEngineOsc.start();
-            } catch(e) { console.warn(e); }
+            // Permanently disabled
         }
 
         function updatePlayerEngine(speedRatio) {
-            if (!playerEngineOsc) {
-                startPlayerEngine();
-            }
-            if (playerEngineGain && playerEngineOsc) {
-                const freq = 45 + speedRatio * 80;
-                playerEngineOsc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
-                
-                const vol = masterVolume * (0.5 + speedRatio * 0.6);
-                playerEngineGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
-            }
+            // Permanently disabled
         }
 
         function stopPlayerEngine() {
-            if (playerEngineOsc) {
-                try { playerEngineOsc.stop(); } catch(e) {}
-                playerEngineOsc = null;
-                playerEngineGain = null;
-                playerEngineFilter = null;
-            }
+            // Permanently disabled
         }
 
         function startTrafficSound(vehicle) {
@@ -947,61 +758,11 @@
         let hornActive = false;
 
         function startHorn() {
-            initAudio();
-            if (!audioCtx || hornActive) return;
-            try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                hornActive = true;
-                
-                const now = audioCtx.currentTime;
-                hornOsc1 = audioCtx.createOscillator();
-                hornOsc2 = audioCtx.createOscillator();
-                hornGain = audioCtx.createGain();
-                
-                hornOsc1.type = 'triangle';
-                hornOsc1.frequency.setValueAtTime(395, now);
-                
-                hornOsc2.type = 'sawtooth';
-                hornOsc2.frequency.setValueAtTime(445, now);
-                
-                hornGain.gain.setValueAtTime(0, now);
-                hornGain.gain.linearRampToValueAtTime(masterVolume * 2.2, now + 0.04);
-                
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(420, now);
-                filter.Q.setValueAtTime(2.0, now);
-                
-                hornOsc1.connect(filter);
-                hornOsc2.connect(filter);
-                filter.connect(hornGain);
-                hornGain.connect(audioCtx.destination);
-                
-                hornOsc1.start(now);
-                hornOsc2.start(now);
-            } catch(e) { console.warn(e); }
+            // Permanently disabled
         }
 
         function stopHorn() {
-            if (hornActive) {
-                hornActive = false;
-                if (hornGain && audioCtx) {
-                    const now = audioCtx.currentTime;
-                    hornGain.gain.cancelScheduledValues(now);
-                    hornGain.gain.linearRampToValueAtTime(0.001, now + 0.08);
-                }
-                const o1 = hornOsc1;
-                const o2 = hornOsc2;
-                setTimeout(() => {
-                    try {
-                        if (o1) o1.stop();
-                        if (o2) o2.stop();
-                    } catch(e) {}
-                }, 100);
-                hornOsc1 = null;
-                hornOsc2 = null;
-                hornGain = null;
-            }
+            // Permanently disabled
         }
 
         // Return to Lobby trigger
@@ -1728,7 +1489,7 @@
                     
                     // Identify trees near road to fall during storm
                     const absX = Math.abs(tx);
-                    if (absX > 16.0 && absX < 21.0 && fallingTrees.length < 2 && index !== 0) {
+                    if (absX >= 22.0 && absX <= 25.0 && fallingTrees.length < 2 && index !== 0) {
                         treeGroup.userData = {
                             isFallingTree: true,
                             hasFallen: false,
@@ -1863,7 +1624,7 @@
         }
 
         // ── Rain Particle System ──────────────────────────────
-        const rainCount = 1800;
+        const rainCount = 8000;
         const rainGeometry = new THREE.BufferGeometry();
         const rainPosArray = new Float32Array(rainCount * 3);
         for (let i = 0; i < rainCount * 3; i += 3) {
@@ -1875,7 +1636,7 @@
         
         const rainMat = new THREE.PointsMaterial({
             color: 0x7799bb,
-            size: 0.22,
+            size: 0.35,
             transparent: true,
             opacity: 0.0
         });
@@ -2149,7 +1910,21 @@
                 hudSub.innerText = `TIME: ${hrStr}:${minStr} AM`;
             }
 
-            const isStormActive = (kilometersRemaining <= 65.0 && kilometersRemaining >= 45.0);
+            const isStormActive = (kilometersRemaining <= 65.0 && kilometersRemaining >= 45.0) || stage === 3;
+
+            if (rainAudio) {
+                if (isStormActive) {
+                    if (rainAudio.paused) {
+                        rainAudio.play().catch(e => console.log("Rain audio waiting for interaction"));
+                    }
+                    rainAudio.volume = Math.min(0.8, rainAudio.volume + delta * 0.3);
+                } else {
+                    rainAudio.volume = Math.max(0.0, rainAudio.volume - delta * 0.3);
+                    if (rainAudio.volume <= 0.01 && !rainAudio.paused) {
+                        rainAudio.pause();
+                    }
+                }
+            }
 
             // ── Animate Environment ──────────────────────────
             // Drift clouds
@@ -2248,7 +2023,7 @@
 
             // Update Rain Particles
             if (isStormActive) {
-                rainMat.opacity = Math.min(0.68, rainMat.opacity + delta * 0.45);
+                rainMat.opacity = Math.min(0.9, rainMat.opacity + delta * 0.45);
             } else {
                 rainMat.opacity = Math.max(0.0, rainMat.opacity - delta * 0.45);
             }
@@ -2257,8 +2032,8 @@
                 const positions = rainGeometry.attributes.position.array;
                 const camPos = camera.position;
                 
-                const windX = -28.0; // blowing left
-                const fallSpeed = -55.0; // falling down fast
+                const windX = -48.0; // blowing left heavily
+                const fallSpeed = -70.0; // falling down fast heavily
                 
                 for (let i = 0; i < rainCount * 3; i += 3) {
                     positions[i] += windX * delta;
@@ -2337,6 +2112,13 @@
                     chunks.delete(index);
                 }
             });
+
+            if (stage === 1) {
+                carGroup.position.y = 0.1;
+                carGroup.rotation.x = 0;
+                carGroup.rotation.z = 0;
+            }
+            let isDrivingOverTree = false;
 
             // Animate river waves in all active chunks
             // Animate river or bridge water waves in all active chunks
@@ -2459,7 +2241,7 @@
                 if (chunk.trees) {
                     chunk.trees.forEach(tree => {
                         if (!tree.userData.isFallingTree) {
-                            const bend = isStormActive ? (Math.sin(time * 5.0 + tree.position.z * 0.05) * 0.12 + 0.08) : 0.0;
+                            const bend = isStormActive ? (Math.sin(time * 8.0 + tree.position.z * 0.05) * 0.28 + 0.22) : 0.0;
                             tree.rotation.z = bend;
                         }
                     });
@@ -2492,17 +2274,46 @@
                         // Collision check
                         if (stage === 1 && (tree.userData.hasFallen || tree.userData.isFalling)) {
                             const carRelX = carGroup.position.x;
-                            const isBlockedLeft = (tree.userData.fallDirection === 1 && carRelX < 4);
-                            const isBlockedRight = (tree.userData.fallDirection === -1 && carRelX > -4);
+                            const isBlockedLeft = (tree.userData.fallDirection === 1 && carRelX < 5);
+                            const isBlockedRight = (tree.userData.fallDirection === -1 && carRelX > -5);
                             
-                            if (Math.abs(distZ) < 3.2 && (isBlockedLeft || isBlockedRight)) {
-                                carSpeed = -0.2; // bounce back
-                                playThudSound();
+                            if (Math.abs(distZ) < 5.0 && (isBlockedLeft || isBlockedRight)) {
+                                isDrivingOverTree = true;
+                                if (!tree.userData.playedThud) {
+                                    playThudSound();
+                                    tree.userData.playedThud = true;
+                                }
                             }
                         }
                     });
                 }
             });
+
+            // Apply shaking/bumpy effect if driving over a tree
+            if (stage === 1 && isDrivingOverTree && Math.abs(carSpeed) > 0.05) {
+                carGroup.position.y = 0.52;
+                const shakeAmount = 0.09;
+                const frequency = 45.0;
+                carGroup.rotation.x = Math.sin(time * frequency) * shakeAmount;
+                carGroup.rotation.z = Math.cos(time * (frequency + 5.0)) * shakeAmount;
+                
+                // Procedural squeaking sound
+                if (audioCtx && Math.random() < 0.18) {
+                    try {
+                        const osc = audioCtx.createOscillator();
+                        const oscGain = audioCtx.createGain();
+                        osc.connect(oscGain);
+                        oscGain.connect(audioCtx.destination);
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(450 + Math.random() * 200, audioCtx.currentTime);
+                        osc.frequency.linearRampToValueAtTime(800 + Math.random() * 150, audioCtx.currentTime + 0.08);
+                        oscGain.gain.setValueAtTime(masterVolume * 0.2, audioCtx.currentTime);
+                        oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.09);
+                    } catch(e) {}
+                }
+            }
 
             // Update traffic vehicles
             if (stage === 1) {
