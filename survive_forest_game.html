@@ -513,6 +513,13 @@
 
         let lightningLine = null;
         let lightningFlashActive = false;
+        let rescueSceneSpawned = false;
+        
+        // Storm parameter interpolators for smooth transitions
+        let currentWindX = -3.0;
+        let currentFallSpeed = -20.0;
+        let currentBendAmp = 0.08;
+        let currentBendFreq = 3.0;
 
         function triggerLightning() {
             if (lightningLine) {
@@ -1585,6 +1592,61 @@
                     offset: Math.random() * 10
                 });
                 
+                // Spawn a rescue/cleanup scene right after the rain/storm stops
+                if (kilometersRemaining < 45.0 && !rescueSceneSpawned && index > 0) {
+                    // Create a fallen trunk lying flat
+                    const trunkGeo = new THREE.CylinderGeometry(0.35, 0.45, 12, 8);
+                    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
+                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                    trunk.rotation.z = Math.PI / 2; // lie flat
+                    trunk.position.set(11, 0.45, 0); // on the side of the road
+                    chunkGroup.add(trunk);
+                    
+                    // Foliage clump on the side
+                    const foliageMat = new THREE.MeshLambertMaterial({ color: 0x153d20 });
+                    const foliage = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 8), foliageMat);
+                    foliage.position.set(16, 1.2, 0);
+                    chunkGroup.add(foliage);
+                    
+                    // Spawn 6 workers around the tree
+                    const workerPositions = [
+                        { x: 9.2, z: -2, rx: 0.3 },
+                        { x: 10.5, z: 3, rx: 0.4 },
+                        { x: 12.8, z: -4, rx: 0.2 },
+                        { x: 11.2, z: 5, rx: 0.3 },
+                        { x: 8.5, z: 1, rx: 0.5 },
+                        { x: 13.5, z: 2, rx: 0.2 }
+                    ];
+                    
+                    workerPositions.forEach((pos, i) => {
+                        const worker = createPedestrianMesh();
+                        // Assign bright safety vest color (orange/yellow-green) for rescue workers!
+                        worker.children[0].material = new THREE.MeshLambertMaterial({ color: i % 2 === 0 ? 0xff4500 : 0xccff00 }); // safety orange/yellow
+                        worker.position.set(pos.x, 0.1, pos.z);
+                        worker.rotation.x = pos.rx; // bend over to clean/rescue the tree
+                        worker.rotation.y = Math.random() * Math.PI * 2;
+                        chunkGroup.add(worker);
+                    });
+                    
+                    // Add some orange traffic cones
+                    const coneGeo = new THREE.CylinderGeometry(0.02, 0.25, 0.6, 8);
+                    const coneMat = new THREE.MeshLambertMaterial({ color: 0xff4500 });
+                    
+                    const conePositions = [
+                        { x: 7.5, z: -10 },
+                        { x: 7.5, z: 0 },
+                        { x: 7.5, z: 10 }
+                    ];
+                    
+                    conePositions.forEach(pos => {
+                        const cone = new THREE.Mesh(coneGeo, coneMat);
+                        cone.position.set(pos.x, 0.3, pos.z);
+                        chunkGroup.add(cone);
+                    });
+                    
+                    rescueSceneSpawned = true;
+                }
+
                 chunks.set(index, {
                     group: chunkGroup,
                     riverMesh: riverMesh,
@@ -1961,16 +2023,30 @@
             // Dynamic Sunrise & Sun Waking Up over Mountains (rising slowly over 10 minutes)
             const sunriseProgress = Math.min(1.0, time / 600.0); 
             
-            // Sky & Fog color transition (navy -> thick warm crimson/dark violet gradient)
-            let targetSkyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
-            let targetAmbient = 0.65;
-            let targetSunLight = 0.6 + sunriseProgress * 1.2;
+            // Interpolate wind and bend parameters smoothly based on isStormActive
+            const targetWindX = isStormActive ? -65.0 : -3.0; // gentle breeze after storm
+            const targetFallSpeed = isStormActive ? -80.0 : -20.0;
+            const targetBendAmp = isStormActive ? 0.38 : 0.08;
+            const targetBendFreq = isStormActive ? 9.0 : 3.0;
+            
+            currentWindX += (targetWindX - currentWindX) * delta * 1.2;
+            currentFallSpeed += (targetFallSpeed - currentFallSpeed) * delta * 1.2;
+            currentBendAmp += (targetBendAmp - currentBendAmp) * delta * 1.2;
+            currentBendFreq += (targetBendFreq - currentBendFreq) * delta * 1.2;
+            
+            // Sky & Fog color transition
+            let targetSkyColor;
+            let targetAmbient;
+            let targetSunLight;
             
             if (isStormActive) {
                 // Storm interpolation (dark black sky, low lights)
-                targetSkyColor.lerp(new THREE.Color(0x020204), 1.0);
+                targetSkyColor = new THREE.Color(0x020204);
                 targetAmbient = 0.12;
                 targetSunLight = 0.08;
+                
+                // Scale down sun so it disappears (covered by black clouds)
+                sunMesh.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 2.0);
                 
                 // Random lightning strikes (about every 3-5 seconds)
                 if (Math.random() < 0.0055 && !lightningLine) {
@@ -1986,14 +2062,31 @@
                 // Lerp clouds color to dark storm black
                 cloudMat.color.lerp(new THREE.Color(0x101015), delta * 2.0);
             } else {
-                // Return to normal ambient light levels
+                // Scale sun back to normal (revealed after black clouds disappear)
+                sunMesh.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 2.0);
+                
+                if (kilometersRemaining < 45.0) {
+                    // Post-storm: bright clear day atmosphere
+                    targetSkyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0xa6c8e0), sunriseProgress);
+                    targetAmbient = 0.75 + sunriseProgress * 0.1;
+                    targetSunLight = 1.6 + sunriseProgress * 0.3;
+                    
+                    // Lerp clouds color to bright white
+                    cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
+                } else {
+                    // Pre-storm: normal morning sunrise
+                    targetSkyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
+                    targetAmbient = 0.15 + sunriseProgress * 0.5;
+                    targetSunLight = 0.2 + sunriseProgress * 1.0;
+                    
+                    // Lerp clouds color to warm morning clouds
+                    cloudMat.color.lerp(new THREE.Color(0xe0e6ed), delta * 2.0);
+                }
+                
                 if (!lightningLine) {
                     ambientLight.intensity = targetAmbient;
                     sunLight.intensity = targetSunLight;
                 }
-                
-                // Lerp clouds color back to bright morning clouds
-                cloudMat.color.lerp(new THREE.Color(0xe0e6ed), delta * 2.0);
             }
             
             if (lightningFlashActive) {
@@ -2012,10 +2105,10 @@
             sunMat.color.copy(sunColor);
             glowMat.color.copy(sunColor);
             
-            // Sun rises behind the mountains
-            sunMesh.position.z = carGroup.position.z + 280;
-            sunMesh.position.y = 2 + sunriseProgress * 45; // rises from 2 to 47
-            sunMesh.position.x = -40 + Math.sin(time * 0.05) * 5;
+            // Sun rises and moves to the top of the sky based on time (sunriseProgress)
+            sunMesh.position.z = carGroup.position.z + 280 - sunriseProgress * 200; 
+            sunMesh.position.y = 2 + sunriseProgress * 95; // rises high to the top
+            sunMesh.position.x = -40 + sunriseProgress * 40; 
             
             // Sun lighting adjusts accordingly
             sunLight.color.copy(sunColor);
@@ -2059,12 +2152,9 @@
                 const positions = rainGeometry.attributes.position.array;
                 const camPos = camera.position;
                 
-                const windX = -65.0; // blowing left heavily
-                const fallSpeed = -80.0; // falling down fast heavily
-                
                 for (let i = 0; i < rainCount * 3; i += 3) {
-                    positions[i] += windX * delta;
-                    positions[i + 1] += fallSpeed * delta;
+                    positions[i] += currentWindX * delta;
+                    positions[i + 1] += currentFallSpeed * delta;
                     positions[i + 2] += carSpeed * 40 * delta; // keep up with car
                     
                     if (positions[i + 1] < 0) {
@@ -2083,7 +2173,7 @@
             }
 
             // Windshield rain overlay generator
-            if (isStormActive && stage === 1 && !wipersOn) {
+            if (isStormActive && stage === 1) {
                 const containerRain = document.getElementById('windshield-rain-container');
                 if (containerRain && Math.random() < 0.28) {
                     const drop = document.createElement('div');
@@ -2268,7 +2358,7 @@
                 if (chunk.trees) {
                     chunk.trees.forEach(tree => {
                         if (!tree.userData.isFallingTree) {
-                            const bend = isStormActive ? (Math.sin(time * 9.0 + tree.position.z * 0.05) * 0.38 + 0.32) : 0.0;
+                            const bend = (Math.sin(time * currentBendFreq + tree.position.z * 0.05) * currentBendAmp + (isStormActive ? 0.32 : 0.0));
                             tree.rotation.z = bend;
                         }
                     });
