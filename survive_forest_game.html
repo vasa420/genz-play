@@ -520,6 +520,28 @@
         let currentFallSpeed = -20.0;
         let currentBendAmp = 0.08;
         let currentBendFreq = 3.0;
+        let currentFogDensity = 0.012;
+        let currentAmbient = 0.65;
+        let currentSunLight = 0.6;
+        let currentSkyColor = new THREE.Color(0x0e060d);
+        
+        // Overtake Event State
+        let overtakeEventStarted = false;
+        const overtakeCars = [];
+        
+        // Railway Crossing Event State
+        let railwayCrossingState = 'none';
+        let railwayZ = -1;
+        let railwayChunkIdx = -1;
+        let railwayGateL = null;
+        let railwayGateR = null;
+        let gateAngle = Math.PI / 2;
+        let railwayTimer = 0;
+        let trainGroup = null;
+        let trainX = -450;
+        let crossingSignalLight1 = null;
+        let crossingSignalLight2 = null;
+        const crossingOncomingCars = [];
 
         function triggerLightning() {
             if (lightningLine) {
@@ -889,13 +911,13 @@
         scene.add(sunLight);
 
         // ── Sun Waking Up over Mountains ──────────────────────
-        const sunGeo = new THREE.SphereGeometry(15, 24, 24);
+        const sunGeo = new THREE.SphereGeometry(5, 24, 24);
         const sunMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(-40, 2, 280);
         
         // Sun outer glow (thick red glow)
-        const glowGeo = new THREE.SphereGeometry(30, 24, 24);
+        const glowGeo = new THREE.SphereGeometry(10, 24, 24);
         const glowMat = new THREE.MeshBasicMaterial({ 
             color: 0xff0000, 
             transparent: true, 
@@ -1265,6 +1287,116 @@
             }
             
             return shopGroup;
+        }
+
+        function buildTrainGroup() {
+            trainGroup = new THREE.Group();
+            trainGroup.position.set(trainX, 0.1, railwayZ);
+            
+            // 1. Locomotive (front carriage)
+            const locoGroup = new THREE.Group();
+            locoGroup.position.x = 0;
+            
+            const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(20, 4.5, 3.2), new THREE.MeshLambertMaterial({ color: 0x1c3a63 }));
+            bodyMesh.position.y = 2.45;
+            bodyMesh.castShadow = true;
+            locoGroup.add(bodyMesh);
+            
+            // Locomotive cabin
+            const cabinMesh = new THREE.Mesh(new THREE.BoxGeometry(7, 1.8, 3.2), new THREE.MeshLambertMaterial({ color: 0x122540 }));
+            cabinMesh.position.set(-5, 4.5 + 0.9 - 1.25, 0); // raised cabin at the back
+            cabinMesh.castShadow = true;
+            locoGroup.add(cabinMesh);
+            
+            // Train wheel cylinder geometry
+            const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 3.4, 8);
+            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+            for (let w = -8; w <= 8; w += 4) {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.rotation.x = Math.PI / 2;
+                wheel.position.set(w, 0.55, 0);
+                locoGroup.add(wheel);
+            }
+            
+            // Headlight
+            const lightGeo = new THREE.SphereGeometry(0.4, 8, 8);
+            const lightMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const headlight = new THREE.Mesh(lightGeo, lightMat);
+            headlight.position.set(10.1, 2.8, 0);
+            locoGroup.add(headlight);
+            
+            trainGroup.add(locoGroup);
+            
+            // 2. Carriage cars (30 cars linked behind locomotive)
+            const numCarriages = 30;
+            for (let i = 0; i < numCarriages; i++) {
+                const carriageGroup = new THREE.Group();
+                // Carriage X center behind locomotive
+                const carriageX = -10 - 1 - 9 - i * 19;
+                carriageGroup.position.x = carriageX;
+                
+                // Alternating color for visual contrast
+                const carriageColor = (i % 2 === 0) ? 0x6e1b1b : 0x7a7a7a; // red or grey carriages
+                const carriageBody = new THREE.Mesh(new THREE.BoxGeometry(18, 4.2, 3.2), new THREE.MeshLambertMaterial({ color: carriageColor }));
+                carriageBody.position.y = 2.3;
+                carriageBody.castShadow = true;
+                carriageGroup.add(carriageBody);
+                
+                // Windows (row of small black boxes on both sides)
+                const windowGeo = new THREE.BoxGeometry(1.2, 0.8, 3.25);
+                const windowMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+                for (let wx = -7; wx <= 7; wx += 3.5) {
+                    const win = new THREE.Mesh(windowGeo, windowMat);
+                    win.position.set(wx, 2.7, 0);
+                    carriageGroup.add(win);
+                }
+                
+                // Carriage wheels
+                for (let cw = -7; cw <= 7; cw += 14) {
+                    const wheelL = new THREE.Mesh(wheelGeo, wheelMat);
+                    wheelL.rotation.x = Math.PI / 2;
+                    wheelL.position.set(cw, 0.55, 0);
+                    carriageGroup.add(wheelL);
+                }
+                
+                trainGroup.add(carriageGroup);
+            }
+        }
+
+        function playTrainHorn() {
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const now = audioCtx.currentTime;
+                // Train horns typically use 3 distinct frequencies
+                const frequencies = [311.13, 370.00, 470.00];
+                
+                frequencies.forEach(freq => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now);
+                    
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(800, now);
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(masterVolume * 0.9, now + 0.1);
+                    gain.gain.setValueAtTime(masterVolume * 0.9, now + 2.4);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
+                    
+                    osc.start(now);
+                    osc.stop(now + 2.9);
+                });
+            } catch(e) {}
         }
 
         // Procedural Pedestrian Mesh
@@ -1645,6 +1777,143 @@
                     });
                     
                     rescueSceneSpawned = true;
+                }
+
+                // Build Railway Crossing if this is the designated crossing chunk
+                if (index === railwayChunkIdx) {
+                    // Build railway tracks at Z = 0 (relative to chunk center)
+                    const trackGroup = new THREE.Group();
+                    
+                    // Sleepers (wooden ties)
+                    const tieGeo = new THREE.BoxGeometry(1.6, 0.12, 0.8);
+                    const tieMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
+                    for (let tx = -150; tx <= 150; tx += 3.2) {
+                        const tie = new THREE.Mesh(tieGeo, tieMat);
+                        tie.position.set(tx, 0.08, 0);
+                        trackGroup.add(tie);
+                    }
+                    
+                    // Steel Rails
+                    const railGeo = new THREE.BoxGeometry(300, 0.15, 0.1);
+                    const railMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+                    
+                    const rail1 = new THREE.Mesh(railGeo, railMat);
+                    rail1.position.set(0, 0.16, -0.45);
+                    trackGroup.add(rail1);
+                    
+                    const rail2 = new THREE.Mesh(railGeo, railMat);
+                    rail2.position.set(0, 0.16, 0.45);
+                    trackGroup.add(rail2);
+                    
+                    chunkGroup.add(trackGroup);
+
+                    // Crossing Signal Post & Lights (Left and Right)
+                    const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 4.5, 8);
+                    const postMat = new THREE.MeshLambertMaterial({ color: 0xdd8800 }); // orange warning color
+                    
+                    // Left Post
+                    const postL = new THREE.Mesh(postGeo, postMat);
+                    postL.position.set(7.5, 2.25, -14);
+                    chunkGroup.add(postL);
+                    
+                    // Right Post
+                    const postR = new THREE.Mesh(postGeo, postMat);
+                    postR.position.set(-7.5, 2.25, 14);
+                    chunkGroup.add(postR);
+                    
+                    // Crossbuck Sign ("X") on top of posts
+                    const cbMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+                    
+                    const cbLeft1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
+                    cbLeft1.rotation.z = Math.PI / 4;
+                    cbLeft1.position.set(7.5, 4.2, -14);
+                    chunkGroup.add(cbLeft1);
+                    
+                    const cbLeft2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
+                    cbLeft2.rotation.z = -Math.PI / 4;
+                    cbLeft2.position.set(7.5, 4.2, -14);
+                    chunkGroup.add(cbLeft2);
+                    
+                    const cbRight1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
+                    cbRight1.rotation.z = Math.PI / 4;
+                    cbRight1.position.set(-7.5, 4.2, 14);
+                    chunkGroup.add(cbRight1);
+                    
+                    const cbRight2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
+                    cbRight2.rotation.z = -Math.PI / 4;
+                    cbRight2.position.set(-7.5, 4.2, 14);
+                    chunkGroup.add(cbRight2);
+                    
+                    // Circular orange signs (like in image)
+                    const signGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.06, 16);
+                    signGeo.rotateX(Math.PI / 2);
+                    const signMat = new THREE.MeshLambertMaterial({ color: 0xdd8800 });
+                    
+                    const signL = new THREE.Mesh(signGeo, signMat);
+                    signL.position.set(7.5, 3.2, -14);
+                    chunkGroup.add(signL);
+                    
+                    const signR = new THREE.Mesh(signGeo, signMat);
+                    signR.position.set(-7.5, 3.2, 14);
+                    chunkGroup.add(signR);
+                    
+                    // Signal Lights (2 red spheres that will alternate flash)
+                    const signalGeo = new THREE.SphereGeometry(0.24, 8, 8);
+                    const signalOffMat = new THREE.MeshBasicMaterial({ color: 0x330000 });
+                    
+                    crossingSignalLight1 = new THREE.Mesh(signalGeo, signalOffMat.clone());
+                    crossingSignalLight1.position.set(7.1, 2.5, -13.85);
+                    chunkGroup.add(crossingSignalLight1);
+                    
+                    crossingSignalLight2 = new THREE.Mesh(signalGeo, signalOffMat.clone());
+                    crossingSignalLight2.position.set(7.9, 2.5, -13.85);
+                    chunkGroup.add(crossingSignalLight2);
+                    
+                    // Gate arm pivots (Left and Right)
+                    gateAngle = Math.PI / 2; // start open (pointing UP)
+                    
+                    railwayGateL = new THREE.Group();
+                    railwayGateL.position.set(7.5, 0.8, -14);
+                    
+                    const armMeshL = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 0.15), new THREE.MeshLambertMaterial({ color: 0xff4500 }));
+                    armMeshL.position.x = -4.0; // offset so pivot point is at X = 7.5
+                    railwayGateL.add(armMeshL);
+                    railwayGateL.rotation.z = gateAngle;
+                    chunkGroup.add(railwayGateL);
+                    
+                    railwayGateR = new THREE.Group();
+                    railwayGateR.position.set(-7.5, 0.8, 14);
+                    
+                    const armMeshR = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 0.15), new THREE.MeshLambertMaterial({ color: 0xff4500 }));
+                    armMeshR.position.x = 4.0; // offset so pivot point is at X = -7.5
+                    railwayGateR.add(armMeshR);
+                    railwayGateR.rotation.z = -gateAngle;
+                    chunkGroup.add(railwayGateR);
+                    
+                    // Spawn waiting vehicles queue on the oncoming lane (X = -4, Z > 14)
+                    crossingOncomingCars.length = 0; // reset
+                    const oncomingQueues = [26, 46, 66];
+                    oncomingQueues.forEach(zOffset => {
+                        const carColor = carColors[Math.floor(Math.random() * carColors.length)];
+                        const stoppedCar = createCarMesh(carColor);
+                        stoppedCar.position.set(-4, 0.1, zOffset);
+                        stoppedCar.rotation.y = Math.PI; // facing oncoming
+                        chunkGroup.add(stoppedCar);
+                        
+                        // We wrap this group in a vehicle object to resume later
+                        crossingOncomingCars.push({
+                            group: stoppedCar,
+                            speed: 0
+                        });
+                        
+                        // Add to main trafficVehicles array as well so it updates sound / collisions!
+                        trafficVehicles.push({
+                            group: stoppedCar,
+                            speed: 0,
+                            lane: -4,
+                            type: 'car'
+                        });
+                    });
                 }
 
                 chunks.set(index, {
@@ -2038,12 +2307,14 @@
             let targetSkyColor;
             let targetAmbient;
             let targetSunLight;
+            let targetFogDensity = 0.007; // normal morning fog density
             
             if (isStormActive) {
                 // Storm interpolation (dark black sky, low lights)
                 targetSkyColor = new THREE.Color(0x020204);
                 targetAmbient = 0.12;
                 targetSunLight = 0.08;
+                targetFogDensity = 0.015; // thick storm fog
                 
                 // Scale down sun so it disappears (covered by black clouds)
                 sunMesh.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 2.0);
@@ -2051,12 +2322,6 @@
                 // Random lightning strikes (about every 3-5 seconds)
                 if (Math.random() < 0.0055 && !lightningLine) {
                     triggerLightning();
-                }
-                
-                // Muffle other environment lights
-                if (!lightningLine) {
-                    ambientLight.intensity = targetAmbient;
-                    sunLight.intensity = targetSunLight;
                 }
                 
                 // Lerp clouds color to dark storm black
@@ -2070,6 +2335,7 @@
                     targetSkyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0xa6c8e0), sunriseProgress);
                     targetAmbient = 0.75 + sunriseProgress * 0.1;
                     targetSunLight = 1.6 + sunriseProgress * 0.3;
+                    targetFogDensity = 0.0005; // clear day, remove mist/fog!
                     
                     // Lerp clouds color to bright white
                     cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
@@ -2078,27 +2344,35 @@
                     targetSkyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
                     targetAmbient = 0.15 + sunriseProgress * 0.5;
                     targetSunLight = 0.2 + sunriseProgress * 1.0;
+                    targetFogDensity = 0.007;
                     
                     // Lerp clouds color to warm morning clouds
                     cloudMat.color.lerp(new THREE.Color(0xe0e6ed), delta * 2.0);
                 }
-                
-                if (!lightningLine) {
-                    ambientLight.intensity = targetAmbient;
-                    sunLight.intensity = targetSunLight;
-                }
             }
             
+            // Gradually interpolate colors and intensities to make the transition slow and smooth!
+            currentAmbient += (targetAmbient - currentAmbient) * delta * 0.35;
+            currentSunLight += (targetSunLight - currentSunLight) * delta * 0.35;
+            currentFogDensity += (targetFogDensity - currentFogDensity) * delta * 0.35;
+            currentSkyColor.lerp(targetSkyColor, delta * 0.35);
+            
+            scene.fog.density = currentFogDensity;
+            
+            // Set lighting and colors based on lightning overrides or slow day transitions
             if (lightningFlashActive) {
-                targetSkyColor = new THREE.Color(0xd0e2ff);
                 ambientLight.intensity = 4.2;
                 sunLight.intensity = 4.8;
+                renderer.setClearColor(new THREE.Color(0xd0e2ff));
+                scene.fog.color.setHex(0xd0e2ff);
+                ambientLight.color.setHex(0xd0e2ff);
+            } else {
+                ambientLight.intensity = currentAmbient;
+                sunLight.intensity = currentSunLight;
+                renderer.setClearColor(currentSkyColor);
+                scene.fog.color.copy(currentSkyColor);
+                ambientLight.color.copy(currentSkyColor);
             }
-
-            renderer.setClearColor(targetSkyColor);
-            scene.fog.color.copy(targetSkyColor);
-            
-            ambientLight.color.copy(targetSkyColor);
             
             // Sun color (stays thick, vibrant red and shifts to slightly brighter deep red)
             const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xcc1100), sunriseProgress);
@@ -2432,6 +2706,148 @@
                 }
             }
 
+            // Update Overtaking Black Cars Event
+            if (stage === 1) {
+                if (kilometersRemaining <= 40.0 && !overtakeEventStarted) {
+                    overtakeEventStarted = true;
+                    // Spawn 5 black cars behind the player
+                    for (let i = 0; i < 5; i++) {
+                        const carColor = 0x151515; // very dark/black car
+                        const mesh = createCarMesh(carColor);
+                        const lane = (i % 2 === 0) ? 4 : -4;
+                        const zPos = carGroup.position.z - 110 - i * 35;
+                        mesh.position.set(lane, 0.1, zPos);
+                        scene.add(mesh);
+                        
+                        overtakeCars.push({
+                            mesh: mesh,
+                            speed: 4.8 + Math.random() * 0.7,
+                            lane: lane
+                        });
+                    }
+                }
+                
+                if (overtakeEventStarted) {
+                    overtakeCars.forEach(car => {
+                        car.mesh.position.z += car.speed;
+                        const relZ = car.mesh.position.z - carGroup.position.z;
+                        if (relZ > 500) {
+                            scene.remove(car.mesh);
+                        }
+                    });
+                }
+            }
+
+            // Update Railway Crossing Cinematic Event
+            if (stage === 1) {
+                if (kilometersRemaining <= 35.0 && railwayCrossingState === 'none') {
+                    railwayCrossingState = 'approaching';
+                    railwayChunkIdx = currentChunkIndex + 1; // spawn crossing in the next chunk
+                    railwayZ = railwayChunkIdx * CHUNK_SIZE; // center of that chunk
+                }
+                
+                if (railwayCrossingState !== 'none' && railwayCrossingState !== 'completed') {
+                    const distToCrossing = railwayZ - carGroup.position.z;
+                    
+                    // 1. Approaching: gates start closing and warning lights flash when player is close
+                    if (railwayCrossingState === 'approaching') {
+                        if (distToCrossing < 160) {
+                            // Flash crossing lights
+                            if (Math.floor(time * 3.5) % 2 === 0) {
+                                if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
+                                if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
+                            } else {
+                                if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
+                                if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
+                            }
+                            
+                            // Slowly close gates
+                            gateAngle = Math.max(0, gateAngle - delta * 0.65);
+                            if (railwayGateL) railwayGateL.rotation.z = gateAngle;
+                            if (railwayGateR) railwayGateR.rotation.z = -gateAngle;
+                            
+                            if (gateAngle === 0) {
+                                railwayCrossingState = 'waiting';
+                                railwayTimer = 0;
+                            }
+                        }
+                    }
+                    
+                    // 2. Waiting for the train: gates closed, flashing continues, train horn plays near the end of 15 seconds
+                    else if (railwayCrossingState === 'waiting') {
+                        // Flashing lights
+                        if (Math.floor(time * 3.5) % 2 === 0) {
+                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
+                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
+                        } else {
+                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
+                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
+                        }
+                        
+                        railwayTimer += delta;
+                        
+                        // Play a loud train horn sound at 13 seconds
+                        if (railwayTimer > 12.8 && railwayTimer < 13.0) {
+                            playTrainHorn();
+                        }
+                        
+                        if (railwayTimer >= 15.0) {
+                            railwayCrossingState = 'train';
+                            railwayTimer = 0;
+                            trainX = -450;
+                            buildTrainGroup();
+                            scene.add(trainGroup);
+                        }
+                    }
+                    
+                    // 3. Train passing: gates closed, train zooms past for 25 seconds
+                    else if (railwayCrossingState === 'train') {
+                        // Flashing lights
+                        if (Math.floor(time * 3.5) % 2 === 0) {
+                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
+                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
+                        } else {
+                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
+                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
+                        }
+                        
+                        // Move train very fast
+                        trainX += 3.8; // zooms past
+                        if (trainGroup) trainGroup.position.x = trainX;
+                        
+                        railwayTimer += delta;
+                        if (railwayTimer >= 25.0) {
+                            if (trainGroup) {
+                                scene.remove(trainGroup);
+                                trainGroup = null;
+                            }
+                            railwayCrossingState = 'opening';
+                            railwayTimer = 0;
+                        }
+                    }
+                    
+                    // 4. Opening gates: gates open, lights stop flashing, traffic resumes
+                    else if (railwayCrossingState === 'opening') {
+                        // Turn off crossing lights
+                        if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
+                        if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
+                        
+                        // Slowly open gates
+                        gateAngle = Math.min(Math.PI / 2, gateAngle + delta * 0.65);
+                        if (railwayGateL) railwayGateL.rotation.z = gateAngle;
+                        if (railwayGateR) railwayGateR.rotation.z = -gateAngle;
+                        
+                        if (gateAngle === Math.PI / 2) {
+                            railwayCrossingState = 'completed';
+                            // Resume oncoming stopped vehicles
+                            crossingOncomingCars.forEach(car => {
+                                car.speed = -(0.8 + Math.random() * 0.4);
+                            });
+                        }
+                    }
+                }
+            }
+
             // Update traffic vehicles
             if (stage === 1) {
                 if (audioCtx && audioCtx.state === 'suspended') {
@@ -2580,6 +2996,15 @@
 
                 carGroup.position.x += Math.sin(carAngle) * carSpeed;
                 carGroup.position.z += Math.cos(carAngle) * carSpeed;
+                
+                // Railway Crossing Player Blocking Clamp
+                if (railwayCrossingState !== 'none' && railwayCrossingState !== 'completed' && railwayCrossingState !== 'opening') {
+                    if (carGroup.position.z > railwayZ - 16 && carGroup.position.z < railwayZ + 10) {
+                        carGroup.position.z = railwayZ - 16;
+                        carSpeed = 0;
+                    }
+                }
+                
                 carGroup.rotation.y = carAngle;
 
                 wheels.forEach(wheel => {
