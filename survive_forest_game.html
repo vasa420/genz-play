@@ -541,7 +541,19 @@
         let trainX = -450;
         let crossingSignalLight1 = null;
         let crossingSignalLight2 = null;
+        let trainSignalLightRed = null;
+        let trainSignalLightGreen = null;
+        let trainSignalState = 'red'; // 'red' or 'green'
+        let gateLights = []; // To store small flashing red LEDs on gate arms
         const crossingOncomingCars = [];
+
+        // Accident Rescue Scene Event State
+        let rescueSceneChunkIdx = -1;
+        let rescueSceneZ = -1;
+        let rescueSceneState = 'none'; // 'none', 'approaching', 'completed'
+        let rescueRedLights = []; // To store flashing red emergency lights
+        let rescueBlueLights = []; // To store flashing blue emergency lights
+        const smokeParticles = []; // To animate smoke from the crashed car
 
         function triggerLightning() {
             if (lightningLine) {
@@ -1297,67 +1309,194 @@
             const locoGroup = new THREE.Group();
             locoGroup.position.x = 0;
             
-            const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(20, 4.5, 3.2), new THREE.MeshLambertMaterial({ color: 0x1c3a63 }));
-            bodyMesh.position.y = 2.45;
+            // Massive body (width: 4.0, height: 6.0, length: 28)
+            const trainBodyMat = new THREE.MeshStandardMaterial({ 
+                color: 0x1a365d, // industrial steel blue
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            const trainAccentMat = new THREE.MeshStandardMaterial({
+                color: 0xe53e3e, // bold red stripe
+                metalness: 0.5,
+                roughness: 0.4
+            });
+            const metalGreyMat = new THREE.MeshStandardMaterial({
+                color: 0x4a5568,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            // Base chassis
+            const chassis = new THREE.Mesh(new THREE.BoxGeometry(27.8, 0.4, 3.9), metalGreyMat);
+            chassis.position.y = 0.8;
+            chassis.castShadow = true;
+            chassis.receiveShadow = true;
+            locoGroup.add(chassis);
+            
+            // Main engine body
+            const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(26, 4.2, 3.8), trainBodyMat);
+            bodyMesh.position.y = 3.1;
             bodyMesh.castShadow = true;
+            bodyMesh.receiveShadow = true;
             locoGroup.add(bodyMesh);
             
-            // Locomotive cabin
-            const cabinMesh = new THREE.Mesh(new THREE.BoxGeometry(7, 1.8, 3.2), new THREE.MeshLambertMaterial({ color: 0x122540 }));
-            cabinMesh.position.set(-5, 4.5 + 0.9 - 1.25, 0); // raised cabin at the back
-            cabinMesh.castShadow = true;
-            locoGroup.add(cabinMesh);
+            // Driver cabin window (windshield)
+            const windshieldMat = new THREE.MeshPhysicalMaterial({ 
+                color: 0x3182ce,
+                transparent: true,
+                opacity: 0.6,
+                roughness: 0.1,
+                transmission: 0.9,
+                thickness: 0.5
+            });
+            const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 3.2), windshieldMat);
+            windshield.position.set(13.0, 4.0, 0);
+            locoGroup.add(windshield);
             
-            // Train wheel cylinder geometry
-            const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 3.4, 8);
-            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-            for (let w = -8; w <= 8; w += 4) {
-                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-                wheel.rotation.x = Math.PI / 2;
-                wheel.position.set(w, 0.55, 0);
-                locoGroup.add(wheel);
-            }
+            // Cab roof (raised portion at the front-middle)
+            const cabinRoof = new THREE.Mesh(new THREE.BoxGeometry(8, 0.8, 3.8), trainBodyMat);
+            cabinRoof.position.set(9.0, 5.6, 0);
+            cabinRoof.castShadow = true;
+            locoGroup.add(cabinRoof);
             
-            // Headlight
-            const lightGeo = new THREE.SphereGeometry(0.4, 8, 8);
-            const lightMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            // Wedge cowcatcher (plow) at front bottom
+            const cowcatcherGeo = new THREE.ConeGeometry(2.3, 1.0, 4);
+            cowcatcherGeo.rotateX(Math.PI / 2);
+            cowcatcherGeo.rotateY(Math.PI / 4);
+            const cowcatcher = new THREE.Mesh(cowcatcherGeo, metalGreyMat);
+            cowcatcher.position.set(14.0, 0.7, 0);
+            cowcatcher.scale.set(1, 0.8, 1.8);
+            cowcatcher.castShadow = true;
+            locoGroup.add(cowcatcher);
+            
+            // Red accent stripe along the engine side
+            const stripeL = new THREE.Mesh(new THREE.BoxGeometry(25.8, 0.25, 0.05), trainAccentMat);
+            stripeL.position.set(-0.1, 2.5, 1.93);
+            locoGroup.add(stripeL);
+            
+            const stripeR = new THREE.Mesh(new THREE.BoxGeometry(25.8, 0.25, 0.05), trainAccentMat);
+            stripeR.position.set(-0.1, 2.5, -1.93);
+            locoGroup.add(stripeR);
+
+            // Exhaust pipes / horn details on roof
+            const pipeGeo = new THREE.CylinderGeometry(0.15, 0.2, 0.7, 8);
+            const pipe1 = new THREE.Mesh(pipeGeo, metalGreyMat);
+            pipe1.position.set(-3.0, 5.5, 0);
+            pipe1.castShadow = true;
+            locoGroup.add(pipe1);
+            
+            const pipe2 = new THREE.Mesh(pipeGeo, metalGreyMat);
+            pipe2.position.set(-6.0, 5.5, 0);
+            pipe2.castShadow = true;
+            locoGroup.add(pipe2);
+            
+            // 4 metal wheels bogies (front and back wheel sets)
+            const wheelGeo = new THREE.CylinderGeometry(0.72, 0.72, 4.1, 12);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
+            
+            // Front Bogie Wheels
+            const wheelSetF1 = new THREE.Mesh(wheelGeo, wheelMat);
+            wheelSetF1.rotation.x = Math.PI / 2;
+            wheelSetF1.position.set(8.5, 0.72, 0);
+            locoGroup.add(wheelSetF1);
+            
+            const wheelSetF2 = new THREE.Mesh(wheelGeo, wheelMat);
+            wheelSetF2.rotation.x = Math.PI / 2;
+            wheelSetF2.position.set(11.5, 0.72, 0);
+            locoGroup.add(wheelSetF2);
+            
+            // Rear Bogie Wheels
+            const wheelSetB1 = new THREE.Mesh(wheelGeo, wheelMat);
+            wheelSetB1.rotation.x = Math.PI / 2;
+            wheelSetB1.position.set(-8.5, 0.72, 0);
+            locoGroup.add(wheelSetB1);
+            
+            const wheelSetB2 = new THREE.Mesh(wheelGeo, wheelMat);
+            wheelSetB2.rotation.x = Math.PI / 2;
+            wheelSetB2.position.set(-11.5, 0.72, 0);
+            locoGroup.add(wheelSetB2);
+            
+            // Headlight sphere (emissive yellow)
+            const lightGeo = new THREE.SphereGeometry(0.5, 12, 12);
+            const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffee });
             const headlight = new THREE.Mesh(lightGeo, lightMat);
-            headlight.position.set(10.1, 2.8, 0);
+            headlight.position.set(13.92, 3.1, 0);
             locoGroup.add(headlight);
+            
+            // Add a dynamic spotlight representing the train's powerful headlight beams!
+            const spotlight = new THREE.SpotLight(0xfff0c2, 12, 160, Math.PI / 10, 0.4, 0.5);
+            spotlight.position.set(14.0, 3.1, 0);
+            
+            // Target ahead on the tracks
+            const targetObject = new THREE.Object3D();
+            targetObject.position.set(100.0, 3.1, 0);
+            locoGroup.add(targetObject);
+            spotlight.target = targetObject;
+            
+            spotlight.castShadow = true;
+            locoGroup.add(spotlight);
             
             trainGroup.add(locoGroup);
             
-            // 2. Carriage cars (30 cars linked behind locomotive)
-            const numCarriages = 30;
+            // 2. Carriage cars (20 massive carriages linked behind locomotive)
+            const numCarriages = 20; // 20 large detailed cars
             for (let i = 0; i < numCarriages; i++) {
                 const carriageGroup = new THREE.Group();
                 // Carriage X center behind locomotive
-                const carriageX = -10 - 1 - 9 - i * 19;
+                // Length is 25, spacing is 1
+                const carriageX = -14 - 1 - 12.5 - i * 26;
                 carriageGroup.position.x = carriageX;
                 
-                // Alternating color for visual contrast
-                const carriageColor = (i % 2 === 0) ? 0x6e1b1b : 0x7a7a7a; // red or grey carriages
-                const carriageBody = new THREE.Mesh(new THREE.BoxGeometry(18, 4.2, 3.2), new THREE.MeshLambertMaterial({ color: carriageColor }));
-                carriageBody.position.y = 2.3;
+                // Chassis
+                const cChassis = new THREE.Mesh(new THREE.BoxGeometry(25.8, 0.4, 3.9), metalGreyMat);
+                cChassis.position.y = 0.8;
+                cChassis.castShadow = true;
+                carriageGroup.add(cChassis);
+                
+                // Carriage Body
+                // Alternating color for visual contrast: rust red or cool silver grey
+                const carriageColor = (i % 2 === 0) ? 0x7c2d12 : 0x475569;
+                const carriageBody = new THREE.Mesh(new THREE.BoxGeometry(24, 4.4, 3.8), new THREE.MeshStandardMaterial({ 
+                    color: carriageColor,
+                    metalness: 0.6,
+                    roughness: 0.4
+                }));
+                carriageBody.position.y = 3.2;
                 carriageBody.castShadow = true;
+                carriageBody.receiveShadow = true;
                 carriageGroup.add(carriageBody);
                 
-                // Windows (row of small black boxes on both sides)
-                const windowGeo = new THREE.BoxGeometry(1.2, 0.8, 3.25);
-                const windowMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-                for (let wx = -7; wx <= 7; wx += 3.5) {
-                    const win = new THREE.Mesh(windowGeo, windowMat);
-                    win.position.set(wx, 2.7, 0);
+                // Add a bold white/grey stripe along the carriage body sides
+                const stripeGeo = new THREE.BoxGeometry(23.8, 0.2, 0.04);
+                const carriageStripeMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db });
+                
+                const cStripeL = new THREE.Mesh(stripeGeo, carriageStripeMat);
+                cStripeL.position.set(0, 4.0, 1.92);
+                carriageGroup.add(cStripeL);
+                
+                const cStripeR = new THREE.Mesh(stripeGeo, carriageStripeMat);
+                cStripeR.position.set(0, 4.0, -1.92);
+                carriageGroup.add(cStripeR);
+                
+                // Windows (row of small black glass boxes on both sides)
+                const windowGeo = new THREE.BoxGeometry(1.6, 1.0, 3.84);
+                const winMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.1 });
+                for (let wx = -9.0; wx <= 9.0; wx += 4.5) {
+                    const win = new THREE.Mesh(windowGeo, winMat);
+                    win.position.set(wx, 3.4, 0);
                     carriageGroup.add(win);
                 }
                 
-                // Carriage wheels
-                for (let cw = -7; cw <= 7; cw += 14) {
-                    const wheelL = new THREE.Mesh(wheelGeo, wheelMat);
-                    wheelL.rotation.x = Math.PI / 2;
-                    wheelL.position.set(cw, 0.55, 0);
-                    carriageGroup.add(wheelL);
-                }
+                // Bogies & Wheels for carriage
+                const wheelSetC1 = new THREE.Mesh(wheelGeo, wheelMat);
+                wheelSetC1.rotation.x = Math.PI / 2;
+                wheelSetC1.position.set(8.5, 0.72, 0);
+                carriageGroup.add(wheelSetC1);
+                
+                const wheelSetC2 = new THREE.Mesh(wheelGeo, wheelMat);
+                wheelSetC2.rotation.x = Math.PI / 2;
+                wheelSetC2.position.set(-8.5, 0.72, 0);
+                carriageGroup.add(wheelSetC2);
                 
                 trainGroup.add(carriageGroup);
             }
@@ -1724,189 +1863,608 @@
                     offset: Math.random() * 10
                 });
                 
-                // Spawn a rescue/cleanup scene right after the rain/storm stops
-                if (kilometersRemaining < 45.0 && !rescueSceneSpawned && index > 0) {
-                    // Create a fallen trunk lying flat
-                    const trunkGeo = new THREE.CylinderGeometry(0.35, 0.45, 12, 8);
-                    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
-                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                    trunk.rotation.z = Math.PI / 2; // lie flat
-                    trunk.position.set(11, 0.45, 0); // on the side of the road
-                    chunkGroup.add(trunk);
-                    
-                    // Foliage clump on the side
-                    const foliageMat = new THREE.MeshLambertMaterial({ color: 0x153d20 });
-                    const foliage = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 8), foliageMat);
-                    foliage.position.set(16, 1.2, 0);
-                    chunkGroup.add(foliage);
-                    
-                    // Spawn 6 workers around the tree
-                    const workerPositions = [
-                        { x: 9.2, z: -2, rx: 0.3 },
-                        { x: 10.5, z: 3, rx: 0.4 },
-                        { x: 12.8, z: -4, rx: 0.2 },
-                        { x: 11.2, z: 5, rx: 0.3 },
-                        { x: 8.5, z: 1, rx: 0.5 },
-                        { x: 13.5, z: 2, rx: 0.2 }
-                    ];
-                    
-                    workerPositions.forEach((pos, i) => {
-                        const worker = createPedestrianMesh();
-                        // Assign bright safety vest color (orange/yellow-green) for rescue workers!
-                        worker.children[0].material = new THREE.MeshLambertMaterial({ color: i % 2 === 0 ? 0xff4500 : 0xccff00 }); // safety orange/yellow
-                        worker.position.set(pos.x, 0.1, pos.z);
-                        worker.rotation.x = pos.rx; // bend over to clean/rescue the tree
-                        worker.rotation.y = Math.random() * Math.PI * 2;
-                        chunkGroup.add(worker);
+                // Spawn a rescue/cleanup scene at 15.0 KM
+                if (index === rescueSceneChunkIdx) {
+                    // 1. CRASHED CAR
+                    // Rusted dark red/grey, rotated, and dented, placed in the oncoming lane (around X = -4)
+                    const carBodyMat = new THREE.MeshStandardMaterial({
+                        color: 0x5a1818, // dark crashed red
+                        metalness: 0.6,
+                        roughness: 0.8
+                    });
+                    const metalBlackMat = new THREE.MeshStandardMaterial({
+                        color: 0x111111,
+                        metalness: 0.8,
+                        roughness: 0.4
                     });
                     
-                    // Add some orange traffic cones
-                    const coneGeo = new THREE.CylinderGeometry(0.02, 0.25, 0.6, 8);
-                    const coneMat = new THREE.MeshLambertMaterial({ color: 0xff4500 });
+                    const crashCarGroup = new THREE.Group();
+                    // Positioned at X = -2.5, Z = 5 (relative to chunk center)
+                    crashCarGroup.position.set(-2.5, 0.4, 5);
+                    
+                    // Crushed chassis
+                    const carChassis = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 4.2), metalBlackMat);
+                    crashCarGroup.add(carChassis);
+                    
+                    // Crushed body
+                    const carBody = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.8, 4.0), carBodyMat);
+                    carBody.position.y = 0.55;
+                    crashCarGroup.add(carBody);
+                    
+                    // Crushed cabin (deformed)
+                    const carCabin = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 2.2), carBodyMat);
+                    carCabin.position.set(0, 1.25, -0.4);
+                    carCabin.rotation.y = -0.15; // deformed
+                    crashCarGroup.add(carCabin);
+                    
+                    // Open hood (deformed engine compartment)
+                    const carHood = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 1.2), carBodyMat);
+                    carHood.position.set(0, 0.98, 1.4);
+                    carHood.rotation.x = -Math.PI / 4; // opened up
+                    crashCarGroup.add(carHood);
+                    
+                    // Wheels (skewed/crashed)
+                    const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.28, 8);
+                    
+                    const wheelFL = new THREE.Mesh(wheelGeo, metalBlackMat);
+                    wheelFL.rotation.z = Math.PI / 2;
+                    wheelFL.rotation.x = 0.4; // bent out
+                    wheelFL.position.set(-0.85, 0.35, 1.2);
+                    crashCarGroup.add(wheelFL);
+                    
+                    const wheelFR = new THREE.Mesh(wheelGeo, metalBlackMat);
+                    wheelFR.rotation.z = Math.PI / 2;
+                    wheelFR.rotation.y = -0.3; // bent in
+                    wheelFR.position.set(0.85, 0.35, 1.2);
+                    crashCarGroup.add(wheelFR);
+                    
+                    const wheelRL = new THREE.Mesh(wheelGeo, metalBlackMat);
+                    wheelRL.rotation.z = Math.PI / 2;
+                    wheelRL.position.set(-0.85, 0.35, -1.2);
+                    crashCarGroup.add(wheelRL);
+                    
+                    const wheelRR = new THREE.Mesh(wheelGeo, metalBlackMat);
+                    wheelRR.rotation.z = Math.PI / 2 + 0.35; // dislodged
+                    wheelRR.position.set(0.85, 0.45, -1.2);
+                    crashCarGroup.add(wheelRR);
+
+                    // Tilt the entire crashed car as if it slid/crashed
+                    crashCarGroup.rotation.set(-0.15, 0.45, 0.12);
+                    chunkGroup.add(crashCarGroup);
+                    crashedCar = crashCarGroup; // Keep global reference for smoke particles
+
+                    // 2. INJURED PERSON (Full blood on body, sitting next to driver's door)
+                    const injuredWorker = createPedestrianMesh();
+                    // Make their clothes full blood red!
+                    injuredWorker.children[0].material = new THREE.MeshLambertMaterial({ color: 0x8a0303 }); // deep blood red
+                    injuredWorker.position.set(-4.2, 0.05, 5.5);
+                    injuredWorker.rotation.set(Math.PI / 2, 0, Math.PI / 4); // slumped next to car door
+                    chunkGroup.add(injuredWorker);
+
+                    // 3. EMERGENCY VEHICLES
+                    // A. Police Car (with flashing red/blue light bars)
+                    const policeCarGroup = new THREE.Group();
+                    policeCarGroup.position.set(-3.2, 0.4, -9.0); // parked behind the crash
+                    policeCarGroup.rotation.y = 0.15; // angled slightly
+                    
+                    const polBodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.5, roughness: 0.3 }); // black
+                    const polDoorMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.3 }); // white door/roof
+                    
+                    // Police chassis
+                    const polChassis = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 4.2), metalBlackMat);
+                    policeCarGroup.add(polChassis);
+                    
+                    // Police body (black front/rear, white center)
+                    const polBodyF = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.8, 1.2), polBodyMat);
+                    polBodyF.position.set(0, 0.55, 1.4);
+                    policeCarGroup.add(polBodyF);
+                    
+                    const polBodyC = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.8, 1.8), polDoorMat);
+                    polBodyC.position.set(0, 0.55, -0.1);
+                    policeCarGroup.add(polBodyC);
+                    
+                    const polBodyR = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.8, 1.2), polBodyMat);
+                    polBodyR.position.set(0, 0.55, -1.4);
+                    policeCarGroup.add(polBodyR);
+                    
+                    const polCabin = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 2.0), polDoorMat);
+                    polCabin.position.set(0, 1.25, -0.2);
+                    policeCarGroup.add(polCabin);
+                    
+                    // Lightbar stand
+                    const barStand = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.08, 0.15), metalBlackMat);
+                    barStand.position.set(0, 1.6, -0.1);
+                    policeCarGroup.add(barStand);
+                    
+                    // Lightbar bulbs
+                    const redBulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+                    redBulb.position.set(-0.35, 1.68, -0.1);
+                    policeCarGroup.add(redBulb);
+                    rescueRedLights.push(redBulb);
+                    
+                    const blueBulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0x0000ff }));
+                    blueBulb.position.set(0.35, 1.68, -0.1);
+                    policeCarGroup.add(blueBulb);
+                    rescueBlueLights.push(blueBulb);
+                    
+                    // Police wheels
+                    for (let wz of [1.2, -1.2]) {
+                        for (let wx of [-0.85, 0.85]) {
+                            const wh = new THREE.Mesh(wheelGeo, metalBlackMat);
+                            wh.rotation.z = Math.PI / 2;
+                            wh.position.set(wx, 0.35, wz);
+                            policeCarGroup.add(wh);
+                        }
+                    }
+                    chunkGroup.add(policeCarGroup);
+
+                    // B. Ambulance (boxy white rescue truck)
+                    const ambGroup = new THREE.Group();
+                    ambGroup.position.set(-5.5, 0.5, 22.0); // parked ahead of the crash
+                    ambGroup.rotation.y = Math.PI - 0.2; // facing back towards player
+                    
+                    const ambMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4 });
+                    const redCrossMat = new THREE.MeshBasicMaterial({ color: 0xcc0000 });
+                    
+                    // Ambulance chassis
+                    const ambChassis = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 5.0), metalBlackMat);
+                    ambGroup.add(ambChassis);
+                    
+                    // Ambulance cab
+                    const ambCab = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.9, 1.6), ambMat);
+                    ambCab.position.set(0, 0.65, 1.6);
+                    ambGroup.add(ambCab);
+                    
+                    // Ambulance box
+                    const ambBox = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.7, 3.2), ambMat);
+                    ambBox.position.set(0, 1.15, -0.7);
+                    ambGroup.add(ambBox);
+                    
+                    // Red Cross on both sides
+                    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 0.8), redCrossMat);
+                    crossH.position.set(0.96, 1.15, -0.7);
+                    ambGroup.add(crossH);
+                    
+                    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.3), redCrossMat);
+                    crossV.position.set(0.96, 1.15, -0.7);
+                    ambGroup.add(crossV);
+                    
+                    const crossHL = crossH.clone();
+                    crossHL.position.x = -0.96;
+                    ambGroup.add(crossHL);
+                    
+                    const crossVL = crossV.clone();
+                    crossVL.position.x = -0.96;
+                    ambGroup.add(crossVL);
+                    
+                    // Ambulance Lightbar
+                    const ambLight1 = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+                    ambLight1.position.set(-0.55, 2.1, -0.7);
+                    ambGroup.add(ambLight1);
+                    rescueRedLights.push(ambLight1);
+                    
+                    const ambLight2 = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), new THREE.MeshBasicMaterial({ color: 0x0000ff }));
+                    ambLight2.position.set(0.55, 2.1, -0.7);
+                    ambGroup.add(ambLight2);
+                    rescueBlueLights.push(ambLight2);
+                    
+                    // Ambulance wheels
+                    const ambWheelGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.3, 8);
+                    for (let wz of [1.4, -1.4]) {
+                        for (let wx of [-0.95, 0.95]) {
+                            const wh = new THREE.Mesh(ambWheelGeo, metalBlackMat);
+                            wh.rotation.z = Math.PI / 2;
+                            wh.position.set(wx, 0.42, wz);
+                            ambGroup.add(wh);
+                        }
+                    }
+                    chunkGroup.add(ambGroup);
+
+                    // 4. OVER 40 PEOPLE (42 safety workers and civilians gathered around)
+                    const numRescuePeople = 42;
+                    for (let i = 0; i < numRescuePeople; i++) {
+                        const worker = createPedestrianMesh();
+                        
+                        // Radiate around the crashed car at (X = -2.5, Z = 5)
+                        const radius = 3.5 + Math.random() * 8.0;
+                        const angle = (i / numRescuePeople) * Math.PI * 2 + (Math.random() - 0.5) * 0.15;
+                        
+                        const px = -2.5 + Math.cos(angle) * radius;
+                        const pz = 5.0 + Math.sin(angle) * radius;
+                        
+                        worker.position.set(px, 0.1, pz);
+                        worker.lookAt(-2.5, 0.1, 5.0);
+                        
+                        // Mix safety workers (orange/yellow safety vests) and normal looking civilians
+                        if (i % 2 === 0) {
+                            worker.children[0].material = new THREE.MeshLambertMaterial({ color: i % 4 === 0 ? 0xff4500 : 0xccff00 }); // bright orange/neon green
+                            
+                            // Bend crouched workers near the crash
+                            if (radius < 5.0 && Math.random() < 0.6) {
+                                worker.rotation.x = 0.5; 
+                                worker.position.y = 0.05; 
+                            }
+                        } else {
+                            // Civilian onlookers
+                            const randomCol = carColors[Math.floor(Math.random() * carColors.length)];
+                            worker.children[0].material = new THREE.MeshLambertMaterial({ color: randomCol });
+                        }
+                        
+                        chunkGroup.add(worker);
+                    }
+
+                    // 5. ORANGE TRAFFIC CONES DIRECTING VEHICLES AROUND SCENE
+                    const coneGeo = new THREE.CylinderGeometry(0.02, 0.24, 0.6, 8);
+                    const coneMat = new THREE.MeshLambertMaterial({ color: 0xff5500 });
                     
                     const conePositions = [
-                        { x: 7.5, z: -10 },
-                        { x: 7.5, z: 0 },
-                        { x: 7.5, z: 10 }
+                        { x: -5.5, z: -25 },
+                        { x: -4.5, z: -18 },
+                        { x: -3.5, z: -11 },
+                        { x: -2.5, z: -4 },
+                        { x: -1.8, z: 3 },
+                        { x: -1.8, z: 10 },
+                        { x: -1.8, z: 17 },
+                        { x: -2.5, z: 24 },
+                        { x: -3.8, z: 31 },
+                        { x: -5.0, z: 38 }
                     ];
                     
                     conePositions.forEach(pos => {
                         const cone = new THREE.Mesh(coneGeo, coneMat);
                         cone.position.set(pos.x, 0.3, pos.z);
+                        cone.castShadow = true;
                         chunkGroup.add(cone);
+                        
+                        trafficVehicles.push({
+                            group: cone,
+                            speed: 0,
+                            lane: pos.x,
+                            type: 'cone',
+                            isRescueCone: true
+                        });
                     });
-                    
-                    rescueSceneSpawned = true;
                 }
 
                 // Build Railway Crossing if this is the designated crossing chunk
                 if (index === railwayChunkIdx) {
-                    // Build railway tracks at Z = 0 (relative to chunk center)
+                    // Reset gate lights list
+                    gateLights = [];
+
+                    // 1. BALLAST GRAVEL BED
+                    // A wide, slightly raised dark-grey bed under the track area
+                    const ballastGeo = new THREE.BoxGeometry(300, 0.08, 3.8);
+                    const ballastMat = new THREE.MeshLambertMaterial({ color: 0x2e2f33 }); // dark gravel color
+                    const ballast = new THREE.Mesh(ballastGeo, ballastMat);
+                    ballast.position.set(0, 0.04, 0);
+                    ballast.receiveShadow = true;
+                    chunkGroup.add(ballast);
+
+                    // 2. SLEEPERS (Wooden Ties)
+                    // High-quality wooden ties with dark-brown wood-texture material
+                    const tieGeo = new THREE.BoxGeometry(1.8, 0.16, 0.7);
+                    const tieMat = new THREE.MeshLambertMaterial({ color: 0x4a2e1b }); // rich dark brown wood
+                    const metalPlateGeo = new THREE.BoxGeometry(0.24, 0.02, 0.72);
+                    const metalPlateMat = new THREE.MeshLambertMaterial({ color: 0x555555 }); // tie plates
+                    
                     const trackGroup = new THREE.Group();
                     
-                    // Sleepers (wooden ties)
-                    const tieGeo = new THREE.BoxGeometry(1.6, 0.12, 0.8);
-                    const tieMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
-                    for (let tx = -150; tx <= 150; tx += 3.2) {
+                    for (let tx = -150; tx <= 150; tx += 2.8) { // closer spacing for realism
                         const tie = new THREE.Mesh(tieGeo, tieMat);
                         tie.position.set(tx, 0.08, 0);
+                        tie.castShadow = true;
+                        tie.receiveShadow = true;
                         trackGroup.add(tie);
+                        
+                        // Add tie plates under where the rails will go
+                        // Rail 1 is at Z = -0.48, Rail 2 is at Z = 0.48
+                        const plate1 = new THREE.Mesh(metalPlateGeo, metalPlateMat);
+                        plate1.position.set(tx, 0.17, -0.48);
+                        trackGroup.add(plate1);
+                        
+                        const plate2 = new THREE.Mesh(metalPlateGeo, metalPlateMat);
+                        plate2.position.set(tx, 0.17, 0.48);
+                        trackGroup.add(plate2);
                     }
                     
-                    // Steel Rails
-                    const railGeo = new THREE.BoxGeometry(300, 0.15, 0.1);
-                    const railMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+                    // 3. STEEL RAILS WITH PROPER PROFILE (Bottom flange, middle web, top head)
+                    const railMat = new THREE.MeshStandardMaterial({ 
+                        color: 0x888c94, 
+                        metalness: 0.9, 
+                        roughness: 0.2, 
+                        emissive: 0x111112 
+                    });
                     
-                    const rail1 = new THREE.Mesh(railGeo, railMat);
-                    rail1.position.set(0, 0.16, -0.45);
+                    // Create rail profile helper function
+                    function createSteelRail(zPos) {
+                        const railGroup = new THREE.Group();
+                        
+                        // Base flange (wide and thin)
+                        const baseGeo = new THREE.BoxGeometry(300, 0.03, 0.18);
+                        const base = new THREE.Mesh(baseGeo, railMat);
+                        base.position.set(0, 0.18 + 0.015, zPos);
+                        base.receiveShadow = true;
+                        railGroup.add(base);
+                        
+                        // Web (middle thin vertical wall)
+                        const webGeo = new THREE.BoxGeometry(300, 0.12, 0.05);
+                        const web = new THREE.Mesh(webGeo, railMat);
+                        web.position.set(0, 0.18 + 0.03 + 0.06, zPos);
+                        web.receiveShadow = true;
+                        railGroup.add(web);
+                        
+                        // Head (top narrow block)
+                        const headGeo = new THREE.BoxGeometry(300, 0.07, 0.1);
+                        const head = new THREE.Mesh(headGeo, railMat);
+                        head.position.set(0, 0.18 + 0.15 + 0.035, zPos);
+                        head.castShadow = true;
+                        head.receiveShadow = true;
+                        railGroup.add(head);
+                        
+                        return railGroup;
+                    }
+                    
+                    const rail1 = createSteelRail(-0.48);
                     trackGroup.add(rail1);
-                    
-                    const rail2 = new THREE.Mesh(railGeo, railMat);
-                    rail2.position.set(0, 0.16, 0.45);
+                    const rail2 = createSteelRail(0.48);
                     trackGroup.add(rail2);
-                    
                     chunkGroup.add(trackGroup);
 
-                    // Crossing Signal Post & Lights (Left and Right)
-                    const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 4.5, 8);
-                    const postMat = new THREE.MeshLambertMaterial({ color: 0xdd8800 }); // orange warning color
+                    // 4. PAVED LEVEL CROSSING PANELS (Rubber/concrete panels between and flanking the rails)
+                    // Spans across the road. Road width is 24.
+                    const panelMat = new THREE.MeshLambertMaterial({ color: 0x222222 }); // dark rubber/asphalt panels
                     
-                    // Left Post
-                    const postL = new THREE.Mesh(postGeo, postMat);
-                    postL.position.set(7.5, 2.25, -14);
-                    chunkGroup.add(postL);
+                    // Panel between the rails (Z = -0.40 to 0.40, X = -12 to 12)
+                    const centerPanelGeo = new THREE.BoxGeometry(24, 0.28, 0.82);
+                    const centerPanel = new THREE.Mesh(centerPanelGeo, panelMat);
+                    centerPanel.position.set(0, 0.14 + 0.08, 0); // raised to be flush
+                    centerPanel.receiveShadow = true;
+                    chunkGroup.add(centerPanel);
                     
-                    // Right Post
-                    const postR = new THREE.Mesh(postGeo, postMat);
-                    postR.position.set(-7.5, 2.25, 14);
-                    chunkGroup.add(postR);
+                    // Side panel 1 (outer Z = -0.9 to -0.52)
+                    const sidePanelGeo = new THREE.BoxGeometry(24, 0.28, 0.38);
+                    const sidePanel1 = new THREE.Mesh(sidePanelGeo, panelMat);
+                    sidePanel1.position.set(0, 0.14 + 0.08, -0.71);
+                    sidePanel1.receiveShadow = true;
+                    chunkGroup.add(sidePanel1);
                     
-                    // Crossbuck Sign ("X") on top of posts
-                    const cbMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+                    // Side panel 2 (outer Z = 0.52 to 0.9)
+                    const sidePanel2 = new THREE.Mesh(sidePanelGeo, panelMat);
+                    sidePanel2.position.set(0, 0.14 + 0.08, 0.71);
+                    sidePanel2.receiveShadow = true;
+                    chunkGroup.add(sidePanel2);
+
+                    // 5. DETAILED ROAD SIGNALS (Crossing Signal Posts, Crossbucks, Lights, and Bell)
+                    const signalPostMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 }); // silver mast
+                    const signalBackingMat = new THREE.MeshLambertMaterial({ color: 0x111111 }); // black backing board
+                    const signalOffMat = new THREE.MeshBasicMaterial({ color: 0x330000 }); // dark red when off
+                    const crossbuckMat = new THREE.MeshLambertMaterial({ color: 0xeeeeee }); // white crossbuck
+                    const bellMat = new THREE.MeshStandardMaterial({ color: 0x999900, metalness: 0.8, roughness: 0.3 }); // brass bell
+
+                    function buildRoadSignalPost(posX, posZ, isLeft) {
+                        const signalPostGroup = new THREE.Group();
+                        signalPostGroup.position.set(posX, 0, posZ);
+                        
+                        // Vertical post mast
+                        const postMast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 4.8, 12), signalPostMat);
+                        postMast.position.y = 2.4;
+                        postMast.castShadow = true;
+                        signalPostGroup.add(postMast);
+                        
+                        // Foundation base
+                        const postBase = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.4, 8), signalPostMat);
+                        postBase.position.y = 0.2;
+                        postBase.castShadow = true;
+                        signalPostGroup.add(postBase);
+                        
+                        // Crossbar for lights (horizontal pipe)
+                        const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.0, 8), signalPostMat);
+                        crossbar.rotation.z = Math.PI / 2;
+                        crossbar.position.set(0, 3.2, isLeft ? 0.3 : -0.3); // offset towards road
+                        crossbar.castShadow = true;
+                        signalPostGroup.add(crossbar);
+                        
+                        // Backing shields (left and right on crossbar)
+                        const shieldL = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.05, 16), signalBackingMat);
+                        shieldL.rotation.x = Math.PI / 2;
+                        shieldL.position.set(-0.7, 3.2, isLeft ? 0.35 : -0.35);
+                        signalPostGroup.add(shieldL);
+                        
+                        const shieldR = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.05, 16), signalBackingMat);
+                        shieldR.rotation.x = Math.PI / 2;
+                        shieldR.position.set(0.7, 3.2, isLeft ? 0.35 : -0.35);
+                        signalPostGroup.add(shieldR);
+                        
+                        // Signal bulbs
+                        const bulbGeo = new THREE.SphereGeometry(0.18, 12, 12);
+                        const lightL = new THREE.Mesh(bulbGeo, signalOffMat.clone());
+                        lightL.position.set(-0.7, 3.2, isLeft ? 0.42 : -0.42);
+                        signalPostGroup.add(lightL);
+                        
+                        const lightR = new THREE.Mesh(bulbGeo, signalOffMat.clone());
+                        lightR.position.set(0.7, 3.2, isLeft ? 0.42 : -0.42);
+                        signalPostGroup.add(lightR);
+                        
+                        // Keep reference to flashing lights
+                        if (isLeft) {
+                            crossingSignalLight1 = lightL;
+                            crossingSignalLight2 = lightR;
+                        }
+                        
+                        // Crossbuck Signs (X on top)
+                        const cb1 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.06), crossbuckMat);
+                        cb1.rotation.z = Math.PI / 4;
+                        cb1.position.set(0, 4.4, isLeft ? 0.1 : -0.1);
+                        cb1.castShadow = true;
+                        signalPostGroup.add(cb1);
+                        
+                        const cb2 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.06), crossbuckMat);
+                        cb2.rotation.z = -Math.PI / 4;
+                        cb2.position.set(0, 4.4, isLeft ? 0.1 : -0.1);
+                        cb2.castShadow = true;
+                        signalPostGroup.add(cb2);
+                        
+                        // Yellow/orange circular backing board
+                        const retroSign = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.04, 16), new THREE.MeshStandardMaterial({ color: 0xdd8800, roughness: 0.4 }));
+                        retroSign.rotation.x = Math.PI / 2;
+                        retroSign.position.set(0, 2.0, isLeft ? 0.2 : -0.2);
+                        retroSign.castShadow = true;
+                        signalPostGroup.add(retroSign);
+                        
+                        // Bell housing on top
+                        const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.3, 12), bellMat);
+                        bell.position.y = 4.9;
+                        bell.castShadow = true;
+                        signalPostGroup.add(bell);
+                        
+                        return signalPostGroup;
+                    }
                     
-                    const cbLeft1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
-                    cbLeft1.rotation.z = Math.PI / 4;
-                    cbLeft1.position.set(7.5, 4.2, -14);
-                    chunkGroup.add(cbLeft1);
+                    const roadSignalL = buildRoadSignalPost(8.2, -1.8, true);
+                    chunkGroup.add(roadSignalL);
                     
-                    const cbLeft2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
-                    cbLeft2.rotation.z = -Math.PI / 4;
-                    cbLeft2.position.set(7.5, 4.2, -14);
-                    chunkGroup.add(cbLeft2);
+                    const roadSignalR = buildRoadSignalPost(-8.2, 1.8, false);
+                    chunkGroup.add(roadSignalR);
+
+                    // 6. DETAILED 3D CROSSING GATES
+                    const gateBaseMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
                     
-                    const cbRight1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
-                    cbRight1.rotation.z = Math.PI / 4;
-                    cbRight1.position.set(-7.5, 4.2, 14);
-                    chunkGroup.add(cbRight1);
+                    function buildCrossingGate(posX, posZ, isLeft) {
+                        const gateGroup = new THREE.Group();
+                        gateGroup.position.set(posX, 0, posZ);
+                        
+                        // Gate motor box base
+                        const baseBox = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.7), gateBaseMat);
+                        baseBox.position.y = 0.55;
+                        baseBox.castShadow = true;
+                        gateGroup.add(baseBox);
+                        
+                        // Axle cylinder
+                        const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.9, 12), signalPostMat);
+                        axle.rotation.x = Math.PI / 2;
+                        axle.position.set(isLeft ? -0.4 : 0.4, 0.85, 0);
+                        axle.castShadow = true;
+                        gateGroup.add(axle);
+                        
+                        // Arm pivot group
+                        const armPivotGroup = new THREE.Group();
+                        armPivotGroup.position.set(isLeft ? -0.4 : 0.4, 0.85, 0);
+                        
+                        // Counterweight structure
+                        const counter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 0.55), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+                        counter.position.set(isLeft ? 0.9 : -0.9, 0, 0);
+                        counter.castShadow = true;
+                        armPivotGroup.add(counter);
+                        
+                        // Striped arm mesh
+                        const segmentLen = 1.1;
+                        const armZSize = 0.12;
+                        const armYSize = 0.28;
+                        const numSegments = 8;
+                        
+                        const redMat = new THREE.MeshLambertMaterial({ color: 0xee2222 });
+                        const whiteMat = new THREE.MeshLambertMaterial({ color: 0xeeeeee });
+                        
+                        for (let s = 0; s < numSegments; s++) {
+                            const segMat = (s % 2 === 0) ? redMat : whiteMat;
+                            const segment = new THREE.Mesh(new THREE.BoxGeometry(segmentLen, armYSize, armZSize), segMat);
+                            const dirX = isLeft ? -1 : 1;
+                            segment.position.set(dirX * (segmentLen/2 + s * segmentLen), 0, 0);
+                            segment.castShadow = true;
+                            armPivotGroup.add(segment);
+                            
+                            // Add warning LEDs on top of the arm
+                            if (s === 1 || s === 4 || s === 7) {
+                                const gateLed = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), signalOffMat.clone());
+                                gateLed.position.set(dirX * (segmentLen/2 + s * segmentLen), armYSize/2 + 0.05, 0);
+                                armPivotGroup.add(gateLed);
+                                gateLights.push({
+                                    mesh: gateLed,
+                                    type: (s === 7) ? 'steady' : 'alternate'
+                                });
+                            }
+                        }
+                        
+                        gateGroup.add(armPivotGroup);
+                        
+                        return {
+                            group: gateGroup,
+                            pivot: armPivotGroup
+                        };
+                    }
                     
-                    const cbRight2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.08), cbMat);
-                    cbRight2.rotation.z = -Math.PI / 4;
-                    cbRight2.position.set(-7.5, 4.2, 14);
-                    chunkGroup.add(cbRight2);
+                    const gateLObj = buildCrossingGate(8.2, -1.8, true);
+                    railwayGateL = gateLObj.pivot;
+                    chunkGroup.add(gateLObj.group);
                     
-                    // Circular orange signs (like in image)
-                    const signGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.06, 16);
-                    signGeo.rotateX(Math.PI / 2);
-                    const signMat = new THREE.MeshLambertMaterial({ color: 0xdd8800 });
+                    const gateRObj = buildCrossingGate(-8.2, 1.8, false);
+                    railwayGateR = gateRObj.pivot;
+                    chunkGroup.add(gateRObj.group);
                     
-                    const signL = new THREE.Mesh(signGeo, signMat);
-                    signL.position.set(7.5, 3.2, -14);
-                    chunkGroup.add(signL);
-                    
-                    const signR = new THREE.Mesh(signGeo, signMat);
-                    signR.position.set(-7.5, 3.2, 14);
-                    chunkGroup.add(signR);
-                    
-                    // Signal Lights (2 red spheres that will alternate flash)
-                    const signalGeo = new THREE.SphereGeometry(0.24, 8, 8);
-                    const signalOffMat = new THREE.MeshBasicMaterial({ color: 0x330000 });
-                    
-                    crossingSignalLight1 = new THREE.Mesh(signalGeo, signalOffMat.clone());
-                    crossingSignalLight1.position.set(7.1, 2.5, -13.85);
-                    chunkGroup.add(crossingSignalLight1);
-                    
-                    crossingSignalLight2 = new THREE.Mesh(signalGeo, signalOffMat.clone());
-                    crossingSignalLight2.position.set(7.9, 2.5, -13.85);
-                    chunkGroup.add(crossingSignalLight2);
-                    
-                    // Gate arm pivots (Left and Right)
-                    gateAngle = Math.PI / 2; // start open (pointing UP)
-                    
-                    railwayGateL = new THREE.Group();
-                    railwayGateL.position.set(7.5, 0.8, -14);
-                    
-                    const armMeshL = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 0.15), new THREE.MeshLambertMaterial({ color: 0xff4500 }));
-                    armMeshL.position.x = -4.0; // offset so pivot point is at X = 7.5
-                    railwayGateL.add(armMeshL);
+                    // Initialize angles
+                    gateAngle = Math.PI / 2;
                     railwayGateL.rotation.z = gateAngle;
-                    chunkGroup.add(railwayGateL);
-                    
-                    railwayGateR = new THREE.Group();
-                    railwayGateR.position.set(-7.5, 0.8, 14);
-                    
-                    const armMeshR = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 0.15), new THREE.MeshLambertMaterial({ color: 0xff4500 }));
-                    armMeshR.position.x = 4.0; // offset so pivot point is at X = -7.5
-                    railwayGateR.add(armMeshR);
                     railwayGateR.rotation.z = -gateAngle;
-                    chunkGroup.add(railwayGateR);
+
+                    // 7. BRAND NEW TRACKSIDE TRAIN SIGNAL
+                    // Located to the left of the road (X = -16) and slightly before tracks (Z = -2.8), facing oncoming train.
+                    const trainSignalPost = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.0, 8), signalPostMat);
+                    trainSignalPost.position.set(-16, 2.0, -2.8);
+                    trainSignalPost.castShadow = true;
+                    chunkGroup.add(trainSignalPost);
                     
-                    // Spawn waiting vehicles queue on the oncoming lane (X = -4, Z > 14)
-                    crossingOncomingCars.length = 0; // reset
+                    // Train signal head
+                    const trainSignalHead = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.6, 0.18), signalBackingMat);
+                    trainSignalHead.position.set(-16, 3.4, -2.8);
+                    trainSignalHead.rotation.y = Math.PI / 2; // facing west (negative X) where train comes from
+                    trainSignalHead.castShadow = true;
+                    chunkGroup.add(trainSignalHead);
+                    
+                    // Visors
+                    const visorGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.25, 12, 1, true);
+                    visorGeo.rotateX(Math.PI / 2);
+                    const visor1 = new THREE.Mesh(visorGeo, signalBackingMat);
+                    visor1.position.set(-15.8, 3.8, -2.8);
+                    visor1.rotation.y = Math.PI / 2;
+                    chunkGroup.add(visor1);
+                    
+                    const visor2 = new THREE.Mesh(visorGeo, signalBackingMat);
+                    visor2.position.set(-15.8, 3.0, -2.8);
+                    visor2.rotation.y = Math.PI / 2;
+                    chunkGroup.add(visor2);
+                    
+                    // Lights (Red top, Green bottom)
+                    const redLightMat = new THREE.MeshBasicMaterial({ color: 0x330000 });
+                    const greenLightMat = new THREE.MeshBasicMaterial({ color: 0x003300 });
+                    
+                    trainSignalLightRed = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), redLightMat);
+                    trainSignalLightRed.position.set(-15.82, 3.8, -2.8);
+                    chunkGroup.add(trainSignalLightRed);
+                    
+                    trainSignalLightGreen = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), greenLightMat);
+                    trainSignalLightGreen.position.set(-15.82, 3.0, -2.8);
+                    chunkGroup.add(trainSignalLightGreen);
+                    
+                    // Set default train signal state
+                    trainSignalState = 'red';
+                    trainSignalLightRed.material.color.setHex(0xff0000);
+                    trainSignalLightGreen.material.color.setHex(0x003300);
+
+                    // 8. SPAWN WAITING VEHICLES QUEUE (On oncoming lane: X = -4, Z > 14)
+                    crossingOncomingCars.length = 0;
                     const oncomingQueues = [26, 46, 66];
                     oncomingQueues.forEach(zOffset => {
                         const carColor = carColors[Math.floor(Math.random() * carColors.length)];
                         const stoppedCar = createCarMesh(carColor);
                         stoppedCar.position.set(-4, 0.1, zOffset);
-                        stoppedCar.rotation.y = Math.PI; // facing oncoming
+                        stoppedCar.rotation.y = Math.PI;
                         chunkGroup.add(stoppedCar);
                         
-                        // We wrap this group in a vehicle object to resume later
                         crossingOncomingCars.push({
                             group: stoppedCar,
                             speed: 0
                         });
                         
-                        // Add to main trafficVehicles array as well so it updates sound / collisions!
                         trafficVehicles.push({
                             group: stoppedCar,
                             speed: 0,
@@ -1928,35 +2486,8 @@
             }
         }
 
-        // Realistic Mountain Range (far background)
+        // Realistic Mountain Range (far background) - Removed
         const mountains = [];
-        const mountainMat = new THREE.MeshLambertMaterial({ color: 0x22262d });
-        const snowMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-        const mountGeo = new THREE.ConeGeometry(50, 110, 5);
-        const snowGeo = new THREE.ConeGeometry(15, 33, 5);
-
-        mountGeo.translate(0, 55, 0);
-        snowGeo.translate(0, 93.5, 0);
-
-        for (let i = 0; i < 7; i++) {
-            const mountGroup = new THREE.Group();
-            
-            const base = new THREE.Mesh(mountGeo, mountainMat);
-            mountGroup.add(base);
-
-            const peak = new THREE.Mesh(snowGeo, snowMat);
-            mountGroup.add(peak);
-
-            const mx = -200 + i * 60 + (Math.random() - 0.5) * 20;
-            const mz = 250 + (Math.random() - 0.5) * 30; // Move mountains ahead of the driving path
-            const scale = 0.75 + Math.random() * 0.5;
-            
-            mountGroup.scale.set(scale, scale, scale);
-            mountGroup.position.set(mx, -5, mz);
-            mountGroup.userData = { relativeZ: mz - (-120) };
-            scene.add(mountGroup);
-            mountains.push(mountGroup);
-        }
 
         // Floating Clouds
         const clouds = [];
@@ -2274,9 +2805,8 @@
                 hudSub.innerText = `TIME: ${hrStr}:${minStr} AM`;
             }
 
-            const isStormActive = (kilometersRemaining <= 65.0 && kilometersRemaining >= 45.0) || stage === 3;
-
-
+            const isStormActive = (kilometersRemaining <= 20.0 && kilometersRemaining >= 10.0) || stage === 3;
+            const isPreStorm = (kilometersRemaining <= 25.0 && kilometersRemaining > 20.0);
 
             // ── Animate Environment ──────────────────────────
             // Drift clouds
@@ -2292,11 +2822,24 @@
             // Dynamic Sunrise & Sun Waking Up over Mountains (rising slowly over 10 minutes)
             const sunriseProgress = Math.min(1.0, time / 600.0); 
             
-            // Interpolate wind and bend parameters smoothly based on isStormActive
-            const targetWindX = isStormActive ? -65.0 : -3.0; // gentle breeze after storm
-            const targetFallSpeed = isStormActive ? -80.0 : -20.0;
-            const targetBendAmp = isStormActive ? 0.38 : 0.08;
-            const targetBendFreq = isStormActive ? 9.0 : 3.0;
+            // Interpolate wind and bend parameters smoothly based on active phases
+            let targetWindX = -3.0;
+            let targetFallSpeed = -20.0;
+            let targetBendAmp = 0.08;
+            let targetBendFreq = 3.0;
+
+            if (isStormActive) {
+                targetWindX = -85.0; // heavy wind
+                targetFallSpeed = -110.0; // sharp rain
+                targetBendAmp = 0.45; // heavy bending
+                targetBendFreq = 12.0;
+            } else if (isPreStorm) {
+                // progressive wind build-up
+                targetWindX = -25.0;
+                targetFallSpeed = -35.0;
+                targetBendAmp = 0.18;
+                targetBendFreq = 5.0;
+            }
             
             currentWindX += (targetWindX - currentWindX) * delta * 1.2;
             currentFallSpeed += (targetFallSpeed - currentFallSpeed) * delta * 1.2;
@@ -2310,27 +2853,39 @@
             let targetFogDensity = 0.007; // normal morning fog density
             
             if (isStormActive) {
-                // Storm interpolation (dark black sky, low lights)
-                targetSkyColor = new THREE.Color(0x020204);
-                targetAmbient = 0.12;
-                targetSunLight = 0.08;
-                targetFogDensity = 0.015; // thick storm fog
+                // Gloomy storm atmosphere (a little bit dark)
+                targetSkyColor = new THREE.Color(0x181a20);
+                targetAmbient = 0.25;
+                targetSunLight = 0.15;
+                targetFogDensity = 0.012; // storm fog
                 
-                // Scale down sun so it disappears (covered by black clouds)
+                // Scale down sun so it disappears (covered by clouds)
                 sunMesh.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 2.0);
                 
-                // Random lightning strikes (about every 3-5 seconds)
+                // Random lightning strikes
                 if (Math.random() < 0.0055 && !lightningLine) {
                     triggerLightning();
                 }
                 
-                // Lerp clouds color to dark storm black
-                cloudMat.color.lerp(new THREE.Color(0x101015), delta * 2.0);
+                // Clouds color to dark grey
+                cloudMat.color.lerp(new THREE.Color(0x1c1e22), delta * 2.0);
+            } else if (isPreStorm) {
+                // Slowly getting dark atmosphere
+                targetSkyColor = new THREE.Color(0x030305); // very dark charcoal
+                targetAmbient = 0.06;
+                targetSunLight = 0.04;
+                targetFogDensity = 0.012;
+                
+                // Scale down sun so it gets covered
+                sunMesh.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 1.5);
+                
+                // Clouds color turning dark storm black
+                cloudMat.color.lerp(new THREE.Color(0x101015), delta * 1.5);
             } else {
-                // Scale sun back to normal (revealed after black clouds disappear)
+                // Scale sun back to normal
                 sunMesh.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 2.0);
                 
-                if (kilometersRemaining < 45.0) {
+                if (kilometersRemaining < 10.0) {
                     // Post-storm: bright clear day atmosphere
                     targetSkyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0xa6c8e0), sunriseProgress);
                     targetAmbient = 0.75 + sunriseProgress * 0.1;
@@ -2340,7 +2895,7 @@
                     // Lerp clouds color to bright white
                     cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
                 } else {
-                    // Pre-storm: normal morning sunrise
+                    // Pre-storm: normal morning sunrise (when > 25.0 KM)
                     targetSkyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
                     targetAmbient = 0.15 + sunriseProgress * 0.5;
                     targetSunLight = 0.2 + sunriseProgress * 1.0;
@@ -2738,6 +3293,63 @@
                 }
             }
 
+            // Update Accident Rescue Event Trigger
+            if (stage === 1) {
+                if (kilometersRemaining <= 15.0 && rescueSceneState === 'none') {
+                    rescueSceneState = 'approaching';
+                    rescueSceneChunkIdx = currentChunkIndex + 1; // spawn rescue in the next chunk
+                    rescueSceneZ = rescueSceneChunkIdx * CHUNK_SIZE; // center of that chunk
+                }
+            }
+
+            // Update Accident Rescue Flashing Lights & Smoke
+            if (stage === 1 && rescueSceneState !== 'none') {
+                const isFlashTick = Math.floor(time * 8) % 2 === 0;
+                
+                // Toggle red and blue lights
+                rescueRedLights.forEach(light => {
+                    light.material.color.setHex(isFlashTick ? 0xff0000 : 0x220000);
+                });
+                rescueBlueLights.forEach(light => {
+                    light.material.color.setHex(isFlashTick ? 0x000022 : 0x0000ff);
+                });
+
+                // Spawn smoke particles from crashed car engine compartment
+                if (crashedCar && Math.random() < 0.25 && smokeParticles.length < 40) {
+                    const smokeGeo = new THREE.SphereGeometry(0.18 + Math.random() * 0.15, 8, 8);
+                    const smokeMat = new THREE.MeshLambertMaterial({
+                        color: 0xcccccc,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    const particle = new THREE.Mesh(smokeGeo, smokeMat);
+                    particle.position.set(-2.5 + (Math.random() - 0.5) * 0.4, 0.9, rescueSceneZ + 5 + (Math.random() - 0.5) * 0.4);
+                    scene.add(particle);
+                    smokeParticles.push({
+                        mesh: particle,
+                        velocity: new THREE.Vector3((Math.random() - 0.5) * 0.4, 1.2 + Math.random() * 0.8, (Math.random() - 0.5) * 0.4),
+                        opacity: 0.6,
+                        scaleSpeed: 0.6
+                    });
+                }
+            }
+
+            // Animate existing smoke particles
+            for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                const p = smokeParticles[i];
+                p.mesh.position.addScaledVector(p.velocity, delta);
+                // Drift with storm wind
+                p.mesh.position.x += currentWindX * 0.05 * delta; 
+                p.opacity -= delta * 0.35;
+                p.mesh.material.opacity = p.opacity;
+                p.mesh.scale.addScalar(p.scaleSpeed * delta);
+                
+                if (p.opacity <= 0) {
+                    scene.remove(p.mesh);
+                    smokeParticles.splice(i, 1);
+                }
+            }
+
             // Update Railway Crossing Cinematic Event
             if (stage === 1) {
                 if (kilometersRemaining <= 35.0 && railwayCrossingState === 'none') {
@@ -2748,23 +3360,48 @@
                 
                 if (railwayCrossingState !== 'none' && railwayCrossingState !== 'completed') {
                     const distToCrossing = railwayZ - carGroup.position.z;
-                    
-                    // 1. Approaching: gates start closing and warning lights flash when player is close
+                    const isTick = Math.floor(time * 3.5) % 2 === 0;
+
+                    // A. WARNING LIGHTS FLASHING ANIMATION
+                    // Flash road signals and gate arm LEDs if gates are active (approaching, waiting, or train)
+                    if (railwayCrossingState === 'approaching' || railwayCrossingState === 'waiting' || railwayCrossingState === 'train') {
+                        if (isTick) {
+                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
+                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
+                        } else {
+                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
+                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
+                        }
+                        
+                        gateLights.forEach(light => {
+                            if (light.type === 'steady') {
+                                light.mesh.material.color.setHex(0xff0000);
+                            } else {
+                                light.mesh.material.color.setHex(isTick ? 0xff0000 : 0x330000);
+                            }
+                        });
+                    } else {
+                        // Turn off warning lights
+                        if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
+                        if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
+                        gateLights.forEach(light => {
+                            light.mesh.material.color.setHex(0x330000);
+                        });
+                    }
+
+                    // B. STATE MACHINE UPDATES
+                    // 1. Approaching: gates start closing when player is close
                     if (railwayCrossingState === 'approaching') {
                         if (distToCrossing < 160) {
-                            // Flash crossing lights
-                            if (Math.floor(time * 3.5) % 2 === 0) {
-                                if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
-                                if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
-                            } else {
-                                if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
-                                if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
-                            }
-                            
-                            // Slowly close gates
-                            gateAngle = Math.max(0, gateAngle - delta * 0.65);
+                            // Slowly close gates (speed 0.5)
+                            gateAngle = Math.max(0, gateAngle - delta * 0.5);
                             if (railwayGateL) railwayGateL.rotation.z = gateAngle;
                             if (railwayGateR) railwayGateR.rotation.z = -gateAngle;
+                            
+                            // Keep train signal RED
+                            if (trainSignalLightRed) trainSignalLightRed.material.color.setHex(0xff0000);
+                            if (trainSignalLightGreen) trainSignalLightGreen.material.color.setHex(0x003300);
+                            trainSignalState = 'red';
                             
                             if (gateAngle === 0) {
                                 railwayCrossingState = 'waiting';
@@ -2773,50 +3410,43 @@
                         }
                     }
                     
-                    // 2. Waiting for the train: gates closed, flashing continues, train horn plays near the end of 15 seconds
+                    // 2. Waiting for the train: gates closed, wait brief delay, turn train signal green, play horn, dispatch train
                     else if (railwayCrossingState === 'waiting') {
-                        // Flashing lights
-                        if (Math.floor(time * 3.5) % 2 === 0) {
-                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
-                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
-                        } else {
-                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
-                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
-                        }
-                        
                         railwayTimer += delta;
                         
-                        // Play a loud train horn sound at 13 seconds
-                        if (railwayTimer > 12.8 && railwayTimer < 13.0) {
-                            playTrainHorn();
+                        // Turn train signal green after 1.2s of gate being closed
+                        if (railwayTimer >= 1.2 && trainSignalState === 'red') {
+                            trainSignalState = 'green';
+                            if (trainSignalLightRed) trainSignalLightRed.material.color.setHex(0x330000);
+                            if (trainSignalLightGreen) trainSignalLightGreen.material.color.setHex(0x00ff00);
                         }
                         
-                        if (railwayTimer >= 15.0) {
+                        // Dispatch train 0.8s later (at 2.0s)
+                        if (railwayTimer >= 2.0) {
                             railwayCrossingState = 'train';
                             railwayTimer = 0;
                             trainX = -450;
                             buildTrainGroup();
                             scene.add(trainGroup);
+                            playTrainHorn();
                         }
                     }
                     
-                    // 3. Train passing: gates closed, train zooms past for 25 seconds
+                    // 3. Train passing: train zooms past extremely fast, signal changes back to red when engine passes
                     else if (railwayCrossingState === 'train') {
-                        // Flashing lights
-                        if (Math.floor(time * 3.5) % 2 === 0) {
-                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0xff0000);
-                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
-                        } else {
-                            if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
-                            if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0xff0000);
-                        }
-                        
                         // Move train very fast
-                        trainX += 3.8; // zooms past
+                        trainX += 8.5; 
                         if (trainGroup) trainGroup.position.x = trainX;
                         
-                        railwayTimer += delta;
-                        if (railwayTimer >= 25.0) {
+                        // Change train signal back to red when locomotive crosses the road (X = 0)
+                        if (trainX >= 0 && trainSignalState === 'green') {
+                            trainSignalState = 'red';
+                            if (trainSignalLightRed) trainSignalLightRed.material.color.setHex(0xff0000);
+                            if (trainSignalLightGreen) trainSignalLightGreen.material.color.setHex(0x003300);
+                        }
+                        
+                        // Transition to opening when train has fully cleared (X > 500)
+                        if (trainX > 500) {
                             if (trainGroup) {
                                 scene.remove(trainGroup);
                                 trainGroup = null;
@@ -2826,14 +3456,10 @@
                         }
                     }
                     
-                    // 4. Opening gates: gates open, lights stop flashing, traffic resumes
+                    // 4. Opening gates: gates open in slow motion, road lights turn off, traffic resumes
                     else if (railwayCrossingState === 'opening') {
-                        // Turn off crossing lights
-                        if (crossingSignalLight1) crossingSignalLight1.material.color.setHex(0x330000);
-                        if (crossingSignalLight2) crossingSignalLight2.material.color.setHex(0x330000);
-                        
-                        // Slowly open gates
-                        gateAngle = Math.min(Math.PI / 2, gateAngle + delta * 0.65);
+                        // Slowly open gates in slow motion (speed 0.15, approx 3-4x slower than closing)
+                        gateAngle = Math.min(Math.PI / 2, gateAngle + delta * 0.15);
                         if (railwayGateL) railwayGateL.rotation.z = gateAngle;
                         if (railwayGateR) railwayGateR.rotation.z = -gateAngle;
                         
@@ -2855,7 +3481,62 @@
                 }
                 
                 trafficVehicles.forEach(vehicle => {
-                    vehicle.group.position.z += vehicle.speed;
+                    // Wind blow simulation for vehicles in storm
+                    if (isStormActive && !vehicle.isWindBlown && vehicle.speed !== 0 && !vehicle.isRescueCone) {
+                        const relZ = vehicle.group.position.z - carGroup.position.z;
+                        // Trigger when vehicle is 60 to 110 units ahead of the player (fully visible!)
+                        if (relZ > 60 && relZ < 110 && Math.random() < 0.01) {
+                            vehicle.isWindBlown = true;
+                            vehicle.windBlowTimer = 0;
+                            const pushDir = vehicle.group.position.x > 0 ? 1 : -1;
+                            vehicle.vy = 8.0 + Math.random() * 6.0; // vertical velocity
+                            vehicle.vx = pushDir * (12.0 + Math.random() * 8.0); // sideways velocity
+                            vehicle.vz = vehicle.speed * 1.5; // forward momentum
+                            // Rotational velocities
+                            vehicle.vrx = (Math.random() - 0.5) * 8.0;
+                            vehicle.vry = (Math.random() - 0.5) * 5.0;
+                            vehicle.vrz = (Math.random() - 0.5) * 8.0;
+                            
+                            // Play a thud sound
+                            playThudSound();
+                        }
+                    }
+
+                    if (vehicle.isWindBlown) {
+                        vehicle.windBlowTimer += delta;
+                        
+                        // Physics update
+                        vehicle.group.position.x += vehicle.vx * delta;
+                        vehicle.group.position.y += vehicle.vy * delta;
+                        vehicle.group.position.z += vehicle.vz * delta;
+                        
+                        // Gravity pulls it down
+                        vehicle.vy -= 18.0 * delta; 
+                        
+                        // Spin
+                        vehicle.group.rotation.x += vehicle.vrx * delta;
+                        vehicle.group.rotation.y += vehicle.vry * delta;
+                        vehicle.group.rotation.z += vehicle.vrz * delta;
+                        
+                        // Ground collision
+                        if (vehicle.group.position.y <= 0.1 && vehicle.vy < 0) {
+                            vehicle.group.position.y = 0.1;
+                            vehicle.isWindBlown = false;
+                            vehicle.speed = 0; // stopped
+                            vehicle.vx = 0;
+                            vehicle.vy = 0;
+                            vehicle.vz = 0;
+                            
+                            // Align flat on the grass
+                            vehicle.group.rotation.set(0, Math.random() * Math.PI * 2, 0);
+                            
+                            // Play landing crash sound
+                            playThudSound();
+                        }
+                    } else {
+                        // Normal vehicle movement
+                        vehicle.group.position.z += vehicle.speed;
+                    }
                     const relZ = vehicle.group.position.z - carGroup.position.z;
                     if (vehicle.speed > 0) {
                         if (relZ < -150) {
