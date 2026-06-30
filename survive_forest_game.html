@@ -989,94 +989,275 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(text, canvas.width / 2, canvas.height / 2);
             
-            const texture = new THREE.CanvasTexture(canvas);
-            const material = new THREE.MeshLambertMaterial({ 
-                map: texture, 
-                emissive: 0x39ff14, 
-                emissiveMap: texture,
-                emissiveIntensity: 0.8
-            });
-            
-            signCanvasCache.set(text, material);
-            return material;
-        }
-
-        // Procedural Vehicle Meshes
-        function createCarMesh(color, isParked = false) {
+          function buildBMWConvertibleMesh(color, isParked = false, isPlayer = false) {
             const car = new THREE.Group();
             
-            const bodyGeo = new THREE.BoxGeometry(1.8, 0.6, 4.0);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.2, metalness: 0.8 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.4;
-            body.castShadow = true;
-            body.receiveShadow = true;
-            car.add(body);
-            
-            const cabinGeo = new THREE.BoxGeometry(1.5, 0.6, 2.0);
-            const cabinMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.1, transparent: true, opacity: 0.9 });
-            const cabin = new THREE.Mesh(cabinGeo, cabinMat);
-            cabin.position.set(0, 0.9, -0.2);
-            cabin.castShadow = true;
-            car.add(cabin);
-            
-            const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 10);
-            wheelGeo.rotateZ(Math.PI / 2);
-            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
-            
-            const offsets = [
-                { x: -0.95, z: 1.1 },
-                { x: 0.95, z: 1.1 },
-                { x: -0.95, z: -1.1 },
-                { x: 0.95, z: -1.1 }
-            ];
-            offsets.forEach(offset => {
-                const wh = new THREE.Mesh(wheelGeo, wheelMat);
-                wh.position.set(offset.x, 0.35, offset.z);
-                wh.castShadow = true;
-                car.add(wh);
+            // Materials
+            const bodyMat = new THREE.MeshStandardMaterial({ 
+                color: color, 
+                roughness: 0.2, 
+                metalness: 0.85 
             });
-            
-            // Lights
-            const headlightGeo = new THREE.BoxGeometry(0.2, 0.15, 0.05);
-            const headlightMat = isParked 
-                ? new THREE.MeshStandardMaterial({ color: 0x555544, roughness: 0.5 })
-                : new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const hl = new THREE.Mesh(headlightGeo, headlightMat);
-            hl.position.set(-0.6, 0.45, 2.01);
-            car.add(hl);
-            const hr = new THREE.Mesh(headlightGeo, headlightMat);
-            hr.position.set(0.6, 0.45, 2.01);
-            car.add(hr);
-            
-            const taillightGeo = new THREE.BoxGeometry(0.2, 0.15, 0.05);
-            const taillightMat = isParked 
+            const blackTrimMat = new THREE.MeshStandardMaterial({ 
+                color: 0x111112, 
+                roughness: 0.5, 
+                metalness: 0.5 
+            });
+            const chromeMat = new THREE.MeshStandardMaterial({ 
+                color: 0xd1d5db, 
+                metalness: 0.9, 
+                roughness: 0.1 
+            });
+            const orangeSeatMat = new THREE.MeshStandardMaterial({ 
+                color: 0xff5500, // vibrant sport orange
+                roughness: 0.6 
+            });
+            const windshieldMat = new THREE.MeshStandardMaterial({ 
+                color: 0x111113, 
+                roughness: 0.1, 
+                transparent: true, 
+                opacity: 0.85 
+            });
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+            // 1. Sleek Low Chassis
+            const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.28, 4.4), blackTrimMat);
+            chassis.position.y = 0.22;
+            chassis.castShadow = true;
+            chassis.receiveShadow = true;
+            car.add(chassis);
+
+            // 2. Main Curved Body (sides/skirts)
+            const mainBody = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.44, 4.2), bodyMat);
+            mainBody.position.y = 0.48;
+            mainBody.castShadow = true;
+            mainBody.receiveShadow = true;
+            car.add(mainBody);
+
+            // 3. Hood (V-shape black stripe design)
+            const hood = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.22, 1.4), bodyMat);
+            hood.position.set(0, 0.65, 1.3);
+            hood.rotation.x = -0.06; // slight forward slope
+            hood.castShadow = true;
+            car.add(hood);
+
+            const hoodInsert = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.03, 1.0), blackTrimMat);
+            hoodInsert.position.set(0, 0.77, 1.4);
+            hoodInsert.rotation.x = -0.06;
+            car.add(hoodInsert);
+
+            // 4. Front Nose & Kidney Grilles
+            const nose = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.32, 0.3), bodyMat);
+            nose.position.set(0, 0.48, 2.05);
+            car.add(nose);
+
+            // BMW Kidney Grilles
+            const grilleFrameL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.18, 0.04), chromeMat);
+            grilleFrameL.position.set(-0.22, 0.48, 2.19);
+            car.add(grilleFrameL);
+            const grilleInnerL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.05), blackTrimMat);
+            grilleInnerL.position.set(-0.22, 0.48, 2.2);
+            car.add(grilleInnerL);
+
+            const grilleFrameR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.18, 0.04), chromeMat);
+            grilleFrameR.position.set(0.22, 0.48, 2.19);
+            car.add(grilleFrameR);
+            const grilleInnerR = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.05), blackTrimMat);
+            grilleInnerR.position.set(0.22, 0.48, 2.2);
+            car.add(grilleInnerR);
+
+            // BMW Roundel Logo
+            const logo = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 8), new THREE.MeshBasicMaterial({ color: 0x0055ff }));
+            logo.rotation.x = Math.PI / 2;
+            logo.position.set(0, 0.62, 2.14);
+            car.add(logo);
+
+            // Front License Plate
+            const plate = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.15, 0.03), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+            plate.position.set(0, 0.28, 2.2);
+            car.add(plate);
+            const plateBand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.04), new THREE.MeshBasicMaterial({ color: 0x0033cc })); // EU blue band
+            plateBand.position.set(-0.29, 0.28, 2.2);
+            car.add(plateBand);
+
+            // 5. Headlights (sleek, sharp slanted LEDs)
+            const headlightL = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.06), glowMat);
+            headlightL.position.set(-0.64, 0.52, 2.18);
+            headlightL.rotation.y = -0.15;
+            car.add(headlightL);
+
+            const headlightR = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.06), glowMat);
+            headlightR.position.set(0.64, 0.52, 2.18);
+            headlightR.rotation.y = 0.15;
+            car.add(headlightR);
+
+            // 6. Roadster Open Cockpit & Windshield Frame
+            const windFrame = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.68, 0.05), blackTrimMat);
+            windFrame.position.set(0, 0.94, 0.55);
+            windFrame.rotation.x = -Math.PI / 6; // slanted backward
+            car.add(windFrame);
+
+            const windGlass = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.6, 0.03), windshieldMat);
+            windGlass.position.set(0, 0.94, 0.55);
+            windGlass.rotation.x = -Math.PI / 6;
+            car.add(windGlass);
+
+            // 7. Orange Sports Seats
+            // Seat Left
+            const seatLBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.52), orangeSeatMat);
+            seatLBase.position.set(-0.4, 0.44, -0.05);
+            car.add(seatLBase);
+            const seatLBack = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.72, 0.12), orangeSeatMat);
+            seatLBack.position.set(-0.4, 0.78, -0.34);
+            seatLBack.rotation.x = -0.12; // tilted back
+            car.add(seatLBack);
+            const seatLHead = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.18, 0.1), orangeSeatMat);
+            seatLHead.position.set(-0.4, 1.15, -0.38);
+            seatLHead.rotation.x = -0.12;
+            car.add(seatLHead);
+
+            // Seat Right
+            const seatRBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.52), orangeSeatMat);
+            seatRBase.position.set(0.4, 0.44, -0.05);
+            car.add(seatRBase);
+            const seatRBack = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.72, 0.12), orangeSeatMat);
+            seatRBack.position.set(0.4, 0.78, -0.34);
+            seatRBack.rotation.x = -0.12;
+            car.add(seatRBack);
+            const seatRHead = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.18, 0.1), orangeSeatMat);
+            seatRHead.position.set(0.4, 1.15, -0.38);
+            seatRHead.rotation.x = -0.12;
+            car.add(seatRHead);
+
+            // 8. Flying Buttresses & Rear Deck
+            const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.38, 1.3), bodyMat);
+            rearDeck.position.set(0, 0.62, -1.35);
+            car.add(rearDeck);
+
+            const buttressL = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.32, 0.75), bodyMat);
+            buttressL.position.set(-0.4, 0.85, -0.75);
+            buttressL.rotation.x = -0.25; // slant down
+            car.add(buttressL);
+
+            const buttressR = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.32, 0.75), bodyMat);
+            buttressR.position.set(0.4, 0.85, -0.75);
+            buttressR.rotation.x = -0.25;
+            car.add(buttressR);
+
+            // 9. Side Mirrors
+            const mirrorL = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.1), blackTrimMat);
+            mirrorL.position.set(-0.96, 0.76, 0.5);
+            car.add(mirrorL);
+            const mirrorR = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.1), blackTrimMat);
+            mirrorR.position.set(0.96, 0.76, 0.5);
+            car.add(mirrorR);
+
+            // 10. Taillights (sharp red LED bars)
+            const taillightMat = isParked
                 ? new THREE.MeshStandardMaterial({ color: 0x441111, roughness: 0.5 })
                 : new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const tl = new THREE.Mesh(taillightGeo, taillightMat);
-            tl.position.set(-0.6, 0.45, -2.01);
-            car.add(tl);
-            const tr = new THREE.Mesh(taillightGeo, taillightMat);
-            tr.position.set(0.6, 0.45, -2.01);
-            car.add(tr);
             
-            if (!isParked) {
-                // Front spotlight casting light beam forward
-                const spot = new THREE.SpotLight(0xfff5d0, 1.6, 45, Math.PI / 6, 0.5, 1);
-                spot.position.set(0, 0.45, 2.05);
-                const spotTarget = new THREE.Object3D();
-                spotTarget.position.set(0, 0.2, 15);
-                spot.target = spotTarget;
-                car.add(spot);
-                car.add(spotTarget);
+            const ledTL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.05), taillightMat);
+            ledTL.position.set(-0.64, 0.56, -2.01);
+            car.add(ledTL);
 
-                // Taillight glow
-                const tailGlow = new THREE.PointLight(0xff0000, 0.6, 6, 1.5);
-                tailGlow.position.set(0, 0.45, -2.05);
+            const ledTR = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.05), taillightMat);
+            ledTR.position.set(0.64, 0.56, -2.01);
+            car.add(ledTR);
+
+            // 11. Multi-Spoke Sports Wheels
+            const tireMat = new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.9 });
+            const spokeMat = chromeMat;
+            const wheelGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.36, 12);
+            wheelGeo.rotateZ(Math.PI / 2);
+            
+            const wheelOffsets = [
+                { x: -0.92, z: 1.15 },  // FL
+                { x: 0.92, z: 1.15 },   // FR
+                { x: -0.92, z: -1.15 }, // RL
+                { x: 0.92, z: -1.15 }   // RR
+            ];
+
+            wheelOffsets.forEach(offset => {
+                const wheelGroup = new THREE.Group();
+                wheelGroup.position.set(offset.x, 0.42, offset.z);
+
+                // Tire
+                const tire = new THREE.Mesh(wheelGeo, tireMat);
+                tire.castShadow = true;
+                wheelGroup.add(tire);
+
+                // Chrome Spokes
+                const rimFace = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.38, 12), spokeMat);
+                rimFace.rotation.z = Math.PI / 2;
+                wheelGroup.add(rimFace);
+
+                const centerCap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.4, 8), blackTrimMat);
+                centerCap.rotation.z = Math.PI / 2;
+                wheelGroup.add(centerCap);
+
+                car.add(wheelGroup);
+            });
+
+            // 12. Spotlights & Sounds (only if not parked)
+            if (!isParked) {
+                const spotL = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
+                spotL.position.set(-0.64, 0.52, 2.1);
+                spotL.target.position.set(-0.64, 0.2, 20);
+                car.add(spotL);
+                car.add(spotL.target);
+
+                const spotR = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
+                spotR.position.set(0.64, 0.52, 2.1);
+                spotR.target.position.set(0.64, 0.2, 20);
+                car.add(spotR);
+                car.add(spotR.target);
+
+                const tailGlow = new THREE.PointLight(0xff0000, 0.8, 6, 1.5);
+                tailGlow.position.set(0, 0.56, -2.05);
                 car.add(tailGlow);
             }
-            
+
+            // 13. Cockpit Dashboard & Wipers (only for player)
+            if (isPlayer) {
+                // Dashboard
+                const dashboard = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.35, 0.45), new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.7 }));
+                dashboard.position.set(0, 0.78, 0.72);
+                car.add(dashboard);
+
+                // Steering Wheel
+                const steeringWheel = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.03, 6, 16), new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.8 }));
+                steeringWheel.position.set(-0.45, 0.84, 0.6);
+                steeringWheel.rotation.x = -Math.PI / 6;
+                car.add(steeringWheel);
+
+                // Speedometer gauge
+                const gauge = new THREE.Mesh(new THREE.CircleGeometry(0.07, 10), new THREE.MeshBasicMaterial({ color: 0x00ffcc }));
+                gauge.position.set(-0.45, 0.82, 0.86);
+                gauge.rotation.x = -Math.PI / 10;
+                car.add(gauge);
+
+                // Cockpit Wipers
+                wiperGroupL = new THREE.Group();
+                wiperGroupL.position.set(-0.45, 0.94, 0.75);
+                const wiperArmL = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.44, 0.015), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
+                wiperArmL.position.y = 0.22;
+                wiperGroupL.add(wiperArmL);
+                car.add(wiperGroupL);
+
+                wiperGroupR = new THREE.Group();
+                wiperGroupR.position.set(0.45, 0.94, 0.75);
+                const wiperArmR = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.44, 0.015), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
+                wiperArmR.position.y = 0.22;
+                wiperGroupR.add(wiperArmR);
+                car.add(wiperGroupR);
+            }
+
             return car;
+        }
+
+        function createCarMesh(color, isParked = false) {
+            return buildBMWConvertibleMesh(color, isParked, false);
         }
 
         function createTruckMesh() {
@@ -1154,67 +1335,140 @@
             return truck;
         }
 
-        // Procedural Bus Mesh Creator
+        // Procedural Bus Mesh Creator (Futuristic City Bus design from image)
         function createBusMesh() {
             const bus = new THREE.Group();
             
-            // Main body
-            const bodyGeo = new THREE.BoxGeometry(2.1, 1.9, 8.5);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.4 });
+            // 1. DYNAMIC CANVAS FOR LED ROUTE SIGN ("182 Pl. Invalides")
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0a0a0c'; // black screen
+            ctx.fillRect(0, 0, 256, 64);
+            
+            // Amber LED glow
+            ctx.fillStyle = '#ff9a00'; 
+            ctx.font = 'bold 24px monospace';
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 6;
+            ctx.fillText('182 Pl. Invalides', 10, 40);
+            
+            const textTexture = new THREE.CanvasTexture(canvas);
+            const signMat = new THREE.MeshBasicMaterial({ map: textTexture });
+
+            // 2. SLICK AERODYNAMIC BODY
+            const bodyMat = new THREE.MeshStandardMaterial({ 
+                color: 0xebedf0, // soft clean white/light grey
+                roughness: 0.3, 
+                metalness: 0.5 
+            });
+            const bodyGeo = new THREE.BoxGeometry(2.1, 1.75, 8.8);
             const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 1.1;
+            body.position.y = 1.15;
             body.castShadow = true;
             body.receiveShadow = true;
             bus.add(body);
-            
-            // Windows strip
-            const winGeo = new THREE.BoxGeometry(2.14, 0.5, 7.5);
-            const winMat = new THREE.MeshStandardMaterial({ color: 0xffdd55, emissive: 0x553300, roughness: 0.1 });
-            const win = new THREE.Mesh(winGeo, winMat);
-            win.position.set(0, 1.3, -0.2);
-            bus.add(win);
-            
-            // Wheels
-            const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.5, 10);
-            wheelGeo.rotateZ(Math.PI / 2);
-            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
-            
-            const offsets = [
-                { x: -1.05, z: 2.8 },
-                { x: 1.05, z: 2.8 },
-                { x: -1.05, z: -1.5 },
-                { x: 1.05, z: -1.5 },
-                { x: -1.05, z: -3.3 },
-                { x: 1.05, z: -3.3 }
-            ];
-            offsets.forEach(offset => {
-                const wh = new THREE.Mesh(wheelGeo, wheelMat);
-                wh.position.set(offset.x, 0.5, offset.z);
-                wh.castShadow = true;
-                bus.add(wh);
+
+            // Roof-mounted AC shroud/intake
+            const roofAC = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.24, 1.4), bodyMat);
+            roofAC.position.set(0, 2.1, 2.6);
+            roofAC.castShadow = true;
+            bus.add(roofAC);
+
+            // 3. FRONT WINDSHIELD & ROUTE BOARD
+            const windshieldMat = new THREE.MeshStandardMaterial({ 
+                color: 0x111113, 
+                roughness: 0.1, 
+                metalness: 0.9 
             });
+            const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.06, 1.5, 0.08), windshieldMat);
+            windshield.position.set(0, 1.25, 4.41);
+            bus.add(windshield);
+
+            // Backing board for LED sign
+            const signBack = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.38, 0.08), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+            signBack.position.set(0, 1.88, 4.41);
+            bus.add(signBack);
+
+            // Glowing display mesh
+            const signMesh = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.3, 0.02), signMat);
+            signMesh.position.set(0, 1.88, 4.46);
+            bus.add(signMesh);
+
+            // 4. SIDE GLAZING STRIPS
+            const sideWinL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.85, 7.8), windshieldMat);
+            sideWinL.position.set(-1.06, 1.35, 0.1);
+            bus.add(sideWinL);
+
+            const sideWinR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.85, 7.8), windshieldMat);
+            sideWinR.position.set(1.06, 1.35, 0.1);
+            bus.add(sideWinR);
+
+            // 5. WHEELS & FUTURISTIC HUBCAPS (Matching image)
+            const tireMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
+            const rimMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.1 }); // silver chrome rim
+            const centerCapMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.5 }); // dark center hubcap
+
+            const wheelOffsets = [
+                { x: -1.02, z: 2.3 },
+                { x: 1.02, z: 2.3 },
+                { x: -1.02, z: -2.3 },
+                { x: 1.02, z: -2.3 }
+            ];
+
+            wheelOffsets.forEach(offset => {
+                const wheelGroup = new THREE.Group();
+                wheelGroup.position.set(offset.x, 0.48, offset.z);
+
+                // Outer tire
+                const tireGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.44, 16);
+                tireGeo.rotateZ(Math.PI / 2);
+                const tire = new THREE.Mesh(tireGeo, tireMat);
+                tire.castShadow = true;
+                wheelGroup.add(tire);
+
+                // Chrome Rim Face
+                const rimGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.46, 16);
+                rimGeo.rotateZ(Math.PI / 2);
+                const rim = new THREE.Mesh(rimGeo, rimMat);
+                wheelGroup.add(rim);
+
+                // Dark Hubcap Center
+                const capGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.48, 12);
+                capGeo.rotateZ(Math.PI / 2);
+                const cap = new THREE.Mesh(capGeo, centerCapMat);
+                wheelGroup.add(cap);
+
+                bus.add(wheelGroup);
+            });
+
+            // 6. THIN LED LIGHT STRIPS
+            const ledHeadlightGeo = new THREE.BoxGeometry(0.4, 0.05, 0.05);
+            const ledHeadlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
             
-            // Lights
-            const headlightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.05);
-            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const hl = new THREE.Mesh(headlightGeo, headlightMat);
-            hl.position.set(-0.7, 0.6, 4.26);
-            bus.add(hl);
-            const hr = new THREE.Mesh(headlightGeo, headlightMat);
-            hr.position.set(0.7, 0.6, 4.26);
-            bus.add(hr);
+            const ledHL = new THREE.Mesh(ledHeadlightGeo, ledHeadlightMat);
+            ledHL.position.set(-0.7, 0.42, 4.41);
+            bus.add(ledHL);
             
-            const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const tl = new THREE.Mesh(headlightGeo, taillightMat);
-            tl.position.set(-0.7, 0.5, -4.26);
-            bus.add(tl);
-            const tr = new THREE.Mesh(headlightGeo, taillightMat);
-            tr.position.set(0.7, 0.5, -4.26);
-            bus.add(tr);
+            const ledHR = new THREE.Mesh(ledHeadlightGeo, ledHeadlightMat);
+            ledHR.position.set(0.7, 0.42, 4.41);
+            bus.add(ledHR);
+
+            const ledTaillightGeo = new THREE.BoxGeometry(0.06, 0.5, 0.05);
+            const ledTaillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            
+            const ledTL = new THREE.Mesh(ledTaillightGeo, ledTaillightMat);
+            ledTL.position.set(-0.95, 0.6, -4.41);
+            bus.add(ledTL);
+            
+            const ledTR = new THREE.Mesh(ledTaillightGeo, ledTaillightMat);
+            ledTR.position.set(0.95, 0.6, -4.41);
+            bus.add(ledTR);
 
             // Front spotlight casting light beam forward
             const spot = new THREE.SpotLight(0xfff5d0, 1.8, 55, Math.PI / 6, 0.5, 1);
-            spot.position.set(0, 0.6, 4.3);
+            spot.position.set(0, 0.6, 4.42);
             const spotTarget = new THREE.Object3D();
             spotTarget.position.set(0, 0.2, 20);
             spot.target = spotTarget;
@@ -1223,7 +1477,7 @@
 
             // Taillight glow
             const tailGlow = new THREE.PointLight(0xff0000, 0.8, 8, 1.5);
-            tailGlow.position.set(0, 0.5, -4.3);
+            tailGlow.position.set(0, 0.5, -4.42);
             bus.add(tailGlow);
             
             return bus;
@@ -1766,12 +2020,80 @@
                 chunkGroup.add(riverMesh);
                 
                 // Trees
-                const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 18, 5);
-                const foliageGeo = new THREE.ConeGeometry(5, 14, 5);
-                trunkGeo.translate(0, 9, 0);
-                foliageGeo.translate(0, 18, 0);
+                // Trees (Majestic oak tree design matching the image)
                 const trunkMat = new THREE.MeshLambertMaterial({ color: 0x422f25 });
                 const foliageColors = [0x0e2b16, 0x153d20, 0x1a4f29];
+
+                function buildMajesticTree(foliageColor) {
+                    const treeGroup = new THREE.Group();
+                    
+                    // 1. Flared Base / Root buttress
+                    const baseGeo = new THREE.CylinderGeometry(0.7, 2.2, 2.8, 8);
+                    const base = new THREE.Mesh(baseGeo, trunkMat);
+                    base.position.y = 1.4;
+                    base.castShadow = true;
+                    base.receiveShadow = true;
+                    treeGroup.add(base);
+                    
+                    // 2. Main Trunk
+                    const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 5.0, 8);
+                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                    trunk.position.y = 4.3; // raised
+                    trunk.castShadow = true;
+                    trunk.receiveShadow = true;
+                    treeGroup.add(trunk);
+                    
+                    // 3. Thick Spreading Branches
+                    const branchMat = trunkMat;
+                    const numBranches = 4;
+                    const angles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+                    
+                    angles.forEach((angle, idx) => {
+                        const branchGroup = new THREE.Group();
+                        branchGroup.position.set(0, 5.5, 0); // pivot at top of trunk
+                        branchGroup.rotation.y = angle;
+                        
+                        // angled cylinder
+                        const brGeo = new THREE.CylinderGeometry(0.2, 0.35, 3.2, 6);
+                        brGeo.rotateZ(Math.PI / 4); // slant 45 deg
+                        brGeo.translate(1.1, 1.1, 0); // shift up-out
+                        const br = new THREE.Mesh(brGeo, branchMat);
+                        br.castShadow = true;
+                        branchGroup.add(br);
+                        
+                        // Foliage cluster at the tip of the branch
+                        const fCol = new THREE.Color(foliageColor).clone().multiplyScalar(0.95 + idx * 0.05); // slight shade variation
+                        const fMat = new THREE.MeshLambertMaterial({ color: fCol });
+                        
+                        const fSize = 2.4 + Math.random() * 0.8;
+                        const foliageCluster = new THREE.Mesh(new THREE.SphereGeometry(fSize, 8, 8), fMat);
+                        foliageCluster.position.set(2.2, 2.2, 0);
+                        foliageCluster.castShadow = true;
+                        foliageCluster.receiveShadow = true;
+                        branchGroup.add(foliageCluster);
+                        
+                        treeGroup.add(branchGroup);
+                    });
+                    
+                    // 4. Center / Crown Foliage Clusters (for a massive, bushy canopy)
+                    const fMatCenter = new THREE.MeshLambertMaterial({ color: foliageColor });
+                    
+                    // Center main foliage
+                    const centerF = new THREE.Mesh(new THREE.SphereGeometry(3.6, 8, 8), fMatCenter);
+                    centerF.position.set(0, 7.8, 0);
+                    centerF.castShadow = true;
+                    centerF.receiveShadow = true;
+                    treeGroup.add(centerF);
+                    
+                    // Top foliage crown
+                    const topF = new THREE.Mesh(new THREE.SphereGeometry(2.8, 8, 8), fMatCenter);
+                    topF.position.set(0, 9.8, 0);
+                    topF.castShadow = true;
+                    topF.receiveShadow = true;
+                    treeGroup.add(topF);
+
+                    return treeGroup;
+                }
                 
                 const trees = [];
                 const fallingTrees = [];
@@ -1781,17 +2103,8 @@
                     if (tx > -20 && tx < 20) tx += tx >= 0 ? 22 : -22;
                     if (tx > 50 && tx < 100) tx += 50;
                     
-                    const treeGroup = new THREE.Group();
-                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                    trunk.castShadow = true;
-                    trunk.receiveShadow = true;
-                    treeGroup.add(trunk);
-                    
-                    const fMat = new THREE.MeshLambertMaterial({ color: foliageColors[Math.floor(Math.random() * foliageColors.length)] });
-                    const foliage = new THREE.Mesh(foliageGeo, fMat);
-                    foliage.castShadow = true;
-                    foliage.receiveShadow = true;
-                    treeGroup.add(foliage);
+                    const fColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
+                    const treeGroup = buildMajesticTree(fColor);
                     
                     treeGroup.scale.set(0.9 + Math.random() * 0.3, 0.85 + Math.random() * 0.45, 0.9 + Math.random() * 0.3);
                     treeGroup.position.set(tx, 0, tz);
@@ -2486,8 +2799,117 @@
             }
         }
 
-        // Realistic Mountain Range (far background) - Removed
+        // Realistic Mountain Range (far background) - Dolomite / Seceda Style!
         const mountains = [];
+        
+        function createWedgeGeometry(pX, pY, pZ, b1X, b1Y, b1Z, b1X2, b1Y2, b1Z2, b2X, b2Y, b2Z, b2X2, b2Y2, b2Z2) {
+            const geom = new THREE.BufferGeometry();
+            const vertices = new Float32Array([
+                // Face 1 (Left)
+                pX, pY, pZ,
+                b1X, b1Y, b1Z,
+                b1X2, b1Y2, b1Z2,
+                
+                // Face 2 (Right)
+                pX, pY, pZ,
+                b2X2, b2Y2, b2Z2,
+                b2X, b2Y, b2Z,
+                
+                // Face 3 (Front)
+                pX, pY, pZ,
+                b2X, b2Y, b2Z,
+                b1X, b1Y, b1Z,
+                
+                // Face 4 (Back)
+                pX, pY, pZ,
+                b1X2, b1Y2, b1Z2,
+                b2X2, b2Y2, b2Z2,
+                
+                // Face 5 (Bottom Tri 1)
+                b1X, b1Y, b1Z,
+                b2X, b2Y, b2Z,
+                b2X2, b2Y2, b2Z2,
+                
+                // Face 6 (Bottom Tri 2)
+                b1X, b1Y, b1Z,
+                b2X2, b2Y2, b2Z2,
+                b1X2, b1Y2, b1Z2
+            ]);
+            geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geom.computeVertexNormals();
+            return geom;
+        }
+
+        function buildSecedaMountain(w, h, d) {
+            const group = new THREE.Group();
+            
+            const greenMat = new THREE.MeshLambertMaterial({ color: 0x567b35 }); // Grass slope color
+            const greyMat = new THREE.MeshLambertMaterial({ color: 0x3d4147 });  // Shadowed rock cliff color
+            
+            const px = 0.2 * w;
+            const py = h;
+            const pz = 0;
+            
+            // 1. Green Slope (Left Side)
+            const greenGeo = createWedgeGeometry(
+                px, py, pz,
+                -w, 0, d,
+                -w, 0, -d,
+                px, 0, d,
+                px, 0, -d
+            );
+            const greenMesh = new THREE.Mesh(greenGeo, greenMat);
+            greenMesh.castShadow = true;
+            greenMesh.receiveShadow = true;
+            group.add(greenMesh);
+            
+            // 2. Grey Cliff (Right Side)
+            const greyGeo = createWedgeGeometry(
+                px, py, pz,
+                px, 0, d,
+                px, 0, -d,
+                px + 0.15 * w, 0.05 * h, d,
+                px + 0.15 * w, 0.05 * h, -d
+            );
+            const greyMesh = new THREE.Mesh(greyGeo, greyMat);
+            greyMesh.castShadow = true;
+            greyMesh.receiveShadow = true;
+            group.add(greyMesh);
+
+            return group;
+        }
+
+        // Spawn 6 groups of mountains in the background (left and right of the highway)
+        for (let i = 0; i < 6; i++) {
+            const mountCluster = new THREE.Group();
+            
+            // Each cluster has 3 overlapping Seceda spires
+            // Main spire
+            const m1 = buildSecedaMountain(150, 160, 60);
+            mountCluster.add(m1);
+            
+            // Back/right spire
+            const m2 = buildSecedaMountain(110, 130, 45);
+            m2.position.set(30, -5, -15);
+            mountCluster.add(m2);
+            
+            // Front/left spire
+            const m3 = buildSecedaMountain(80, 85, 35);
+            m3.position.set(-45, -2, 10);
+            mountCluster.add(m3);
+
+            // Position the cluster along the parallax line
+            const mx = -240 + i * 90 + (Math.random() - 0.5) * 20;
+            const mz = 280 + (Math.random() - 0.5) * 40;
+            const scale = 0.65 + Math.random() * 0.45;
+            
+            mountCluster.scale.set(scale, scale, scale);
+            mountCluster.position.set(mx, -8, mz);
+            
+            mountCluster.userData = { relativeZ: mz - (-120) };
+            scene.add(mountCluster);
+            mountains.push(mountCluster);
+        }
 
         // Floating Clouds
         const clouds = [];
@@ -2607,110 +3029,10 @@
         }
 
         // ── 3D Car Asset ──────────────────────────────────────
-        const carGroup = new THREE.Group();
-
-        // Car main body
-        const carBodyGeo = new THREE.BoxGeometry(2.4, 0.8, 4.8);
-        const carBodyMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.2, metalness: 0.8 }); // Cherry red metallic
-        const carBody = new THREE.Mesh(carBodyGeo, carBodyMat);
-        carBody.position.y = 0.5;
-        carBody.castShadow = true;
-        carBody.receiveShadow = true;
-        carGroup.add(carBody);
-
-        // Car cabin (glass/roof)
-        const carCabinGeo = new THREE.BoxGeometry(2.0, 0.7, 2.4);
-        const carCabinMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.1, transparent: true, opacity: 0.95 });
-        const carCabin = new THREE.Mesh(carCabinGeo, carCabinMat);
-        carCabin.position.set(0, 1.25, -0.2);
-        carCabin.castShadow = true;
-        carGroup.add(carCabin);
-
-        // Wheels
-        const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 12);
-        wheelGeo.rotateZ(Math.PI / 2);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
-        
-        const wheels = [];
-        const wheelOffsets = [
-            { x: -1.25, z: 1.4 },  // front-left
-            { x: 1.25, z: 1.4 },   // front-right
-            { x: -1.25, z: -1.4 }, // back-left
-            { x: 1.25, z: -1.4 }   // back-right
-        ];
-
-        wheelOffsets.forEach((offset) => {
-            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-            wheel.position.set(offset.x, 0.5, offset.z);
-            wheel.castShadow = true;
-            carGroup.add(wheel);
-            wheels.push(wheel);
-        });
-
-        // Headlights (glow cylinders)
-        const lightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
-        const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        
-        const headlightLeft = new THREE.Mesh(lightGeo, lightMat);
-        headlightLeft.position.set(-0.8, 0.55, 2.41);
-        carGroup.add(headlightLeft);
-
-        const headlightRight = new THREE.Mesh(lightGeo, lightMat);
-        headlightRight.position.set(0.8, 0.55, 2.41);
-        carGroup.add(headlightRight);
-
-        // Spotlights casting actual light
-        const spotLeft = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
-        spotLeft.position.set(-0.8, 0.55, 2.5);
-        spotLeft.target.position.set(-0.8, 0.2, 20);
-        carGroup.add(spotLeft);
-        carGroup.add(spotLeft.target);
-
-        const spotRight = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
-        spotRight.position.set(0.8, 0.55, 2.5);
-        spotRight.target.position.set(0.8, 0.2, 20);
-        carGroup.add(spotRight);
-        carGroup.add(spotRight.target);
-
-        // ── Driver seat Cockpit Dashboard & Steering Wheel ──
-        // Dashboard
-        const dashGeo = new THREE.BoxGeometry(2.2, 0.4, 0.5);
-        const dashMat = new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.7 });
-        const dashboard = new THREE.Mesh(dashGeo, dashMat);
-        dashboard.position.set(0, 0.9, 0.7);
-        carGroup.add(dashboard);
-
-        // Steering Wheel
-        const steeringWheelGeo = new THREE.TorusGeometry(0.24, 0.035, 6, 20);
-        const steeringWheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.8 });
-        const steeringWheel = new THREE.Mesh(steeringWheelGeo, steeringWheelMat);
-        steeringWheel.position.set(-0.55, 1.0, 0.55);
-        steeringWheel.rotation.x = -Math.PI / 6;
-        carGroup.add(steeringWheel);
-
-        // Glowing cyan speedometer gauge
-        const gaugeGeo = new THREE.CircleGeometry(0.08, 12);
-        const gaugeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
-        const gauge = new THREE.Mesh(gaugeGeo, gaugeMat);
-        gauge.position.set(-0.55, 0.95, 0.96);
-        gauge.rotation.x = -Math.PI / 10;
-        carGroup.add(gauge);
-
-        // Cockpit Wipers
-        const wiperGroupL = new THREE.Group();
-        wiperGroupL.position.set(-0.55, 1.15, 0.65); // pivot point L
-        const wiperArmL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.48, 0.02), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
-        wiperArmL.position.y = 0.24;
-        wiperGroupL.add(wiperArmL);
-        carGroup.add(wiperGroupL);
-        
-        const wiperGroupR = new THREE.Group();
-        wiperGroupR.position.set(0.55, 1.15, 0.65); // pivot point R
-        const wiperArmR = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.48, 0.02), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
-        wiperArmR.position.y = 0.24;
-        wiperGroupR.add(wiperArmR);
-        carGroup.add(wiperGroupR);
-
+        // Player's car is a silver BMW i8 Roadster matching the image!
+        let wiperGroupL = null;
+        let wiperGroupR = null;
+        const carGroup = buildBMWConvertibleMesh(0xd1d5db, false, true); // Silver metallic, active, isPlayer
         carGroup.position.set(0, 0.1, -120); // start position
         scene.add(carGroup);
 
