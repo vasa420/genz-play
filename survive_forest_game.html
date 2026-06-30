@@ -342,7 +342,6 @@
         let radioFilterNode = null;
         let radioInterval = null;
         let currentRadioBeat = 0;
-        let rainAudio = null;
 
         const bassRoots = [55.00, 43.65, 65.41, 49.00]; // A1, F1, C2, G1
         const leadNotes = [
@@ -354,11 +353,6 @@
 
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (!rainAudio) {
-                rainAudio = new Audio('johnbritton-thunder-156423 (1).mp3');
-                rainAudio.loop = true;
-                rainAudio.volume = 0.0;
-            }
         }
 
         function initCarRadio() {
@@ -518,12 +512,15 @@
         }
 
         let lightningLine = null;
+        let lightningFlashActive = false;
 
         function triggerLightning() {
             if (lightningLine) {
                 scene.remove(lightningLine);
                 lightningLine = null;
             }
+            
+            lightningFlashActive = true;
             
             const basePos = (stage === 1) ? carGroup.position : camera.position;
             const angle = (stage === 1) ? carAngle : playerAngle;
@@ -546,11 +543,33 @@
             let curZ = startZ;
             
             const segments = 7;
+            const branches = [];
+            
             for (let i = 0; i < segments; i++) {
                 curY -= startY / segments;
                 curX += (Math.random() - 0.5) * 16;
                 curZ += (Math.random() - 0.5) * 12;
-                points.push(new THREE.Vector3(curX, curY, curZ));
+                const nextPoint = new THREE.Vector3(curX, curY, curZ);
+                points.push(nextPoint);
+                
+                // 35% chance to start a branch from this node, but only if it's high enough and not the very first/last nodes
+                if (Math.random() < 0.35 && i > 1 && i < segments - 1) {
+                    let branchX = curX;
+                    let branchY = curY;
+                    let branchZ = curZ;
+                    const branchPoints = [new THREE.Vector3(branchX, branchY, branchZ)];
+                    
+                    const branchSegments = 3 + Math.floor(Math.random() * 3);
+                    const branchDir = Math.random() > 0.5 ? 1 : -1;
+                    
+                    for (let j = 0; j < branchSegments; j++) {
+                        branchY -= (curY) / branchSegments;
+                        branchX += (Math.random() - 0.5) * 8 + branchDir * 6;
+                        branchZ += (Math.random() - 0.5) * 8;
+                        branchPoints.push(new THREE.Vector3(branchX, branchY, branchZ));
+                    }
+                    branches.push(branchPoints);
+                }
             }
             
             // Render a thick, glowing bolt by drawing 5 slightly offset lines that ignore fog
@@ -572,11 +591,24 @@
                 lightningGroup.add(line);
             });
             
+            // Draw branches thinner (only 3 offsets)
+            const branchOffsets = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0.06, 0.02, -0.06),
+                new THREE.Vector3(-0.06, -0.02, 0.06)
+            ];
+            
+            branches.forEach(branchPoints => {
+                branchOffsets.forEach(offset => {
+                    const offsetPoints = branchPoints.map(p => p.clone().add(offset));
+                    const geometry = new THREE.BufferGeometry().setFromPoints(offsetPoints);
+                    const line = new THREE.Line(geometry, material);
+                    lightningGroup.add(line);
+                });
+            });
+            
             lightningLine = lightningGroup;
             scene.add(lightningLine);
-            
-            ambientLight.intensity = 3.8;
-            sunLight.intensity = 4.2;
             
             playThunderSound();
             
@@ -585,6 +617,7 @@
                     scene.remove(lightningLine);
                     lightningLine = null;
                 }
+                lightningFlashActive = false;
             }, 180);
         }
 
@@ -1847,7 +1880,7 @@
         const carColors = [0x1a73e8, 0xf15a24, 0x00a896, 0x8e44ad, 0xf1c40f, 0x34495e, 0x7f8c8d];
 
         function spawnTrafficVehicles() {
-            const numTraffic = 6;
+            const numTraffic = 11;
             for (let i = 0; i < numTraffic; i++) {
                 const zPos = carGroup.position.z + 100 + i * 80 + (Math.random() - 0.5) * 40;
                 const lane = Math.random() > 0.5 ? 4 : -4;
@@ -1912,19 +1945,7 @@
 
             const isStormActive = (kilometersRemaining <= 65.0 && kilometersRemaining >= 45.0) || stage === 3;
 
-            if (rainAudio) {
-                if (isStormActive) {
-                    if (rainAudio.paused) {
-                        rainAudio.play().catch(e => console.log("Rain audio waiting for interaction"));
-                    }
-                    rainAudio.volume = Math.min(0.8, rainAudio.volume + delta * 0.3);
-                } else {
-                    rainAudio.volume = Math.max(0.0, rainAudio.volume - delta * 0.3);
-                    if (rainAudio.volume <= 0.01 && !rainAudio.paused) {
-                        rainAudio.pause();
-                    }
-                }
-            }
+
 
             // ── Animate Environment ──────────────────────────
             // Drift clouds
@@ -1975,6 +1996,12 @@
                 cloudMat.color.lerp(new THREE.Color(0xe0e6ed), delta * 2.0);
             }
             
+            if (lightningFlashActive) {
+                targetSkyColor = new THREE.Color(0xd0e2ff);
+                ambientLight.intensity = 4.2;
+                sunLight.intensity = 4.8;
+            }
+
             renderer.setClearColor(targetSkyColor);
             scene.fog.color.copy(targetSkyColor);
             
@@ -2032,8 +2059,8 @@
                 const positions = rainGeometry.attributes.position.array;
                 const camPos = camera.position;
                 
-                const windX = -48.0; // blowing left heavily
-                const fallSpeed = -70.0; // falling down fast heavily
+                const windX = -65.0; // blowing left heavily
+                const fallSpeed = -80.0; // falling down fast heavily
                 
                 for (let i = 0; i < rainCount * 3; i += 3) {
                     positions[i] += windX * delta;
@@ -2241,7 +2268,7 @@
                 if (chunk.trees) {
                     chunk.trees.forEach(tree => {
                         if (!tree.userData.isFallingTree) {
-                            const bend = isStormActive ? (Math.sin(time * 8.0 + tree.position.z * 0.05) * 0.28 + 0.22) : 0.0;
+                            const bend = isStormActive ? (Math.sin(time * 9.0 + tree.position.z * 0.05) * 0.38 + 0.32) : 0.0;
                             tree.rotation.z = bend;
                         }
                     });
@@ -2254,13 +2281,13 @@
                         const distZ = worldTreeZ - carGroup.position.z;
                         
                         // Trigger fall if car is close and approaching
-                        if (isStormActive && distZ > 0 && distZ < 140 && !tree.userData.hasFallen && !tree.userData.isFalling) {
+                        if (isStormActive && distZ > 0 && distZ < 125 && !tree.userData.hasFallen && !tree.userData.isFalling) {
                             tree.userData.isFalling = true;
                         }
                         
                         if (tree.userData.isFalling) {
                             const targetAngle = (Math.PI / 2) * 0.85; // fall flat
-                            const fallSpeed = 2.2 * delta;
+                            const fallSpeed = 1.1 * delta;
                             tree.userData.fallAngle = Math.min(targetAngle, tree.userData.fallAngle + fallSpeed);
                             
                             tree.rotation.z = tree.userData.fallDirection * tree.userData.fallAngle;
@@ -2327,18 +2354,30 @@
                     if (vehicle.speed > 0) {
                         if (relZ < -150) {
                             vehicle.group.position.z = carGroup.position.z + 300 + Math.random() * 100;
-                            vehicle.group.position.x = Math.random() > 0.5 ? 4 : -4;
-                            vehicle.speed = 0.3 + Math.random() * 0.4;
+                            const lane = Math.random() > 0.5 ? 4 : -4;
+                            vehicle.group.position.x = lane;
+                            vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
                             stopTrafficSound(vehicle);
                         }
                     } else {
                         if (relZ < -100) {
                             vehicle.group.position.z = carGroup.position.z + 300 + Math.random() * 100;
-                            vehicle.group.position.x = Math.random() > 0.5 ? 4 : -4;
-                            vehicle.speed = -(0.8 + Math.random() * 0.6);
+                            const lane = Math.random() > 0.5 ? 4 : -4;
+                            vehicle.group.position.x = lane;
+                            vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
                             stopTrafficSound(vehicle);
                         }
                     }
+
+                    // Recycle if too far ahead to keep traffic in circulation
+                    if (relZ > 350) {
+                        vehicle.group.position.z = carGroup.position.z - 150 - Math.random() * 50;
+                        const lane = Math.random() > 0.5 ? 4 : -4;
+                        vehicle.group.position.x = lane;
+                        vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
+                        stopTrafficSound(vehicle);
+                    }
+
                     vehicle.group.rotation.y = vehicle.speed > 0 ? 0 : Math.PI;
 
                     // Positional Audio Logic
