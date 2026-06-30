@@ -989,7 +989,19 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(text, canvas.width / 2, canvas.height / 2);
             
-          function buildBMWConvertibleMesh(color, isParked = false, isPlayer = false) {
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.MeshLambertMaterial({ 
+                map: texture, 
+                emissive: 0x39ff14, 
+                emissiveMap: texture,
+                emissiveIntensity: 0.8
+            });
+            
+            signCanvasCache.set(text, material);
+            return material;
+        }
+
+        function buildBMWConvertibleMesh(color, isParked = false, isPlayer = false) {
             const car = new THREE.Group();
             
             // Materials
@@ -1376,13 +1388,15 @@
             roofAC.castShadow = true;
             bus.add(roofAC);
 
-            // 3. FRONT WINDSHIELD & ROUTE BOARD
-            const windshieldMat = new THREE.MeshStandardMaterial({ 
-                color: 0x111113, 
-                roughness: 0.1, 
-                metalness: 0.9 
+            // 3. TRANSPARENT FRONT WINDSHIELD
+            const frontGlassMat = new THREE.MeshStandardMaterial({ 
+                color: 0xccf5ff, 
+                transparent: true, 
+                opacity: 0.35, 
+                roughness: 0.1,
+                metalness: 0.8
             });
-            const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.06, 1.5, 0.08), windshieldMat);
+            const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.04, 1.45, 0.04), frontGlassMat);
             windshield.position.set(0, 1.25, 4.41);
             bus.add(windshield);
 
@@ -1396,19 +1410,86 @@
             signMesh.position.set(0, 1.88, 4.46);
             bus.add(signMesh);
 
-            // 4. SIDE GLAZING STRIPS
-            const sideWinL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.85, 7.8), windshieldMat);
+            // 4. TRANSPARENT CABIN INTERIOR (Seats, steering, dashboard)
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.05, 1.5), new THREE.MeshStandardMaterial({ color: 0x4a4a4a }));
+            floor.position.set(0, 0.55, 3.8);
+            bus.add(floor);
+
+            const dashBoard = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.28, 0.4), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 }));
+            dashBoard.position.set(0, 0.84, 4.2);
+            bus.add(dashBoard);
+
+            const steerWheel = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 4, 12), new THREE.MeshStandardMaterial({ color: 0x111112 }));
+            steerWheel.position.set(-0.55, 0.94, 4.02);
+            steerWheel.rotation.x = -Math.PI / 6;
+            bus.add(steerWheel);
+
+            // Two front seats (tall grey/blue passenger seats from image)
+            const seatBlueMat = new THREE.MeshStandardMaterial({ color: 0x5a6e85, roughness: 0.6 });
+            
+            const seatBackL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.15, 0.12), seatBlueMat);
+            seatBackL.position.set(-0.55, 1.25, 3.4);
+            bus.add(seatBackL);
+            const seatCushionL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.15, 0.55), seatBlueMat);
+            seatCushionL.position.set(-0.55, 0.65, 3.6);
+            bus.add(seatCushionL);
+
+            const seatBackR = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.15, 0.12), seatBlueMat);
+            seatBackR.position.set(0.55, 1.25, 3.4);
+            bus.add(seatBackR);
+            const seatCushionR = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.15, 0.55), seatBlueMat);
+            seatCushionR.position.set(0.55, 0.65, 3.6);
+            bus.add(seatCushionR);
+
+            // 5. BLACK SIDE EARS / MIRRORS
+            const mirrorStalkGeo = new THREE.BoxGeometry(0.25, 0.04, 0.04);
+            const mirrorBoxGeo = new THREE.BoxGeometry(0.16, 0.44, 0.12);
+            const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1f, roughness: 0.6 });
+            
+            // Left mirror
+            const stalkL = new THREE.Mesh(mirrorStalkGeo, mirrorMat);
+            stalkL.position.set(-1.18, 1.62, 4.38);
+            bus.add(stalkL);
+            const boxL = new THREE.Mesh(mirrorBoxGeo, mirrorMat);
+            boxL.position.set(-1.32, 1.42, 4.38);
+            bus.add(boxL);
+
+            // Right mirror
+            const stalkR = new THREE.Mesh(mirrorStalkGeo, mirrorMat);
+            stalkR.position.set(1.18, 1.62, 4.38);
+            bus.add(stalkR);
+            const boxR = new THREE.Mesh(mirrorBoxGeo, mirrorMat);
+            boxR.position.set(1.32, 1.42, 4.38);
+            bus.add(boxR);
+
+            // 6. WINDSHIELD WIPERS (Resting horizontally at the base of the glass)
+            const wiperGeo = new THREE.BoxGeometry(0.72, 0.02, 0.02);
+            const wiperMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0c });
+            
+            const wiperL = new THREE.Mesh(wiperGeo, wiperMat);
+            wiperL.position.set(-0.48, 0.62, 4.43);
+            wiperL.rotation.z = -0.04;
+            bus.add(wiperL);
+            
+            const wiperR = new THREE.Mesh(wiperGeo, wiperMat);
+            wiperR.position.set(0.48, 0.62, 4.43);
+            wiperR.rotation.z = 0.04;
+            bus.add(wiperR);
+
+            // 7. SIDE GLAZING STRIPS
+            const sideWinMat = new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.1, metalness: 0.9 });
+            const sideWinL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.85, 7.8), sideWinMat);
             sideWinL.position.set(-1.06, 1.35, 0.1);
             bus.add(sideWinL);
 
-            const sideWinR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.85, 7.8), windshieldMat);
+            const sideWinR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.85, 7.8), sideWinMat);
             sideWinR.position.set(1.06, 1.35, 0.1);
             bus.add(sideWinR);
 
-            // 5. WHEELS & FUTURISTIC HUBCAPS (Matching image)
+            // 8. WHEELS & HUBCAPS
             const tireMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
-            const rimMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.1 }); // silver chrome rim
-            const centerCapMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.5 }); // dark center hubcap
+            const rimMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.1 });
+            const centerCapMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.5 });
 
             const wheelOffsets = [
                 { x: -1.02, z: 2.3 },
@@ -1421,20 +1502,17 @@
                 const wheelGroup = new THREE.Group();
                 wheelGroup.position.set(offset.x, 0.48, offset.z);
 
-                // Outer tire
                 const tireGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.44, 16);
                 tireGeo.rotateZ(Math.PI / 2);
                 const tire = new THREE.Mesh(tireGeo, tireMat);
                 tire.castShadow = true;
                 wheelGroup.add(tire);
 
-                // Chrome Rim Face
                 const rimGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.46, 16);
                 rimGeo.rotateZ(Math.PI / 2);
                 const rim = new THREE.Mesh(rimGeo, rimMat);
                 wheelGroup.add(rim);
 
-                // Dark Hubcap Center
                 const capGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.48, 12);
                 capGeo.rotateZ(Math.PI / 2);
                 const cap = new THREE.Mesh(capGeo, centerCapMat);
@@ -1443,18 +1521,62 @@
                 bus.add(wheelGroup);
             });
 
-            // 6. THIN LED LIGHT STRIPS
-            const ledHeadlightGeo = new THREE.BoxGeometry(0.4, 0.05, 0.05);
-            const ledHeadlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            // 9. PROJECTOR HEADLIGHT ASSEMBLIES (Triangular multi-bulb housings)
+            const headlightHousingMat = new THREE.MeshStandardMaterial({ color: 0xc1c5cb, roughness: 0.3 });
+            const hL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.05), headlightHousingMat);
+            hL.position.set(-0.7, 0.42, 4.41);
+            hL.rotation.z = -0.15;
+            bus.add(hL);
             
-            const ledHL = new THREE.Mesh(ledHeadlightGeo, ledHeadlightMat);
-            ledHL.position.set(-0.7, 0.42, 4.41);
-            bus.add(ledHL);
-            
-            const ledHR = new THREE.Mesh(ledHeadlightGeo, ledHeadlightMat);
-            ledHR.position.set(0.7, 0.42, 4.41);
-            bus.add(ledHR);
+            const hR = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.05), headlightHousingMat);
+            hR.position.set(0.7, 0.42, 4.41);
+            hR.rotation.z = 0.15;
+            bus.add(hR);
 
+            // 4 bulbs in each headlight housing
+            const bulbGeo = new THREE.SphereGeometry(0.04, 8, 8);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            for (let b = 0; b < 4; b++) {
+                const offsetX = -0.15 + b * 0.1;
+                
+                const bulbL = new THREE.Mesh(bulbGeo, bulbMat);
+                bulbL.position.set(-0.7 + offsetX, 0.42, 4.44);
+                bus.add(bulbL);
+                
+                const bulbR = new THREE.Mesh(bulbGeo, bulbMat);
+                bulbR.position.set(0.7 + offsetX, 0.42, 4.44);
+                bus.add(bulbR);
+            }
+
+            // Winged center logo
+            const logoWingL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.02), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+            logoWingL.position.set(-0.1, 0.44, 4.42);
+            logoWingL.rotation.z = 0.25;
+            bus.add(logoWingL);
+            
+            const logoWingR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.02), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+            logoWingR.position.set(0.1, 0.44, 4.42);
+            logoWingR.rotation.z = -0.25;
+            bus.add(logoWingR);
+
+            // Bumper circular fog lights
+            const fogGeo = new THREE.SphereGeometry(0.05, 8, 8);
+            const fogMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            
+            const fogL = new THREE.Mesh(fogGeo, fogMat);
+            fogL.position.set(-0.82, 0.24, 4.42);
+            bus.add(fogL);
+            
+            const fogR = new THREE.Mesh(fogGeo, fogMat);
+            fogR.position.set(0.82, 0.24, 4.42);
+            bus.add(fogR);
+
+            // Black license plate area
+            const licensePlate = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.15, 0.02), new THREE.MeshBasicMaterial({ color: 0x050505 }));
+            licensePlate.position.set(0, 0.22, 4.42);
+            bus.add(licensePlate);
+
+            // LED Taillights
             const ledTaillightGeo = new THREE.BoxGeometry(0.06, 0.5, 0.05);
             const ledTaillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             
