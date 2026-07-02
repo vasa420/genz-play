@@ -2939,103 +2939,168 @@
         // ── 3D Car Asset ──────────────────────────────────────
         const carGroup = new THREE.Group();
 
-        // Car main body
-        const carBodyGeo = new THREE.BoxGeometry(2.4, 0.8, 4.8);
-        const carBodyMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.2, metalness: 0.8 }); // Cherry red metallic
-        const carBody = new THREE.Mesh(carBodyGeo, carBodyMat);
-        carBody.position.y = 0.5;
-        carBody.castShadow = true;
-        carBody.receiveShadow = true;
-        carGroup.add(carBody);
+        // 1. MAIN WEDGE-SHAPED BODY (Lamborghini Orange Metallic)
+        const carBodyMat = new THREE.MeshStandardMaterial({ 
+            color: 0xff5a00, // vibrant Lambo orange
+            roughness: 0.18, 
+            metalness: 0.82 
+        });
+        const carbonMat = new THREE.MeshStandardMaterial({
+            color: 0x18181c, // dark carbon fiber grey/black
+            roughness: 0.5,
+            metalness: 0.3
+        });
+        
+        // Lower chassis
+        const carChassis = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.32, 4.6), carBodyMat);
+        carChassis.position.y = 0.28;
+        carChassis.castShadow = true;
+        carChassis.receiveShadow = true;
+        carGroup.add(carChassis);
 
-        // Car cabin (glass/roof)
-        const carCabinGeo = new THREE.BoxGeometry(2.0, 0.7, 2.4);
-        const carCabinMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.1, transparent: true, opacity: 0.95 });
-        const carCabin = new THREE.Mesh(carCabinGeo, carCabinMat);
-        carCabin.position.set(0, 1.25, -0.2);
+        // Slanted hood (wedge sloping nose)
+        const carHood = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.22, 1.8), carBodyMat);
+        carHood.position.set(0, 0.44, 1.2);
+        carHood.rotation.x = 0.08; // angled forward
+        carHood.castShadow = true;
+        carGroup.add(carHood);
+
+        // Rear engine deck
+        const carDeck = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.18, 1.5), carBodyMat);
+        carDeck.position.set(0, 0.46, -1.35);
+        carDeck.rotation.x = -0.05; // sloped backward
+        carDeck.castShadow = true;
+        carGroup.add(carDeck);
+
+        // 2. LOW-PROFILE WINDSHIELD & CABIN (Slanted black glass)
+        const cabinGeo = new THREE.BoxGeometry(2.0, 0.58, 1.8);
+        const cabinMat = new THREE.MeshStandardMaterial({ 
+            color: 0x16171a, 
+            roughness: 0.05, 
+            transparent: true, 
+            opacity: 0.94 
+        });
+        const carCabin = new THREE.Mesh(cabinGeo, cabinMat);
+        carCabin.position.set(0, 0.88, -0.1);
+        carCabin.rotation.x = 0.24; // slanted cabin windshield
         carCabin.castShadow = true;
         carGroup.add(carCabin);
 
-        // Wheels
-        const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 12);
+        // 3. FRONT BUMPER VENTS & CARBON SIDE SPLITTERS
+        const frontIntake = new THREE.Mesh(new THREE.BoxGeometry(2.22, 0.24, 0.2), carbonMat);
+        frontIntake.position.set(0, 0.16, 2.22);
+        carGroup.add(frontIntake);
+
+        const splitterL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.4), carbonMat);
+        splitterL.position.set(-0.95, 0.08, 2.24);
+        carGroup.add(splitterL);
+        const splitterR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.4), carbonMat);
+        splitterR.position.set(0.95, 0.08, 2.24);
+        carGroup.add(splitterR);
+
+        // 4. SIDE DECAL / SKIRT CARBON STRIPE
+        const sideStripe = new THREE.Mesh(new THREE.BoxGeometry(2.34, 0.08, 3.2), carbonMat);
+        sideStripe.position.set(0, 0.22, -0.3);
+        carGroup.add(sideStripe);
+
+        // 5. CARBON FIBER REAR WING (Spoiler)
+        const wingStrutL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.12), carbonMat);
+        wingStrutL.position.set(-0.9, 0.62, -2.1);
+        carGroup.add(wingStrutL);
+        const wingStrutR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.12), carbonMat);
+        wingStrutR.position.set(0.9, 0.62, -2.1);
+        carGroup.add(wingStrutR);
+
+        const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.04, 0.4), carbonMat);
+        wingBlade.position.set(0, 0.74, -2.1);
+        wingBlade.castShadow = true;
+        carGroup.add(wingBlade);
+
+        // 6. DARK GREY SPORT WHEELS & ORANGE BRAKE CALIPERS
+        const wheelGeo = new THREE.CylinderGeometry(0.46, 0.46, 0.58, 12);
         wheelGeo.rotateZ(Math.PI / 2);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.7 }); // dark gunmetal grey rims
+        const caliperMat = new THREE.MeshBasicMaterial({ color: 0xff5a00 }); // orange Brembo calipers
         
         const wheels = [];
         const wheelOffsets = [
-            { x: -1.25, z: 1.4 },  // front-left
-            { x: 1.25, z: 1.4 },   // front-right
-            { x: -1.25, z: -1.4 }, // back-left
-            { x: 1.25, z: -1.4 }   // back-right
+            { x: -1.16, z: 1.35 },  // front-left
+            { x: 1.16, z: 1.35 },   // front-right
+            { x: -1.16, z: -1.35 }, // back-left
+            { x: 1.16, z: -1.35 }   // back-right
         ];
 
-        wheelOffsets.forEach((offset) => {
+        wheelOffsets.forEach((offset, idx) => {
             const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-            wheel.position.set(offset.x, 0.5, offset.z);
+            wheel.position.set(offset.x, 0.46, offset.z);
             wheel.castShadow = true;
             carGroup.add(wheel);
             wheels.push(wheel);
+
+            // Add orange caliper details visible behind spokes
+            const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.18, 0.06), caliperMat);
+            caliper.position.set(offset.x + (offset.x > 0 ? -0.24 : 0.24), 0.56, offset.z + 0.12);
+            carGroup.add(caliper);
         });
 
-        // Headlights (glow cylinders)
-        const lightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+        // 7. LIGHTS
+        const lightGeo = new THREE.BoxGeometry(0.32, 0.1, 0.3);
         const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         
         const headlightLeft = new THREE.Mesh(lightGeo, lightMat);
-        headlightLeft.position.set(-0.8, 0.55, 2.41);
+        headlightLeft.position.set(-0.85, 0.48, 1.95);
+        headlightLeft.rotation.y = 0.2; // angled inward
         carGroup.add(headlightLeft);
 
         const headlightRight = new THREE.Mesh(lightGeo, lightMat);
-        headlightRight.position.set(0.8, 0.55, 2.41);
+        headlightRight.position.set(0.85, 0.48, 1.95);
+        headlightRight.rotation.y = -0.2;
         carGroup.add(headlightRight);
 
-        // Spotlights casting actual light
+        // Spotlights
         const spotLeft = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
-        spotLeft.position.set(-0.8, 0.55, 2.5);
-        spotLeft.target.position.set(-0.8, 0.2, 20);
+        spotLeft.position.set(-0.85, 0.48, 2.0);
+        spotLeft.target.position.set(-0.85, 0.2, 20);
         carGroup.add(spotLeft);
         carGroup.add(spotLeft.target);
 
         const spotRight = new THREE.SpotLight(0xfff5d0, 2.0, 60, Math.PI / 5, 0.5, 1);
-        spotRight.position.set(0.8, 0.55, 2.5);
-        spotRight.target.position.set(0.8, 0.2, 20);
+        spotRight.position.set(0.85, 0.48, 2.0);
+        spotRight.target.position.set(0.85, 0.2, 20);
         carGroup.add(spotRight);
         carGroup.add(spotRight.target);
 
-        // ── Driver seat Cockpit Dashboard & Steering Wheel ──
-        // Dashboard
-        const dashGeo = new THREE.BoxGeometry(2.2, 0.4, 0.5);
+        // 8. COCKPIT DETAILS (Steering wheel, Speedometer, Wipers)
+        const dashGeo = new THREE.BoxGeometry(2.1, 0.32, 0.5);
         const dashMat = new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.7 });
         const dashboard = new THREE.Mesh(dashGeo, dashMat);
-        dashboard.position.set(0, 0.9, 0.7);
+        dashboard.position.set(0, 0.72, 0.6);
         carGroup.add(dashboard);
 
-        // Steering Wheel
         const steeringWheelGeo = new THREE.TorusGeometry(0.24, 0.035, 6, 20);
         const steeringWheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.8 });
         const steeringWheel = new THREE.Mesh(steeringWheelGeo, steeringWheelMat);
-        steeringWheel.position.set(-0.55, 1.0, 0.55);
+        steeringWheel.position.set(-0.55, 0.82, 0.45);
         steeringWheel.rotation.x = -Math.PI / 6;
         carGroup.add(steeringWheel);
 
-        // Glowing cyan speedometer gauge
         const gaugeGeo = new THREE.CircleGeometry(0.08, 12);
         const gaugeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
         const gauge = new THREE.Mesh(gaugeGeo, gaugeMat);
-        gauge.position.set(-0.55, 0.95, 0.96);
+        gauge.position.set(-0.55, 0.78, 0.82);
         gauge.rotation.x = -Math.PI / 10;
         carGroup.add(gauge);
 
         // Cockpit Wipers
         const wiperGroupL = new THREE.Group();
-        wiperGroupL.position.set(-0.55, 1.15, 0.65); // pivot point L
+        wiperGroupL.position.set(-0.55, 0.88, 0.65);
         const wiperArmL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.48, 0.02), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
         wiperArmL.position.y = 0.24;
         wiperGroupL.add(wiperArmL);
         carGroup.add(wiperGroupL);
         
         const wiperGroupR = new THREE.Group();
-        wiperGroupR.position.set(0.55, 1.15, 0.65); // pivot point R
+        wiperGroupR.position.set(0.55, 0.88, 0.65);
         const wiperArmR = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.48, 0.02), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.8, roughness: 0.3 }));
         wiperArmR.position.y = 0.24;
         wiperGroupR.add(wiperArmR);
@@ -3312,12 +3377,8 @@
                 }
             });
 
-            // Update Rain Particles
-            if (isStormActive) {
-                rainMat.opacity = Math.min(0.9, rainMat.opacity + delta * 0.45);
-            } else {
-                rainMat.opacity = Math.max(0.0, rainMat.opacity - delta * 0.45);
-            }
+            // Update Rain Particles - starts and ends sharply!
+            rainMat.opacity = isStormActive ? 0.9 : 0.0;
             
             if (rainMat.opacity > 0) {
                 const positions = rainGeometry.attributes.position.array;
