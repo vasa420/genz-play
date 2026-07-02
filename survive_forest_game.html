@@ -923,21 +923,29 @@
         scene.add(sunLight);
 
         // ── Sun Waking Up over Mountains ──────────────────────
-        const sunGeo = new THREE.SphereGeometry(5, 24, 24);
-        const sunMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const sunGeo = new THREE.SphereGeometry(9, 24, 24);
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xffbb00 });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(-40, 2, 280);
         
-        // Sun outer glow (thick red glow)
-        const glowGeo = new THREE.SphereGeometry(10, 24, 24);
-        const glowMat = new THREE.MeshBasicMaterial({ 
-            color: 0xff0000, 
-            transparent: true, 
-            opacity: 0.32, 
-            blending: THREE.AdditiveBlending 
+        // Sun outer glow (thick gradient corona shells)
+        const glowMats = [];
+        const glowOpacities = [0.45, 0.28, 0.15, 0.08];
+        const glowSizes = [14, 20, 28, 40];
+        const glowColors = [0xffaa00, 0xff6600, 0xff3300, 0xbb1100];
+        
+        glowSizes.forEach((size, idx) => {
+            const glowGeo = new THREE.SphereGeometry(size, 24, 24);
+            const glowMat = new THREE.MeshBasicMaterial({ 
+                color: glowColors[idx], 
+                transparent: true, 
+                opacity: glowOpacities[idx], 
+                blending: THREE.AdditiveBlending 
+            });
+            const sunGlow = new THREE.Mesh(glowGeo, glowMat);
+            sunMesh.add(sunGlow);
+            glowMats.push(glowMat);
         });
-        const sunGlow = new THREE.Mesh(glowGeo, glowMat);
-        sunMesh.add(sunGlow);
         scene.add(sunMesh);
 
         // Soft yellow fill light from opposite sky direction
@@ -1158,63 +1166,129 @@
         function createBusMesh() {
             const bus = new THREE.Group();
             
-            // Main body
-            const bodyGeo = new THREE.BoxGeometry(2.1, 1.9, 8.5);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.4 });
+            // 1. MAIN BODY (Futuristic white/light-blue-grey satin finish)
+            const bodyGeo = new THREE.BoxGeometry(2.2, 2.1, 8.6);
+            const bodyMat = new THREE.MeshStandardMaterial({ 
+                color: 0xe2e8f0, 
+                roughness: 0.35,
+                metalness: 0.1
+            });
             const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 1.1;
+            body.position.y = 1.15;
             body.castShadow = true;
             body.receiveShadow = true;
             bus.add(body);
+
+            // Rounded top-front edge cylinder
+            const roundedTopGeo = new THREE.CylinderGeometry(0.18, 0.18, 2.2, 12);
+            roundedTopGeo.rotateZ(Math.PI / 2);
+            const roundedTop = new THREE.Mesh(roundedTopGeo, bodyMat);
+            roundedTop.position.set(0, 2.1, 4.2);
+            bus.add(roundedTop);
+
+            // Rounded bottom-front edge cylinder
+            const roundedBottomGeo = new THREE.CylinderGeometry(0.12, 0.12, 2.2, 12);
+            roundedBottomGeo.rotateZ(Math.PI / 2);
+            const roundedBottom = new THREE.Mesh(roundedBottomGeo, bodyMat);
+            roundedBottom.position.set(0, 0.2, 4.24);
+            bus.add(roundedBottom);
             
-            // Windows strip
-            const winGeo = new THREE.BoxGeometry(2.14, 0.5, 7.5);
-            const winMat = new THREE.MeshStandardMaterial({ color: 0xffdd55, emissive: 0x553300, roughness: 0.1 });
-            const win = new THREE.Mesh(winGeo, winMat);
-            win.position.set(0, 1.3, -0.2);
-            bus.add(win);
+            // 2. LARGE POLISHED FRONT DISPLAY SCREEN (Black glass wrap)
+            const screenGeo = new THREE.BoxGeometry(2.16, 1.8, 0.1);
+            const screenMat = new THREE.MeshStandardMaterial({ 
+                color: 0x111115, 
+                roughness: 0.08,
+                metalness: 0.95
+            });
+            const frontScreen = new THREE.Mesh(screenGeo, screenMat);
+            frontScreen.position.set(0, 1.25, 4.31);
+            bus.add(frontScreen);
+
+            // Destination text board (M2 Pl. Wolnosci) inside the display shield
+            const destMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 }); // Amber glow
+            const destBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.12, 0.02), destMat);
+            destBoard.position.set(0, 1.85, 4.33);
+            bus.add(destBoard);
+
+            // 3. CONTINUOUS DARK TINTED SIDE WINDOW BAND
+            const sideWinGeo = new THREE.BoxGeometry(2.22, 0.85, 6.8);
+            const sideWinMat = new THREE.MeshStandardMaterial({ 
+                color: 0x1c1e22, 
+                roughness: 0.1,
+                metalness: 0.8
+            });
+            const sideWin = new THREE.Mesh(sideWinGeo, sideWinMat);
+            sideWin.position.set(0, 1.35, -0.5);
+            bus.add(sideWin);
             
-            // Wheels
-            const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.5, 10);
+            // 4. CHROME / SILVER ACCENT STRIP ABOVE WINDOWS
+            const chromeGeo = new THREE.BoxGeometry(2.23, 0.06, 6.8);
+            const chromeMat = new THREE.MeshStandardMaterial({ 
+                color: 0xd1d5db, 
+                metalness: 0.9, 
+                roughness: 0.15 
+            });
+            const chromeStrip = new THREE.Mesh(chromeGeo, chromeMat);
+            chromeStrip.position.set(0, 1.82, -0.5);
+            bus.add(chromeStrip);
+            
+            // 5. INTEGRATED SHROUDED WHEELS (Slightly recessed X = 0.92)
+            const wheelGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.48, 12);
             wheelGeo.rotateZ(Math.PI / 2);
-            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.9 });
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.95 });
+            const hubcapGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.52, 12);
+            hubcapGeo.rotateZ(Math.PI / 2);
+            const hubcapMat = new THREE.MeshStandardMaterial({ color: 0xa1a1aa, metalness: 0.8, roughness: 0.2 });
             
             const offsets = [
-                { x: -1.05, z: 2.8 },
-                { x: 1.05, z: 2.8 },
-                { x: -1.05, z: -1.5 },
-                { x: 1.05, z: -1.5 },
-                { x: -1.05, z: -3.3 },
-                { x: 1.05, z: -3.3 }
+                { x: -0.92, z: 2.5 },
+                { x: 0.92, z: 2.5 },
+                { x: -0.92, z: -2.2 },
+                { x: 0.92, z: -2.2 }
             ];
             offsets.forEach(offset => {
+                // Main tyre
                 const wh = new THREE.Mesh(wheelGeo, wheelMat);
-                wh.position.set(offset.x, 0.5, offset.z);
+                wh.position.set(offset.x, 0.48, offset.z);
                 wh.castShadow = true;
                 bus.add(wh);
+                
+                // Chrome hubcap
+                const hub = new THREE.Mesh(hubcapGeo, hubcapMat);
+                hub.position.set(offset.x, 0.48, offset.z);
+                bus.add(hub);
             });
             
-            // Lights
-            const headlightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.05);
-            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const hl = new THREE.Mesh(headlightGeo, headlightMat);
-            hl.position.set(-0.7, 0.6, 4.26);
-            bus.add(hl);
-            const hr = new THREE.Mesh(headlightGeo, headlightMat);
-            hr.position.set(0.7, 0.6, 4.26);
-            bus.add(hr);
+            // 6. SLEEK CAMERA MIRRORS (Winglets)
+            const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.5 });
+            const mirrorL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.08), mirrorMat);
+            mirrorL.position.set(-1.18, 1.9, 4.0);
+            bus.add(mirrorL);
+            const mirrorR = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.08), mirrorMat);
+            mirrorR.position.set(1.18, 1.9, 4.0);
+            bus.add(mirrorR);
             
+            // 7. LED HEADLIGHTS STRIP
+            const headlightGeo = new THREE.BoxGeometry(1.8, 0.06, 0.06);
+            const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const ledHeadlights = new THREE.Mesh(headlightGeo, headlightMat);
+            ledHeadlights.position.set(0, 0.45, 4.32);
+            bus.add(ledHeadlights);
+            
+            // 8. LED TAILLIGHTS (Thin vertical bars)
+            const taillightGeo = new THREE.BoxGeometry(0.06, 0.6, 0.06);
             const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const tl = new THREE.Mesh(headlightGeo, taillightMat);
-            tl.position.set(-0.7, 0.5, -4.26);
+            
+            const tl = new THREE.Mesh(taillightGeo, taillightMat);
+            tl.position.set(-1.0, 0.9, -4.31);
             bus.add(tl);
-            const tr = new THREE.Mesh(headlightGeo, taillightMat);
-            tr.position.set(0.7, 0.5, -4.26);
+            const tr = new THREE.Mesh(taillightGeo, taillightMat);
+            tr.position.set(1.0, 0.9, -4.31);
             bus.add(tr);
 
             // Front spotlight casting light beam forward
             const spot = new THREE.SpotLight(0xfff5d0, 1.8, 55, Math.PI / 6, 0.5, 1);
-            spot.position.set(0, 0.6, 4.3);
+            spot.position.set(0, 0.45, 4.3);
             const spotTarget = new THREE.Object3D();
             spotTarget.position.set(0, 0.2, 20);
             spot.target = spotTarget;
@@ -1223,19 +1297,19 @@
 
             // Taillight glow
             const tailGlow = new THREE.PointLight(0xff0000, 0.8, 8, 1.5);
-            tailGlow.position.set(0, 0.5, -4.3);
+            tailGlow.position.set(0, 0.9, -4.3);
             bus.add(tailGlow);
             
             return bus;
         }
 
-        // Procedural Shop Mesh Creator
+        // Procedural Shop Mesh Creator - Upgraded to "Big Big Shop"
         function createShopMesh(name, isBakery) {
             const shopGroup = new THREE.Group();
             
-            const buildWidth = 14;
-            const buildHeight = 9;
-            const buildDepth = 18;
+            const buildWidth = 19;
+            const buildHeight = 13;
+            const buildDepth = 24;
             
             const colors = [0x5c4033, 0x4a5d4e, 0x6e7f80, 0x8a7f80, 0x5e5061, 0x3d4a5d];
             const buildMat = new THREE.MeshStandardMaterial({ 
@@ -1248,16 +1322,16 @@
             mainBuilding.receiveShadow = true;
             shopGroup.add(mainBuilding);
             
-            const roofWidth = buildWidth + 2;
-            const roofHeight = 3;
-            const roofDepth = buildDepth + 2;
+            const roofWidth = buildWidth + 2.5;
+            const roofHeight = 3.5;
+            const roofDepth = buildDepth + 2.5;
             const roof = new THREE.Mesh(new THREE.BoxGeometry(roofWidth, roofHeight, roofDepth), new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.9 }));
             roof.position.y = buildHeight + roofHeight / 2 - 0.8;
             roof.castShadow = true;
             shopGroup.add(roof);
             
-            const door = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.8 }));
-            door.position.set(buildWidth / 2 + 0.05, 2.1, 0);
+            const door = new THREE.Mesh(new THREE.BoxGeometry(0.2, 5.0, 2.8), new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.8 }));
+            door.position.set(buildWidth / 2 + 0.05, 2.5, 0);
             shopGroup.add(door);
             
             const winMat = new THREE.MeshStandardMaterial({ 
@@ -1266,39 +1340,152 @@
                 emissiveIntensity: 1.2,
                 roughness: 0.1 
             });
-            const winGeo = new THREE.BoxGeometry(0.1, 2.0, 3.0);
+            const winGeo = new THREE.BoxGeometry(0.1, 2.5, 4.0);
             const winLeft = new THREE.Mesh(winGeo, winMat);
-            winLeft.position.set(buildWidth / 2 + 0.05, 3.0, -4.0);
+            winLeft.position.set(buildWidth / 2 + 0.05, 3.8, -6.5);
             shopGroup.add(winLeft);
             
             const winRight = new THREE.Mesh(winGeo, winMat);
-            winRight.position.set(buildWidth / 2 + 0.05, 3.0, 4.0);
+            winRight.position.set(buildWidth / 2 + 0.05, 3.8, 6.5);
             shopGroup.add(winRight);
             
-            const signboard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.0, 8.0), getSignMaterial(name));
-            signboard.position.set(buildWidth / 2 + 0.2, buildHeight - 1.0, 0);
+            const signboard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.2, 10.0), getSignMaterial(name));
+            signboard.position.set(buildWidth / 2 + 0.2, buildHeight - 1.8, 0);
             signboard.castShadow = true;
             shopGroup.add(signboard);
             
             if (isBakery) {
                 const car1 = createCarMesh(0x0055ff, true);
-                car1.position.set(buildWidth / 2 + 3.5, 0.1, -4.0);
+                car1.position.set(buildWidth / 2 + 4.5, 0.1, -6.0);
                 car1.rotation.y = Math.PI / 6;
                 shopGroup.add(car1);
                 
                 const car2 = createCarMesh(0xffffff, true);
-                car2.position.set(buildWidth / 2 + 3.5, 0.1, 4.0);
+                car2.position.set(buildWidth / 2 + 4.5, 0.1, 6.0);
                 car2.rotation.y = -Math.PI / 6;
                 shopGroup.add(car2);
             } else if (Math.random() > 0.5) {
                 const carColors = [0xbb0000, 0x333333, 0x00aa55, 0xffaa00];
                 const car = createCarMesh(carColors[Math.floor(Math.random() * carColors.length)], true);
-                car.position.set(buildWidth / 2 + 3.5, 0.1, (Math.random() - 0.5) * 8);
+                car.position.set(buildWidth / 2 + 4.5, 0.1, (Math.random() - 0.5) * 12);
                 car.rotation.y = (Math.random() - 0.5) * 0.5;
                 shopGroup.add(car);
             }
             
             return shopGroup;
+        }
+
+        // Procedural Hotel Mesh Creator - "Large Grand Hotel"
+        function createHotelMesh(name) {
+            const hotelGroup = new THREE.Group();
+            
+            const buildWidth = 24;
+            const buildHeight = 26;
+            const buildDepth = 36;
+            
+            // Modern hotel material (beige / concrete cream color)
+            const buildMat = new THREE.MeshStandardMaterial({ 
+                color: 0xdfdbd5, 
+                roughness: 0.6 
+            });
+            const mainBuilding = new THREE.Mesh(new THREE.BoxGeometry(buildWidth, buildHeight, buildDepth), buildMat);
+            mainBuilding.position.y = buildHeight / 2;
+            mainBuilding.castShadow = true;
+            mainBuilding.receiveShadow = true;
+            hotelGroup.add(mainBuilding);
+            
+            // Grand roof structure
+            const roofGeo = new THREE.BoxGeometry(buildWidth + 2, 2, buildDepth + 2);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x1a202c, roughness: 0.8 });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = buildHeight + 1.0;
+            roof.castShadow = true;
+            hotelGroup.add(roof);
+            
+            // Hotel entrance canopy / awning
+            const canopyGeo = new THREE.BoxGeometry(4.8, 0.4, 8.0);
+            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x742a2a, roughness: 0.5 }); // burgundy red canopy
+            const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+            canopy.position.set(buildWidth / 2 + 2.4, 4.0, 0);
+            canopy.castShadow = true;
+            hotelGroup.add(canopy);
+            
+            // Pillars supporting canopy
+            const pillarGeo = new THREE.CylinderGeometry(0.18, 0.18, 4.0, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7 });
+            
+            const pillar1 = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar1.position.set(buildWidth / 2 + 4.2, 2.0, -3.2);
+            pillar1.castShadow = true;
+            hotelGroup.add(pillar1);
+            
+            const pillar2 = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar2.position.set(buildWidth / 2 + 4.2, 2.0, 3.2);
+            pillar2.castShadow = true;
+            hotelGroup.add(pillar2);
+            
+            // Grand double glass doors
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.1, transparent: true, opacity: 0.7 });
+            const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0xb7791f, metalness: 0.8 }); // gold frame
+            
+            const door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.8, 3.6), doorMat);
+            door.position.set(buildWidth / 2 + 0.05, 1.9, 0);
+            hotelGroup.add(door);
+            
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(0.15, 4.0, 3.8), doorFrameMat);
+            frame.position.set(buildWidth / 2 + 0.02, 2.0, 0);
+            hotelGroup.add(frame);
+
+            // Matrix of hotel windows (4 stories, 6 columns of windows per side)
+            const winMat = new THREE.MeshStandardMaterial({ 
+                color: 0xffdd55, 
+                emissive: 0xffb732, 
+                emissiveIntensity: 1.4,
+                roughness: 0.1 
+            });
+            const winGeo = new THREE.BoxGeometry(0.12, 1.6, 2.0);
+            
+            // Facade windows
+            const floors = [8, 13, 18, 23];
+            const cols = [-12, -7.2, -2.4, 2.4, 7.2, 12];
+            
+            floors.forEach(fy => {
+                cols.forEach(cz => {
+                    // Skip center columns on bottom floor due to canopy
+                    if (fy === 8 && Math.abs(cz) < 5.0) return;
+                    
+                    const windowMesh = new THREE.Mesh(winGeo, winMat);
+                    windowMesh.position.set(buildWidth / 2 + 0.05, fy, cz);
+                    hotelGroup.add(windowMesh);
+                });
+            });
+
+            // Glowing Hotel Signboard (Neon Red) on top of the facade
+            const signMat = new THREE.MeshStandardMaterial({
+                color: 0xe53e3e,
+                emissive: 0xe53e3e,
+                emissiveIntensity: 2.5
+            });
+            const signBoard = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.2, 12.0), new THREE.MeshStandardMaterial({ color: 0x111115 }));
+            signBoard.position.set(buildWidth / 2 + 0.3, buildHeight - 3.0, 0);
+            hotelGroup.add(signBoard);
+            
+            const signText = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.8, 10.0), signMat);
+            signText.position.set(buildWidth / 2 + 0.45, buildHeight - 3.0, 0);
+            hotelGroup.add(signText);
+
+            // Parking Lot with parked cars out front
+            const parkZPositions = [-10.0, 0.0, 10.0];
+            const parkColors = [0xdd3333, 0xffffff, 0x1a202c];
+            
+            parkZPositions.forEach((pz, idx) => {
+                const parkedCar = createCarMesh(parkColors[idx], true);
+                parkedCar.position.set(buildWidth / 2 + 5.5, 0.1, pz);
+                parkedCar.rotation.y = Math.PI / 4;
+                hotelGroup.add(parkedCar);
+            });
+            
+            return hotelGroup;
         }
 
         function buildTrainGroup() {
@@ -1775,11 +1962,18 @@
                 
                 const trees = [];
                 const fallingTrees = [];
-                for (let i = 0; i < 30; i++) {
-                    let tx = (Math.random() - 0.5) * 360;
+                for (let i = 0; i < 320; i++) {
+                    let tx = (Math.random() - 0.5) * 450;
                     let tz = (Math.random() - 0.5) * CHUNK_SIZE;
-                    if (tx > -20 && tx < 20) tx += tx >= 0 ? 22 : -22;
-                    if (tx > 50 && tx < 100) tx += 50;
+                    
+                    // Clear the road and sidewalks (road is from -16 to 16, sidewalk extends to 32)
+                    if (tx > -32 && tx < 32) {
+                        tx += tx >= 0 ? 32 : -32;
+                    }
+                    // Clear the river (river is from 58 to 92)
+                    if (tx > 58 && tx < 92) {
+                        tx += tx > 75 ? 35 : -35;
+                    }
                     
                     const treeGroup = new THREE.Group();
                     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
@@ -1793,14 +1987,19 @@
                     foliage.receiveShadow = true;
                     treeGroup.add(foliage);
                     
-                    treeGroup.scale.set(0.9 + Math.random() * 0.3, 0.85 + Math.random() * 0.45, 0.9 + Math.random() * 0.3);
+                    // Big Big Trees scaling
+                    const scaleX = 1.3 + Math.random() * 1.5;
+                    const scaleY = 1.2 + Math.random() * 2.2;
+                    const scaleZ = 1.3 + Math.random() * 1.5;
+                    treeGroup.scale.set(scaleX, scaleY, scaleZ);
+                    
                     treeGroup.position.set(tx, 0, tz);
                     chunkGroup.add(treeGroup);
                     trees.push(treeGroup);
                     
                     // Identify trees near road to fall during storm
                     const absX = Math.abs(tx);
-                    if (absX >= 22.0 && absX <= 25.0 && fallingTrees.length < 2 && index !== 0) {
+                    if (absX >= 32.0 && absX <= 38.0 && fallingTrees.length < 2 && index !== 0) {
                         treeGroup.userData = {
                             isFallingTree: true,
                             hasFallen: false,
@@ -1812,31 +2011,49 @@
                     }
                 }
                 
-                // Shops
+                // Buildings (Shops & Grand Hotels)
+                const HOTEL_NAMES = ["GRAND FOREST HOTEL", "PINE RIDGE INN", "WOODLAND RETREAT", "MOUNTAIN LODGE HOTEL", "LAKESIDE RESORT"];
                 let nameLeft = SHOP_NAMES[Math.abs(index * 2) % SHOP_NAMES.length];
                 let nameRight = SHOP_NAMES[Math.abs(index * 2 + 1) % SHOP_NAMES.length];
                 if (index === 0) nameLeft = "COZY CRUMB BAKERY";
                 
-                const shopLeft = createShopMesh(nameLeft, nameLeft === "COZY CRUMB BAKERY");
-                shopLeft.position.set(-20, 0, -80);
-                chunkGroup.add(shopLeft);
+                const isOddChunk = Math.abs(index) % 2 === 1;
                 
-                const shopRight = createShopMesh(nameRight, nameRight === "COZY CRUMB BAKERY");
-                shopRight.position.set(20, 0, 80);
-                shopRight.rotation.y = Math.PI;
-                chunkGroup.add(shopRight);
+                // Building 1 (Left, Z = -80)
+                let buildingLeft;
+                if (isOddChunk) {
+                    const hotelName = HOTEL_NAMES[Math.abs(index) % HOTEL_NAMES.length];
+                    buildingLeft = createHotelMesh(hotelName);
+                } else {
+                    buildingLeft = createShopMesh(nameLeft, nameLeft === "COZY CRUMB BAKERY");
+                }
+                buildingLeft.position.set(-32, 0, -80);
+                chunkGroup.add(buildingLeft);
                 
+                // Building 2 (Right, Z = 80)
+                const buildingRight = createShopMesh(nameRight, nameRight === "COZY CRUMB BAKERY");
+                buildingRight.position.set(32, 0, 80);
+                buildingRight.rotation.y = Math.PI;
+                chunkGroup.add(buildingRight);
+                
+                // Building 3 (Left, Z = 80)
                 const nameLeft2 = SHOP_NAMES[Math.abs(index * 2 + 4) % SHOP_NAMES.length];
-                const nameRight2 = SHOP_NAMES[Math.abs(index * 2 + 5) % SHOP_NAMES.length];
+                const buildingLeft2 = createShopMesh(nameLeft2, false);
+                buildingLeft2.position.set(-32, 0, 80);
+                chunkGroup.add(buildingLeft2);
                 
-                const shopLeft2 = createShopMesh(nameLeft2, false);
-                shopLeft2.position.set(-20, 0, 80);
-                chunkGroup.add(shopLeft2);
-                
-                const shopRight2 = createShopMesh(nameRight2, false);
-                shopRight2.position.set(20, 0, -80);
-                shopRight2.rotation.y = Math.PI;
-                chunkGroup.add(shopRight2);
+                // Building 4 (Right, Z = -80)
+                let buildingRight2;
+                if (isOddChunk) {
+                    const hotelName = HOTEL_NAMES[Math.abs(index + 3) % HOTEL_NAMES.length];
+                    buildingRight2 = createHotelMesh(hotelName);
+                } else {
+                    const nameRight2 = SHOP_NAMES[Math.abs(index * 2 + 5) % SHOP_NAMES.length];
+                    buildingRight2 = createShopMesh(nameRight2, false);
+                }
+                buildingRight2.position.set(32, 0, -80);
+                buildingRight2.rotation.y = Math.PI;
+                chunkGroup.add(buildingRight2);
                 
                 // Pedestrians
                 const peds = [];
@@ -2583,7 +2800,7 @@
 
         // Flying Crows
         const birds = [];
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 45; i++) {
             const crowMesh = createCrowMesh();
             const angle = Math.random() * Math.PI * 2;
             const radius = 35 + Math.random() * 45;
@@ -2805,8 +3022,8 @@
                 hudSub.innerText = `TIME: ${hrStr}:${minStr} AM`;
             }
 
-            const isStormActive = (kilometersRemaining <= 20.0 && kilometersRemaining >= 10.0) || stage === 3;
-            const isPreStorm = (kilometersRemaining <= 25.0 && kilometersRemaining > 20.0);
+            const isStormActive = (kilometersRemaining <= 20.0 && kilometersRemaining >= 10.0) || (kilometersRemaining <= 65.0 && kilometersRemaining >= 45.0) || stage === 3;
+            const isPreStorm = (kilometersRemaining <= 25.0 && kilometersRemaining > 20.0) || (kilometersRemaining <= 70.0 && kilometersRemaining > 65.0);
 
             // ── Animate Environment ──────────────────────────
             // Drift clouds
@@ -2819,8 +3036,8 @@
                 else if (relZ > 250) cloud.mesh.position.z -= 500;
             });
 
-            // Dynamic Sunrise & Sun Waking Up over Mountains (rising slowly over 10 minutes)
-            const sunriseProgress = Math.min(1.0, time / 600.0); 
+            // Dynamic Sunrise & Sun Waking Up over Mountains - mapped to distance (80 KM to 70 KM)
+            const sunriseProgress = kilometersRemaining > 70.0 ? Math.min(1.0, (80.0 - kilometersRemaining) / 10.0) : 1.0; 
             
             // Interpolate wind and bend parameters smoothly based on active phases
             let targetWindX = -3.0;
@@ -2885,7 +3102,9 @@
                 // Scale sun back to normal
                 sunMesh.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 2.0);
                 
-                if (kilometersRemaining < 10.0) {
+                // Post-storm clear day when kilometersRemaining < 10.0 OR between 45.0 and 25.0
+                const isClearDay = (kilometersRemaining < 10.0) || (kilometersRemaining < 45.0 && kilometersRemaining > 25.0);
+                if (isClearDay) {
                     // Post-storm: bright clear day atmosphere
                     targetSkyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0xa6c8e0), sunriseProgress);
                     targetAmbient = 0.75 + sunriseProgress * 0.1;
@@ -2895,10 +3114,10 @@
                     // Lerp clouds color to bright white
                     cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
                 } else {
-                    // Pre-storm: normal morning sunrise (when > 25.0 KM)
-                    targetSkyColor = new THREE.Color(0x0e060d).lerp(new THREE.Color(0x280c14), sunriseProgress);
-                    targetAmbient = 0.15 + sunriseProgress * 0.5;
-                    targetSunLight = 0.2 + sunriseProgress * 1.0;
+                    // Pre-storm: normal morning sunrise (when > 70.0 KM) - gets gradually lighter
+                    targetSkyColor = new THREE.Color(0x08040d).lerp(new THREE.Color(0x6e2a34), sunriseProgress);
+                    targetAmbient = 0.1 + sunriseProgress * 0.65;
+                    targetSunLight = 0.15 + sunriseProgress * 1.4;
                     targetFogDensity = 0.007;
                     
                     // Lerp clouds color to warm morning clouds
@@ -2929,10 +3148,20 @@
                 ambientLight.color.copy(currentSkyColor);
             }
             
-            // Sun color (stays thick, vibrant red and shifts to slightly brighter deep red)
-            const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xcc1100), sunriseProgress);
+            // Sun color (stays thick, vibrant orange-yellow core and shifts to deep orange-red corona)
+            const sunColor = new THREE.Color(0xffbb00).lerp(new THREE.Color(0xff8800), sunriseProgress);
             sunMat.color.copy(sunColor);
-            glowMat.color.copy(sunColor);
+            
+            // Corona colors gradient updates matching the reference image!
+            const coronaColors = [
+                new THREE.Color(0xffaa00).lerp(new THREE.Color(0xff5500), sunriseProgress),
+                new THREE.Color(0xff6600).lerp(new THREE.Color(0xdd3300), sunriseProgress),
+                new THREE.Color(0xff3300).lerp(new THREE.Color(0xaa1100), sunriseProgress),
+                new THREE.Color(0xbb1100).lerp(new THREE.Color(0x770000), sunriseProgress)
+            ];
+            glowMats.forEach((mat, idx) => {
+                mat.color.copy(coronaColors[idx]);
+            });
             
             // Sun rises and moves to the top of the sky based on time (sunriseProgress)
             sunMesh.position.z = carGroup.position.z + 280 - sunriseProgress * 200; 
