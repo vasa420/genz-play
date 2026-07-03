@@ -343,6 +343,10 @@
         let radioInterval = null;
         let currentRadioBeat = 0;
 
+        let stormMusic = null;
+        let stormMusicTargetVol = 0.0;
+        let stormMusicCurrentVol = 0.0;
+
         const bassRoots = [55.00, 43.65, 65.41, 49.00]; // A1, F1, C2, G1
         const leadNotes = [
             [220, 246.94, 261.63, 329.63, 440],
@@ -353,6 +357,14 @@
 
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!stormMusic) {
+                stormMusic = new Audio('soundreality-thunder-sound-375727.mp3');
+                stormMusic.loop = true;
+                stormMusic.volume = 0;
+                stormMusic.play().catch(e => {
+                    console.log("Storm music play deferred until interaction:", e);
+                });
+            }
         }
 
         function initCarRadio() {
@@ -3260,11 +3272,33 @@
                 }
             });
 
-            // Update Rain Particles
+            // Update Rain Particles and Storm Music
             if (isStormActive) {
                 rainMat.opacity = Math.min(0.95, rainMat.opacity + delta * 0.95); // Sharper rain onset at 65km
+                
+                if (stormMusic) {
+                    if (stormMusic.paused) {
+                        stormMusic.play().catch(e => {});
+                    }
+                    stormMusicTargetVol = Math.min(1.0, masterVolume * 8.0);
+                }
             } else {
                 rainMat.opacity = Math.max(0.0, rainMat.opacity - delta * 0.45);
+                stormMusicTargetVol = 0.0;
+            }
+
+            if (stormMusic) {
+                const fadeRate = isStormActive ? 1.0 : 0.4; // fade out slowly
+                stormMusicCurrentVol += (stormMusicTargetVol - stormMusicCurrentVol) * delta * fadeRate;
+                if (stormMusicCurrentVol < 0.001) {
+                    stormMusicCurrentVol = 0.0;
+                    if (!stormMusic.paused) {
+                        stormMusic.pause();
+                    }
+                } else if (stormMusicCurrentVol > 1.0) {
+                    stormMusicCurrentVol = 1.0;
+                }
+                stormMusic.volume = stormMusicCurrentVol;
             }
             
             if (rainMat.opacity > 0) {
