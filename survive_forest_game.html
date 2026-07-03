@@ -3096,9 +3096,10 @@
             const isPreStorm = (kilometersRemaining <= 25.0 && kilometersRemaining > 20.0) || (kilometersRemaining <= 70.0 && kilometersRemaining > 65.0);
 
             // ── Animate Environment ──────────────────────────
-            // Drift clouds
+            // Drift clouds (slower during pre-storm and storm for "slow motion" feel)
             clouds.forEach(cloud => {
-                cloud.mesh.position.x += cloud.speed;
+                const currentCloudSpeed = isStormActive ? cloud.speed * 0.45 : (isPreStorm ? cloud.speed * 0.65 : cloud.speed);
+                cloud.mesh.position.x += currentCloudSpeed;
                 if (cloud.mesh.position.x > 200) cloud.mesh.position.x = -200;
                 
                 const relZ = cloud.mesh.position.z - carGroup.position.z;
@@ -3116,16 +3117,16 @@
             let targetBendFreq = 3.0;
 
             if (isStormActive) {
-                targetWindX = -85.0; // heavy wind
-                targetFallSpeed = -110.0; // sharp rain
-                targetBendAmp = 0.45; // heavy bending
+                targetWindX = -90.0; // heavy wind
+                targetFallSpeed = -140.0; // sharp high rain
+                targetBendAmp = 0.48; // heavy bending
                 targetBendFreq = 12.0;
             } else if (isPreStorm) {
-                // progressive wind build-up
-                targetWindX = -25.0;
-                targetFallSpeed = -35.0;
-                targetBendAmp = 0.18;
-                targetBendFreq = 5.0;
+                // progressive slow-motion wind build-up
+                targetWindX = -45.0; // wind gets heavy
+                targetFallSpeed = -30.0; // no rain yet
+                targetBendAmp = 0.28; // progressive heavy bending
+                targetBendFreq = 3.5; // slow-motion heavy bend frequency
             }
             
             currentWindX += (targetWindX - currentWindX) * delta * 1.2;
@@ -3149,25 +3150,25 @@
                 // Scale down sun so it disappears (covered by clouds)
                 sunMesh.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 2.0);
                 
-                // Random lightning strikes
-                if (Math.random() < 0.0055 && !lightningLine) {
+                // Random lightning strikes - heavy lightning (increased frequency to 0.012)
+                if (Math.random() < 0.012 && !lightningLine) {
                     triggerLightning();
                 }
                 
                 // Clouds color to dark grey
                 cloudMat.color.lerp(new THREE.Color(0x1c1e22), delta * 2.0);
             } else if (isPreStorm) {
-                // Slowly getting dark atmosphere
-                targetSkyColor = new THREE.Color(0x030305); // very dark charcoal
-                targetAmbient = 0.06;
-                targetSunLight = 0.04;
-                targetFogDensity = 0.012;
+                // Light dark atmosphere (not fully dark)
+                targetSkyColor = new THREE.Color(0x3c3f4a); // grey-blue storm sky
+                targetAmbient = 0.42; // light dark ambient
+                targetSunLight = 0.38; // light dark sun light
+                targetFogDensity = 0.010; // mist rises
                 
-                // Scale down sun so it gets covered
+                // Scale down sun so it gets covered slowly
                 sunMesh.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 1.5);
                 
-                // Clouds color turning dark storm black
-                cloudMat.color.lerp(new THREE.Color(0x101015), delta * 1.5);
+                // Clouds color turning dark storm black slowly
+                cloudMat.color.lerp(new THREE.Color(0x1a1a20), delta * 1.5);
             } else {
                 // Scale sun back to normal
                 sunMesh.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 2.0);
@@ -3261,7 +3262,7 @@
 
             // Update Rain Particles
             if (isStormActive) {
-                rainMat.opacity = Math.min(0.9, rainMat.opacity + delta * 0.45);
+                rainMat.opacity = Math.min(0.95, rainMat.opacity + delta * 0.95); // Sharper rain onset at 65km
             } else {
                 rainMat.opacity = Math.max(0.0, rainMat.opacity - delta * 0.45);
             }
@@ -3293,7 +3294,7 @@
             // Windshield rain overlay generator
             if (isStormActive && stage === 1) {
                 const containerRain = document.getElementById('windshield-rain-container');
-                if (containerRain && Math.random() < 0.28) {
+                if (containerRain && Math.random() < 0.60) { // Increased density for high rain
                     const drop = document.createElement('div');
                     drop.className = 'windshield-rain-drop';
                     
@@ -3959,7 +3960,9 @@
                 if (keys.s) carSpeed -= carAccel;
 
                 carSpeed *= friction;
-                carSpeed = Math.max(Math.min(carSpeed, maxCarSpeed), -maxCarSpeed * 0.4);
+                // Dynamically reduce maximum car speed during pre-storm and storm for a slow-motion weather effect
+                const currentMaxSpeed = isStormActive ? maxCarSpeed * 0.65 : (isPreStorm ? maxCarSpeed * 0.85 : maxCarSpeed);
+                carSpeed = Math.max(Math.min(carSpeed, currentMaxSpeed), -currentMaxSpeed * 0.4);
 
                 if (Math.abs(carSpeed) > 0.05) {
                     const direction = carSpeed > 0 ? 1 : -1;
