@@ -1728,29 +1728,100 @@
         function createPedestrianMesh() {
             const group = new THREE.Group();
             
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.4), new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
-            torso.position.y = 1.0;
+            // Materials matching the designed character
+            const shirtMat = new THREE.MeshLambertMaterial({ color: 0xff6f91 }); // Coral pink shirt
+            const skirtMat = new THREE.MeshLambertMaterial({ color: 0x4e3629 }); // Dark brown skirt
+            const tightsMat = new THREE.MeshLambertMaterial({ color: 0x3a241b }); // Brown tights
+            const skinMat = new THREE.MeshLambertMaterial({ color: 0xffe0ac }); // Skin tone
+            const hairMat = new THREE.MeshLambertMaterial({ color: 0x24150e }); // Dark brown hair
+            const shoeMat = new THREE.MeshLambertMaterial({ color: 0x1a0e08 }); // Dark flats
+
+            // 1. Torso (Coral Pink Shirt)
+            const torsoGeo = new THREE.BoxGeometry(0.55, 0.6, 0.35);
+            const torso = new THREE.Mesh(torsoGeo, shirtMat);
+            torso.position.y = 1.25;
             torso.castShadow = true;
             group.add(torso);
             
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshLambertMaterial({ color: 0xffcc99 }));
-            head.position.y = 1.7;
+            // Collar detail
+            const collarGeo = new THREE.BoxGeometry(0.2, 0.08, 0.22);
+            const collar = new THREE.Mesh(collarGeo, shirtMat);
+            collar.position.set(0, 1.57, 0.02);
+            group.add(collar);
+
+            // 2. Skirt (Dark Brown Knee-length Skirt)
+            const skirtGeo = new THREE.CylinderGeometry(0.28, 0.36, 0.5, 10);
+            const skirt = new THREE.Mesh(skirtGeo, skirtMat);
+            skirt.position.y = 0.8;
+            skirt.castShadow = true;
+            group.add(skirt);
+
+            // 3. Head (Skin)
+            const headGeo = new THREE.SphereGeometry(0.22, 10, 10);
+            const head = new THREE.Mesh(headGeo, skinMat);
+            head.position.y = 1.68;
             head.castShadow = true;
             group.add(head);
+
+            // 4. Hair (Short Dark Brown)
+            const hairTopGeo = new THREE.SphereGeometry(0.23, 8, 8);
+            const hairTop = new THREE.Mesh(hairTopGeo, hairMat);
+            hairTop.position.set(0, 1.74, -0.02);
+            group.add(hairTop);
             
-            const legGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.8);
-            const legMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
-            
-            const leftLeg = new THREE.Mesh(legGeo, legMat);
-            leftLeg.position.set(-0.2, 0.4, 0);
-            leftLeg.castShadow = true;
+            const hairBackGeo = new THREE.BoxGeometry(0.44, 0.28, 0.4);
+            const hairBack = new THREE.Mesh(hairBackGeo, hairMat);
+            hairBack.position.set(0, 1.68, -0.06);
+            group.add(hairBack);
+
+            // 5. Arms (Pink sleeves + skin hands)
+            const armGroupL = new THREE.Group();
+            armGroupL.position.set(-0.34, 1.45, 0);
+            const sleeveL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.12), shirtMat);
+            sleeveL.position.y = -0.05;
+            sleeveL.castShadow = true;
+            armGroupL.add(sleeveL);
+            const handL = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.35, 6), skinMat);
+            handL.position.y = -0.3;
+            handL.castShadow = true;
+            armGroupL.add(handL);
+            group.add(armGroupL);
+
+            const armGroupR = new THREE.Group();
+            armGroupR.position.set(0.34, 1.45, 0);
+            const sleeveR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.12), shirtMat);
+            sleeveR.position.y = -0.05;
+            sleeveR.castShadow = true;
+            armGroupR.add(sleeveR);
+            const handR = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.35, 6), skinMat);
+            handR.position.y = -0.3;
+            handR.castShadow = true;
+            armGroupR.add(handR);
+            group.add(armGroupR);
+
+            // 6. Legs (Tights + Shoes)
+            const leftLeg = new THREE.Group();
+            leftLeg.position.set(-0.16, 0.4, 0);
+            const leftLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 8), tightsMat);
+            leftLegCylinder.castShadow = true;
+            leftLeg.add(leftLegCylinder);
+            const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), shoeMat);
+            leftShoe.position.set(0, -0.35, 0.05);
+            leftShoe.castShadow = true;
+            leftLeg.add(leftShoe);
             group.add(leftLeg);
-            
-            const rightLeg = new THREE.Mesh(legGeo, legMat);
-            rightLeg.position.set(0.2, 0.4, 0);
-            rightLeg.castShadow = true;
+
+            const rightLeg = new THREE.Group();
+            rightLeg.position.set(0.16, 0.4, 0);
+            const rightLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 8), tightsMat);
+            rightLegCylinder.castShadow = true;
+            rightLeg.add(rightLegCylinder);
+            const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), shoeMat);
+            rightShoe.position.set(0, -0.35, 0.05);
+            rightShoe.castShadow = true;
+            rightLeg.add(rightShoe);
             group.add(rightLeg);
-            
+
             group.userData = { leftLeg, rightLeg };
             return group;
         }
@@ -1880,14 +1951,14 @@
                     group: ped1,
                     localZ: ped1.position.z,
                     direction: Math.random() > 0.5 ? 1 : -1,
-                    speed: 8.0 + Math.random() * 8.0,
+                    speed: 2.2 + Math.random() * 1.6, // Slow normal walking speed
                     offset: Math.random() * 10
                 });
                 peds.push({
                     group: ped2,
                     localZ: ped2.position.z,
                     direction: Math.random() > 0.5 ? 1 : -1,
-                    speed: 8.0 + Math.random() * 8.0,
+                    speed: 2.2 + Math.random() * 1.6, // Slow normal walking speed
                     offset: Math.random() * 10
                 });
                 
@@ -2068,14 +2139,14 @@
                     group: ped1,
                     localZ: ped1.position.z,
                     direction: Math.random() > 0.5 ? 1 : -1,
-                    speed: 8.0 + Math.random() * 8.0,
+                    speed: 2.2 + Math.random() * 1.6, // Slow normal walking speed
                     offset: Math.random() * 10
                 });
                 peds.push({
                     group: ped2,
                     localZ: ped2.position.z,
                     direction: Math.random() > 0.5 ? 1 : -1,
-                    speed: 8.0 + Math.random() * 8.0,
+                    speed: 2.2 + Math.random() * 1.6, // Slow normal walking speed
                     offset: Math.random() * 10
                 });
                 
@@ -3395,7 +3466,10 @@
                     ped.group.position.z = ped.localZ;
                     ped.group.rotation.y = ped.direction > 0 ? 0 : Math.PI;
                     if (ped.group.userData.leftLeg && ped.group.userData.rightLeg) {
-                        const swing = Math.sin(time * 8 + ped.offset) * 0.45;
+                        // Dynamically adjust swing frequency based on pedestrian speed for realistic walking
+                        const swingFreq = ped.speed * 0.9 + 1.2;
+                        const swingAmp = 0.35; // slightly smaller stride amplitude for slow walking
+                        const swing = Math.sin(time * swingFreq + ped.offset) * swingAmp;
                         ped.group.userData.leftLeg.rotation.x = swing;
                         ped.group.userData.rightLeg.rotation.x = -swing;
                     }
