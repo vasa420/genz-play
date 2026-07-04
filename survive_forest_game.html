@@ -352,6 +352,16 @@
         let stormMusicTargetVol = 0.0;
         let stormMusicCurrentVol = 0.0;
 
+        let hornAudio = null;
+        let hornActive = false;
+
+        function initHornAudio() {
+            if (!hornAudio) {
+                hornAudio = new Audio('floraphonic-car-horn-4-189858.mp3');
+                hornAudio.loop = true;
+            }
+        }
+
         const bassRoots = [55.00, 43.65, 65.41, 49.00]; // A1, F1, C2, G1
         const leadNotes = [
             [220, 246.94, 261.63, 329.63, 440],
@@ -370,6 +380,7 @@
                     console.log("Storm music play deferred until interaction:", e);
                 });
             }
+            initHornAudio();
         }
 
         function initCarRadio() {
@@ -843,17 +854,26 @@
             }
         }
 
-        let hornOsc1 = null;
-        let hornOsc2 = null;
-        let hornGain = null;
-        let hornActive = false;
-
         function startHorn() {
-            // Permanently disabled
+            initAudio();
+            if (hornActive) return;
+            hornActive = true;
+            if (hornAudio) {
+                hornAudio.volume = Math.min(1.0, masterVolume * 10.0);
+                hornAudio.currentTime = 0;
+                hornAudio.play().catch(e => {
+                    console.log("Horn play deferred:", e);
+                });
+            }
         }
 
         function stopHorn() {
-            // Permanently disabled
+            if (!hornActive) return;
+            hornActive = false;
+            if (hornAudio) {
+                hornAudio.pause();
+                hornAudio.currentTime = 0;
+            }
         }
 
         // Return to Lobby trigger
