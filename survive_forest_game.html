@@ -138,7 +138,7 @@
             font-weight: 700;
         }
 
-        /* Lobby Return button (always visible) */
+        /* Lobby Return button (hidden during driving stage) */
         .btn-lobby {
             position: absolute;
             top: 25px;
@@ -155,6 +155,7 @@
             cursor: pointer;
             z-index: 5;
             transition: 0.3s;
+            display: none; /* Hidden during driving stage */
         }
         .btn-lobby:hover {
             border-color: var(--danger);
@@ -317,7 +318,7 @@
         </div>
     </div>
 
-    <button class="btn-lobby" onclick="returnToLobby()">← LOBBY</button>
+    <button id="lobby-btn" class="btn-lobby" onclick="returnToLobby()">← LOBBY</button>
 
     <div class="hud-container">
         <div class="hud-title" id="hud-mode-title">ACT I: FOREST HIGHWAY</div>
@@ -853,6 +854,7 @@
 
         // Return to Lobby trigger
         function returnToLobby() {
+            if (stage === 1) return; // Prevent returning to lobby during driving stage
             stopPlayerEngine();
             stopHorn();
             stopCarRadio();
@@ -869,7 +871,13 @@
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = true;
             if (key === 'g' && stage === 1) startHorn();
-            if (key === 'q') returnToLobby();
+            if (key === 'q') {
+                if (stage === 1) {
+                    // Q key is disabled during driving car stage
+                    return;
+                }
+                returnToLobby();
+            }
             if (key === 'z' && stage === 1) {
                 wipersOn = !wipersOn;
             }
@@ -3976,6 +3984,12 @@
                             hudTitle.style.boxShadow = "0 0 15px rgba(57,255,20,0.45)";
                             controlsHelp.innerHTML = "WALK WITH: <span>W / S</span> (Walk) · <span>A / D</span> (Turn Camera)";
                             timerDisplay.style.display = "none";
+                            
+                            // Show lobby button
+                            const lobbyBtn = document.getElementById('lobby-btn');
+                            if (lobbyBtn) {
+                                lobbyBtn.style.display = 'block';
+                            }
                             
                             // Reset transition and fade in slowly
                             fadeOverlay.style.transition = 'opacity 1.5s ease-in-out';
