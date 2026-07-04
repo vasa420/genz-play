@@ -898,27 +898,22 @@
             if (key === 'g') stopHorn();
         });
 
-        // ── Mouse & Touch Drag to Look ────────────────────────
-        window.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            prevMouseX = e.clientX;
-            prevMouseY = e.clientY;
-        });
-
-        window.addEventListener('mouseup', () => {
-            isMouseDown = false;
+        // ── Mouse Pointer Lock & Touch Drag to Look ───────────
+        canvas.addEventListener('click', () => {
+            if (document.pointerLockElement !== canvas) {
+                canvas.requestPointerLock();
+            }
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown) return;
-            const deltaX = e.clientX - prevMouseX;
-            const deltaY = e.clientY - prevMouseY;
-            prevMouseX = e.clientX;
-            prevMouseY = e.clientY;
+            if (document.pointerLockElement === canvas) {
+                const deltaX = e.movementX || 0;
+                const deltaY = e.movementY || 0;
 
-            playerAngle -= deltaX * 0.004;
-            cameraPitch -= deltaY * 0.004;
-            cameraPitch = Math.max(-Math.PI / 3.5, Math.min(Math.PI / 3.5, cameraPitch));
+                playerAngle -= deltaX * 0.0025;
+                cameraPitch -= deltaY * 0.0025;
+                cameraPitch = Math.max(-Math.PI / 3.5, Math.min(Math.PI / 3.5, cameraPitch));
+            }
         });
 
         window.addEventListener('touchstart', (e) => {
