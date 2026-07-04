@@ -1212,6 +1212,7 @@
                 car.add(tailGlow);
             }
             
+            car.scale.set(1.0, 1.5, 1.0);
             return car;
         }
 
@@ -1287,6 +1288,7 @@
             tailGlow.position.set(0, 0.4, -3.75);
             truck.add(tailGlow);
             
+            truck.scale.set(1.0, 1.5, 1.0);
             return truck;
         }
 
@@ -1428,6 +1430,7 @@
             tailGlow.position.set(0, 0.9, -4.3);
             bus.add(tailGlow);
             
+            bus.scale.set(1.0, 1.5, 1.0);
             return bus;
         }
 
@@ -3222,6 +3225,7 @@
 
         carGroup.position.set(16.0, 0.1, -123.0); // start position near the house
         carGroup.rotation.y = -Math.PI / 2; // facing the road
+        carGroup.scale.set(1.0, 1.5, 1.0); // scale player car vertically
         scene.add(carGroup);
 
         // ── Game Logic & Loop ────────────────────────────────
@@ -3240,7 +3244,7 @@
         let wiperTime = 0;
 
         // Player walking variables
-        const playerPos = new THREE.Vector3(15.0, 1.9, -119.0);
+        const playerPos = new THREE.Vector3(15.0, 0.95, -119.0);
         let playerAngle = Math.PI / 2; // looking towards the house
         const walkSpeed = 0.24;
         let isWalking = false;
@@ -4290,7 +4294,7 @@
                 // Driver Seat POV (left-hand side)
                 let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
                 let camZ = carGroup.position.z + Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
-                let camY = carGroup.position.y + 1.25;
+                let camY = carGroup.position.y + 1.875;
                 
                 camera.position.set(camX, camY, camZ);
                 
@@ -4356,7 +4360,7 @@
                 }
 
                 const terrainHeight = Math.sin(playerPos.x * 0.05) * Math.cos(playerPos.z * 0.05) * 1.5 + Math.sin(playerPos.x * 0.01) * 3;
-                playerPos.y = 1.9 + terrainHeight;
+                playerPos.y = 0.95 + terrainHeight;
 
                 camera.position.copy(playerPos);
                 
