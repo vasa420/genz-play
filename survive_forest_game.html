@@ -3022,6 +3022,93 @@
             });
         }
 
+        // Procedural Low-Poly House Mesh
+        function createLowPolyHouse() {
+            const houseGroup = new THREE.Group();
+
+            // Main body (walls)
+            const wallGeo = new THREE.BoxGeometry(10, 6, 8);
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 }); // light grey siding
+            const walls = new THREE.Mesh(wallGeo, wallMat);
+            walls.position.y = 3;
+            walls.castShadow = true;
+            walls.receiveShadow = true;
+            houseGroup.add(walls);
+
+            // Garage Section (low quality, next to the house)
+            const garageGeo = new THREE.BoxGeometry(6, 4.5, 7);
+            const garageMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.9 });
+            const garage = new THREE.Mesh(garageGeo, garageMat);
+            garage.position.set(-8, 2.25, 0.5); // side of the house
+            garage.castShadow = true;
+            garage.receiveShadow = true;
+            houseGroup.add(garage);
+
+            // Garage Door
+            const garageDoorGeo = new THREE.BoxGeometry(0.1, 3.5, 5);
+            const garageDoorMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.8 }); // wood color
+            const garageDoor = new THREE.Mesh(garageDoorGeo, garageDoorMat);
+            garageDoor.position.set(-11.05, 1.75, 0.5); // facing road (negative X)
+            houseGroup.add(garageDoor);
+
+            // Pitched Roofs
+            const roofGeo = new THREE.ConeGeometry(7.5, 4, 4); // 4-sided pyramid
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x333338, roughness: 0.9 }); // dark grey roof shingles
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.set(0, 8, 0);
+            roof.rotation.y = Math.PI / 4; // align pyramid faces to wall faces
+            roof.castShadow = true;
+            houseGroup.add(roof);
+
+            const garageRoofGeo = new THREE.ConeGeometry(5, 2.5, 4);
+            const garageRoof = new THREE.Mesh(garageRoofGeo, roofMat);
+            garageRoof.position.set(-8, 5.75, 0.5);
+            garageRoof.rotation.y = Math.PI / 4;
+            garageRoof.castShadow = true;
+            houseGroup.add(garageRoof);
+
+            // Front Porch / Pillars
+            const porchRoofGeo = new THREE.BoxGeometry(3, 0.4, 6);
+            const porchRoof = new THREE.Mesh(porchRoofGeo, roofMat);
+            porchRoof.position.set(6, 4.5, 1);
+            porchRoof.castShadow = true;
+            houseGroup.add(porchRoof);
+
+            const pillarGeo = new THREE.CylinderGeometry(0.15, 0.15, 4.5, 6);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+            
+            const pillar1 = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar1.position.set(7.3, 2.25, -1.8);
+            pillar1.castShadow = true;
+            houseGroup.add(pillar1);
+
+            const pillar2 = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar2.position.set(7.3, 2.25, 3.8);
+            pillar2.castShadow = true;
+            houseGroup.add(pillar2);
+
+            // Front Door
+            const doorGeo = new THREE.BoxGeometry(0.1, 3.8, 2);
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x5a3d28, roughness: 0.9 }); // dark wood door
+            const door = new THREE.Mesh(doorGeo, doorMat);
+            door.position.set(5.05, 1.9, 1); // front of house
+            houseGroup.add(door);
+
+            // Windows
+            const windowGeo = new THREE.BoxGeometry(0.15, 1.8, 1.4);
+            const windowMat = new THREE.MeshBasicMaterial({ color: 0xffe066 }); // warm glow
+
+            const window1 = new THREE.Mesh(windowGeo, windowMat);
+            window1.position.set(5.05, 4.5, -2);
+            houseGroup.add(window1);
+
+            const window2 = new THREE.Mesh(windowGeo, windowMat);
+            window2.position.set(5.05, 4.5, 2);
+            houseGroup.add(window2);
+
+            return houseGroup;
+        }
+
         // ── 3D Car Asset ──────────────────────────────────────
         const carGroup = new THREE.Group();
 
