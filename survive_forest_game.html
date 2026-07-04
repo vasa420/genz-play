@@ -302,7 +302,7 @@
     <div id="windshield-rain-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9996; overflow: hidden;"></div>
 
     <!-- Dashcam HUD overlay -->
-    <div class="dashcam-overlay" id="dashcam-hud">
+    <div class="dashcam-overlay" id="dashcam-hud" style="display: none;">
         <div class="dashcam-top">
             <div class="dashcam-rec">
                 <div class="dashcam-dot"></div>
@@ -321,14 +321,14 @@
     <button id="lobby-btn" class="btn-lobby" onclick="returnToLobby()">← LOBBY</button>
 
     <div class="hud-container">
-        <div class="hud-title" id="hud-mode-title">ACT I: FOREST HIGHWAY</div>
+        <div class="hud-title" id="hud-mode-title" style="color: #39ff14; border-color: #39ff14; box-shadow: 0 0 15px rgba(57,255,20,0.45);">ACT I: MY HOUSE</div>
         <div class="hud-sub" id="hud-sub-title">TIME: 06:30 AM</div>
     </div>
 
-    <div class="timer-hud" id="timer-display">30.00 KM (PAUSED)</div>
+    <div class="timer-hud" id="timer-display">150.00 KM (LOCKED)</div>
 
     <div class="controls-help" id="controls-text">
-        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers)
+        WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look)
     </div>
 
     <canvas id="game-canvas"></canvas>
@@ -854,7 +854,7 @@
 
         // Return to Lobby trigger
         function returnToLobby() {
-            if (stage === 1) return; // Prevent returning to lobby during driving stage
+            if (stage === 1 || stage === 0) return; // Prevent returning to lobby during driving and house stages
             stopPlayerEngine();
             stopHorn();
             stopCarRadio();
@@ -867,13 +867,51 @@
 
         // ── Keyboard Input ────────────────────────────────────
         const keys = { w: false, a: false, s: false, d: false };
+        let enteringCar = false;
+
+        function enterCarTransition() {
+            if (enteringCar) return;
+            enteringCar = true;
+
+            fadeOverlay.style.transition = 'opacity 0.6s ease-in-out';
+            fadeOverlay.style.opacity = '1';
+
+            setTimeout(() => {
+                carGroup.position.set(0, 0.1, -120);
+                carGroup.rotation.y = 0;
+                carAngle = 0;
+                carSpeed = 0;
+
+                stage = 1; // transition to driving stage
+
+                document.getElementById('dashcam-hud').style.display = 'block';
+                timerDisplay.style.display = 'block';
+                timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM";
+
+                hudTitle.innerText = "ACT I: FOREST HIGHWAY";
+                hudTitle.style.color = "#ff3300";
+                hudTitle.style.borderColor = "#ff3300";
+                hudTitle.style.boxShadow = "0 0 15px rgba(255,51,0,0.45)";
+
+                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers)";
+
+                initAudio();
+                initCarRadio();
+
+                fadeOverlay.style.transition = 'opacity 0.6s ease-in-out';
+                fadeOverlay.style.opacity = '0';
+
+                enteringCar = false;
+            }, 600);
+        }
+
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = true;
             if (key === 'g' && stage === 1) startHorn();
             if (key === 'q') {
-                if (stage === 1) {
-                    // Q key is disabled during driving car stage
+                if (stage === 1 || stage === 0) {
+                    // Q key is disabled during driving and house stages
                     return;
                 }
                 returnToLobby();
@@ -881,7 +919,12 @@
             if (key === 'z' && stage === 1) {
                 wipersOn = !wipersOn;
             }
-            
+            if ((key === 'f' || key === 'enter') && stage === 0) {
+                if (playerPos.distanceTo(carGroup.position) < 6.0) {
+                    enterCarTransition();
+                }
+            }
+
             initAudio();
             if (stage === 1 && !radioActive) {
                 initCarRadio();
@@ -892,7 +935,52 @@
             if (key in keys) keys[key] = false;
             if (key === 'g') stopHorn();
         });
-        
+
+        // ── Mouse & Touch Drag to Look ────────────────────────
+        window.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            if (stage !== 0 && stage !== 3) return;
+            const deltaX = e.clientX - prevMouseX;
+            const deltaY = e.clientY - prevMouseY;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+
+            playerAngle -= deltaX * 0.004;
+            cameraPitch -= deltaY * 0.004;
+            cameraPitch = Math.max(-Math.PI / 3.5, Math.min(Math.PI / 3.5, cameraPitch));
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                prevMouseX = e.touches[0].clientX;
+                prevMouseY = e.touches[0].clientY;
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                if (stage !== 0 && stage !== 3) return;
+                const deltaX = e.touches[0].clientX - prevMouseX;
+                const deltaY = e.touches[0].clientY - prevMouseY;
+                prevMouseX = e.touches[0].clientX;
+                prevMouseY = e.touches[0].clientY;
+
+                playerAngle -= deltaX * 0.005;
+                cameraPitch -= deltaY * 0.005;
+                cameraPitch = Math.max(-Math.PI / 3.5, Math.min(Math.PI / 3.5, cameraPitch));
+            }
+        });
+
         window.addEventListener('click', () => {
             initAudio();
             if (stage === 1 && !radioActive) {
@@ -3018,14 +3106,21 @@
         wiperGroupR.add(wiperArmR);
         carGroup.add(wiperGroupR);
 
-        carGroup.position.set(0, 0.1, -120); // start position
+        // Create and position house on the side of the road
+        const house = createLowPolyHouse();
+        house.position.set(16, 0.1, -120); // on the side of the road
+        house.rotation.y = Math.PI; // face the road
+        scene.add(house);
+
+        carGroup.position.set(9.0, 0.1, -123.0); // start position near the house
+        carGroup.rotation.y = -Math.PI / 2; // facing the road
         scene.add(carGroup);
 
         // ── Game Logic & Loop ────────────────────────────────
-        let stage = 1; // 1: Driving, 2: Dimming Transition, 3: Walking
+        let stage = 0; // 0: Walk near house, 1: Driving, 2: Dimming Transition, 3: Walking (in forest)
         let kilometersRemaining = 150.0;
-        let parkedCarX = 0;
-        let parkedCarZ = 0;
+        let parkedCarX = 9.0;
+        let parkedCarZ = -123.0;
         let carSpeed = 0;
         let carAngle = 0;
         const maxCarSpeed = 1.9;
@@ -3037,11 +3132,16 @@
         let wiperTime = 0;
 
         // Player walking variables
-        const playerPos = new THREE.Vector3(0, 2, -100);
-        let playerAngle = Math.PI; // looking down the road / forest
+        const playerPos = new THREE.Vector3(8.0, 1.9, -117.0);
+        let playerAngle = Math.PI / 2; // looking towards the house
         const walkSpeed = 0.24;
         let isWalking = false;
         let footstepTimeAcc = 0;
+
+        let cameraPitch = 0.0; // vertical look angle
+        let isMouseDown = false;
+        let prevMouseX = 0;
+        let prevMouseY = 0;
 
         // Traffic Management
         const trafficVehicles = [];
@@ -3092,6 +3192,20 @@
         const hudTitle = document.getElementById('hud-mode-title');
         const controlsHelp = document.getElementById('controls-text');
         const fadeOverlay = document.getElementById('fade-overlay');
+
+        function checkHouseCollision(pos) {
+            // House position is (16, 0.1, -120)
+            // Main walls: width 10 (X: [11, 21]), depth 8 (Z: [-124, -116])
+            if (pos.x >= 11 - 1.2 && pos.x <= 21 + 1.2 && pos.z >= -124 - 1.2 && pos.z <= -116 + 1.2) {
+                return true;
+            }
+            // Garage walls: center is at house.x - 8 = 8, house.z + 0.5 = -119.5
+            // Width 6 (X: [5, 11]), depth 7 (Z: [-123, -116])
+            if (pos.x >= 5 - 1.2 && pos.x <= 11 + 1.2 && pos.z >= -123 - 1.2 && pos.z <= -116 + 1.2) {
+                return true;
+            }
+            return false;
+        }
 
         function updateGame(delta, time) {
             // ── Update running clock globally ───────────────────
@@ -4075,12 +4189,21 @@
                 );
                 camera.lookAt(lookTarget);
             }
-            // ── STAGE 3: WALKING ─────────────────────────────
-            else if (stage === 3) {
+            // ── STAGE 3 or 0: WALKING ────────────────────────
+            else if (stage === 3 || stage === 0) {
                 isWalking = false;
                 
-                if (keys.a) playerAngle += 0.035;
-                if (keys.d) playerAngle -= 0.035;
+                if (stage === 0) {
+                    const dist = playerPos.distanceTo(carGroup.position);
+                    if (dist < 6.0) {
+                        controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> · <span style='color: #ff3300; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,0,0.5);'>PRESS F TO ENTER VEHICLE</span>";
+                    } else {
+                        controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look) · APPROACH VEHICLE";
+                    }
+                }
+
+                const prevX = playerPos.x;
+                const prevZ = playerPos.z;
 
                 if (keys.w) {
                     playerPos.x += Math.sin(playerAngle) * walkSpeed;
@@ -4092,9 +4215,33 @@
                     playerPos.z -= Math.cos(playerAngle) * walkSpeed;
                     isWalking = true;
                 }
+                if (keys.a) {
+                    // Strafe Left
+                    playerPos.x -= Math.cos(playerAngle) * walkSpeed;
+                    playerPos.z += Math.sin(playerAngle) * walkSpeed;
+                    isWalking = true;
+                }
+                if (keys.d) {
+                    // Strafe Right
+                    playerPos.x += Math.cos(playerAngle) * walkSpeed;
+                    playerPos.z -= Math.sin(playerAngle) * walkSpeed;
+                    isWalking = true;
+                }
 
-                playerPos.x = Math.max(Math.min(playerPos.x, parkedCarX + 150), parkedCarX - 150);
-                playerPos.z = Math.max(Math.min(playerPos.z, parkedCarZ + 200), parkedCarZ - 200);
+                // Check collision with the house (only in stage 0)
+                if (stage === 0 && checkHouseCollision(playerPos)) {
+                    playerPos.x = prevX;
+                    playerPos.z = prevZ;
+                }
+
+                // Keep player within bounds
+                if (stage === 0) {
+                    playerPos.x = Math.max(Math.min(playerPos.x, parkedCarX + 25), parkedCarX - 25);
+                    playerPos.z = Math.max(Math.min(playerPos.z, parkedCarZ + 25), parkedCarZ - 25);
+                } else {
+                    playerPos.x = Math.max(Math.min(playerPos.x, parkedCarX + 150), parkedCarX - 150);
+                    playerPos.z = Math.max(Math.min(playerPos.z, parkedCarZ + 200), parkedCarZ - 200);
+                }
 
                 const terrainHeight = Math.sin(playerPos.x * 0.05) * Math.cos(playerPos.z * 0.05) * 1.5 + Math.sin(playerPos.x * 0.01) * 3;
                 playerPos.y = 1.9 + terrainHeight;
@@ -4102,9 +4249,9 @@
                 camera.position.copy(playerPos);
                 
                 const lookTarget = new THREE.Vector3(
-                    playerPos.x + Math.sin(playerAngle),
-                    playerPos.y,
-                    playerPos.z + Math.cos(playerAngle)
+                    playerPos.x + Math.sin(playerAngle) * Math.cos(cameraPitch),
+                    playerPos.y + Math.sin(cameraPitch),
+                    playerPos.z + Math.cos(playerAngle) * Math.cos(cameraPitch)
                 );
                 camera.lookAt(lookTarget);
 
@@ -4124,7 +4271,7 @@
                 if (stage === 1) {
                     radioGainNode.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.15);
                     radioFilterNode.frequency.setTargetAtTime(20000, audioCtx.currentTime, 0.15);
-                } else if (stage === 3) {
+                } else if (stage === 3 || stage === 0) {
                     const dx = camera.position.x - parkedCarX;
                     const dz = camera.position.z - parkedCarZ;
                     const dist = Math.sqrt(dx * dx + dz * dz);
