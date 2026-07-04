@@ -3216,18 +3216,18 @@
 
         // Create and position house on the side of the road
         const house = createLowPolyHouse();
-        house.position.set(16, 0.1, -120); // on the side of the road
+        house.position.set(23, 0.1, -120); // on the side of the road, pushed back into forest
         house.rotation.y = Math.PI; // face the road
         scene.add(house);
 
-        carGroup.position.set(9.0, 0.1, -123.0); // start position near the house
+        carGroup.position.set(16.0, 0.1, -123.0); // start position near the house
         carGroup.rotation.y = -Math.PI / 2; // facing the road
         scene.add(carGroup);
 
         // ── Game Logic & Loop ────────────────────────────────
         let stage = 0; // 0: Walk near house, 1: Driving, 2: Dimming Transition, 3: Walking (in forest)
         let kilometersRemaining = 150.0;
-        let parkedCarX = 9.0;
+        let parkedCarX = 16.0;
         let parkedCarZ = -123.0;
         let carSpeed = 0;
         let carAngle = 0;
@@ -3240,7 +3240,7 @@
         let wiperTime = 0;
 
         // Player walking variables
-        const playerPos = new THREE.Vector3(8.0, 1.9, -117.0);
+        const playerPos = new THREE.Vector3(15.0, 1.9, -119.0);
         let playerAngle = Math.PI / 2; // looking towards the house
         const walkSpeed = 0.24;
         let isWalking = false;
@@ -3304,14 +3304,14 @@
         const fadeOverlay = document.getElementById('fade-overlay');
 
         function checkHouseCollision(pos) {
-            // House position is (16, 0.1, -120)
-            // Main walls: width 10 (X: [11, 21]), depth 8 (Z: [-124, -116])
-            if (pos.x >= 11 - 1.2 && pos.x <= 21 + 1.2 && pos.z >= -124 - 1.2 && pos.z <= -116 + 1.2) {
+            // House position is (23, 0.1, -120)
+            // Main walls: width 10 (X: [18, 28]), depth 8 (Z: [-124, -116])
+            if (pos.x >= 18 - 1.2 && pos.x <= 28 + 1.2 && pos.z >= -124 - 1.2 && pos.z <= -116 + 1.2) {
                 return true;
             }
-            // Garage walls (world position center X = 24, Z = -120.5)
-            // Actual world X bounds: [21, 27], Z bounds: [-124, -117]
-            if (pos.x >= 21 - 1.2 && pos.x <= 27 + 1.2 && pos.z >= -124 - 1.2 && pos.z <= -117 + 1.2) {
+            // Garage walls (world position center X = 31, Z = -120.5)
+            // Actual world X bounds: [28, 34], Z bounds: [-124, -117]
+            if (pos.x >= 28 - 1.2 && pos.x <= 34 + 1.2 && pos.z >= -124 - 1.2 && pos.z <= -117 + 1.2) {
                 return true;
             }
             return false;
