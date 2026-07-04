@@ -3031,11 +3031,11 @@
         function createLowPolyHouse() {
             const houseGroup = new THREE.Group();
 
-            // Main body (walls)
-            const wallGeo = new THREE.BoxGeometry(10, 6, 8);
+            // Main body (walls) - increased height from 6 to 12
+            const wallGeo = new THREE.BoxGeometry(10, 12, 8);
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 }); // light grey siding
             const walls = new THREE.Mesh(wallGeo, wallMat);
-            walls.position.y = 3;
+            walls.position.y = 6;
             walls.castShadow = true;
             walls.receiveShadow = true;
             houseGroup.add(walls);
@@ -3056,11 +3056,11 @@
             garageDoor.position.set(-11.05, 1.75, 0.5); // facing road (negative X)
             houseGroup.add(garageDoor);
 
-            // Pitched Roofs
+            // Pitched Roofs - adjusted Y position to 14 to sit on top of 12-height walls
             const roofGeo = new THREE.ConeGeometry(7.5, 4, 4); // 4-sided pyramid
             const roofMat = new THREE.MeshStandardMaterial({ color: 0x333338, roughness: 0.9 }); // dark grey roof shingles
             const roof = new THREE.Mesh(roofGeo, roofMat);
-            roof.position.set(0, 8, 0);
+            roof.position.set(0, 14, 0);
             roof.rotation.y = Math.PI / 4; // align pyramid faces to wall faces
             roof.castShadow = true;
             houseGroup.add(roof);
@@ -3099,7 +3099,7 @@
             door.position.set(5.05, 1.9, 1); // front of house
             houseGroup.add(door);
 
-            // Windows
+            // Windows - 1st Floor
             const windowGeo = new THREE.BoxGeometry(0.15, 1.8, 1.4);
             const windowMat = new THREE.MeshBasicMaterial({ color: 0xffe066 }); // warm glow
 
@@ -3110,6 +3110,15 @@
             const window2 = new THREE.Mesh(windowGeo, windowMat);
             window2.position.set(5.05, 4.5, 2);
             houseGroup.add(window2);
+
+            // Windows - 2nd Floor
+            const window3 = new THREE.Mesh(windowGeo, windowMat);
+            window3.position.set(5.05, 9.0, -2);
+            houseGroup.add(window3);
+
+            const window4 = new THREE.Mesh(windowGeo, windowMat);
+            window4.position.set(5.05, 9.0, 2);
+            houseGroup.add(window4);
 
             return houseGroup;
         }
