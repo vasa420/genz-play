@@ -317,7 +317,7 @@
         </div>
     </div>
 
-    <button class="btn-lobby" onclick="returnToLobby()">← LOBBY</button>
+    <button class="btn-lobby" style="opacity: 0.3; pointer-events: none;" onclick="returnToLobby()">← LOBBY</button>
 
     <div class="hud-container">
         <div class="hud-title" id="hud-mode-title">ACT I: FOREST HIGHWAY</div>
@@ -851,8 +851,19 @@
             // Permanently disabled
         }
 
-        // Return to Lobby trigger
+        // Return to Lobby trigger with startup cooldown to prevent accidental trigger
+        let lobbyEnabled = false;
+        setTimeout(() => {
+            lobbyEnabled = true;
+            const btn = document.querySelector('.btn-lobby');
+            if (btn) {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }
+        }, 3000); // 3 seconds cooldown
+
         function returnToLobby() {
+            if (!lobbyEnabled) return;
             stopPlayerEngine();
             stopHorn();
             stopCarRadio();
@@ -869,7 +880,9 @@
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = true;
             if (key === 'g' && stage === 1) startHorn();
-            if (key === 'q') returnToLobby();
+            if (key === 'q') {
+                if (lobbyEnabled) returnToLobby();
+            }
             if (key === 'z' && stage === 1) {
                 wipersOn = !wipersOn;
             }
