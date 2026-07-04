@@ -929,9 +929,11 @@
                 wipersOn = !wipersOn;
             }
             if (key === 'b') {
-                flashlightActive = !flashlightActive;
-                if (flashlight) {
-                    flashlight.intensity = flashlightActive ? 35.0 : 0;
+                if (stage === 0 || stage === 3) {
+                    flashlightActive = !flashlightActive;
+                    if (flashlight) {
+                        flashlight.intensity = flashlightActive ? 35.0 : 0;
+                    }
                 }
             }
             if ((key === 'f' || key === 'enter') && stage === 0) {
@@ -4101,7 +4103,79 @@
                             playThudSound();
                         }
                     } else {
-                        // Normal vehicle movement
+                        // Normal vehicle movement with adaptive cruise control to avoid collision
+                        let desiredSpeed = vehicle.baseSpeed;
+                        if (desiredSpeed === undefined) {
+                            vehicle.baseSpeed = vehicle.speed;
+                            desiredSpeed = vehicle.speed;
+                        }
+
+                        let obstacleAhead = null;
+                        let minDistance = 30; // look ahead distance in units
+
+                        // Check other traffic vehicles
+                        trafficVehicles.forEach(other => {
+                            if (other === vehicle || other.isWindBlown) return;
+                            
+                            // Must be in the same lane (approximately)
+                            const laneDiff = Math.abs(other.group.position.x - vehicle.group.position.x);
+                            if (laneDiff < 2.0) {
+                                if (vehicle.baseSpeed > 0) {
+                                    // We are moving forward (+Z), check if other is ahead of us
+                                    const dist = other.group.position.z - vehicle.group.position.z;
+                                    if (dist > 0 && dist < minDistance) {
+                                        minDistance = dist;
+                                        obstacleAhead = other;
+                                    }
+                                } else {
+                                    // We are moving backward (-Z), check if other is ahead of us (lower Z)
+                                    const dist = vehicle.group.position.z - other.group.position.z;
+                                    if (dist > 0 && dist < minDistance) {
+                                        minDistance = dist;
+                                        obstacleAhead = other;
+                                    }
+                                }
+                            }
+                        });
+
+                        // Check player car (if stage 1 or 0)
+                        if (stage === 1 || stage === 0) {
+                            const laneDiff = Math.abs(carGroup.position.x - vehicle.group.position.x);
+                            if (laneDiff < 2.0) {
+                                if (vehicle.baseSpeed > 0) {
+                                    const dist = carGroup.position.z - vehicle.group.position.z;
+                                    if (dist > 0 && dist < minDistance) {
+                                        minDistance = dist;
+                                        const playerZSpeed = Math.cos(carAngle) * carSpeed;
+                                        obstacleAhead = { speed: playerZSpeed };
+                                    }
+                                } else {
+                                    const dist = vehicle.group.position.z - carGroup.position.z;
+                                    if (dist > 0 && dist < minDistance) {
+                                        minDistance = dist;
+                                        const playerZSpeed = Math.cos(carAngle) * carSpeed;
+                                        obstacleAhead = { speed: playerZSpeed };
+                                    }
+                                }
+                            }
+                        }
+
+                        if (obstacleAhead) {
+                            // Match the front vehicle's speed, or stop if too close (e.g. distance < 10)
+                            if (minDistance < 10) {
+                                desiredSpeed = 0;
+                            } else {
+                                const frontSpeed = obstacleAhead.speed || 0;
+                                if (vehicle.baseSpeed > 0) {
+                                    desiredSpeed = Math.max(0, Math.min(frontSpeed, vehicle.baseSpeed));
+                                } else {
+                                    desiredSpeed = Math.min(0, Math.max(frontSpeed, vehicle.baseSpeed));
+                                }
+                            }
+                        }
+
+                        // Smoothly interpolate the vehicle's speed to desired speed
+                        vehicle.speed += (desiredSpeed - vehicle.speed) * delta * 4.0;
                         vehicle.group.position.z += vehicle.speed;
                     }
                     const relZ = vehicle.group.position.z - listenerPos.z;
@@ -4252,6 +4326,52 @@
 
                 carGroup.position.x += Math.sin(carAngle) * carSpeed;
                 carGroup.position.z += Math.cos(carAngle) * carSpeed;
+                
+                // Traffic Vehicle Collision check for Player's Car
+                trafficVehicles.forEach(vehicle => {
+                    if (vehicle.isWindBlown) return;
+                    const dx = carGroup.position.x - vehicle.group.position.x;
+                    const dz = carGroup.position.z - vehicle.group.position.z;
+                    
+                    // Bounding box dimensions for collision check
+                    let minXDist = 2.1; 
+                    let minZDist = 4.4; 
+                    if (vehicle.isRescueCone) {
+                        minXDist = 1.3; 
+                        minZDist = 1.3;
+                    }
+                    
+                    if (Math.abs(dx) < minXDist && Math.abs(dz) < minZDist) {
+                        const overlapX = minXDist - Math.abs(dx);
+                        const overlapZ = minZDist - Math.abs(dz);
+                        
+                        if (overlapX < overlapZ) {
+                            carGroup.position.x += (dx > 0 ? 1 : -1) * overlapX;
+                        } else {
+                            carGroup.position.z += (dz > 0 ? 1 : -1) * overlapZ;
+                            carSpeed *= -0.2; // bounce back
+                        }
+                    }
+                });
+
+                overtakeCars.forEach(car => {
+                    const dx = carGroup.position.x - car.mesh.position.x;
+                    const dz = carGroup.position.z - car.mesh.position.z;
+                    const minXDist = 2.1;
+                    const minZDist = 4.4;
+                    
+                    if (Math.abs(dx) < minXDist && Math.abs(dz) < minZDist) {
+                        const overlapX = minXDist - Math.abs(dx);
+                        const overlapZ = minZDist - Math.abs(dz);
+                        
+                        if (overlapX < overlapZ) {
+                            carGroup.position.x += (dx > 0 ? 1 : -1) * overlapX;
+                        } else {
+                            carGroup.position.z += (dz > 0 ? 1 : -1) * overlapZ;
+                            carSpeed *= -0.2;
+                        }
+                    }
+                });
                 
                 // Railway Crossing Player Blocking Clamp
                 if (railwayCrossingState !== 'none' && railwayCrossingState !== 'completed' && railwayCrossingState !== 'opening') {
