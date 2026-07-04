@@ -338,6 +338,9 @@
         let flashlight = null;
         let flashlightActive = false;
 
+        let isEngineStarted = false;
+        let engineStartAudio = null;
+
         // ── Audio Engine ──────────────────────────────────────
         let audioCtx = null;
         const masterVolume = 0.06;
@@ -370,6 +373,13 @@
             [196.00, 220.00, 246.94, 293.66, 392.00]
         ];
 
+        function initEngineAudio() {
+            if (!engineStartAudio) {
+                engineStartAudio = new Audio('pwlpl-car-engine-start-sound-effect-521106.mp3');
+                engineStartAudio.loop = false;
+            }
+        }
+
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (!stormMusic) {
@@ -381,6 +391,7 @@
                 });
             }
             initHornAudio();
+            initEngineAudio();
         }
 
         function initCarRadio() {
@@ -876,6 +887,30 @@
             }
         }
 
+        function toggleEngine() {
+            initAudio();
+            if (stage !== 1) return; // Only allow engine toggle in driving stage
+            
+            isEngineStarted = !isEngineStarted;
+            
+            if (isEngineStarted) {
+                if (engineStartAudio) {
+                    engineStartAudio.volume = Math.min(1.0, masterVolume * 8.0);
+                    engineStartAudio.currentTime = 0;
+                    engineStartAudio.play().catch(e => {
+                        console.log("Engine sound play deferred:", e);
+                    });
+                }
+                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers) · <span style='color: #ff3300;'>[V] STOP ENGINE</span>";
+            } else {
+                if (engineStartAudio) {
+                    engineStartAudio.pause();
+                }
+                carSpeed = 0;
+                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span style='color: #00ffcc; font-weight: bold;'>[V] START ENGINE</span>";
+            }
+        }
+
         // Return to Lobby trigger
         function returnToLobby() {
             if (stage === 1 || stage === 0) return; // Prevent returning to lobby during driving and house stages
@@ -922,7 +957,7 @@
                 hudTitle.style.borderColor = "#ff3300";
                 hudTitle.style.boxShadow = "0 0 15px rgba(255,51,0,0.45)";
 
-                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers)";
+                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span style='color: #00ffcc; font-weight: bold;'>[V] START ENGINE</span>";
 
                 initAudio();
                 initCarRadio();
@@ -947,6 +982,9 @@
             }
             if (key === 'z' && stage === 1) {
                 wipersOn = !wipersOn;
+            }
+            if (key === 'v' && stage === 1) {
+                toggleEngine();
             }
             if (key === 'b') {
                 if (stage === 0 || stage === 3) {
@@ -4339,8 +4377,12 @@
                 let timeStr = `2026-06-25 ${hrStr}:${minStr}:${secStr} AM`;
                 document.getElementById('dashcam-time').innerText = timeStr;
 
-                if (keys.w) carSpeed += carAccel;
-                if (keys.s) carSpeed -= carAccel;
+                if (isEngineStarted) {
+                    if (keys.w) carSpeed += carAccel;
+                    if (keys.s) carSpeed -= carAccel;
+                } else {
+                    carSpeed *= 0.85; // engine off: slow down quickly
+                }
 
                 carSpeed *= friction;
                 // Dynamically reduce maximum car speed during pre-storm and storm for a slow-motion weather effect
