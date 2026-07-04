@@ -301,7 +301,7 @@
     <div id="windshield-rain-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9996; overflow: hidden;"></div>
 
     <!-- Dashcam HUD overlay -->
-    <div class="dashcam-overlay" id="dashcam-hud">
+    <div class="dashcam-overlay" id="dashcam-hud" style="display: none;">
         <div class="dashcam-top">
             <div class="dashcam-rec">
                 <div class="dashcam-dot"></div>
@@ -320,14 +320,14 @@
     <button class="btn-lobby" style="opacity: 0.3; pointer-events: none;" onclick="returnToLobby()">← LOBBY</button>
 
     <div class="hud-container">
-        <div class="hud-title" id="hud-mode-title">ACT I: FOREST HIGHWAY</div>
+        <div class="hud-title" id="hud-mode-title" style="color: #39ff14; border-color: #39ff14; box-shadow: 0 0 15px rgba(57,255,20,0.45);">ACT I: INTO THE WILDERNESS</div>
         <div class="hud-sub" id="hud-sub-title">TIME: 06:30 AM</div>
     </div>
 
-    <div class="timer-hud" id="timer-display">30.00 KM (PAUSED)</div>
+    <div class="timer-hud" id="timer-display" style="display: none;">30.00 KM (PAUSED)</div>
 
     <div class="controls-help" id="controls-text">
-        DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers)
+        WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look)
     </div>
 
     <canvas id="game-canvas"></canvas>
@@ -896,6 +896,49 @@
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = false;
             if (key === 'g') stopHorn();
+        });
+
+        // ── Mouse & Touch Drag to Look ────────────────────────
+        window.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            const deltaX = e.clientX - prevMouseX;
+            const deltaY = e.clientY - prevMouseY;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+
+            playerAngle -= deltaX * 0.004;
+            cameraPitch -= deltaY * 0.004;
+            cameraPitch = Math.max(-Math.PI / 3.5, Math.min(Math.PI / 3.5, cameraPitch));
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                prevMouseX = e.touches[0].clientX;
+                prevMouseY = e.touches[0].clientY;
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const deltaX = e.touches[0].clientX - prevMouseX;
+                const deltaY = e.touches[0].clientY - prevMouseY;
+                prevMouseX = e.touches[0].clientX;
+                prevMouseY = e.touches[0].clientY;
+
+                playerAngle -= deltaX * 0.005;
+                cameraPitch -= deltaY * 0.005;
+                cameraPitch = Math.max(-Math.PI / 3.5, Math.min(Math.PI / 3.5, cameraPitch));
+            }
         });
         
         window.addEventListener('click', () => {
@@ -2918,6 +2961,93 @@
             });
         }
 
+        // Procedural Low-Poly House Mesh
+        function createLowPolyHouse() {
+            const houseGroup = new THREE.Group();
+
+            // Main body (walls)
+            const wallGeo = new THREE.BoxGeometry(10, 6, 8);
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 }); // light grey siding
+            const walls = new THREE.Mesh(wallGeo, wallMat);
+            walls.position.y = 3;
+            walls.castShadow = true;
+            walls.receiveShadow = true;
+            houseGroup.add(walls);
+
+            // Garage Section (low quality, next to the house)
+            const garageGeo = new THREE.BoxGeometry(6, 4.5, 7);
+            const garageMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.9 });
+            const garage = new THREE.Mesh(garageGeo, garageMat);
+            garage.position.set(-8, 2.25, 0.5); // side of the house
+            garage.castShadow = true;
+            garage.receiveShadow = true;
+            houseGroup.add(garage);
+
+            // Garage Door
+            const garageDoorGeo = new THREE.BoxGeometry(0.1, 3.5, 5);
+            const garageDoorMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.8 }); // wood color
+            const garageDoor = new THREE.Mesh(garageDoorGeo, garageDoorMat);
+            garageDoor.position.set(-11.05, 1.75, 0.5); // facing road (negative X)
+            houseGroup.add(garageDoor);
+
+            // Pitched Roofs
+            const roofGeo = new THREE.ConeGeometry(7.5, 4, 4); // 4-sided pyramid
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x333338, roughness: 0.9 }); // dark grey roof shingles
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.set(0, 8, 0);
+            roof.rotation.y = Math.PI / 4; // align pyramid faces to wall faces
+            roof.castShadow = true;
+            houseGroup.add(roof);
+
+            const garageRoofGeo = new THREE.ConeGeometry(5, 2.5, 4);
+            const garageRoof = new THREE.Mesh(garageRoofGeo, roofMat);
+            garageRoof.position.set(-8, 5.75, 0.5);
+            garageRoof.rotation.y = Math.PI / 4;
+            garageRoof.castShadow = true;
+            houseGroup.add(garageRoof);
+
+            // Front Porch / Pillars
+            const porchRoofGeo = new THREE.BoxGeometry(3, 0.4, 6);
+            const porchRoof = new THREE.Mesh(porchRoofGeo, roofMat);
+            porchRoof.position.set(6, 4.5, 1);
+            porchRoof.castShadow = true;
+            houseGroup.add(porchRoof);
+
+            const pillarGeo = new THREE.CylinderGeometry(0.15, 0.15, 4.5, 6);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+            
+            const pillar1 = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar1.position.set(7.3, 2.25, -1.8);
+            pillar1.castShadow = true;
+            houseGroup.add(pillar1);
+
+            const pillar2 = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar2.position.set(7.3, 2.25, 3.8);
+            pillar2.castShadow = true;
+            houseGroup.add(pillar2);
+
+            // Front Door
+            const doorGeo = new THREE.BoxGeometry(0.1, 3.8, 2);
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x5a3d28, roughness: 0.9 }); // dark wood door
+            const door = new THREE.Mesh(doorGeo, doorMat);
+            door.position.set(5.05, 1.9, 1); // front of house
+            houseGroup.add(door);
+
+            // Windows
+            const windowGeo = new THREE.BoxGeometry(0.15, 1.8, 1.4);
+            const windowMat = new THREE.MeshBasicMaterial({ color: 0xffe066 }); // warm glow
+
+            const window1 = new THREE.Mesh(windowGeo, windowMat);
+            window1.position.set(5.05, 4.5, -2);
+            houseGroup.add(window1);
+
+            const window2 = new THREE.Mesh(windowGeo, windowMat);
+            window2.position.set(5.05, 4.5, 2);
+            houseGroup.add(window2);
+
+            return houseGroup;
+        }
+
         // ── 3D Car Asset ──────────────────────────────────────
         const carGroup = new THREE.Group();
 
@@ -3023,14 +3153,21 @@
         wiperGroupR.add(wiperArmR);
         carGroup.add(wiperGroupR);
 
-        carGroup.position.set(0, 0.1, -120); // start position
+        // Create and position house on the side of the road
+        const house = createLowPolyHouse();
+        house.position.set(16, 0.1, -120); // on the side of the road
+        house.rotation.y = Math.PI; // face the road
+        scene.add(house);
+
+        carGroup.position.set(9.0, 0.1, -123.0); // start position near the house
+        carGroup.rotation.y = -Math.PI / 2; // facing the road
         scene.add(carGroup);
 
         // ── Game Logic & Loop ────────────────────────────────
-        let stage = 1; // 1: Driving, 2: Dimming Transition, 3: Walking
+        let stage = 3; // Start in Walking mode from the beginning
         let kilometersRemaining = 80.0;
-        let parkedCarX = 0;
-        let parkedCarZ = 0;
+        let parkedCarX = 9.0;
+        let parkedCarZ = -123.0;
         let carSpeed = 0;
         let carAngle = 0;
         const maxCarSpeed = 1.9;
@@ -3042,11 +3179,16 @@
         let wiperTime = 0;
 
         // Player walking variables
-        const playerPos = new THREE.Vector3(0, 2, -100);
-        let playerAngle = Math.PI; // looking down the road / forest
+        const playerPos = new THREE.Vector3(8.0, 1.9, -117.0);
+        let playerAngle = Math.PI / 2; // looking towards the house
         const walkSpeed = 0.24;
         let isWalking = false;
         let footstepTimeAcc = 0;
+        
+        let isMouseDown = false;
+        let prevMouseX = 0;
+        let prevMouseY = 0;
+        let cameraPitch = 0.0; // vertical look angle
 
         // Traffic Management
         const trafficVehicles = [];
@@ -4078,9 +4220,6 @@
             else if (stage === 3) {
                 isWalking = false;
                 
-                if (keys.a) playerAngle += 0.035;
-                if (keys.d) playerAngle -= 0.035;
-
                 if (keys.w) {
                     playerPos.x += Math.sin(playerAngle) * walkSpeed;
                     playerPos.z += Math.cos(playerAngle) * walkSpeed;
@@ -4089,6 +4228,18 @@
                 if (keys.s) {
                     playerPos.x -= Math.sin(playerAngle) * walkSpeed;
                     playerPos.z -= Math.cos(playerAngle) * walkSpeed;
+                    isWalking = true;
+                }
+                if (keys.a) {
+                    // Strafe Left
+                    playerPos.x -= Math.cos(playerAngle) * walkSpeed;
+                    playerPos.z += Math.sin(playerAngle) * walkSpeed;
+                    isWalking = true;
+                }
+                if (keys.d) {
+                    // Strafe Right
+                    playerPos.x += Math.cos(playerAngle) * walkSpeed;
+                    playerPos.z -= Math.sin(playerAngle) * walkSpeed;
                     isWalking = true;
                 }
 
@@ -4101,9 +4252,9 @@
                 camera.position.copy(playerPos);
                 
                 const lookTarget = new THREE.Vector3(
-                    playerPos.x + Math.sin(playerAngle),
-                    playerPos.y,
-                    playerPos.z + Math.cos(playerAngle)
+                    playerPos.x + Math.sin(playerAngle) * Math.cos(cameraPitch),
+                    playerPos.y + Math.sin(cameraPitch),
+                    playerPos.z + Math.cos(playerAngle) * Math.cos(cameraPitch)
                 );
                 camera.lookAt(lookTarget);
 
