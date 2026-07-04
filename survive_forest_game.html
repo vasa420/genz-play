@@ -328,7 +328,7 @@
     <div class="timer-hud" id="timer-display">150.00 KM (LOCKED)</div>
 
     <div class="controls-help" id="controls-text">
-        WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look)
+        WALK WITH: <span>W / S / A / D</span> · <span>DRAG MOUSE</span> · <span style="color: #00ffcc;">[B] TORCH</span>
     </div>
 
     <canvas id="game-canvas"></canvas>
@@ -534,9 +534,9 @@
         let currentBendAmp = 0.08;
         let currentBendFreq = 3.0;
         let currentFogDensity = 0.012;
-        let currentAmbient = 0.38;
-        let currentSunLight = 0.45;
-        let currentSkyColor = new THREE.Color(0x1e152a);
+        let currentAmbient = 0.45;
+        let currentSunLight = 0.52;
+        let currentSkyColor = new THREE.Color(0x231835);
         
         // Overtake Event State
         let overtakeEventStarted = false;
@@ -884,6 +884,11 @@
 
                 stage = 1; // transition to driving stage
 
+                flashlightActive = false;
+                if (flashlight) {
+                    flashlight.intensity = 0;
+                }
+
                 document.getElementById('dashcam-hud').style.display = 'block';
                 timerDisplay.style.display = 'block';
                 timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM";
@@ -918,6 +923,12 @@
             }
             if (key === 'z' && stage === 1) {
                 wipersOn = !wipersOn;
+            }
+            if (key === 'b') {
+                flashlightActive = !flashlightActive;
+                if (flashlight) {
+                    flashlight.intensity = flashlightActive ? 4.5 : 0;
+                }
             }
             if ((key === 'f' || key === 'enter') && stage === 0) {
                 if (playerPos.distanceTo(carGroup.position) < 6.0) {
@@ -1004,7 +1015,7 @@
 
         const scene = new THREE.Scene();
         // Early morning light sky (dusty dark morning 6:30 AM before sunrise)
-        const initialSkyColor = 0x1e152a; 
+        const initialSkyColor = 0x231835; 
         renderer.setClearColor(initialSkyColor);
         scene.fog = new THREE.FogExp2(initialSkyColor, 0.012);
 
@@ -1014,6 +1025,12 @@
         // Ambient morning glow (starts dark purple/blue)
         const ambientLight = new THREE.AmbientLight(0x251a2d, 0.55);
         scene.add(ambientLight);
+
+        // ── Flashlight / Torch Light ─────────────────────────
+        flashlight = new THREE.SpotLight(0xffffff, 0, 80, Math.PI / 6, 0.4, 0.8);
+        flashlight.castShadow = true;
+        scene.add(flashlight);
+        scene.add(flashlight.target);
 
         // Low sunrise light (starts low intensity red-orange)
         const sunLight = new THREE.DirectionalLight(0xff3300, 0.8);
@@ -3143,6 +3160,10 @@
         let prevMouseX = 0;
         let prevMouseY = 0;
 
+        // Flashlight/Torch Light variables
+        let flashlight = null;
+        let flashlightActive = false;
+
         // Traffic Management
         const trafficVehicles = [];
         const trafficTypes = ['car', 'truck', 'bus'];
@@ -3320,9 +3341,9 @@
                     cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
                 } else {
                     // Pre-storm: normal morning sunrise (when > 70.0 KM) - gets gradually lighter
-                    targetSkyColor = new THREE.Color(0x1e152a).lerp(new THREE.Color(0x6e2a34), sunriseProgress);
-                    targetAmbient = 0.38 + sunriseProgress * 0.37;
-                    targetSunLight = 0.45 + sunriseProgress * 1.1;
+                    targetSkyColor = new THREE.Color(0x231835).lerp(new THREE.Color(0x6e2a34), sunriseProgress);
+                    targetAmbient = 0.45 + sunriseProgress * 0.3;
+                    targetSunLight = 0.52 + sunriseProgress * 1.03;
                     targetFogDensity = 0.007;
                     
                     // Lerp clouds color to warm morning clouds
@@ -3924,16 +3945,18 @@
             }
 
             // Update traffic vehicles
-            if (stage === 1) {
+            if (stage === 1 || stage === 0) {
                 if (audioCtx && audioCtx.state === 'suspended') {
                     if (keys.w || keys.s || keys.a || keys.d) audioCtx.resume();
                 }
+                
+                const listenerPos = (stage === 1) ? carGroup.position : camera.position;
                 
                 trafficVehicles.forEach(vehicle => {
                     // Wind blow simulation for vehicles in storm (REMOVED: Vehicles no longer fly)
                     /*
                     if (isStormActive && !vehicle.isWindBlown && vehicle.speed !== 0 && !vehicle.isRescueCone) {
-                        const relZ = vehicle.group.position.z - carGroup.position.z;
+                        const relZ = vehicle.group.position.z - listenerPos.z;
                         // Trigger when vehicle is 60 to 110 units ahead of the player (fully visible!)
                         if (relZ > 60 && relZ < 110 && Math.random() < 0.01) {
                             vehicle.isWindBlown = true;
@@ -3988,10 +4011,10 @@
                         // Normal vehicle movement
                         vehicle.group.position.z += vehicle.speed;
                     }
-                    const relZ = vehicle.group.position.z - carGroup.position.z;
+                    const relZ = vehicle.group.position.z - listenerPos.z;
                     if (vehicle.speed > 0) {
                         if (relZ < -150) {
-                            vehicle.group.position.z = carGroup.position.z + 300 + Math.random() * 100;
+                            vehicle.group.position.z = listenerPos.z + 300 + Math.random() * 100;
                             const lane = Math.random() > 0.5 ? 4 : -4;
                             vehicle.group.position.x = lane;
                             vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
@@ -3999,7 +4022,7 @@
                         }
                     } else {
                         if (relZ < -100) {
-                            vehicle.group.position.z = carGroup.position.z + 300 + Math.random() * 100;
+                            vehicle.group.position.z = listenerPos.z + 300 + Math.random() * 100;
                             const lane = Math.random() > 0.5 ? 4 : -4;
                             vehicle.group.position.x = lane;
                             vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
@@ -4009,7 +4032,7 @@
 
                     // Recycle if too far ahead to keep traffic in circulation
                     if (relZ > 350) {
-                        vehicle.group.position.z = carGroup.position.z - 150 - Math.random() * 50;
+                        vehicle.group.position.z = listenerPos.z - 150 - Math.random() * 50;
                         const lane = Math.random() > 0.5 ? 4 : -4;
                         vehicle.group.position.x = lane;
                         vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
@@ -4020,7 +4043,7 @@
 
                     // Positional Audio Logic
                     const distZ = Math.abs(relZ);
-                    const distX = Math.abs(vehicle.group.position.x - carGroup.position.x);
+                    const distX = Math.abs(vehicle.group.position.x - listenerPos.x);
                     const dist = Math.sqrt(distZ * distZ + distX * distX);
                     
                     if (dist < 100 && audioCtx) {
@@ -4034,7 +4057,7 @@
                             vehicle.soundGain.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.1);
                             
                             if (vehicle.soundPanner) {
-                                const panVal = Math.max(-1, Math.min(1, (vehicle.group.position.x - carGroup.position.x) / 10));
+                                const panVal = Math.max(-1, Math.min(1, (vehicle.group.position.x - listenerPos.x) / 10));
                                 vehicle.soundPanner.pan.setTargetAtTime(panVal, audioCtx.currentTime, 0.1);
                             }
                             
@@ -4254,6 +4277,14 @@
                     playerPos.z + Math.cos(playerAngle) * Math.cos(cameraPitch)
                 );
                 camera.lookAt(lookTarget);
+
+                // Position flashlight at camera position and point it in camera look direction
+                if (flashlight) {
+                    flashlight.position.copy(camera.position);
+                    const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion);
+                    flashlight.target.position.copy(camera.position).add(dir);
+                    flashlight.target.updateMatrixWorld();
+                }
 
                 if (isWalking) {
                     footstepTimeAcc += delta;
