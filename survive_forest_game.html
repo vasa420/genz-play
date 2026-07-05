@@ -4858,8 +4858,8 @@
                     playerPos.z = Math.max(Math.min(playerPos.z, parkedCarZ + 200), parkedCarZ - 200);
                 }
 
-                const terrainHeight = Math.sin(playerPos.x * 0.05) * Math.cos(playerPos.z * 0.05) * 1.5 + Math.sin(playerPos.x * 0.01) * 3;
-                playerPos.y = 0.95 + terrainHeight;
+                // Keep player at a stable human eye level (1.75m) above the flat ground to prevent clipping/black screen
+                playerPos.y = 1.75;
 
                 camera.position.copy(playerPos);
                 
