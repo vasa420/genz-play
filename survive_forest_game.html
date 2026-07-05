@@ -918,6 +918,16 @@
             stopHorn();
             stopCarRadio();
             trafficVehicles.forEach(stopTrafficSound);
+            trafficVehicles.forEach(v => {
+                if (v.passbyAudio) {
+                    try { v.passbyAudio.pause(); } catch(e) {}
+                }
+            });
+            overtakeCars.forEach(c => {
+                if (c.passbyAudio) {
+                    try { c.passbyAudio.pause(); } catch(e) {}
+                }
+            });
             document.getElementById('fade-overlay').style.opacity = '1';
             setTimeout(() => {
                 location.href = 'survive_it.html';
@@ -2943,7 +2953,9 @@
                             group: stoppedCar,
                             speed: 0,
                             lane: -4,
-                            type: 'car'
+                            type: 'car',
+                            passbyAudio: new Audio('flutie8211-muscle-car-driving-left-to-right-559148.mp3'),
+                            passbyPlayed: false
                         };
                         crossingOncomingCars.push(carObj);
                         trafficVehicles.push(carObj);
@@ -3356,7 +3368,14 @@
                     mesh.rotation.y = Math.PI;
                 }
                 scene.add(mesh);
-                trafficVehicles.push({ group: mesh, speed: speed, lane: lane, type: type });
+                trafficVehicles.push({ 
+                    group: mesh, 
+                    speed: speed, 
+                    lane: lane, 
+                    type: type,
+                    passbyAudio: new Audio('flutie8211-muscle-car-driving-left-to-right-559148.mp3'),
+                    passbyPlayed: false
+                });
             }
         }
 
@@ -3906,7 +3925,9 @@
                         overtakeCars.push({
                             mesh: mesh,
                             speed: 4.8 + Math.random() * 0.7,
-                            lane: lane
+                            lane: lane,
+                            passbyAudio: new Audio('flutie8211-muscle-car-driving-left-to-right-559148.mp3'),
+                            passbyPlayed: false
                         });
                     }
                 }
@@ -3915,7 +3936,29 @@
                     overtakeCars.forEach(car => {
                         car.mesh.position.z += car.speed;
                         const relZ = car.mesh.position.z - carGroup.position.z;
+                        
+                        // Passby audio trigger for overtake event cars
+                        const distZ = Math.abs(relZ);
+                        if (distZ < 65 && !car.passbyPlayed) {
+                            car.passbyPlayed = true;
+                            if (car.passbyAudio) {
+                                car.passbyAudio.currentTime = 0;
+                                car.passbyAudio.play().catch(e => {});
+                            }
+                        }
+                        
+                        if (car.passbyAudio && car.passbyPlayed) {
+                            const dx = car.mesh.position.x - carGroup.position.x;
+                            const dist = Math.sqrt(distZ * distZ + dx * dx);
+                            const maxDist = 80;
+                            const volumeScale = Math.max(0, 1 - dist / maxDist);
+                            car.passbyAudio.volume = Math.min(1.0, masterVolume * 8.0 * volumeScale);
+                        }
+
                         if (relZ > 500) {
+                            if (car.passbyAudio) {
+                                try { car.passbyAudio.pause(); } catch(e) {}
+                            }
                             scene.remove(car.mesh);
                         }
                     });
@@ -4252,6 +4295,7 @@
                             vehicle.group.position.x = lane;
                             vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
                             vehicle.baseSpeed = vehicle.speed;
+                            vehicle.passbyPlayed = false;
                             stopTrafficSound(vehicle);
                         }
                     } else {
@@ -4261,6 +4305,7 @@
                             vehicle.group.position.x = lane;
                             vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
                             vehicle.baseSpeed = vehicle.speed;
+                            vehicle.passbyPlayed = false;
                             stopTrafficSound(vehicle);
                         }
                     }
@@ -4272,6 +4317,7 @@
                         vehicle.group.position.x = lane;
                         vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
                         vehicle.baseSpeed = vehicle.speed;
+                        vehicle.passbyPlayed = false;
                         stopTrafficSound(vehicle);
                     }
 
@@ -4281,6 +4327,22 @@
                     const distZ = Math.abs(relZ);
                     const distX = Math.abs(vehicle.group.position.x - listenerPos.x);
                     const dist = Math.sqrt(distZ * distZ + distX * distX);
+                    
+                    // Passby Audio Logic
+                    if (!vehicle.isRescueCone && !vehicle.isWindBlown && (stage === 1 || stage === 0)) {
+                        if (distZ < 65 && !vehicle.passbyPlayed) {
+                            vehicle.passbyPlayed = true;
+                            if (vehicle.passbyAudio) {
+                                vehicle.passbyAudio.currentTime = 0;
+                                vehicle.passbyAudio.play().catch(e => {});
+                            }
+                        }
+                    }
+                    if (vehicle.passbyAudio && vehicle.passbyPlayed) {
+                        const maxDist = 80;
+                        const volumeScale = Math.max(0, 1 - dist / maxDist);
+                        vehicle.passbyAudio.volume = Math.min(1.0, masterVolume * 8.0 * volumeScale);
+                    }
                     
                     if (dist < 100 && audioCtx) {
                         if (!vehicle.soundOsc) {
