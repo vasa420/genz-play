@@ -15,6 +15,11 @@ const io = new Server(server, {
 // Serve static files from the current directory
 app.use(express.static(path.join(__dirname)));
 
+// Redirect root path to arcade_hub.html
+app.get('/', (req, res) => {
+    res.redirect('/arcade_hub.html');
+});
+
 const { exec } = require('child_process');
 
 app.post('/api/set-system-volume', (req, res) => {
