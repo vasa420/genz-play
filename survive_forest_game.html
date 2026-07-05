@@ -1045,7 +1045,7 @@
             const cupGeo = new THREE.CylinderGeometry(0.1, 0.07, 0.16, 8);
             const cupMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 });
             teaCupMesh = new THREE.Mesh(cupGeo, cupMat);
-            teaCupMesh.position.set(13.0, 1.28, -2.1);
+            teaCupMesh.position.set(23.0, 1.28, -2.1);
             teaShopGroup.add(teaCupMesh);
         }
 
@@ -1053,12 +1053,12 @@
             teaShopGroup = new THREE.Group();
             teaShopGroup.position.set(0, 0, shopZ);
 
-            // 1. The Park area (Grass lawn on the right side)
+            // 1. The Park area (Grass lawn on the right side - shifted completely off-road)
             const parkGeo = new THREE.PlaneGeometry(16, 16);
             const parkMat = new THREE.MeshStandardMaterial({ color: 0x2e5c1e, roughness: 0.9 });
             const park = new THREE.Mesh(parkGeo, parkMat);
             park.rotation.x = -Math.PI / 2;
-            park.position.set(16, 0.02, 0);
+            park.position.set(26, 0.02, 0);
             park.receiveShadow = true;
             teaShopGroup.add(park);
 
@@ -1066,50 +1066,50 @@
             const fenceMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
             
             const backFence = new THREE.Mesh(new THREE.BoxGeometry(16, 0.8, 0.1), fenceMat);
-            backFence.position.set(16, 0.4, -8);
+            backFence.position.set(26, 0.4, -8);
             teaShopGroup.add(backFence);
             
             const rightFence = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 16), fenceMat);
-            rightFence.position.set(24, 0.4, 0);
+            rightFence.position.set(34, 0.4, 0);
             teaShopGroup.add(rightFence);
 
             const leftFence = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 16), fenceMat);
-            leftFence.position.set(8, 0.4, 0);
+            leftFence.position.set(18, 0.4, 0);
             teaShopGroup.add(leftFence);
 
-            for (let x = 8; x <= 24; x += 2) {
+            for (let x = 18; x <= 34; x += 2) {
                 const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), fenceMat);
                 post.position.set(x, 0.6, -8);
                 teaShopGroup.add(post);
             }
             for (let z = -8; z <= 8; z += 2) {
                 const postL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), fenceMat);
-                postL.position.set(8, 0.6, z);
+                postL.position.set(18, 0.6, z);
                 teaShopGroup.add(postL);
                 
                 const postR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), fenceMat);
-                postR.position.set(24, 0.6, z);
+                postR.position.set(34, 0.6, z);
                 teaShopGroup.add(postR);
             }
 
-            // 3. Tea Stall kiosk cabin (Big shop structure)
+            // 3. Tea Stall kiosk cabin (Big shop structure - placed inside the park lawn)
             const stallMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
             const darkStallMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1f, roughness: 0.9 });
             
             const stallBase = new THREE.Mesh(new THREE.BoxGeometry(6.5, 4.0, 4.0), stallMat);
-            stallBase.position.set(13, 2.0, -4);
+            stallBase.position.set(23, 2.0, -4);
             stallBase.castShadow = true;
             teaShopGroup.add(stallBase);
             
             const counter = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.1, 0.9), darkStallMat);
-            counter.position.set(13, 1.2, -2.0);
+            counter.position.set(23, 1.2, -2.0);
             counter.castShadow = true;
             teaShopGroup.add(counter);
             teaCounterObj = counter;
 
             const roofMat = new THREE.MeshStandardMaterial({ color: 0x55555d, roughness: 0.4, metalness: 0.8 });
             const kioskRoof = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.15, 4.6), roofMat);
-            kioskRoof.position.set(13, 4.15, -3.8);
+            kioskRoof.position.set(23, 4.15, -3.8);
             kioskRoof.rotation.x = 0.12;
             kioskRoof.castShadow = true;
             teaShopGroup.add(kioskRoof);
@@ -1117,24 +1117,24 @@
             // Glowing Neon Sign Board "HOT TEA"
             const signMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
             const signBoard = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x111115 }));
-            signBoard.position.set(13, 4.65, -1.9);
+            signBoard.position.set(23, 4.65, -1.9);
             teaShopGroup.add(signBoard);
             
             const neonText = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.3, 0.12), signMat);
-            neonText.position.set(13, 4.65, -1.86);
+            neonText.position.set(23, 4.65, -1.86);
             teaShopGroup.add(neonText);
 
             // Boiler
             const boilerMat = new THREE.MeshStandardMaterial({ color: 0xafafb2, metalness: 0.9, roughness: 0.2 });
             const boiler = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 12), boilerMat);
-            boiler.position.set(11.2, 1.65, -2.05);
+            boiler.position.set(21.2, 1.65, -2.05);
             teaShopGroup.add(boiler);
 
             // 4. Benches
             const benchMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
             
             const bench1 = new THREE.Group();
-            bench1.position.set(19, 0, 2);
+            bench1.position.set(29, 0, 2);
             
             const seat1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 0.7), benchMat);
             seat1.position.y = 0.45;
@@ -1154,7 +1154,7 @@
             teaShopGroup.add(bench1);
 
             const bench2 = bench1.clone();
-            bench2.position.set(18, 0, -4);
+            bench2.position.set(28, 0, -4);
             bench2.rotation.y = Math.PI / 2;
             teaShopGroup.add(bench2);
 
@@ -1170,7 +1170,7 @@
 
             // Shop Keeper Sitting Behind Counter
             const keeper = new THREE.Group();
-            keeper.position.set(13.0, 1.05, -3.2); // inside kiosk
+            keeper.position.set(23.0, 1.05, -3.2); // inside kiosk
             const kHead = new THREE.Mesh(headGeo, skinMat);
             kHead.position.y = 0.85;
             keeper.add(kHead);
@@ -1181,7 +1181,7 @@
 
             // Sitting Customer 1
             const personSitting1 = new THREE.Group();
-            personSitting1.position.set(19, 0.25, 2.0);
+            personSitting1.position.set(29, 0.25, 2.0);
             const s1Head = new THREE.Mesh(headGeo, skinMat);
             s1Head.position.y = 0.85;
             personSitting1.add(s1Head);
@@ -1200,7 +1200,7 @@
 
             // Sitting Customer 2
             const personSitting2 = new THREE.Group();
-            personSitting2.position.set(18.0, 0.25, -4.0);
+            personSitting2.position.set(28.0, 0.25, -4.0);
             personSitting2.rotation.y = Math.PI / 2;
             const s2Head = new THREE.Mesh(headGeo, skinMat);
             s2Head.position.y = 0.85;
@@ -1212,7 +1212,7 @@
 
             scene.add(teaShopGroup);
 
-            // 6. Yellow Parking Spot Outline
+            // 6. Yellow Parking Spot Outline (shifted to road shoulder)
             const zoneGeo = new THREE.PlaneGeometry(4.5, 9.0);
             const zoneMat = new THREE.MeshBasicMaterial({ 
                 color: 0xffcc00, 
@@ -1222,7 +1222,7 @@
             });
             parkingZoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
             parkingZoneMesh.rotation.x = -Math.PI / 2;
-            parkingZoneMesh.position.set(6.0, 0.05, shopZ);
+            parkingZoneMesh.position.set(15.0, 0.05, shopZ);
             scene.add(parkingZoneMesh);
 
             const outlineGeo = new THREE.BufferGeometry();
@@ -1235,21 +1235,21 @@
             outlineGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
             const borderMat = new THREE.LineBasicMaterial({ color: 0xffcc00, linewidth: 2.5 });
             parkingBorderSegments = new THREE.LineSegments(outlineGeo, borderMat);
-            parkingBorderSegments.position.set(6.0, 0, shopZ);
+            parkingBorderSegments.position.set(15.0, 0, shopZ);
             scene.add(parkingBorderSegments);
 
             // Glowing Indicator Cone
             const indGeo = new THREE.ConeGeometry(0.4, 1.2, 5);
             const indMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
             parkingIndicator = new THREE.Mesh(indGeo, indMat);
-            parkingIndicator.position.set(6.0, 2.5, shopZ);
+            parkingIndicator.position.set(15.0, 2.5, shopZ);
             parkingIndicator.rotation.x = Math.PI;
             scene.add(parkingIndicator);
 
             teaShopSpawned = true;
             teaShopGroup.userData = {
                 steamParticles: [],
-                boilerPos: new THREE.Vector3(11.2, 2.0, shopZ - 2.05)
+                boilerPos: new THREE.Vector3(21.2, 2.0, shopZ - 2.05)
             };
         }
 
@@ -1349,7 +1349,7 @@
                     carAngle = 0;
                 } else {
                     // Keep car parked at tea shop location, align forward orientation
-                    carGroup.position.set(6.0, 0.1, teaShopZ);
+                    carGroup.position.set(15.0, 0.1, teaShopZ);
                     carGroup.rotation.y = 0;
                     carAngle = 0;
                     
@@ -5371,9 +5371,9 @@
                         parkingIndicator.rotation.y += delta * 2.0;
                     }
 
-                    // Check distance to parking zone center (X = 6.0, Z = teaShopZ)
+                    // Check distance to parking zone center (X = 15.0, Z = teaShopZ)
                     const distZ = Math.abs(carGroup.position.z - teaShopZ);
-                    const distX = Math.abs(carGroup.position.x - 6.0);
+                    const distX = Math.abs(carGroup.position.x - 15.0);
                     
                     controlsHelp.innerHTML = `<span style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px rgba(255,204,0,0.45);">[!] REACHED 140 KM: PULL OVER & PARK IN THE YELLOW BOX</span>`;
 
