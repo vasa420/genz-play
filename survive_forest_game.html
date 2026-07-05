@@ -4181,6 +4181,9 @@
                 const listenerPos = (stage === 1) ? carGroup.position : camera.position;
                 
                 trafficVehicles.forEach(vehicle => {
+                    let obstacleAhead = null;
+                    let minDistance = 30; // look ahead distance in units
+
                     // Wind blow simulation for vehicles in storm (REMOVED: Vehicles no longer fly)
                     /*
                     if (isStormActive && !vehicle.isWindBlown && vehicle.speed !== 0 && !vehicle.isRescueCone) {
@@ -4243,8 +4246,8 @@
                             desiredSpeed = vehicle.speed;
                         }
 
-                        let obstacleAhead = null;
-                        let minDistance = 30; // look ahead distance in units
+                        obstacleAhead = null;
+                        minDistance = 30; // look ahead distance in units
 
                         // Check other traffic vehicles
                         trafficVehicles.forEach(other => {
