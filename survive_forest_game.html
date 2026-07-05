@@ -358,6 +358,20 @@
         let hornAudio = null;
         let hornActive = false;
 
+        // ── Tea Shop Event State Variables ─────────────────────
+        let teaEventTriggered = false;
+        let teaSpeechDone = false;
+        let teaShopGroup = null;
+        let parkingZoneMesh = null;
+        let parkingIndicator = null;
+        let teaShopZ = 0;
+        let playerExitedForTea = false;
+        let teaDrank = false;
+        let hasSpokenTeaDialogue = false;
+        let originalKilometersVal = 140.0;
+        let teaCounterObj = null; // to reference for distance check
+        let speechBubbles = [];   // to store bubble overlays
+
         function initHornAudio() {
             if (!hornAudio) {
                 hornAudio = new Audio('floraphonic-car-horn-4-189858.mp3');
@@ -937,6 +951,367 @@
             }, 1000);
         }
 
+        // ── Tea Shop Event Functions ──────────────────────────
+        function speakTeaDialogue() {
+            if (hasSpokenTeaDialogue) return;
+            hasSpokenTeaDialogue = true;
+            
+            // Show subtitles on screen
+            const subtitleEl = document.createElement('div');
+            subtitleEl.id = 'speech-subtitles';
+            subtitleEl.style.position = 'fixed';
+            subtitleEl.style.bottom = '120px';
+            subtitleEl.style.left = '50%';
+            subtitleEl.style.transform = 'translateX(-50%)';
+            subtitleEl.style.background = 'rgba(0, 0, 0, 0.85)';
+            subtitleEl.style.color = '#fff';
+            subtitleEl.style.padding = '12px 24px';
+            subtitleEl.style.borderRadius = '8px';
+            subtitleEl.style.fontFamily = 'Courier New, monospace';
+            subtitleEl.style.fontSize = '20px';
+            subtitleEl.style.fontWeight = 'bold';
+            subtitleEl.style.zIndex = '9999';
+            subtitleEl.style.border = '2px solid #ff3300';
+            subtitleEl.style.boxShadow = '0 0 15px rgba(255,51,0,0.5)';
+            subtitleEl.innerText = "Driver: \"Haa, I was very tired, I want to drink tea.\"";
+            document.body.appendChild(subtitleEl);
+
+            // Audio Synthesis
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech first
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance("Haa, I was very tired, I want to drink tea.");
+                
+                // Get voices
+                const voices = window.speechSynthesis.getVoices();
+                // Find a male voice
+                let maleVoice = voices.find(voice => 
+                    voice.name.toLowerCase().includes('male') || 
+                    voice.name.toLowerCase().includes('google uk english male') || 
+                    voice.name.toLowerCase().includes('microsoft david') ||
+                    voice.name.toLowerCase().includes('google us english')
+                );
+                
+                if (!maleVoice && voices.length > 0) {
+                    maleVoice = voices[0];
+                }
+                
+                if (maleVoice) utterance.voice = maleVoice;
+                utterance.pitch = 0.82; // low masculine pitch
+                utterance.rate = 1.05;  // sharp and clear rate
+                
+                utterance.onend = () => {
+                    setTimeout(() => {
+                        subtitleEl.remove();
+                    }, 800);
+                    spawnTeaShopEvent();
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                // Speech API not supported fallback
+                setTimeout(() => {
+                    subtitleEl.remove();
+                    spawnTeaShopEvent();
+                }, 4000);
+            }
+        }
+
+        function spawnTeaShopEvent() {
+            teaShopZ = carGroup.position.z + 180;
+            createTeaShop(teaShopZ);
+            teaSpeechDone = true;
+            
+            // Brighten headlights to illuminate the tea shop
+            if (spotLeft && spotRight) {
+                spotLeft.intensity = 3.5;
+                spotRight.intensity = 3.5;
+            }
+        }
+
+        function createTeaShop(shopZ) {
+            teaShopGroup = new THREE.Group();
+            teaShopGroup.position.set(0, 0, shopZ);
+
+            // 1. The Park area (Grass lawn on the right side)
+            const parkGeo = new THREE.PlaneGeometry(16, 16);
+            const parkMat = new THREE.MeshStandardMaterial({ color: 0x2e5c1e, roughness: 0.9 });
+            const park = new THREE.Mesh(parkGeo, parkMat);
+            park.rotation.x = -Math.PI / 2;
+            park.position.set(16, 0.02, 0);
+            park.receiveShadow = true;
+            teaShopGroup.add(park);
+
+            // 2. Fences surrounding the park
+            const fenceMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
+            
+            const backFence = new THREE.Mesh(new THREE.BoxGeometry(16, 0.8, 0.1), fenceMat);
+            backFence.position.set(16, 0.4, -8);
+            teaShopGroup.add(backFence);
+            
+            const rightFence = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 16), fenceMat);
+            rightFence.position.set(24, 0.4, 0);
+            teaShopGroup.add(rightFence);
+
+            const leftFence = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 16), fenceMat);
+            leftFence.position.set(8, 0.4, 0);
+            teaShopGroup.add(leftFence);
+
+            for (let x = 8; x <= 24; x += 2) {
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), fenceMat);
+                post.position.set(x, 0.6, -8);
+                teaShopGroup.add(post);
+            }
+            for (let z = -8; z <= 8; z += 2) {
+                const postL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), fenceMat);
+                postL.position.set(8, 0.6, z);
+                teaShopGroup.add(postL);
+                
+                const postR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), fenceMat);
+                postR.position.set(24, 0.6, z);
+                teaShopGroup.add(postR);
+            }
+
+            // 3. Tea Stall kiosk cabin
+            const stallMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
+            const darkStallMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1f, roughness: 0.9 });
+            
+            const stallBase = new THREE.Mesh(new THREE.BoxGeometry(5, 3.5, 3.5), stallMat);
+            stallBase.position.set(13, 1.75, -4);
+            stallBase.castShadow = true;
+            teaShopGroup.add(stallBase);
+            
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.1, 0.8), darkStallMat);
+            counter.position.set(13, 1.2, -2.1);
+            counter.castShadow = true;
+            teaShopGroup.add(counter);
+            teaCounterObj = counter;
+
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x55555d, roughness: 0.4, metalness: 0.8 });
+            const kioskRoof = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.15, 4.0), roofMat);
+            kioskRoof.position.set(13, 3.6, -3.8);
+            kioskRoof.rotation.x = 0.12;
+            kioskRoof.castShadow = true;
+            teaShopGroup.add(kioskRoof);
+
+            // Glowing Neon Sign Board "HOT TEA"
+            const signMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+            const signBoard = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x111115 }));
+            signBoard.position.set(13, 4.1, -1.9);
+            teaShopGroup.add(signBoard);
+            
+            const neonText = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.3, 0.12), signMat);
+            neonText.position.set(13, 4.1, -1.86);
+            teaShopGroup.add(neonText);
+
+            // Boiler
+            const boilerMat = new THREE.MeshStandardMaterial({ color: 0xafafb2, metalness: 0.9, roughness: 0.2 });
+            const boiler = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.8, 12), boilerMat);
+            boiler.position.set(11.8, 1.6, -2.15);
+            teaShopGroup.add(boiler);
+
+            // 4. Benches
+            const benchMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+            
+            const bench1 = new THREE.Group();
+            bench1.position.set(19, 0, 2);
+            
+            const seat1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 0.7), benchMat);
+            seat1.position.y = 0.45;
+            bench1.add(seat1);
+            
+            const back1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.5, 0.08), benchMat);
+            back1.position.set(0, 0.8, -0.32);
+            bench1.add(back1);
+            
+            const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.1), benchMat);
+            leg1.position.set(-1.1, 0.225, 0);
+            bench1.add(leg1);
+            const leg2 = leg1.clone();
+            leg2.position.x = 1.1;
+            bench1.add(leg2);
+            
+            teaShopGroup.add(bench1);
+
+            const bench2 = bench1.clone();
+            bench2.position.set(18, 0, -4);
+            bench2.rotation.y = Math.PI / 2;
+            teaShopGroup.add(bench2);
+
+            // 5. Low-poly People
+            const headGeo = new THREE.SphereGeometry(0.18, 8, 8);
+            const torsoGeo = new THREE.CylinderGeometry(0.2, 0.15, 0.7, 8);
+            const limbGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.45, 6);
+            
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.8 });
+            const clothesMatRed = new THREE.MeshStandardMaterial({ color: 0xdd2222, roughness: 0.7 });
+            const clothesMatBlue = new THREE.MeshStandardMaterial({ color: 0x2222dd, roughness: 0.7 });
+            const clothesMatGreen = new THREE.MeshStandardMaterial({ color: 0x228822, roughness: 0.7 });
+
+            // Keeper
+            const keeper = new THREE.Group();
+            keeper.position.set(13, 0.95, -3.4);
+            const kHead = new THREE.Mesh(headGeo, skinMat);
+            kHead.position.y = 0.9;
+            keeper.add(kHead);
+            const kTorso = new THREE.Mesh(torsoGeo, clothesMatGreen);
+            kTorso.position.y = 0.45;
+            keeper.add(kTorso);
+            teaShopGroup.add(keeper);
+
+            // Sitting 1
+            const personSitting1 = new THREE.Group();
+            personSitting1.position.set(19, 0.25, 2.0);
+            const s1Head = new THREE.Mesh(headGeo, skinMat);
+            s1Head.position.y = 0.85;
+            personSitting1.add(s1Head);
+            const s1Torso = new THREE.Mesh(torsoGeo, clothesMatRed);
+            s1Torso.position.y = 0.45;
+            personSitting1.add(s1Torso);
+            const s1ArmL = new THREE.Mesh(limbGeo, skinMat);
+            s1ArmL.position.set(-0.25, 0.55, 0.2);
+            s1ArmL.rotation.x = -Math.PI / 4;
+            personSitting1.add(s1ArmL);
+            const s1ArmR = new THREE.Mesh(limbGeo, skinMat);
+            s1ArmR.position.set(0.25, 0.55, 0.2);
+            s1ArmR.rotation.x = -Math.PI / 4;
+            personSitting1.add(s1ArmR);
+            teaShopGroup.add(personSitting1);
+
+            // Sitting 2
+            const personSitting2 = new THREE.Group();
+            personSitting2.position.set(18.0, 0.25, -4.0);
+            personSitting2.rotation.y = Math.PI / 2;
+            const s2Head = new THREE.Mesh(headGeo, skinMat);
+            s2Head.position.y = 0.85;
+            personSitting2.add(s2Head);
+            const s2Torso = new THREE.Mesh(torsoGeo, clothesMatBlue);
+            s2Torso.position.y = 0.45;
+            personSitting2.add(s2Torso);
+            teaShopGroup.add(personSitting2);
+
+            scene.add(teaShopGroup);
+
+            // 6. Parking Spot Outline
+            const zoneGeo = new THREE.PlaneGeometry(4.5, 9.0);
+            const zoneMat = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffcc, 
+                transparent: true, 
+                opacity: 0.25, 
+                side: THREE.DoubleSide 
+            });
+            parkingZoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
+            parkingZoneMesh.rotation.x = -Math.PI / 2;
+            parkingZoneMesh.position.set(6.0, 0.05, shopZ);
+            scene.add(parkingZoneMesh);
+
+            const outlineGeo = new THREE.BufferGeometry();
+            const vertices = new Float32Array([
+                -2.25, 0.06, -4.5,   2.25, 0.06, -4.5,
+                 2.25, 0.06, -4.5,   2.25, 0.06,  4.5,
+                 2.25, 0.06,  4.5,  -2.25, 0.06,  4.5,
+                -2.25, 0.06,  4.5,  -2.25, 0.06, -4.5
+            ]);
+            outlineGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            const borderMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, linewidth: 2.5 });
+            const border = new THREE.LineSegments(outlineGeo, borderMat);
+            border.position.set(6.0, 0, shopZ);
+            scene.add(border);
+
+            // Glowing Indicator Cone
+            const indGeo = new THREE.ConeGeometry(0.4, 1.2, 5);
+            const indMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+            parkingIndicator = new THREE.Mesh(indGeo, indMat);
+            parkingIndicator.position.set(6.0, 2.5, shopZ);
+            parkingIndicator.rotation.x = Math.PI;
+            scene.add(parkingIndicator);
+
+            teaShopSpawned = true;
+            teaShopGroup.userData = {
+                steamParticles: [],
+                boilerPos: new THREE.Vector3(11.8, 2.0, shopZ - 2.15)
+            };
+        }
+
+        function playSipSound() {
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const now = audioCtx.currentTime;
+                const bufferSize = audioCtx.sampleRate * 0.45;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.setValueAtTime(8.0, now);
+                filter.frequency.setValueAtTime(500, now);
+                filter.frequency.exponentialRampToValueAtTime(1400, now + 0.22);
+                filter.frequency.exponentialRampToValueAtTime(800, now + 0.42);
+                
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(masterVolume * 2.8, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                noise.start(now);
+                noise.stop(now + 0.45);
+            } catch(e) {}
+        }
+
+        function showCustomerSpeechBubbles() {
+            const customerBubbleL = document.createElement('div');
+            customerBubbleL.style.position = 'fixed';
+            customerBubbleL.style.top = '30%';
+            customerBubbleL.style.left = '32%';
+            customerBubbleL.style.background = 'rgba(255, 255, 255, 0.95)';
+            customerBubbleL.style.color = '#111';
+            customerBubbleL.style.padding = '10px 18px';
+            customerBubbleL.style.borderRadius = '18px';
+            customerBubbleL.style.fontFamily = 'Outfit, sans-serif';
+            customerBubbleL.style.fontSize = '15px';
+            customerBubbleL.style.fontWeight = 'bold';
+            customerBubbleL.style.zIndex = '9998';
+            customerBubbleL.style.border = '2px solid #5c4033';
+            customerBubbleL.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+            customerBubbleL.innerText = "Customer 1: \"This fresh ginger tea is perfect for the weather!\"";
+            document.body.appendChild(customerBubbleL);
+
+            const customerBubbleR = document.createElement('div');
+            customerBubbleR.style.position = 'fixed';
+            customerBubbleR.style.top = '38%';
+            customerBubbleR.style.right = '28%';
+            customerBubbleR.style.background = 'rgba(255, 255, 255, 0.95)';
+            customerBubbleR.style.color = '#111';
+            customerBubbleR.style.padding = '10px 18px';
+            customerBubbleR.style.borderRadius = '18px';
+            customerBubbleR.style.fontFamily = 'Outfit, sans-serif';
+            customerBubbleR.style.fontSize = '15px';
+            customerBubbleR.style.fontWeight = 'bold';
+            customerBubbleR.style.zIndex = '9998';
+            customerBubbleR.style.border = '2px solid #5c4033';
+            customerBubbleR.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+            customerBubbleR.innerText = "Customer 2: \"Yeah, the storm is coming soon. Better stay warm.\"";
+            document.body.appendChild(customerBubbleR);
+
+            setTimeout(() => {
+                customerBubbleL.remove();
+                customerBubbleR.remove();
+            }, 4800);
+        }
+
         // ── Keyboard Input ────────────────────────────────────
         const keys = { w: false, a: false, s: false, d: false };
         let enteringCar = false;
@@ -949,9 +1324,26 @@
             fadeOverlay.style.opacity = '1';
 
             setTimeout(() => {
-                carGroup.position.set(0, 0.1, -120);
-                carGroup.rotation.y = 0;
-                carAngle = 0;
+                if (!teaEventTriggered) {
+                    carGroup.position.set(0, 0.1, -120);
+                    carGroup.rotation.y = 0;
+                    carAngle = 0;
+                } else {
+                    // Keep car parked at tea shop location, align forward orientation
+                    carGroup.position.set(6.0, 0.1, teaShopZ);
+                    carGroup.rotation.y = 0;
+                    carAngle = 0;
+                    
+                    // Remove parking zone indicators
+                    if (parkingZoneMesh) {
+                        scene.remove(parkingZoneMesh);
+                        parkingZoneMesh = null;
+                    }
+                    if (parkingIndicator) {
+                        scene.remove(parkingIndicator);
+                        parkingIndicator = null;
+                    }
+                }
                 carSpeed = 0;
 
                 stage = 1; // transition to driving stage
@@ -1009,7 +1401,92 @@
             }
             if ((key === 'f' || key === 'enter') && stage === 0) {
                 if (playerPos.distanceTo(carGroup.position) < 6.0) {
+                    if (teaEventTriggered && !teaDrank) {
+                        const rem = document.createElement('div');
+                        rem.style.position = 'fixed';
+                        rem.style.top = '120px';
+                        rem.style.left = '50%';
+                        rem.style.transform = 'translateX(-50%)';
+                        rem.style.background = 'rgba(255, 50, 50, 0.9)';
+                        rem.style.color = '#fff';
+                        rem.style.padding = '10px 20px';
+                        rem.style.borderRadius = '5px';
+                        rem.style.zIndex = '9999';
+                        rem.innerText = "I need to drink hot tea first, I'm too tired to drive!";
+                        document.body.appendChild(rem);
+                        setTimeout(() => rem.remove(), 2500);
+                        return;
+                    }
                     enterCarTransition();
+                }
+            }
+            if ((key === 'f' || key === 'enter') && stage === 1 && hasParkedForTea && !playerExitedForTea) {
+                // Exit the car to drink tea!
+                playerExitedForTea = true;
+                
+                fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
+                fadeOverlay.style.opacity = '1';
+                
+                setTimeout(() => {
+                    stage = 0; // enter walking mode
+                    playerPos.set(carGroup.position.x - 2.5, 1.75, carGroup.position.z);
+                    camera.position.copy(playerPos);
+                    
+                    document.getElementById('dashcam-hud').style.display = 'none';
+                    controlsHelp.innerHTML = `APPROACH THE COUNTER & <span style="color: #00ffcc; font-weight: bold;">PRESS E TO DRINK HOT TEA</span>`;
+                    
+                    fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
+                    fadeOverlay.style.opacity = '0';
+                }, 500);
+            }
+            if (key === 'e' && stage === 0 && playerExitedForTea && !teaDrank && teaCounterObj) {
+                const counterWorldPos = new THREE.Vector3();
+                teaCounterObj.getWorldPosition(counterWorldPos);
+                const dist = playerPos.distanceTo(counterWorldPos);
+                
+                if (dist < 3.2) {
+                    teaDrank = true;
+                    
+                    fadeOverlay.style.transition = 'none';
+                    fadeOverlay.style.background = 'rgba(255, 120, 0, 0.25)'; // warm orange tint
+                    fadeOverlay.style.opacity = '1';
+                    
+                    playSipSound();
+                    
+                    setTimeout(() => {
+                        fadeOverlay.style.transition = 'opacity 1.5s ease-in-out';
+                        fadeOverlay.style.opacity = '0';
+                        setTimeout(() => {
+                            fadeOverlay.style.background = '#000';
+                        }, 1500);
+                    }, 1200);
+                    
+                    const bubble = document.createElement('div');
+                    bubble.style.position = 'fixed';
+                    bubble.style.top = '120px';
+                    bubble.style.left = '50%';
+                    bubble.style.transform = 'translateX(-50%)';
+                    bubble.style.background = 'rgba(57, 255, 20, 0.9)';
+                    bubble.style.color = '#000';
+                    bubble.style.padding = '12px 24px';
+                    bubble.style.borderRadius = '30px';
+                    bubble.style.fontFamily = 'Outfit, sans-serif';
+                    bubble.style.fontWeight = 'bold';
+                    bubble.style.fontSize = '18px';
+                    bubble.style.zIndex = '9999';
+                    bubble.style.boxShadow = '0 0 20px rgba(57,255,20,0.6)';
+                    bubble.innerText = "Mmm... Warm and refreshing! Restored energy. [✓]";
+                    document.body.appendChild(bubble);
+                    
+                    setTimeout(() => {
+                        bubble.remove();
+                    }, 3500);
+
+                    showCustomerSpeechBubbles();
+
+                    setTimeout(() => {
+                        controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold;">TEA DRANK! APPROACH DRIVER DOOR & PRESS F TO ENTER VEHICLE</span>`;
+                    }, 1500);
                 }
             }
 
@@ -4631,7 +5108,18 @@
 
                 const isDriving = (keys.w || keys.s) && Math.abs(carSpeed) > 0.05;
                 if (isDriving) {
-                    kilometersRemaining -= delta / 10.0;
+                    // Check if 140km event is ready to trigger
+                    if (!teaEventTriggered && kilometersRemaining <= 140.0) {
+                        teaEventTriggered = true;
+                        kilometersRemaining = 140.0;
+                        originalKilometersVal = 140.0;
+                        speakTeaDialogue();
+                    }
+
+                    // Only subtract if tea event is not active or has completed
+                    if (!teaEventTriggered || (teaEventTriggered && teaDrank)) {
+                        kilometersRemaining -= delta / 10.0;
+                    }
                     if (kilometersRemaining <= 0) {
                         kilometersRemaining = 0;
                         stage = 2; // Transition mode
@@ -4677,7 +5165,11 @@
                     }
                 }
                 
-                timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
+                if (teaEventTriggered && !teaDrank) {
+                    timerDisplay.innerText = "140.00 KM (LOCKED)";
+                } else {
+                    timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
+                }
 
                 let speedMph = Math.min(80, Math.abs(carSpeed * (80 / maxCarSpeed))).toFixed(0);
                 document.getElementById('dashcam-speed-val').innerText = speedMph;
@@ -4803,17 +5295,57 @@
                     camZ + Math.cos(carAngle) * 15 - Math.sin(carAngle) * 0.15
                 );
                 camera.lookAt(lookTarget);
+
+                // Handle Tea Shop parking spot check
+                if (teaEventTriggered && teaSpeechDone && !hasParkedForTea) {
+                    // Rotate and bounce the parking indicator cone
+                    if (parkingIndicator) {
+                        parkingIndicator.position.y = 2.5 + Math.sin(time * 5.0) * 0.25;
+                        parkingIndicator.rotation.y += delta * 2.0;
+                    }
+
+                    // Check distance to parking zone center (X = 6.0, Z = teaShopZ)
+                    const distZ = Math.abs(carGroup.position.z - teaShopZ);
+                    const distX = Math.abs(carGroup.position.x - 6.0);
+                    
+                    controlsHelp.innerHTML = `<span style="color: #00ffcc; font-weight: bold; text-shadow: 0 0 10px rgba(0,255,204,0.45);">[!] REACHED 140 KM: PULL OVER & PARK IN THE GREEN BOX</span>`;
+
+                    if (distZ < 4.5 && distX < 2.0) {
+                        // Check if car is very slow/stopped
+                        if (Math.abs(carSpeed) < 0.08) {
+                            hasParkedForTea = true;
+                            carSpeed = 0;
+                            stopPlayerEngine();
+                            isEngineStarted = false;
+                            
+                            playClickSound();
+                            
+                            controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold; text-shadow: 0 0 10px rgba(57,255,20,0.45);">[✓] VEHICLE PARKED · PRESS F TO EXIT AND DRINK TEA</span>`;
+                        }
+                    }
+                }
             }
             // ── STAGE 3 or 0: WALKING ────────────────────────
             else if (stage === 3 || stage === 0) {
                 isWalking = false;
                 
                 if (stage === 0) {
-                    const dist = playerPos.distanceTo(carGroup.position);
-                    if (dist < 6.0) {
-                        controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> · <span style='color: #ff3300; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,0,0.5);'>PRESS F TO ENTER VEHICLE</span>";
+                    if (teaEventTriggered && playerExitedForTea && !teaDrank && teaCounterObj) {
+                        const counterWorldPos = new THREE.Vector3();
+                        teaCounterObj.getWorldPosition(counterWorldPos);
+                        const dist = playerPos.distanceTo(counterWorldPos);
+                        if (dist < 3.2) {
+                            controlsHelp.innerHTML = `WALK WITH: W/S/A/D · <span style="color: #00ffcc; font-weight: bold; text-shadow: 0 0 10px rgba(0,255,204,0.45);">PRESS E TO DRINK FRESH HOT TEA</span>`;
+                        } else {
+                            controlsHelp.innerHTML = `WALK WITH: W/S/A/D · APPROACH THE COUNTER TO DRINK TEA`;
+                        }
                     } else {
-                        controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look) · APPROACH VEHICLE";
+                        const dist = playerPos.distanceTo(carGroup.position);
+                        if (dist < 6.0) {
+                            controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> · <span style='color: #ff3300; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,0,0.5);'>PRESS F TO ENTER VEHICLE</span>";
+                        } else {
+                            controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look) · APPROACH VEHICLE";
+                        }
                     }
                 }
 
@@ -4909,6 +5441,54 @@
                     radioFilterNode.frequency.setTargetAtTime(targetCutoff, audioCtx.currentTime, 0.15);
                 }
             }
+
+            // ── Tea Stall Steam Particles Animation ───────────
+            if (teaShopSpawned && teaShopGroup) {
+                const userData = teaShopGroup.userData;
+                const pList = userData.steamParticles;
+                const boilerWorldPos = userData.boilerPos;
+                
+                // Spawn steam particle
+                if (Math.random() < 0.18 && pList.length < 25) {
+                    const pGeo = new THREE.SphereGeometry(0.06 + Math.random() * 0.08, 6, 6);
+                    const pMat = new THREE.MeshBasicMaterial({ 
+                        color: 0xeeeeee, 
+                        transparent: true, 
+                        opacity: 0.3 + Math.random() * 0.25 
+                    });
+                    const pMesh = new THREE.Mesh(pGeo, pMat);
+                    pMesh.position.copy(boilerWorldPos);
+                    
+                    pMesh.userData = {
+                        vx: (Math.random() - 0.5) * 0.15,
+                        vy: 0.45 + Math.random() * 0.35,
+                        vz: (Math.random() - 0.5) * 0.15,
+                        life: 1.0
+                    };
+                    scene.add(pMesh);
+                    pList.push(pMesh);
+                }
+                
+                // Update steam particles
+                for (let i = pList.length - 1; i >= 0; i--) {
+                    const p = pList[i];
+                    p.position.x += p.userData.vx * delta;
+                    p.position.y += p.userData.vy * delta;
+                    p.position.z += p.userData.vz * delta;
+                    
+                    p.scale.addScalar(delta * 0.7);
+                    p.userData.life -= delta * 0.8;
+                    p.material.opacity = p.userData.life * 0.45;
+                    
+                    if (p.userData.life <= 0) {
+                        scene.remove(p);
+                        p.geometry.dispose();
+                        p.material.dispose();
+                        pList.splice(i, 1);
+                    }
+                }
+            }
+        }
         }
 
         // Render loop
