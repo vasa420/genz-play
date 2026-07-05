@@ -2939,17 +2939,14 @@
                         stoppedCar.rotation.y = Math.PI;
                         chunkGroup.add(stoppedCar);
                         
-                        crossingOncomingCars.push({
-                            group: stoppedCar,
-                            speed: 0
-                        });
-                        
-                        trafficVehicles.push({
+                        const carObj = {
                             group: stoppedCar,
                             speed: 0,
                             lane: -4,
                             type: 'car'
-                        });
+                        };
+                        crossingOncomingCars.push(carObj);
+                        trafficVehicles.push(carObj);
                     });
                 }
 
@@ -4099,7 +4096,9 @@
                             railwayCrossingState = 'completed';
                             // Resume oncoming stopped vehicles
                             crossingOncomingCars.forEach(car => {
-                                car.speed = -(0.8 + Math.random() * 0.4);
+                                const newSpeed = -(0.8 + Math.random() * 0.4);
+                                car.speed = newSpeed;
+                                car.baseSpeed = newSpeed;
                             });
                         }
                     }
@@ -4252,6 +4251,7 @@
                             const lane = Math.random() > 0.5 ? 4 : -4;
                             vehicle.group.position.x = lane;
                             vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
+                            vehicle.baseSpeed = vehicle.speed;
                             stopTrafficSound(vehicle);
                         }
                     } else {
@@ -4260,6 +4260,7 @@
                             const lane = Math.random() > 0.5 ? 4 : -4;
                             vehicle.group.position.x = lane;
                             vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
+                            vehicle.baseSpeed = vehicle.speed;
                             stopTrafficSound(vehicle);
                         }
                     }
@@ -4270,6 +4271,7 @@
                         const lane = Math.random() > 0.5 ? 4 : -4;
                         vehicle.group.position.x = lane;
                         vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
+                        vehicle.baseSpeed = vehicle.speed;
                         stopTrafficSound(vehicle);
                     }
 
