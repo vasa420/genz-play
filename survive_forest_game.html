@@ -4796,7 +4796,8 @@
                 }
                 
                 const currentVol = windTreesAudio.volume;
-                windTreesAudio.volume = currentVol + (targetVol - currentVol) * 0.1;
+                let nextVol = currentVol + (targetVol - currentVol) * 0.1;
+                windTreesAudio.volume = Math.max(0.0, Math.min(1.0, nextVol));
             }
         }
 
