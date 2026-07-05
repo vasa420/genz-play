@@ -355,6 +355,8 @@
         let stormMusicTargetVol = 0.0;
         let stormMusicCurrentVol = 0.0;
 
+        let windTreesAudio = null;
+
         let hornAudio = null;
         let hornActive = false;
 
@@ -380,6 +382,17 @@
             }
         }
 
+        function initWindTreesAudio() {
+            if (!windTreesAudio) {
+                windTreesAudio = new Audio('soundsforyou-wind-in-trees-117477 (1).mp3');
+                windTreesAudio.loop = true;
+                windTreesAudio.volume = masterVolume * 8.0;
+                windTreesAudio.play().catch(e => {
+                    console.log("Wind trees audio play deferred:", e);
+                });
+            }
+        }
+
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (!stormMusic) {
@@ -392,6 +405,7 @@
             }
             initHornAudio();
             initEngineAudio();
+            initWindTreesAudio();
         }
 
         function initCarRadio() {
@@ -917,6 +931,9 @@
             stopPlayerEngine();
             stopHorn();
             stopCarRadio();
+            if (windTreesAudio) {
+                try { windTreesAudio.pause(); } catch(e) {}
+            }
             trafficVehicles.forEach(stopTrafficSound);
             trafficVehicles.forEach(v => {
                 if (v.passbyAudio) {
@@ -4767,6 +4784,19 @@
                     radioGainNode.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.15);
                     radioFilterNode.frequency.setTargetAtTime(targetCutoff, audioCtx.currentTime, 0.15);
                 }
+            }
+
+            // Update wind trees audio volume based on driving stage
+            if (windTreesAudio) {
+                let targetVol = masterVolume * 8.0;
+                if (stage === 1) {
+                    targetVol = masterVolume * 3.0; // quieter inside the car cabin
+                } else if (stage === 2) {
+                    targetVol = 0.0; // fade out during black screen transition
+                }
+                
+                const currentVol = windTreesAudio.volume;
+                windTreesAudio.volume = currentVol + (targetVol - currentVol) * 0.1;
             }
         }
 
