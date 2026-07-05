@@ -359,12 +359,14 @@
         let hornActive = false;
 
         // ── Tea Shop Event State Variables ─────────────────────
+        let teaEventState = 0; // 0=idle, 1=triggered driver speech, 2=parking box active, 3=parked, 4=walking, 5=near owner counter, 6=ordering tea, 7=owner speaking confirmation, 8=waiting for tea preparation, 9=owner speaking tea ready, 10=tea cup spawned, 11=tea picked up, 12=faded for drinking tea, 13=tea drank ready to drive, 14=event complete
         let teaEventTriggered = false;
         let teaSpeechDone = false;
         let teaShopSpawned = false;
         let teaShopGroup = null;
         let parkingZoneMesh = null;
         let parkingIndicator = null;
+        let parkingBorderSegments = null;
         let teaShopZ = 0;
         let playerExitedForTea = false;
         let teaDrank = false;
@@ -372,6 +374,9 @@
         let originalKilometersVal = 140.0;
         let teaCounterObj = null; // to reference for distance check
         let speechBubbles = [];   // to store bubble overlays
+        let teaCupMesh = null;
+        let teaTimer = 0.0;
+        let hasParkedForTea = false;
 
         function initHornAudio() {
             if (!hornAudio) {
@@ -953,13 +958,47 @@
         }
 
         // ── Tea Shop Event Functions ──────────────────────────
-        function speakTeaDialogue() {
-            if (hasSpokenTeaDialogue) return;
-            hasSpokenTeaDialogue = true;
-            
-            // Show subtitles on screen
+        function speakSpeech(text, isOwner, callback) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = window.speechSynthesis.getVoices();
+                
+                let selectedVoice = null;
+                if (isOwner) {
+                    selectedVoice = voices.find(v => 
+                        v.name.toLowerCase().includes('google') && v.name.toLowerCase().includes('male')
+                    ) || voices.find(v => v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('hazel'));
+                    utterance.pitch = 1.1; 
+                    utterance.rate = 0.95;
+                } else {
+                    selectedVoice = voices.find(v => 
+                        v.name.toLowerCase().includes('male') || 
+                        v.name.toLowerCase().includes('google uk english male') || 
+                        v.name.toLowerCase().includes('microsoft david')
+                    );
+                    utterance.pitch = 0.82; 
+                    utterance.rate = 1.05; 
+                }
+                
+                if (selectedVoice) utterance.voice = selectedVoice;
+                utterance.onend = () => {
+                    if (callback) callback();
+                };
+                window.speechSynthesis.speak(utterance);
+            } else {
+                setTimeout(() => {
+                    if (callback) callback();
+                }, 3000);
+            }
+        }
+
+        function showSubtitle(speaker, text, durationMs) {
+            const existing = document.getElementById('dialog-subtitle');
+            if (existing) existing.remove();
+
             const subtitleEl = document.createElement('div');
-            subtitleEl.id = 'speech-subtitles';
+            subtitleEl.id = 'dialog-subtitle';
             subtitleEl.style.position = 'fixed';
             subtitleEl.style.bottom = '120px';
             subtitleEl.style.left = '50%';
@@ -972,50 +1011,20 @@
             subtitleEl.style.fontSize = '20px';
             subtitleEl.style.fontWeight = 'bold';
             subtitleEl.style.zIndex = '9999';
-            subtitleEl.style.border = '2px solid #ff3300';
-            subtitleEl.style.boxShadow = '0 0 15px rgba(255,51,0,0.5)';
-            subtitleEl.innerText = "Driver: \"Haa, I was very tired, I want to drink tea.\"";
+            subtitleEl.style.border = '2px solid #ffcc00';
+            subtitleEl.style.boxShadow = '0 0 15px rgba(255,204,0,0.5)';
+            
+            const speakerColor = speaker === "Driver" ? "#ff3300" : "#ffcc00";
+            subtitleEl.innerHTML = `<span style="color: ${speakerColor};">${speaker}:</span> "${text}"`;
+            
             document.body.appendChild(subtitleEl);
-
-            // Audio Synthesis
-            if ('speechSynthesis' in window) {
-                // Cancel any ongoing speech first
-                window.speechSynthesis.cancel();
-                
-                const utterance = new SpeechSynthesisUtterance("Haa, I was very tired, I want to drink tea.");
-                
-                // Get voices
-                const voices = window.speechSynthesis.getVoices();
-                // Find a male voice
-                let maleVoice = voices.find(voice => 
-                    voice.name.toLowerCase().includes('male') || 
-                    voice.name.toLowerCase().includes('google uk english male') || 
-                    voice.name.toLowerCase().includes('microsoft david') ||
-                    voice.name.toLowerCase().includes('google us english')
-                );
-                
-                if (!maleVoice && voices.length > 0) {
-                    maleVoice = voices[0];
-                }
-                
-                if (maleVoice) utterance.voice = maleVoice;
-                utterance.pitch = 0.82; // low masculine pitch
-                utterance.rate = 1.05;  // sharp and clear rate
-                
-                utterance.onend = () => {
-                    setTimeout(() => {
-                        subtitleEl.remove();
-                    }, 800);
-                    spawnTeaShopEvent();
-                };
-                
-                window.speechSynthesis.speak(utterance);
-            } else {
-                // Speech API not supported fallback
+            
+            if (durationMs) {
                 setTimeout(() => {
-                    subtitleEl.remove();
-                    spawnTeaShopEvent();
-                }, 4000);
+                    if (subtitleEl.parentNode) {
+                        subtitleEl.remove();
+                    }
+                }, durationMs);
             }
         }
 
@@ -1029,6 +1038,15 @@
                 spotLeft.intensity = 3.5;
                 spotRight.intensity = 3.5;
             }
+        }
+
+        function spawnTeaCup() {
+            if (!teaShopGroup) return;
+            const cupGeo = new THREE.CylinderGeometry(0.1, 0.07, 0.16, 8);
+            const cupMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 });
+            teaCupMesh = new THREE.Mesh(cupGeo, cupMat);
+            teaCupMesh.position.set(13.0, 1.28, -2.1);
+            teaShopGroup.add(teaCupMesh);
         }
 
         function createTeaShop(shopZ) {
@@ -1074,42 +1092,42 @@
                 teaShopGroup.add(postR);
             }
 
-            // 3. Tea Stall kiosk cabin
+            // 3. Tea Stall kiosk cabin (Big shop structure)
             const stallMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
             const darkStallMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1f, roughness: 0.9 });
             
-            const stallBase = new THREE.Mesh(new THREE.BoxGeometry(5, 3.5, 3.5), stallMat);
-            stallBase.position.set(13, 1.75, -4);
+            const stallBase = new THREE.Mesh(new THREE.BoxGeometry(6.5, 4.0, 4.0), stallMat);
+            stallBase.position.set(13, 2.0, -4);
             stallBase.castShadow = true;
             teaShopGroup.add(stallBase);
             
-            const counter = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.1, 0.8), darkStallMat);
-            counter.position.set(13, 1.2, -2.1);
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.1, 0.9), darkStallMat);
+            counter.position.set(13, 1.2, -2.0);
             counter.castShadow = true;
             teaShopGroup.add(counter);
             teaCounterObj = counter;
 
             const roofMat = new THREE.MeshStandardMaterial({ color: 0x55555d, roughness: 0.4, metalness: 0.8 });
-            const kioskRoof = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.15, 4.0), roofMat);
-            kioskRoof.position.set(13, 3.6, -3.8);
+            const kioskRoof = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.15, 4.6), roofMat);
+            kioskRoof.position.set(13, 4.15, -3.8);
             kioskRoof.rotation.x = 0.12;
             kioskRoof.castShadow = true;
             teaShopGroup.add(kioskRoof);
 
             // Glowing Neon Sign Board "HOT TEA"
             const signMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
-            const signBoard = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x111115 }));
-            signBoard.position.set(13, 4.1, -1.9);
+            const signBoard = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.6, 0.1), new THREE.MeshStandardMaterial({ color: 0x111115 }));
+            signBoard.position.set(13, 4.65, -1.9);
             teaShopGroup.add(signBoard);
             
-            const neonText = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.3, 0.12), signMat);
-            neonText.position.set(13, 4.1, -1.86);
+            const neonText = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.3, 0.12), signMat);
+            neonText.position.set(13, 4.65, -1.86);
             teaShopGroup.add(neonText);
 
             // Boiler
             const boilerMat = new THREE.MeshStandardMaterial({ color: 0xafafb2, metalness: 0.9, roughness: 0.2 });
-            const boiler = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.8, 12), boilerMat);
-            boiler.position.set(11.8, 1.6, -2.15);
+            const boiler = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 12), boilerMat);
+            boiler.position.set(11.2, 1.65, -2.05);
             teaShopGroup.add(boiler);
 
             // 4. Benches
@@ -1150,18 +1168,18 @@
             const clothesMatBlue = new THREE.MeshStandardMaterial({ color: 0x2222dd, roughness: 0.7 });
             const clothesMatGreen = new THREE.MeshStandardMaterial({ color: 0x228822, roughness: 0.7 });
 
-            // Keeper
+            // Shop Keeper Sitting Behind Counter
             const keeper = new THREE.Group();
-            keeper.position.set(13, 0.95, -3.4);
+            keeper.position.set(13.0, 1.05, -3.2); // inside kiosk
             const kHead = new THREE.Mesh(headGeo, skinMat);
-            kHead.position.y = 0.9;
+            kHead.position.y = 0.85;
             keeper.add(kHead);
             const kTorso = new THREE.Mesh(torsoGeo, clothesMatGreen);
-            kTorso.position.y = 0.45;
+            kTorso.position.y = 0.4;
             keeper.add(kTorso);
             teaShopGroup.add(keeper);
 
-            // Sitting 1
+            // Sitting Customer 1
             const personSitting1 = new THREE.Group();
             personSitting1.position.set(19, 0.25, 2.0);
             const s1Head = new THREE.Mesh(headGeo, skinMat);
@@ -1180,7 +1198,7 @@
             personSitting1.add(s1ArmR);
             teaShopGroup.add(personSitting1);
 
-            // Sitting 2
+            // Sitting Customer 2
             const personSitting2 = new THREE.Group();
             personSitting2.position.set(18.0, 0.25, -4.0);
             personSitting2.rotation.y = Math.PI / 2;
@@ -1194,10 +1212,10 @@
 
             scene.add(teaShopGroup);
 
-            // 6. Parking Spot Outline
+            // 6. Yellow Parking Spot Outline
             const zoneGeo = new THREE.PlaneGeometry(4.5, 9.0);
             const zoneMat = new THREE.MeshBasicMaterial({ 
-                color: 0x00ffcc, 
+                color: 0xffcc00, 
                 transparent: true, 
                 opacity: 0.25, 
                 side: THREE.DoubleSide 
@@ -1215,14 +1233,14 @@
                 -2.25, 0.06,  4.5,  -2.25, 0.06, -4.5
             ]);
             outlineGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-            const borderMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, linewidth: 2.5 });
-            const border = new THREE.LineSegments(outlineGeo, borderMat);
-            border.position.set(6.0, 0, shopZ);
-            scene.add(border);
+            const borderMat = new THREE.LineBasicMaterial({ color: 0xffcc00, linewidth: 2.5 });
+            parkingBorderSegments = new THREE.LineSegments(outlineGeo, borderMat);
+            parkingBorderSegments.position.set(6.0, 0, shopZ);
+            scene.add(parkingBorderSegments);
 
             // Glowing Indicator Cone
             const indGeo = new THREE.ConeGeometry(0.4, 1.2, 5);
-            const indMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+            const indMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
             parkingIndicator = new THREE.Mesh(indGeo, indMat);
             parkingIndicator.position.set(6.0, 2.5, shopZ);
             parkingIndicator.rotation.x = Math.PI;
@@ -1231,7 +1249,7 @@
             teaShopSpawned = true;
             teaShopGroup.userData = {
                 steamParticles: [],
-                boilerPos: new THREE.Vector3(11.8, 2.0, shopZ - 2.15)
+                boilerPos: new THREE.Vector3(11.2, 2.0, shopZ - 2.05)
             };
         }
 
@@ -1344,6 +1362,10 @@
                         scene.remove(parkingIndicator);
                         parkingIndicator = null;
                     }
+                    if (parkingBorderSegments) {
+                        scene.remove(parkingBorderSegments);
+                        parkingBorderSegments = null;
+                    }
                 }
                 carSpeed = 0;
 
@@ -1402,7 +1424,7 @@
             }
             if ((key === 'f' || key === 'enter') && stage === 0) {
                 if (playerPos.distanceTo(carGroup.position) < 6.0) {
-                    if (teaEventTriggered && !teaDrank) {
+                    if (teaEventTriggered && teaEventState < 13) {
                         const rem = document.createElement('div');
                         rem.style.position = 'fixed';
                         rem.style.top = '120px';
@@ -1418,11 +1440,16 @@
                         setTimeout(() => rem.remove(), 2500);
                         return;
                     }
+                    if (teaEventState === 13) {
+                        teaEventState = 14; // Event completed
+                        teaDrank = true;
+                    }
                     enterCarTransition();
                 }
             }
-            if ((key === 'f' || key === 'enter') && stage === 1 && hasParkedForTea && !playerExitedForTea) {
+            if ((key === 'f' || key === 'enter') && stage === 1 && teaEventState === 3) {
                 // Exit the car to drink tea!
+                teaEventState = 4; // transitioning to counter
                 playerExitedForTea = true;
                 
                 fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
@@ -1434,60 +1461,90 @@
                     camera.position.copy(playerPos);
                     
                     document.getElementById('dashcam-hud').style.display = 'none';
-                    controlsHelp.innerHTML = `APPROACH THE COUNTER & <span style="color: #00ffcc; font-weight: bold;">PRESS E TO DRINK HOT TEA</span>`;
+                    controlsHelp.innerHTML = `APPROACH THE COUNTER & <span style="color: #00ffcc; font-weight: bold;">TALK TO TEA OWNER</span>`;
                     
                     fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
                     fadeOverlay.style.opacity = '0';
                 }, 500);
             }
-            if (key === 'e' && stage === 0 && playerExitedForTea && !teaDrank && teaCounterObj) {
+            if (key === 'e' && stage === 0 && teaEventState === 5 && teaCounterObj) {
                 const counterWorldPos = new THREE.Vector3();
                 teaCounterObj.getWorldPosition(counterWorldPos);
                 const dist = playerPos.distanceTo(counterWorldPos);
                 
                 if (dist < 3.2) {
-                    teaDrank = true;
+                    // Order tea
+                    teaEventState = 6;
+                    
+                    showSubtitle("Driver", "I want a cup of tea with medium sugar.");
+                    speakSpeech("I want a cup of tea with medium sugar.", false, () => {
+                        teaEventState = 7;
+                        showSubtitle("Shopkeeper", "OK SIR WAIT PLEASE I WILL BRING");
+                        speakSpeech("OK SIR WAIT PLEASE I WILL BRING", true, () => {
+                            // Subtitles off, start 20s preparation countdown
+                            teaEventState = 8;
+                            const sub = document.getElementById('dialog-subtitle');
+                            if (sub) sub.remove();
+                            
+                            teaTimer = 20.0;
+                        });
+                    });
+                }
+            }
+            else if (key === 'e' && stage === 0 && teaEventState === 10 && teaCounterObj) {
+                const counterWorldPos = new THREE.Vector3();
+                teaCounterObj.getWorldPosition(counterWorldPos);
+                const dist = playerPos.distanceTo(counterWorldPos);
+                
+                if (dist < 3.2) {
+                    // Pick tea
+                    teaEventState = 11;
+                    playClickSound();
+                    controlsHelp.innerHTML = `<span style="color: #ffcc00; font-weight: bold;">TEA PICKED! PRESS E TO DRINK TEA</span>`;
+                }
+            }
+            else if (key === 'e' && stage === 0 && teaEventState === 11 && teaCounterObj) {
+                const counterWorldPos = new THREE.Vector3();
+                teaCounterObj.getWorldPosition(counterWorldPos);
+                const dist = playerPos.distanceTo(counterWorldPos);
+                
+                if (dist < 3.2) {
+                    // Drink tea
+                    teaEventState = 12;
+                    playSipSound();
+                    
+                    // Remove tea cup
+                    if (teaCupMesh && teaShopGroup) {
+                        teaShopGroup.remove(teaCupMesh);
+                        teaCupMesh = null;
+                    }
                     
                     fadeOverlay.style.transition = 'none';
                     fadeOverlay.style.background = 'rgba(255, 120, 0, 0.25)'; // warm orange tint
                     fadeOverlay.style.opacity = '1';
                     
-                    playSipSound();
-                    
                     setTimeout(() => {
-                        fadeOverlay.style.transition = 'opacity 1.5s ease-in-out';
-                        fadeOverlay.style.opacity = '0';
+                        // Fade screen to black for 5 seconds
+                        fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
+                        fadeOverlay.style.background = '#000';
+                        fadeOverlay.style.opacity = '1';
+                        
                         setTimeout(() => {
-                            fadeOverlay.style.background = '#000';
-                        }, 1500);
+                            // Fades screen back, moves player near driver door
+                            teaEventState = 13;
+                            
+                            stage = 0;
+                            playerPos.set(carGroup.position.x - 2.5, 1.75, carGroup.position.z);
+                            camera.position.copy(playerPos);
+                            
+                            controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold;">TEA DRANK! APPROACH DRIVER DOOR & PRESS F TO ENTER VEHICLE</span>`;
+                            
+                            fadeOverlay.style.transition = 'opacity 1.5s ease-in-out';
+                            fadeOverlay.style.opacity = '0';
+                            
+                            showCustomerSpeechBubbles();
+                        }, 5000);
                     }, 1200);
-                    
-                    const bubble = document.createElement('div');
-                    bubble.style.position = 'fixed';
-                    bubble.style.top = '120px';
-                    bubble.style.left = '50%';
-                    bubble.style.transform = 'translateX(-50%)';
-                    bubble.style.background = 'rgba(57, 255, 20, 0.9)';
-                    bubble.style.color = '#000';
-                    bubble.style.padding = '12px 24px';
-                    bubble.style.borderRadius = '30px';
-                    bubble.style.fontFamily = 'Outfit, sans-serif';
-                    bubble.style.fontWeight = 'bold';
-                    bubble.style.fontSize = '18px';
-                    bubble.style.zIndex = '9999';
-                    bubble.style.boxShadow = '0 0 20px rgba(57,255,20,0.6)';
-                    bubble.innerText = "Mmm... Warm and refreshing! Restored energy. [✓]";
-                    document.body.appendChild(bubble);
-                    
-                    setTimeout(() => {
-                        bubble.remove();
-                    }, 3500);
-
-                    showCustomerSpeechBubbles();
-
-                    setTimeout(() => {
-                        controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold;">TEA DRANK! APPROACH DRIVER DOOR & PRESS F TO ENTER VEHICLE</span>`;
-                    }, 1500);
                 }
             }
 
@@ -5110,15 +5167,24 @@
                 const isDriving = (keys.w || keys.s) && Math.abs(carSpeed) > 0.05;
                 if (isDriving) {
                     // Check if 140km event is ready to trigger
-                    if (!teaEventTriggered && kilometersRemaining <= 140.0) {
+                    if (teaEventState === 0 && kilometersRemaining <= 140.0) {
                         teaEventTriggered = true;
+                        teaEventState = 1; // trigger driver speech
                         kilometersRemaining = 140.0;
                         originalKilometersVal = 140.0;
-                        speakTeaDialogue();
+                        
+                        showSubtitle("Driver", "Haa, I was very tired, I want to drink tea.");
+                        speakSpeech("Haa, I was very tired, I want to drink tea.", false, () => {
+                            const sub = document.getElementById('dialog-subtitle');
+                            if (sub) sub.remove();
+                            
+                            teaEventState = 2; // parking spot active
+                            spawnTeaShopEvent();
+                        });
                     }
 
                     // Only subtract if tea event is not active or has completed
-                    if (!teaEventTriggered || (teaEventTriggered && teaDrank)) {
+                    if (teaEventState === 0 || teaEventState >= 14) {
                         kilometersRemaining -= delta / 10.0;
                     }
                     if (kilometersRemaining <= 0) {
@@ -5166,7 +5232,7 @@
                     }
                 }
                 
-                if (teaEventTriggered && !teaDrank) {
+                if (teaEventTriggered && teaEventState < 14) {
                     timerDisplay.innerText = "140.00 KM (LOCKED)";
                 } else {
                     timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
@@ -5298,7 +5364,7 @@
                 camera.lookAt(lookTarget);
 
                 // Handle Tea Shop parking spot check
-                if (teaEventTriggered && teaSpeechDone && !hasParkedForTea) {
+                if (teaEventState === 2) {
                     // Rotate and bounce the parking indicator cone
                     if (parkingIndicator) {
                         parkingIndicator.position.y = 2.5 + Math.sin(time * 5.0) * 0.25;
@@ -5309,21 +5375,22 @@
                     const distZ = Math.abs(carGroup.position.z - teaShopZ);
                     const distX = Math.abs(carGroup.position.x - 6.0);
                     
-                    controlsHelp.innerHTML = `<span style="color: #00ffcc; font-weight: bold; text-shadow: 0 0 10px rgba(0,255,204,0.45);">[!] REACHED 140 KM: PULL OVER & PARK IN THE GREEN BOX</span>`;
+                    controlsHelp.innerHTML = `<span style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px rgba(255,204,0,0.45);">[!] REACHED 140 KM: PULL OVER & PARK IN THE YELLOW BOX</span>`;
 
                     if (distZ < 4.5 && distX < 2.0) {
-                        // Check if car is very slow/stopped
                         if (Math.abs(carSpeed) < 0.08) {
+                            teaEventState = 3; // Parked!
                             hasParkedForTea = true;
                             carSpeed = 0;
                             stopPlayerEngine();
                             isEngineStarted = false;
                             
                             playClickSound();
-                            
-                            controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold; text-shadow: 0 0 10px rgba(57,255,20,0.45);">[✓] VEHICLE PARKED · PRESS F TO EXIT AND DRINK TEA</span>`;
                         }
                     }
+                }
+                if (teaEventState === 3) {
+                    controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold; text-shadow: 0 0 10px rgba(57,255,20,0.45);">[✓] VEHICLE PARKED · PRESS ENTER TO EXIT AND DRINK TEA</span>`;
                 }
             }
             // ── STAGE 3 or 0: WALKING ────────────────────────
@@ -5331,16 +5398,64 @@
                 isWalking = false;
                 
                 if (stage === 0) {
-                    if (teaEventTriggered && playerExitedForTea && !teaDrank && teaCounterObj) {
+                    if (teaEventState === 4 && teaCounterObj) {
+                        const counterWorldPos = new THREE.Vector3();
+                        teaCounterObj.getWorldPosition(counterWorldPos);
+                        const dist = playerPos.distanceTo(counterWorldPos);
+                        
+                        if (dist < 3.2) {
+                            teaEventState = 5; // Near counter ready to order
+                        } else {
+                            controlsHelp.innerHTML = `WALK WITH: W/S/A/D · APPROACH THE TEA OWNER TO ORDER`;
+                        }
+                    }
+                    else if (teaEventState === 5 && teaCounterObj) {
+                        const counterWorldPos = new THREE.Vector3();
+                        teaCounterObj.getWorldPosition(counterWorldPos);
+                        const dist = playerPos.distanceTo(counterWorldPos);
+                        
+                        if (dist >= 3.2) {
+                            teaEventState = 4; // Too far
+                        } else {
+                            controlsHelp.innerHTML = `<span style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px rgba(255,204,0,0.45);">WALK WITH: W/S/A/D · PRESS E TO ORDER TEA</span>`;
+                        }
+                    }
+                    else if (teaEventState === 8) {
+                        teaTimer -= delta;
+                        if (teaTimer <= 0) {
+                            teaTimer = 0;
+                            teaEventState = 9; // Owner speaking ready
+                            
+                            showSubtitle("Shopkeeper", "Tea is ready sir, please take it.");
+                            spawnTeaCup();
+                            speakSpeech("Tea is ready sir, please take it.", true, () => {
+                                teaEventState = 10; // Ready to pick up
+                                const sub = document.getElementById('dialog-subtitle');
+                                if (sub) sub.remove();
+                            });
+                        } else {
+                            controlsHelp.innerHTML = `<span style="color: #ffcc00;">Owner preparing tea... ${Math.ceil(teaTimer)}s remaining</span>`;
+                        }
+                    }
+                    else if (teaEventState === 10 && teaCounterObj) {
                         const counterWorldPos = new THREE.Vector3();
                         teaCounterObj.getWorldPosition(counterWorldPos);
                         const dist = playerPos.distanceTo(counterWorldPos);
                         if (dist < 3.2) {
-                            controlsHelp.innerHTML = `WALK WITH: W/S/A/D · <span style="color: #00ffcc; font-weight: bold; text-shadow: 0 0 10px rgba(0,255,204,0.45);">PRESS E TO DRINK FRESH HOT TEA</span>`;
+                            controlsHelp.innerHTML = `<span style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px rgba(255,204,0,0.45);">PRESS E TO PICK TEA</span>`;
                         } else {
-                            controlsHelp.innerHTML = `WALK WITH: W/S/A/D · APPROACH THE COUNTER TO DRINK TEA`;
+                            controlsHelp.innerHTML = `APPROACH THE COUNTER TO PICK UP YOUR TEA`;
                         }
-                    } else {
+                    }
+                    else if (teaEventState >= 13) {
+                        const dist = playerPos.distanceTo(carGroup.position);
+                        if (dist < 6.0) {
+                            controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> · <span style='color: #ff3300; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,0,0.5);'>PRESS F TO ENTER VEHICLE</span>";
+                        } else {
+                            controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> (Walk / Strafe) · <span>DRAG MOUSE</span> (Look) · APPROACH VEHICLE";
+                        }
+                    }
+                    else {
                         const dist = playerPos.distanceTo(carGroup.position);
                         if (dist < 6.0) {
                             controlsHelp.innerHTML = "WALK WITH: <span>W / S / A / D</span> · <span style='color: #ff3300; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,0,0.5);'>PRESS F TO ENTER VEHICLE</span>";
