@@ -922,6 +922,9 @@
                 if (v.passbyAudio) {
                     try { v.passbyAudio.pause(); } catch(e) {}
                 }
+                if (v.hornSound) {
+                    try { v.hornSound.pause(); } catch(e) {}
+                }
             });
             overtakeCars.forEach(c => {
                 if (c.passbyAudio) {
@@ -2955,7 +2958,8 @@
                             lane: -4,
                             type: 'car',
                             passbyAudio: new Audio('flutie8211-muscle-car-driving-left-to-right-559148.mp3'),
-                            passbyPlayed: false
+                            passbyPlayed: false,
+                            hornSound: new Audio('floraphonic-car-horn-4-189858.mp3') // waiting cars get horns!
                         };
                         crossingOncomingCars.push(carObj);
                         trafficVehicles.push(carObj);
@@ -3350,9 +3354,21 @@
                 let mesh;
                 let speed;
                 if (lane === 4) {
-                    speed = 0.3 + Math.random() * 0.4;
+                    if (type === 'car') {
+                        speed = 0.6 + Math.random() * 0.4; // fast car
+                    } else if (type === 'truck') {
+                        speed = 0.3 + Math.random() * 0.2; // slow truck
+                    } else {
+                        speed = 0.4 + Math.random() * 0.3; // medium bus
+                    }
                 } else {
-                    speed = -(0.8 + Math.random() * 0.6);
+                    if (type === 'car') {
+                        speed = -(1.2 + Math.random() * 0.6); // fast oncoming car
+                    } else if (type === 'truck') {
+                        speed = -(0.7 + Math.random() * 0.3); // slow oncoming truck
+                    } else {
+                        speed = -(0.9 + Math.random() * 0.4); // medium oncoming bus
+                    }
                 }
 
                 if (type === 'car') {
@@ -3368,13 +3384,21 @@
                     mesh.rotation.y = Math.PI;
                 }
                 scene.add(mesh);
+
+                let hornSound = null;
+                if (Math.random() < 0.4) { // 40% of vehicles get horns
+                    hornSound = new Audio('floraphonic-car-horn-4-189858.mp3');
+                    hornSound.loop = false;
+                }
+
                 trafficVehicles.push({ 
                     group: mesh, 
                     speed: speed, 
                     lane: lane, 
                     type: type,
                     passbyAudio: new Audio('flutie8211-muscle-car-driving-left-to-right-559148.mp3'),
-                    passbyPlayed: false
+                    passbyPlayed: false,
+                    hornSound: hornSound
                 });
             }
         }
@@ -4293,8 +4317,27 @@
                             vehicle.group.position.z = listenerPos.z + 300 + Math.random() * 100;
                             const lane = Math.random() > 0.5 ? 4 : -4;
                             vehicle.group.position.x = lane;
-                            vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
-                            vehicle.baseSpeed = vehicle.speed;
+                            
+                            let speed;
+                            if (lane === 4) {
+                                if (vehicle.type === 'car') {
+                                    speed = 0.6 + Math.random() * 0.4;
+                                } else if (vehicle.type === 'truck') {
+                                    speed = 0.3 + Math.random() * 0.2;
+                                } else {
+                                    speed = 0.4 + Math.random() * 0.3;
+                                }
+                            } else {
+                                if (vehicle.type === 'car') {
+                                    speed = -(1.2 + Math.random() * 0.6);
+                                } else if (vehicle.type === 'truck') {
+                                    speed = -(0.7 + Math.random() * 0.3);
+                                } else {
+                                    speed = -(0.9 + Math.random() * 0.4);
+                                }
+                            }
+                            vehicle.speed = speed;
+                            vehicle.baseSpeed = speed;
                             vehicle.passbyPlayed = false;
                             stopTrafficSound(vehicle);
                         }
@@ -4303,8 +4346,27 @@
                             vehicle.group.position.z = listenerPos.z + 300 + Math.random() * 100;
                             const lane = Math.random() > 0.5 ? 4 : -4;
                             vehicle.group.position.x = lane;
-                            vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
-                            vehicle.baseSpeed = vehicle.speed;
+                            
+                            let speed;
+                            if (lane === 4) {
+                                if (vehicle.type === 'car') {
+                                    speed = 0.6 + Math.random() * 0.4;
+                                } else if (vehicle.type === 'truck') {
+                                    speed = 0.3 + Math.random() * 0.2;
+                                } else {
+                                    speed = 0.4 + Math.random() * 0.3;
+                                }
+                            } else {
+                                if (vehicle.type === 'car') {
+                                    speed = -(1.2 + Math.random() * 0.6);
+                                } else if (vehicle.type === 'truck') {
+                                    speed = -(0.7 + Math.random() * 0.3);
+                                } else {
+                                    speed = -(0.9 + Math.random() * 0.4);
+                                }
+                            }
+                            vehicle.speed = speed;
+                            vehicle.baseSpeed = speed;
                             vehicle.passbyPlayed = false;
                             stopTrafficSound(vehicle);
                         }
@@ -4315,8 +4377,27 @@
                         vehicle.group.position.z = listenerPos.z - 150 - Math.random() * 50;
                         const lane = Math.random() > 0.5 ? 4 : -4;
                         vehicle.group.position.x = lane;
-                        vehicle.speed = (lane === 4) ? (0.3 + Math.random() * 0.4) : -(0.8 + Math.random() * 0.6);
-                        vehicle.baseSpeed = vehicle.speed;
+                        
+                        let speed;
+                        if (lane === 4) {
+                            if (vehicle.type === 'car') {
+                                speed = 0.6 + Math.random() * 0.4;
+                            } else if (vehicle.type === 'truck') {
+                                speed = 0.3 + Math.random() * 0.2;
+                            } else {
+                                speed = 0.4 + Math.random() * 0.3;
+                            }
+                        } else {
+                            if (vehicle.type === 'car') {
+                                speed = -(1.2 + Math.random() * 0.6);
+                            } else if (vehicle.type === 'truck') {
+                                speed = -(0.7 + Math.random() * 0.3);
+                            } else {
+                                speed = -(0.9 + Math.random() * 0.4);
+                            }
+                        }
+                        vehicle.speed = speed;
+                        vehicle.baseSpeed = speed;
                         vehicle.passbyPlayed = false;
                         stopTrafficSound(vehicle);
                     }
@@ -4342,6 +4423,28 @@
                         const maxDist = 80;
                         const volumeScale = Math.max(0, 1 - dist / maxDist);
                         vehicle.passbyAudio.volume = Math.min(1.0, masterVolume * 8.0 * volumeScale);
+                    }
+
+                    // Traffic Horn Logic
+                    if (vehicle.hornSound && !vehicle.isRescueCone && !vehicle.isWindBlown && (stage === 1 || stage === 0)) {
+                        const distToPlayer = vehicle.group.position.distanceTo(listenerPos);
+                        if (distToPlayer < 120) {
+                            if (obstacleAhead && minDistance < 12) {
+                                // Blocked traffic: 0.4% chance per frame to honk horn in frustration
+                                if (Math.random() < 0.004 && vehicle.hornSound.paused) {
+                                    const volumeScale = Math.max(0, 1 - distToPlayer / 120);
+                                    vehicle.hornSound.volume = Math.min(1.0, masterVolume * 6.0 * volumeScale);
+                                    vehicle.hornSound.play().catch(e => {});
+                                }
+                            } else {
+                                // Moving traffic: 0.05% chance per frame to honk randomly (e.g. passing warning/greeting)
+                                if (Math.random() < 0.0005 && vehicle.hornSound.paused && distToPlayer > 15 && distToPlayer < 80) {
+                                    const volumeScale = Math.max(0, 1 - distToPlayer / 80);
+                                    vehicle.hornSound.volume = Math.min(1.0, masterVolume * 5.0 * volumeScale);
+                                    vehicle.hornSound.play().catch(e => {});
+                                }
+                            }
+                        }
                     }
                     
                     if (dist < 100 && audioCtx) {
