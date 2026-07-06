@@ -1663,8 +1663,61 @@
         scene.add(sunLight);
 
         // ── Sun Waking Up over Mountains ──────────────────────
-        const sunGeo = new THREE.SphereGeometry(9, 24, 24);
-        const sunMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        function generateSunTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Base background: bright orange-red gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, 256);
+            grad.addColorStop(0, '#e63200');
+            grad.addColorStop(0.5, '#ff7c00');
+            grad.addColorStop(1, '#990d00');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 512, 256);
+            
+            // Draw many overlapping plasma noise cells to simulate fiery granularity
+            for (let i = 0; i < 4500; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 256;
+                const r = 1.5 + Math.random() * 8.5;
+                
+                let color;
+                const rng = Math.random();
+                if (rng < 0.28) {
+                    color = `rgba(255, 235, 30, ${0.12 + Math.random() * 0.28})`; // glowing golden yellow
+                } else if (rng < 0.65) {
+                    color = `rgba(255, 110, 0, ${0.18 + Math.random() * 0.32})`;  // fiery orange
+                } else if (rng < 0.88) {
+                    color = `rgba(220, 15, 0, ${0.15 + Math.random() * 0.22})`;  // hot red
+                } else {
+                    color = `rgba(40, 0, 0, ${0.28 + Math.random() * 0.32})`;      // dark solar spot regions
+                }
+                
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Add horizontal solar wind/plasma flare bands
+            for (let i = 0; i < 18; i++) {
+                ctx.fillStyle = `rgba(255, 245, 120, ${0.04 + Math.random() * 0.08})`;
+                ctx.fillRect(0, Math.random() * 256, 512, 8 + Math.random() * 28);
+            }
+            
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            return tex;
+        }
+
+        const sunGeo = new THREE.SphereGeometry(9, 32, 32);
+        const sunMat = new THREE.MeshBasicMaterial({ 
+            map: generateSunTexture(),
+            color: 0xffffff
+        });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(-40, 2, 280);
         
@@ -4252,10 +4305,14 @@
                 ambientLight.color.copy(currentSkyColor);
             }
             
-            // Sun color (stays thick, vibrant red and shifts to slightly brighter deep red)
-            const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xcc1100), sunriseProgress);
+            // Sun color (vibrant red-orange shifting to warm golden white)
+            const sunColor = new THREE.Color(0xff3300).lerp(new THREE.Color(0xffffff), sunriseProgress);
             sunMat.color.copy(sunColor);
             glowMats.forEach(mat => mat.color.copy(sunColor));
+            
+            // Slow plasma surface rotation animation
+            sunMesh.rotation.y += delta * 0.04;
+            sunMesh.rotation.x += delta * 0.015;
             
             // Sun rises and moves to the top of the sky based on time (sunriseProgress)
             sunMesh.position.z = carGroup.position.z + 280 - sunriseProgress * 200; 
