@@ -4341,14 +4341,14 @@
                     // Lerp clouds color to bright white
                     cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
                 } else {
-                    // Pre-storm: normal morning sunrise (when > 70.0 KM) - gets gradually lighter
-                    targetSkyColor = new THREE.Color(0x231835).lerp(new THREE.Color(0x6e2a34), sunriseProgress);
-                    targetAmbient = 0.45 + sunriseProgress * 0.3;
-                    targetSunLight = 0.52 + sunriseProgress * 1.03;
-                    targetFogDensity = 0.007;
+                    // Pre-storm: normal morning sunrise (when > 70.0 KM) - gets gradually lighter to bright morning white
+                    targetSkyColor = new THREE.Color(0x231835).lerp(new THREE.Color(0xeef4fa), sunriseProgress);
+                    targetAmbient = 0.45 + sunriseProgress * 0.45;
+                    targetSunLight = 0.52 + sunriseProgress * 1.38;
+                    targetFogDensity = 0.007 - sunriseProgress * 0.0045;
                     
                     // Lerp clouds color to warm morning clouds
-                    cloudMat.color.lerp(new THREE.Color(0xe0e6ed), delta * 2.0);
+                    cloudMat.color.lerp(new THREE.Color(0xffffff), delta * 2.0);
                 }
             }
             
