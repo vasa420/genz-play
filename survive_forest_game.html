@@ -3760,42 +3760,123 @@
         const rainParticles = new THREE.Points(rainGeometry, rainMat);
         scene.add(rainParticles);
 
-        // Procedural Crow Mesh
+        // Procedural Crow Mesh (Realistic design with fanned wings, curved beak, tail, and iridescent sheen)
         function createCrowMesh() {
             const crow = new THREE.Group();
-            const crowMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.9 });
             
-            // Body
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 1.3), crowMat);
+            // Iridescent feather material (very dark black with subtle glossy indigo sheen)
+            const crowMat = new THREE.MeshStandardMaterial({ 
+                color: 0x050508, 
+                roughness: 0.35, 
+                metalness: 0.1,
+                emissive: 0x010105
+            });
+            
+            // 1. Aerodynamic body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.38, 1.1), crowMat);
             body.castShadow = true;
             crow.add(body);
             
-            // Head
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), crowMat);
-            head.position.set(0, 0.22, 0.65);
+            // 2. Head & Neck
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 12), crowMat);
+            head.position.set(0, 0.18, 0.55);
             head.castShadow = true;
             crow.add(head);
             
-            // Beak
-            const beak = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.45, 4), crowMat);
-            beak.rotation.x = Math.PI / 2;
-            beak.position.set(0, 0.16, 0.95);
-            crow.add(beak);
+            // 3. Curved realistic beak (hooked down upper beak, straight lower beak)
+            const beakGroup = new THREE.Group();
+            beakGroup.position.set(0, 0.14, 0.65);
             
-            // Left Wing Pivoting Group
+            const upperBeak = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.32, 4), crowMat);
+            upperBeak.rotation.x = Math.PI / 2 + 0.18; // tilt down
+            upperBeak.position.set(0, 0.03, 0.22);
+            beakGroup.add(upperBeak);
+            
+            const lowerBeak = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.28, 4), crowMat);
+            lowerBeak.rotation.x = Math.PI / 2;
+            lowerBeak.position.set(0, -0.02, 0.20);
+            beakGroup.add(lowerBeak);
+            
+            crow.add(beakGroup);
+            
+            // 4. Shiny black eyes
+            const eyeMat = new THREE.MeshStandardMaterial({ 
+                color: 0x020202, 
+                roughness: 0.05, 
+                metalness: 0.9 
+            });
+            const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 6), eyeMat);
+            eyeL.position.set(-0.16, 0.22, 0.62);
+            crow.add(eyeL);
+            
+            const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 6), eyeMat);
+            eyeR.position.set(0.16, 0.22, 0.62);
+            crow.add(eyeR);
+
+            // 5. Wedge shaped tail feathers fanning out
+            const tailGroup = new THREE.Group();
+            tailGroup.position.set(0, -0.08, -0.55);
+            const mainTail = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.02, 0.65), crowMat);
+            mainTail.position.z = -0.28;
+            mainTail.rotation.x = -0.06;
+            tailGroup.add(mainTail);
+            
+            const tailL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.58), crowMat);
+            tailL.position.set(-0.10, 0, -0.25);
+            tailL.rotation.y = -0.12;
+            tailL.rotation.x = -0.06;
+            tailGroup.add(tailL);
+            
+            const tailR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.58), crowMat);
+            tailR.position.set(0.10, 0, -0.25);
+            tailR.rotation.y = 0.12;
+            tailR.rotation.x = -0.06;
+            tailGroup.add(tailR);
+            
+            crow.add(tailGroup);
+            
+            // 6. Left Wing Pivoting Group (Feathered layers)
             const wingLeft = new THREE.Group();
-            const wingLMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.05, 0.65), crowMat);
-            wingLMesh.position.x = -0.8;
-            wingLeft.add(wingLMesh);
-            wingLeft.position.set(-0.35, 0.1, 0);
+            wingLeft.position.set(-0.24, 0.1, 0);
+            
+            const innerL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.4), crowMat);
+            innerL.position.x = -0.4;
+            wingLeft.add(innerL);
+            
+            const outerL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.3), crowMat);
+            outerL.position.set(-1.1, -0.01, -0.04);
+            outerL.rotation.y = -0.15; // swept back
+            wingLeft.add(outerL);
+            
+            // Individual fanning feathers
+            for (let j = 0; j < 5; j++) {
+                const feather = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.01, 0.45), crowMat);
+                feather.position.set(-0.4 - j * 0.2, -0.02, -0.24);
+                feather.rotation.y = -0.18 - j * 0.06;
+                wingLeft.add(feather);
+            }
             crow.add(wingLeft);
             
-            // Right Wing Pivoting Group
+            // 7. Right Wing Pivoting Group (Feathered layers)
             const wingRight = new THREE.Group();
-            const wingRMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.05, 0.65), crowMat);
-            wingRMesh.position.x = 0.8;
-            wingRight.add(wingRMesh);
-            wingRight.position.set(0.35, 0.1, 0);
+            wingRight.position.set(0.24, 0.1, 0);
+            
+            const innerR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.4), crowMat);
+            innerR.position.x = 0.4;
+            wingRight.add(innerR);
+            
+            const outerR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.3), crowMat);
+            outerR.position.set(1.1, -0.01, -0.04);
+            outerR.rotation.y = 0.15; // swept back
+            wingRight.add(outerR);
+            
+            // Individual fanning feathers
+            for (let j = 0; j < 5; j++) {
+                const feather = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.01, 0.45), crowMat);
+                feather.position.set(0.4 + j * 0.2, -0.02, -0.24);
+                feather.rotation.y = 0.18 + j * 0.06;
+                wingRight.add(feather);
+            }
             crow.add(wingRight);
             
             crow.userData = { wingLeft, wingRight };
