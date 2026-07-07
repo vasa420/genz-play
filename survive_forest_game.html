@@ -296,6 +296,7 @@
     <div class="scanlines"></div>
     <div class="crt-glow"></div>
     <div id="fade-overlay"></div>
+    <div id="sleep-time-overlay" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-family: 'Courier New', Courier, monospace; font-size: 64px; font-weight: bold; text-shadow: 0 0 25px rgba(255,255,255,0.7); z-index: 10000; letter-spacing: 4px;">TIME:10:00</div>
     <!-- Windshield Blood Overlay Container -->
     <div id="windshield-blood-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9997; overflow: hidden;"></div>
     <!-- Windshield Rain Overlay Container -->
@@ -358,7 +359,20 @@
         let hornAudio = null;
         let hornActive = false;
 
-        // ── Tea Shop Event State Variables Removed ────────────────
+        // ── 140 KM Rest Event State Variables ─────────────────────
+        let restEventState = 0; // 0=idle, 1=triggered driver speech, 2=parking spot active, 3=parked, 4=sleeping transition, 5=complete
+        let restEventTriggered = false;
+        let restSpeechDone = false;
+        let parkingLotSpawned = false;
+        let parkingLotGroup = null;
+        let parkingZoneMesh = null;
+        let parkingIndicator = null;
+        let parkingBorderSegments = null;
+        let restEventZ = 0;
+        let restEventTimer = 0.0;
+        let hasParkedForRest = false;
+        let originalKilometersVal = 140.0;
+        let lotPeople = []; // array of people inside parking lot
 
         function initHornAudio() {
             if (!hornAudio) {
@@ -939,6 +953,327 @@
             }, 1000);
         }
 
+        // ── Rest Event Helper Functions ───────────────────────
+        function speakSpeech(text, callback) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = window.speechSynthesis.getVoices();
+                
+                // Select a male voice (e.g. David, Google UK English Male, etc.)
+                let selectedVoice = voices.find(v => 
+                    v.name.toLowerCase().includes('male') || 
+                    v.name.toLowerCase().includes('google uk english male') || 
+                    v.name.toLowerCase().includes('microsoft david')
+                );
+                
+                if (selectedVoice) utterance.voice = selectedVoice;
+                utterance.pitch = 0.82; // sharp male/tired depth
+                utterance.rate = 0.95;  // slightly slower tired speaking rate
+                
+                utterance.onend = () => {
+                    if (callback) callback();
+                };
+                window.speechSynthesis.speak(utterance);
+            } else {
+                setTimeout(() => {
+                    if (callback) callback();
+                }, 3000);
+            }
+        }
+
+        function showSubtitle(speaker, text, durationMs) {
+            const existing = document.getElementById('dialog-subtitle');
+            if (existing) existing.remove();
+
+            const subtitleEl = document.createElement('div');
+            subtitleEl.id = 'dialog-subtitle';
+            subtitleEl.style.position = 'fixed';
+            subtitleEl.style.bottom = '120px';
+            subtitleEl.style.left = '50%';
+            subtitleEl.style.transform = 'translateX(-50%)';
+            subtitleEl.style.background = 'rgba(0, 0, 0, 0.85)';
+            subtitleEl.style.color = '#fff';
+            subtitleEl.style.padding = '12px 24px';
+            subtitleEl.style.borderRadius = '8px';
+            subtitleEl.style.fontFamily = 'Courier New, monospace';
+            subtitleEl.style.fontSize = '20px';
+            subtitleEl.style.fontWeight = 'bold';
+            subtitleEl.style.zIndex = '9999';
+            subtitleEl.style.border = '2px solid #ffcc00';
+            subtitleEl.style.boxShadow = '0 0 15px rgba(255,204,0,0.5)';
+            
+            subtitleEl.innerHTML = `<span style="color: #ff3300;">${speaker}:</span> "${text}"`;
+            document.body.appendChild(subtitleEl);
+            
+            if (durationMs) {
+                setTimeout(() => {
+                    if (subtitleEl.parentNode) {
+                        subtitleEl.remove();
+                    }
+                }, durationMs);
+            }
+        }
+
+        function muteAllGameAudio() {
+            if (audioCtx) {
+                try { audioCtx.suspend(); } catch(e) {}
+            }
+            if (hornAudio) hornAudio.volume = 0;
+            if (engineStartAudio) engineStartAudio.volume = 0;
+            if (stormMusic) stormMusic.volume = 0;
+            
+            trafficVehicles.forEach(v => {
+                if (v.passbyAudio) v.passbyAudio.volume = 0;
+                if (v.hornSound) v.hornSound.volume = 0;
+            });
+            overtakeCars.forEach(c => {
+                if (c.passbyAudio) c.passbyAudio.volume = 0;
+            });
+        }
+
+        function unmuteAllGameAudio() {
+            if (audioCtx) {
+                try { audioCtx.resume(); } catch(e) {}
+            }
+            const masterVol = typeof masterVolume !== 'undefined' ? masterVolume : 1.0;
+            if (hornAudio) hornAudio.volume = masterVol;
+            if (engineStartAudio) engineStartAudio.volume = masterVol;
+            if (stormMusic) stormMusic.volume = masterVol * (typeof stormMusicCurrentVol !== 'undefined' ? stormMusicCurrentVol : 0.0);
+            
+            trafficVehicles.forEach(v => {
+                if (v.passbyAudio) v.passbyAudio.volume = masterVol * 0.85;
+                if (v.hornSound) v.hornSound.volume = masterVol * 0.45;
+            });
+            overtakeCars.forEach(c => {
+                if (c.passbyAudio) c.passbyAudio.volume = masterVol * 0.85;
+            });
+        }
+
+        function createLowPolyParkedCar(colorHex) {
+            const car = new THREE.Group();
+            const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.6 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.1 });
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
+            const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+            
+            // Lower body box
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 3.4), bodyMat);
+            body.position.y = 0.45;
+            body.castShadow = true;
+            car.add(body);
+            
+            // Cabin box
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 2.0), bodyMat);
+            cabin.position.set(0, 0.95, -0.2);
+            cabin.castShadow = true;
+            car.add(cabin);
+            
+            // Glass windows
+            const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.45, 0.1), glassMat);
+            frontGlass.position.set(0, 0.95, 0.8);
+            frontGlass.rotation.x = -0.25;
+            car.add(frontGlass);
+            
+            // Headlights
+            const headL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 0.1), metalMat);
+            headL.position.set(-0.6, 0.45, 1.7);
+            const headR = headL.clone();
+            headR.position.x = 0.6;
+            car.add(headL, headR);
+            
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.3, 8);
+            wheelGeo.rotateZ(Math.PI / 2);
+            const wPositions = [
+                [-0.8, 0.32, 1.0], [0.8, 0.32, 1.0],
+                [-0.8, 0.32, -1.0], [0.8, 0.32, -1.0]
+            ];
+            wPositions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.position.set(pos[0], pos[1], pos[2]);
+                wheel.castShadow = true;
+                car.add(wheel);
+            });
+            
+            return car;
+        }
+
+        function createParkingLot(lotZ) {
+            parkingLotGroup = new THREE.Group();
+            parkingLotGroup.position.set(0, 0, lotZ);
+            
+            // 1. Concrete Ground area (shifted to the right of the highway shoulder)
+            const lotGeo = new THREE.PlaneGeometry(28, 42);
+            const lotMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3c, roughness: 0.85 });
+            const ground = new THREE.Mesh(lotGeo, lotMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.set(31.0, 0.02, 0); // X center is 31.0
+            ground.receiveShadow = true;
+            parkingLotGroup.add(ground);
+
+            // 2. Compound Walls / Fence (height 1.8 units, thick concrete boxes)
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x6e6e73, roughness: 0.9 });
+            
+            // Back wall (X bounds: [17, 45], Z = -21)
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(28, 1.8, 0.4), wallMat);
+            backWall.position.set(31.0, 0.9, -21.0);
+            backWall.castShadow = true;
+            parkingLotGroup.add(backWall);
+            
+            // Right side wall (X = 45, Z bounds: [-21, 21])
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, 42), wallMat);
+            rightWall.position.set(45.0, 0.9, 0);
+            rightWall.castShadow = true;
+            parkingLotGroup.add(rightWall);
+            
+            // Front wall (X bounds: [17, 45], Z = 21)
+            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(28, 1.8, 0.4), wallMat);
+            frontWall.position.set(31.0, 0.9, 21.0);
+            frontWall.castShadow = true;
+            parkingLotGroup.add(frontWall);
+
+            // Left boundary fence facing the highway (with gate opening)
+            // Left Wall North section (X = 17, Z: [4.5, 21])
+            const leftWallNorth = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, 16.5), wallMat);
+            leftWallNorth.position.set(17.0, 0.9, 12.75);
+            leftWallNorth.castShadow = true;
+            parkingLotGroup.add(leftWallNorth);
+
+            // Left Wall South section (X = 17, Z: [-21, -4.5])
+            const leftWallSouth = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, 16.5), wallMat);
+            leftWallSouth.position.set(17.0, 0.9, -12.75);
+            leftWallSouth.castShadow = true;
+            parkingLotGroup.add(leftWallSouth);
+
+            // Two large gate pillars at the entrance opening (Z bounds: [-4.5, 4.5])
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x3a3d40, roughness: 0.8 });
+            const pillarGeo = new THREE.BoxGeometry(0.7, 2.5, 0.7);
+            const pillarL = new THREE.Mesh(pillarGeo, pillarMat);
+            pillarL.position.set(17.0, 1.25, -4.5);
+            pillarL.castShadow = true;
+            
+            const pillarR = new THREE.Mesh(pillarGeo, pillarMat);
+            pillarR.position.set(17.0, 1.25, 4.5);
+            pillarR.castShadow = true;
+            parkingLotGroup.add(pillarL, pillarR);
+
+            // 3. Spawn 22 parked cars in neat rows
+            const carColors = [
+                0xd32f2f, 0x1976d2, 0x388e3c, 0xfbc02d, 0x7b1fa2, 
+                0x00796b, 0xf57c00, 0x455a64, 0x5d4037, 0x0088cc,
+                0x6e6e73, 0xffffff, 0x111111, 0x880000, 0x000088
+            ];
+            
+            // Define parking spots inside compound (avoiding path from gate to yellow box)
+            // Yellow box is at X = 26.0, Z = 8.0
+            const spots = [];
+            // Row 1 (X = 34.0, Z from -17.5 to 17.5)
+            for (let z = -17.5; z <= 17.5; z += 5.0) {
+                spots.push({ x: 34.0, z: z, rot: Math.PI / 2 });
+            }
+            // Row 2 (X = 41.0, Z from -17.5 to 17.5)
+            for (let z = -17.5; z <= 17.5; z += 5.0) {
+                spots.push({ x: 41.0, z: z, rot: -Math.PI / 2 });
+            }
+            // Row 3 (X = 26.0, Z from -17.5 to -2.5)
+            for (let z = -17.5; z <= -2.5; z += 5.0) {
+                spots.push({ x: 26.0, z: z, rot: Math.PI / 2 });
+            }
+            
+            // Populate exactly 22 cars
+            for (let i = 0; i < 22; i++) {
+                const spot = spots[i % spots.length];
+                const color = carColors[i % carColors.length];
+                const parkedCar = createLowPolyParkedCar(color);
+                parkedCar.position.set(spot.x, 0, spot.z);
+                parkedCar.rotation.y = spot.rot + (Math.random() - 0.5) * 0.05; // slight misalignment for realism
+                parkingLotGroup.add(parkedCar);
+            }
+
+            // 4. Yellow Parking Spot (X = 26.0, Z = 8.0)
+            const zoneGeo = new THREE.PlaneGeometry(3.5, 7.5);
+            const zoneMat = new THREE.MeshBasicMaterial({ 
+                color: 0xffcc00, 
+                side: THREE.DoubleSide, 
+                transparent: true, 
+                opacity: 0.32 
+            });
+            parkingZoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
+            parkingZoneMesh.rotation.x = -Math.PI / 2;
+            parkingZoneMesh.position.set(26.0, 0.06, lotZ + 8.0); // World Z coordinates
+            scene.add(parkingZoneMesh);
+
+            const edges = new THREE.EdgesGeometry(zoneGeo);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xffcc00, linewidth: 2 });
+            parkingBorderSegments = new THREE.LineSegments(edges, lineMat);
+            parkingBorderSegments.rotation.x = -Math.PI / 2;
+            parkingBorderSegments.position.copy(parkingZoneMesh.position);
+            parkingBorderSegments.position.y += 0.01;
+            scene.add(parkingBorderSegments);
+
+            // Bouncing/Rotating Cone
+            const indicatorGeo = new THREE.ConeGeometry(0.3, 1.2, 4);
+            const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+            parkingIndicator = new THREE.Mesh(indicatorGeo, indicatorMat);
+            parkingIndicator.position.set(26.0, 2.5, lotZ + 8.0);
+            parkingIndicator.rotation.x = Math.PI;
+            scene.add(parkingIndicator);
+
+            // 5. People walking inside compound
+            const headGeo = new THREE.SphereGeometry(0.18, 8, 8);
+            const torsoGeo = new THREE.CylinderGeometry(0.2, 0.15, 0.7, 8);
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.8 });
+            const clothesMats = [
+                new THREE.MeshStandardMaterial({ color: 0xdd2222 }),
+                new THREE.MeshStandardMaterial({ color: 0x2222dd }),
+                new THREE.MeshStandardMaterial({ color: 0x555555 }),
+                new THREE.MeshStandardMaterial({ color: 0x00aa66 })
+            ];
+
+            lotPeople = [];
+            for (let i = 0; i < 5; i++) {
+                const person = new THREE.Group();
+                const px = 20 + Math.random() * 22;
+                const pz = -15 + Math.random() * 30;
+                person.position.set(px, 0, pz);
+                
+                const pHead = new THREE.Mesh(headGeo, skinMat);
+                pHead.position.y = 1.35;
+                pHead.castShadow = true;
+                person.add(pHead);
+                
+                const pTorso = new THREE.Mesh(torsoGeo, clothesMats[i % clothesMats.length]);
+                pTorso.position.y = 0.8;
+                pTorso.castShadow = true;
+                person.add(pTorso);
+                
+                parkingLotGroup.add(person);
+                
+                lotPeople.push({
+                    group: person,
+                    targetX: 20 + Math.random() * 22,
+                    targetZ: -15 + Math.random() * 30,
+                    speed: 0.8 + Math.random() * 0.6
+                });
+            }
+
+            scene.add(parkingLotGroup);
+            parkingLotSpawned = true;
+        }
+
+        function spawnParkingLotEvent() {
+            restEventZ = carGroup.position.z + 180;
+            createParkingLot(restEventZ);
+            restSpeechDone = true;
+            
+            // Brighten headlights to illuminate the compound parking lot
+            if (spotLeft && spotRight) {
+                spotLeft.intensity = 3.5;
+                spotRight.intensity = 3.5;
+            }
+        }
+
         // ── Keyboard Input ────────────────────────────────────
         const keys = { w: false, a: false, s: false, d: false };
         let enteringCar = false;
@@ -1013,6 +1348,66 @@
                 if (playerPos.distanceTo(carGroup.position) < 6.0) {
                     enterCarTransition();
                 }
+            }
+            if ((key === 'f' || key === 'enter') && stage === 1 && restEventState === 3) {
+                restEventState = 4; // Sleeping transition
+                muteAllGameAudio();
+                
+                fadeOverlay.style.transition = 'opacity 1.0s ease-in-out';
+                fadeOverlay.style.background = '#000000';
+                fadeOverlay.style.opacity = '1';
+
+                setTimeout(() => {
+                    const overlayTime = document.getElementById('sleep-time-overlay');
+                    if (overlayTime) {
+                        overlayTime.style.display = 'block';
+                    }
+                    
+                    fadeOverlay.style.transition = 'opacity 4.0s ease-in-out';
+                    fadeOverlay.style.opacity = '0';
+                    
+                    time = 36000; // Set game clock to 10:00 AM (10 * 3600 seconds)
+                    if (scene.fog) {
+                        scene.fog.density = 0; // Clear mist/fog
+                    }
+                    
+                    isPreStorm = false;
+                    isStormActive = false;
+                    wipersOn = false;
+                }, 4000);
+
+                setTimeout(() => {
+                    const overlayTime = document.getElementById('sleep-time-overlay');
+                    if (overlayTime) {
+                        overlayTime.style.display = 'none';
+                    }
+                    
+                    unmuteAllGameAudio();
+                    
+                    isEngineStarted = true;
+                    if (audioCtx) {
+                        try {
+                            updatePlayerEngine(0.0);
+                        } catch(e) {}
+                    }
+                    
+                    restEventState = 5; // Completed! Driving resumes.
+                    
+                    if (parkingZoneMesh) {
+                        scene.remove(parkingZoneMesh);
+                        parkingZoneMesh = null;
+                    }
+                    if (parkingIndicator) {
+                        scene.remove(parkingIndicator);
+                        parkingIndicator = null;
+                    }
+                    if (parkingBorderSegments) {
+                        scene.remove(parkingBorderSegments);
+                        parkingBorderSegments = null;
+                    }
+                    
+                    controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span style='color: #00ffcc; font-weight: bold;'>[V] START ENGINE</span>";
+                }, 8000);
             }
 
             initAudio();
@@ -3835,8 +4230,8 @@
                 ambientLight.color.copy(currentSkyColor);
             }
             
-            // Sun color (vibrant red-orange shifting to warm golden white)
-            const sunColor = new THREE.Color(0xff3300).lerp(new THREE.Color(0xffffff), sunriseProgress);
+            // Sun color (vibrant very very very thick red shifting to bright yellow as it rises)
+            const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xffea00), sunriseProgress);
             sunMat.color.copy(sunColor);
             glowMats.forEach(mat => mat.color.copy(sunColor));
             
@@ -4756,7 +5151,25 @@
 
                 const isDriving = (keys.w || keys.s) && Math.abs(carSpeed) > 0.05;
                 if (isDriving) {
-                    kilometersRemaining -= delta / 10.0;
+                    if (restEventState === 0 && kilometersRemaining <= 140.0) {
+                        restEventTriggered = true;
+                        restEventState = 1;
+                        kilometersRemaining = 140.0;
+                        originalKilometersVal = 140.0;
+                        
+                        showSubtitle("Driver", "Haa, I was very tired, I want to take rest.");
+                        speakSpeech("Haa, I was very tired, I want to take rest.", () => {
+                            const sub = document.getElementById('dialog-subtitle');
+                            if (sub) sub.remove();
+                            
+                            restEventState = 2; // Gated rest area parking spot active
+                            spawnParkingLotEvent();
+                        });
+                    }
+
+                    if (restEventState === 0 || restEventState >= 5) {
+                        kilometersRemaining -= delta / 10.0;
+                    }
                     if (kilometersRemaining <= 0) {
                         kilometersRemaining = 0;
                         stage = 2; // Transition mode
@@ -4802,7 +5215,11 @@
                     }
                 }
                 
-                timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
+                if (restEventState >= 1 && restEventState < 5) {
+                    timerDisplay.innerText = "140.00 KM (LOCKED)";
+                } else {
+                    timerDisplay.innerText = kilometersRemaining.toFixed(2) + " KM" + (isDriving ? "" : " (PAUSED)");
+                }
 
                 let speedMph = Math.min(80, Math.abs(carSpeed * (80 / maxCarSpeed))).toFixed(0);
                 document.getElementById('dashcam-speed-val').innerText = speedMph;
@@ -4913,6 +5330,56 @@
                 } else {
                     wiperGroupL.rotation.z = -1.3;
                     wiperGroupR.rotation.z = -1.3;
+                }
+
+                // Update 140 KM Rest area parking check
+                if (restEventState === 2) {
+                    if (parkingIndicator) {
+                        parkingIndicator.position.y = 2.5 + Math.sin(time * 5.0) * 0.25;
+                        parkingIndicator.rotation.y += delta * 2.0;
+                    }
+
+                    const targetZ = restEventZ + 8.0;
+                    const distX = Math.abs(carGroup.position.x - 26.0);
+                    const distZ = Math.abs(carGroup.position.z - targetZ);
+
+                    controlsHelp.innerHTML = `<span style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px rgba(255,204,0,0.45);">[!] REACHED 140 KM: ENTER GATE & PARK IN YELLOW BOX</span>`;
+
+                    if (distX < 2.0 && distZ < 4.0) {
+                        if (Math.abs(carSpeed) < 0.08) {
+                            restEventState = 3; // Parked!
+                            carSpeed = 0;
+                            stopPlayerEngine();
+                            isEngineStarted = false;
+                        }
+                    }
+                }
+                
+                if (restEventState === 3) {
+                    controlsHelp.innerHTML = `<span style="color: #39ff14; font-weight: bold; text-shadow: 0 0 10px rgba(57,255,20,0.45);">[✓] VEHICLE PARKED · PRESS ENTER TO REST</span>`;
+                }
+
+                if (parkingLotSpawned && lotPeople.length > 0) {
+                    lotPeople.forEach(person => {
+                        const gp = person.group;
+                        const distToTarget = Math.sqrt(
+                            Math.pow(gp.position.x - person.targetX, 2) +
+                            Math.pow(gp.position.z - person.targetZ, 2)
+                        );
+                        
+                        if (distToTarget < 1.0) {
+                            person.targetX = 20 + Math.random() * 22;
+                            person.targetZ = -15 + Math.random() * 30;
+                        } else {
+                            const dirX = (person.targetX - gp.position.x) / distToTarget;
+                            const dirZ = (person.targetZ - gp.position.z) / distToTarget;
+                            gp.position.x += dirX * person.speed * delta;
+                            gp.position.z += dirZ * person.speed * delta;
+                            
+                            const targetAngle = Math.atan2(dirX, dirZ);
+                            gp.rotation.y = targetAngle;
+                        }
+                    });
                 }
 
                 // Driver Seat POV (left-hand side)
