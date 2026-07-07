@@ -297,6 +297,21 @@
     <div class="crt-glow"></div>
     <div id="fade-overlay"></div>
     <div id="sleep-time-overlay" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-family: 'Courier New', Courier, monospace; font-size: 64px; font-weight: bold; text-shadow: 0 0 25px rgba(255,255,255,0.7); z-index: 10000; letter-spacing: 4px;">TIME:10:00</div>
+    <!-- Calling UI Banner -->
+    <div id="phone-call-banner" style="position: fixed; top: -120px; left: 50%; transform: translateX(-50%); width: 340px; background: rgba(25, 25, 27, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; padding: 12px 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); z-index: 10005; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: white; display: flex; align-items: center; justify-content: space-between; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; background: #ff3366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; box-shadow: 0 0 10px rgba(255,51,102,0.4);">M</div>
+            <div>
+                <div style="font-weight: bold; font-size: 16px; color: #fff;">Mom</div>
+                <div id="phone-call-status" style="font-size: 12px; color: #a1a1a5;">Incoming Call...</div>
+            </div>
+        </div>
+        <button id="phone-attend-btn" style="background: #34c759; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 12px rgba(52,199,89,0.5); transition: transform 0.2s, background 0.2s; outline: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" />
+            </svg>
+        </button>
+    </div>
     <!-- Windshield Blood Overlay Container -->
     <div id="windshield-blood-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9997; overflow: hidden;"></div>
     <!-- Windshield Rain Overlay Container -->
@@ -373,6 +388,12 @@
         let hasParkedForRest = false;
         let originalKilometersVal = 140.0;
         let lotPeople = []; // array of people inside parking lot
+
+        // ── 135 KM Phone Call Event State Variables ───────────────
+        let callEventState = 0; // 0=idle, 1=incoming call ringing, 2=answered, 3..8=dialogue steps, 9=disconnect, 10=done
+        let callEventTriggered = false;
+        let ringInterval = null;
+        let restTimeOffset = 0; // offset in seconds added to game time after sleeping (e.g. 12600 seconds)
 
         function initHornAudio() {
             if (!hornAudio) {
@@ -1015,6 +1036,79 @@
             }
         }
 
+        function speakVoice(text, isMom, callback) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = window.speechSynthesis.getVoices();
+                
+                if (isMom) {
+                    let femaleVoice = voices.find(v => 
+                        v.name.toLowerCase().includes('female') || 
+                        v.name.toLowerCase().includes('zira') || 
+                        v.name.toLowerCase().includes('hazel') || 
+                        v.name.toLowerCase().includes('google us english')
+                    );
+                    if (femaleVoice) utterance.voice = femaleVoice;
+                    utterance.pitch = 1.35;
+                    utterance.rate = 1.0;
+                } else {
+                    let maleVoice = voices.find(v => 
+                        v.name.toLowerCase().includes('male') || 
+                        v.name.toLowerCase().includes('david')
+                    );
+                    if (maleVoice) utterance.voice = maleVoice;
+                    utterance.pitch = 1.1;
+                    utterance.rate = 1.08;
+                }
+                
+                utterance.onend = () => {
+                    if (callback) callback();
+                };
+                window.speechSynthesis.speak(utterance);
+            } else {
+                setTimeout(() => {
+                    if (callback) callback();
+                }, 3000);
+            }
+        }
+
+        function playPhoneRing() {
+            if (ringInterval) clearInterval(ringInterval);
+            
+            const ringFunc = () => {
+                if (callEventState !== 1) return;
+                if (!audioCtx) return;
+                try {
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(480, audioCtx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 0.1);
+                    gain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 0.6);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+                    
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc1.start();
+                    osc2.start();
+                    osc1.stop(audioCtx.currentTime + 0.8);
+                    osc2.stop(audioCtx.currentTime + 0.8);
+                } catch(e) {}
+            };
+            
+            ringFunc();
+            ringInterval = setInterval(ringFunc, 2000);
+        }
+
         function muteAllGameAudio() {
             if (audioCtx) {
                 try { audioCtx.suspend(); } catch(e) {}
@@ -1366,7 +1460,8 @@
                     fadeOverlay.style.transition = 'opacity 4.0s ease-in-out';
                     fadeOverlay.style.opacity = '0';
                     
-                    time = 36000; // Set game clock to 10:00 AM (10 * 3600 seconds)
+                    restTimeOffset = 36000 - Math.floor(clock.getElapsedTime());
+                    
                     if (scene.fog) {
                         scene.fog.density = 0; // Clear mist/fog
                     }
@@ -1413,6 +1508,97 @@
             initAudio();
             if (stage === 1 && !radioActive) {
                 initCarRadio();
+            }
+        });
+
+        // ── Phone Call Button Click Listener ──────────────────
+        function startMomDialogue() {
+            callEventState = 2; // Call attended
+            
+            // Clear synthetic ringer chime
+            if (ringInterval) {
+                clearInterval(ringInterval);
+                ringInterval = null;
+            }
+            
+            // Update button UI to a call active status
+            const btn = document.getElementById('phone-attend-btn');
+            if (btn) {
+                btn.style.background = '#ff3b30'; 
+                btn.style.boxShadow = '0 0 12px rgba(255,59,48,0.5)';
+                btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12,9c-2.67,0-5.18,0.85-7.24,2.39L2.83,13.31a1,1 0 0,0-.29,.71,1,1 0 0,0,.29,.71l2.42,2.42a1,1 0 0,0,.71,.29,1,1 0 0,0,.71-.29L9.17,14.7C9.36,14.5,9.47,14.26,9.47,14v-2.29c2.51-.77,5.55-.77,8.06,0V14c0,.26,.11,.5,.3,.7l2.5,2.46c.19,.19,.44,.29,.7,.29s.51-.1,.7-.29l2.42-2.42a1,1 0 0,0,.29-.71,1,1 0 0,0-.29-.71l-1.93-1.92C20.18,9.85,17.67,9,12,9Z"/></svg>`;
+            }
+            
+            let callSecs = 0;
+            const callTimer = setInterval(() => {
+                if (callEventState >= 9) {
+                    clearInterval(callTimer);
+                    return;
+                }
+                callSecs++;
+                const mm = Math.floor(callSecs / 60).toString().padStart(2, '0');
+                const ss = (callSecs % 60).toString().padStart(2, '0');
+                const statusEl = document.getElementById('phone-call-status');
+                if (statusEl) statusEl.innerText = `${mm}:${ss}`;
+            }, 1000);
+
+            // Step 1: Mom speaks
+            callEventState = 3;
+            showSubtitle("Mom", "Hey my child, where are you?", 4000);
+            speakVoice("Hey my child, where are you?", true, () => {
+                
+                // Step 2: Driver speaks automatically
+                callEventState = 4;
+                showSubtitle("Driver", "I am going trip to forest with my friends mom", 4500);
+                speakVoice("I am going trip to forest with my friends mom", false, () => {
+                    
+                    // Step 3: Mom speaks
+                    callEventState = 5;
+                    showSubtitle("Mom", "Ok my child be safe, did you eat morning breakfast?", 5000);
+                    speakVoice("Ok my child be safe, did you eat morning breakfast?", true, () => {
+                        
+                        // Step 4: Driver speaks automatically
+                        callEventState = 6;
+                        showSubtitle("Driver", "Ya mom", 2500);
+                        speakVoice("Ya mom", false, () => {
+                            
+                            // Step 5: Mom speaks
+                            callEventState = 7;
+                            showSubtitle("Mom", "Ok my child be safe bye, I will speak to you later", 4500);
+                            speakVoice("Ok my child be safe bye, I will speak to you later", true, () => {
+                                
+                                // Step 6: Driver speaks automatically
+                                callEventState = 8;
+                                showSubtitle("Driver", "Ok mom, you don't worry mom, bye", 4000);
+                                speakVoice("Ok mom, you don't worry mom, bye", false, () => {
+                                    
+                                    // Step 7: Call ends
+                                    callEventState = 9; // Disconnect
+                                    clearInterval(callTimer);
+                                    
+                                    const statusEl = document.getElementById('phone-call-status');
+                                    if (statusEl) statusEl.innerText = 'Call Ended';
+                                    
+                                    const subtitleEl = document.getElementById('dialog-subtitle');
+                                    if (subtitleEl) subtitleEl.remove();
+                                    
+                                    setTimeout(() => {
+                                        const banner = document.getElementById('phone-call-banner');
+                                        if (banner) banner.style.top = '-120px';
+                                        
+                                        callEventState = 10; // Complete
+                                    }, 1000);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        }
+
+        document.getElementById('phone-attend-btn').addEventListener('click', () => {
+            if (callEventState === 1) {
+                startMomDialogue();
             }
         });
         window.addEventListener('keyup', (e) => {
@@ -4086,7 +4272,7 @@
 
         function updateGame(delta, time) {
             // ── Update running clock globally ───────────────────
-            let elapsedSec = Math.floor(time);
+            let elapsedSec = Math.floor(time) + restTimeOffset;
             let s = elapsedSec % 60;
             let m = 30 + Math.floor(elapsedSec / 60);
             let hr = 6;
@@ -4184,8 +4370,8 @@
                 // Scale sun back to normal
                 sunMesh.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 2.0);
                 
-                // Post-storm clear day when kilometersRemaining < 10.0 OR between 45.0 and 25.0
-                const isClearDay = (kilometersRemaining < 10.0) || (kilometersRemaining < 45.0 && kilometersRemaining > 25.0);
+                // Post-storm clear day when kilometersRemaining < 10.0 OR between 45.0 and 25.0 OR rest event completed
+                const isClearDay = (kilometersRemaining < 10.0) || (kilometersRemaining < 45.0 && kilometersRemaining > 25.0) || (restEventState >= 5);
                 if (isClearDay) {
                     // Post-storm: bright clear day atmosphere
                     targetSkyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0xa6c8e0), sunriseProgress);
@@ -5169,6 +5355,20 @@
 
                     if (restEventState === 0 || restEventState >= 5) {
                         kilometersRemaining -= delta / 10.0;
+                    }
+
+                    // Trigger Phone Call at 135 KM
+                    if (restEventState >= 5 && callEventState === 0 && kilometersRemaining <= 135.0) {
+                        callEventTriggered = true;
+                        callEventState = 1;
+                        
+                        const banner = document.getElementById('phone-call-banner');
+                        if (banner) {
+                            banner.style.top = '25px';
+                        }
+                        playPhoneRing();
+                        
+                        controlsHelp.innerHTML = "<span style='color: #ff3366; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,102,0.5);'>[!] INCOMING CALL FROM MOM · CLICK ANSWER BUTTON</span>";
                     }
                     if (kilometersRemaining <= 0) {
                         kilometersRemaining = 0;
