@@ -1725,23 +1725,8 @@
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(-40, 2, 280);
         
-        // Sun outer glow (thick red glow shells)
+        // Sun outer glow shells removed permanently (glowMats kept empty to avoid ReferenceError in update loop)
         const glowMats = [];
-        const glowOpacities = [0.45, 0.28, 0.15, 0.08];
-        const glowSizes = [14, 20, 28, 40];
-        
-        glowSizes.forEach((size, idx) => {
-            const glowGeo = new THREE.SphereGeometry(size, 24, 24);
-            const glowMat = new THREE.MeshBasicMaterial({ 
-                color: 0xff0000, 
-                transparent: true, 
-                opacity: glowOpacities[idx], 
-                blending: THREE.AdditiveBlending 
-            });
-            const sunGlow = new THREE.Mesh(glowGeo, glowMat);
-            sunMesh.add(sunGlow);
-            glowMats.push(glowMat);
-        });
         scene.add(sunMesh);
 
         // Soft yellow fill light from opposite sky direction
