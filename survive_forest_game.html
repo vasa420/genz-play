@@ -1684,6 +1684,29 @@
         const ambientLight = new THREE.AmbientLight(0x251a2d, 0.55);
         scene.add(ambientLight);
 
+        // ── Streetlight Pool ─────────────────────────────────
+        const streetlightPool = [];
+        const MAX_STREETLIGHT_ACTIVE = 12; // Pool of 12 active spotlights
+        for (let i = 0; i < MAX_STREETLIGHT_ACTIVE; i++) {
+            const spot = new THREE.SpotLight(0xfffaed, 0, 45, Math.PI / 3, 0.5, 1.2);
+            spot.castShadow = true;
+            spot.shadow.mapSize.width = 512;
+            spot.shadow.mapSize.height = 512;
+            spot.shadow.camera.near = 0.5;
+            spot.shadow.camera.far = 50;
+            
+            const targetObj = new THREE.Object3D();
+            scene.add(targetObj);
+            spot.target = targetObj;
+            
+            scene.add(spot);
+            
+            streetlightPool.push({
+                light: spot,
+                target: targetObj
+            });
+        }
+
         // ── Flashlight / Torch Light ─────────────────────────
         flashlight = new THREE.SpotLight(0xffffff, 0, 120, Math.PI / 4, 0.6, 0.5);
         flashlight.castShadow = true;
@@ -3027,6 +3050,89 @@
             return treeGroup;
         }
 
+        function createStreetlightMesh(isLeft) {
+            const group = new THREE.Group();
+            group.name = "streetlight";
+            
+            // Materials
+            const metalMat = new THREE.MeshStandardMaterial({
+                color: 0x77777a,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            const bulbMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff
+            });
+            
+            // Base/Foundation
+            const baseGeo = new THREE.CylinderGeometry(0.2, 0.24, 0.6, 8);
+            const base = new THREE.Mesh(baseGeo, metalMat);
+            base.position.y = 0.3;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            group.add(base);
+            
+            // Vertical Pole (height 9)
+            const poleGeo = new THREE.CylinderGeometry(0.08, 0.14, 9.0, 8);
+            const pole = new THREE.Mesh(poleGeo, metalMat);
+            pole.position.y = 4.5 + 0.6; // offset by base height
+            pole.castShadow = true;
+            pole.receiveShadow = true;
+            group.add(pole);
+            
+            // Curved Arm Group
+            const armGroup = new THREE.Group();
+            armGroup.position.set(0, 9.0 + 0.6, 0);
+            
+            // Horizontal main arm cylinder
+            const armLen = 3.2;
+            const armGeo = new THREE.CylinderGeometry(0.03, 0.05, armLen, 8);
+            armGeo.rotateZ(Math.PI / 2);
+            const arm = new THREE.Mesh(armGeo, metalMat);
+            const dir = isLeft ? 1 : -1;
+            arm.position.x = dir * (armLen / 2);
+            arm.castShadow = true;
+            armGroup.add(arm);
+            
+            // Diagonal brace/support
+            const braceGeo = new THREE.CylinderGeometry(0.02, 0.03, 1.8, 8);
+            braceGeo.rotateZ(dir * Math.PI / 4);
+            const brace = new THREE.Mesh(braceGeo, metalMat);
+            brace.position.set(dir * 0.6, -0.6, 0);
+            brace.castShadow = true;
+            armGroup.add(brace);
+            
+            // Curved tip pointing down
+            const tipGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8);
+            const tip = new THREE.Mesh(tipGeo, metalMat);
+            tip.position.set(dir * armLen, -0.25, 0);
+            tip.castShadow = true;
+            armGroup.add(tip);
+            
+            group.add(armGroup);
+            
+            // Lamp Head
+            const headGeo = new THREE.BoxGeometry(0.4, 0.15, 0.8);
+            const head = new THREE.Mesh(headGeo, metalMat);
+            head.position.set(dir * armLen, 9.0 + 0.6 - 0.5, 0);
+            head.castShadow = true;
+            group.add(head);
+            
+            // Light Bulb (Emissive Panel)
+            const bulbGeo = new THREE.BoxGeometry(0.3, 0.02, 0.6);
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.set(dir * armLen, 9.0 + 0.6 - 0.58, 0);
+            group.add(bulb);
+            
+            // Keep reference to the light's relative offset
+            group.userData = {
+                lightOffset: new THREE.Vector3(dir * armLen, 9.0 + 0.6 - 0.6, 0)
+            };
+            
+            return group;
+        }
+
         // Chunk builder
         function createChunk(index) {
             const isBridge = (Math.abs(index) % 24 === 0 && index !== 0);
@@ -3162,6 +3268,19 @@
                     speed: 2.2 + Math.random() * 1.6, // Slow normal walking speed
                     offset: Math.random() * 10
                 });
+                
+                // Spawn Streetlights along both sides of the bridge deck (every 20 units)
+                const streetlightSpacing = 20; 
+                const halfLength = CHUNK_SIZE / 2;
+                for (let sz = -halfLength; sz <= halfLength; sz += streetlightSpacing) {
+                    const slLeft = createStreetlightMesh(true);
+                    slLeft.position.set(-12.5, 0.08, sz);
+                    chunkGroup.add(slLeft);
+                    
+                    const slRight = createStreetlightMesh(false);
+                    slRight.position.set(12.5, 0.08, sz);
+                    chunkGroup.add(slRight);
+                }
                 
                 chunks.set(index, {
                     group: chunkGroup,
@@ -4002,6 +4121,19 @@
                     });
                 }
 
+                // Spawn Streetlights along both sides of the regular road (every 20 units)
+                const streetlightSpacing = 20; 
+                const halfLength = CHUNK_SIZE / 2;
+                for (let sz = -halfLength; sz <= halfLength; sz += streetlightSpacing) {
+                    const slLeft = createStreetlightMesh(true);
+                    slLeft.position.set(-13.0, 0.08, sz);
+                    chunkGroup.add(slLeft);
+                    
+                    const slRight = createStreetlightMesh(false);
+                    slRight.position.set(13.0, 0.08, sz);
+                    chunkGroup.add(slRight);
+                }
+
                 chunks.set(index, {
                     group: chunkGroup,
                     riverMesh: riverMesh,
@@ -4739,6 +4871,65 @@
             // Sun color (vibrant very very very thick red shifting to bright yellow as it rises)
             const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xffea00), sunriseProgress);
             
+            // ── Dynamic Streetlight Pooling ──
+             const activeStreetlights = [];
+             const playerZ = (stage === 1) ? carGroup.position.z : camera.position.z;
+             
+             chunks.forEach((chunk, chunkIndex) => {
+                 const children = chunk.group.children;
+                 const len = children.length;
+                 for (let i = 0; i < len; i++) {
+                     const node = children[i];
+                     if (node.name === "streetlight") {
+                         const worldPos = new THREE.Vector3();
+                         worldPos.copy(node.userData.lightOffset).applyMatrix4(node.matrixWorld);
+                         
+                         const distZ = Math.abs(worldPos.z - playerZ);
+                         if (distZ < 150) {
+                             activeStreetlights.push({
+                                 position: worldPos,
+                                 node: node,
+                                 distZ: distZ
+                             });
+                         }
+                     }
+                 }
+             });
+             
+             activeStreetlights.sort((a, b) => a.distZ - b.distZ);
+             
+             // Determine light intensity based on time of day and storm status
+             let streetlightIntensity = 0;
+             if (isStormActive) {
+                 streetlightIntensity = 3.5;
+             } else if (isPreStorm) {
+                 streetlightIntensity = 2.0;
+             } else {
+                 streetlightIntensity = Math.max(0, (1.0 - sunriseProgress) * 3.0);
+             }
+             
+             // Turn off all lights in the pool first
+             streetlightPool.forEach(item => {
+                 item.light.intensity = 0;
+                 item.light.visible = false;
+             });
+             
+             // Assign pool lights to closest streetlights
+             const numLightsToAssign = Math.min(activeStreetlights.length, MAX_STREETLIGHT_ACTIVE);
+             for (let i = 0; i < numLightsToAssign; i++) {
+                 const sl = activeStreetlights[i];
+                 const poolItem = streetlightPool[i];
+                 
+                 poolItem.light.position.copy(sl.position);
+                 poolItem.target.position.set(sl.position.x * 0.7, 0, sl.position.z);
+                 poolItem.target.updateMatrixWorld();
+                 
+                 poolItem.light.color.setHex(0xffe3b3);
+                 poolItem.light.intensity = streetlightIntensity;
+                 poolItem.light.visible = streetlightIntensity > 0.05;
+                 poolItem.light.castShadow = (i < 4 && streetlightIntensity > 0.05); // Cast shadows for closest 4 lights
+             }
+ 
             // Keep the core sun disk bright white/light-yellow so it looks like a saturated light source
             const coreColor = new THREE.Color(0xffeedd).lerp(new THREE.Color(0xffffff), sunriseProgress);
             sunMat.color.copy(coreColor);
