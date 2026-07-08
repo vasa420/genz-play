@@ -1327,20 +1327,13 @@
 
             lotPeople = [];
             for (let i = 0; i < 5; i++) {
-                const person = new THREE.Group();
+                const person = createPedestrianMesh();
                 const px = 20 + Math.random() * 22;
                 const pz = -15 + Math.random() * 30;
-                person.position.set(px, 0, pz);
+                person.position.set(px, 0.1, pz);
                 
-                const pHead = new THREE.Mesh(headGeo, skinMat);
-                pHead.position.y = 1.35;
-                pHead.castShadow = true;
-                person.add(pHead);
-                
-                const pTorso = new THREE.Mesh(torsoGeo, clothesMats[i % clothesMats.length]);
-                pTorso.position.y = 0.8;
-                pTorso.castShadow = true;
-                person.add(pTorso);
+                // Override the shirt material (torso is children[0]) for color variety
+                person.children[0].material = clothesMats[i % clothesMats.length];
                 
                 parkingLotGroup.add(person);
                 
@@ -1348,7 +1341,8 @@
                     group: person,
                     targetX: 20 + Math.random() * 22,
                     targetZ: -15 + Math.random() * 30,
-                    speed: 0.8 + Math.random() * 0.6
+                    speed: 0.8 + Math.random() * 0.6,
+                    offset: Math.random() * 10
                 });
             }
 
@@ -1710,51 +1704,66 @@
         // ── Sun Waking Up over Mountains ──────────────────────
         function generateSunTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            // Clean gradient for the sphere to give it a warm, smooth light source appearance
+            const grad = ctx.createLinearGradient(0, 0, 0, 128);
+            grad.addColorStop(0, '#ffffff');      // bright top
+            grad.addColorStop(0.5, '#fff3e0');    // warm cream center
+            grad.addColorStop(1, '#ffa040');      // sunset-orange bottom
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 256, 128);
+            
+            const tex = new THREE.CanvasTexture(canvas);
+            return tex;
+        }
+
+        function generateGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
             
-            // Base background: bright orange-red gradient
-            const grad = ctx.createLinearGradient(0, 0, 0, 256);
-            grad.addColorStop(0, '#e63200');
-            grad.addColorStop(0.5, '#ff7c00');
-            grad.addColorStop(1, '#990d00');
+            // Smooth radial gradient for a realistic lens glow
+            const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+            grad.addColorStop(0.08, 'rgba(255, 255, 255, 0.95)');
+            grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.7)');
+            grad.addColorStop(0.4, 'rgba(255, 255, 255, 0.38)');
+            grad.addColorStop(0.7, 'rgba(255, 255, 255, 0.12)');
+            grad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+            
             ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 512, 256);
-            
-            // Draw many overlapping plasma noise cells to simulate fiery granularity
-            for (let i = 0; i < 4500; i++) {
-                const x = Math.random() * 512;
-                const y = Math.random() * 256;
-                const r = 1.5 + Math.random() * 8.5;
-                
-                let color;
-                const rng = Math.random();
-                if (rng < 0.28) {
-                    color = `rgba(255, 235, 30, ${0.12 + Math.random() * 0.28})`; // glowing golden yellow
-                } else if (rng < 0.65) {
-                    color = `rgba(255, 110, 0, ${0.18 + Math.random() * 0.32})`;  // fiery orange
-                } else if (rng < 0.88) {
-                    color = `rgba(220, 15, 0, ${0.15 + Math.random() * 0.22})`;  // hot red
-                } else {
-                    color = `rgba(40, 0, 0, ${0.28 + Math.random() * 0.32})`;      // dark solar spot regions
-                }
-                
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // Add horizontal solar wind/plasma flare bands
-            for (let i = 0; i < 18; i++) {
-                ctx.fillStyle = `rgba(255, 245, 120, ${0.04 + Math.random() * 0.08})`;
-                ctx.fillRect(0, Math.random() * 256, 512, 8 + Math.random() * 28);
-            }
+            ctx.fillRect(0, 0, 256, 256);
             
             const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = THREE.RepeatWrapping;
-            tex.wrapT = THREE.ClampToEdgeWrapping;
+            return tex;
+        }
+
+        function generateHorizontalGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw horizontal flare using scaling
+            ctx.save();
+            ctx.scale(4, 1);
+            const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+            grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.65)');
+            grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.25)');
+            grad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+            
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(64, 64, 64, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            
+            const tex = new THREE.CanvasTexture(canvas);
             return tex;
         }
 
@@ -1766,8 +1775,31 @@
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(-40, 2, 280);
         
-        // Sun outer glow shells removed permanently (glowMats kept empty to avoid ReferenceError in update loop)
-        const glowMats = [];
+        // Primary soft radial glow sprite
+        const glowMat = new THREE.SpriteMaterial({
+            map: generateGlowTexture(),
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            opacity: 0.85,
+            depthWrite: false
+        });
+        const glowSprite = new THREE.Sprite(glowMat);
+        glowSprite.scale.set(130, 130, 1);
+        sunMesh.add(glowSprite);
+
+        // Horizontal atmospheric light scattering flare sprite
+        const horizGlowMat = new THREE.SpriteMaterial({
+            map: generateHorizontalGlowTexture(),
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            opacity: 0.65,
+            depthWrite: false
+        });
+        const horizGlowSprite = new THREE.Sprite(horizGlowMat);
+        horizGlowSprite.scale.set(260, 45, 1);
+        sunMesh.add(horizGlowSprite);
+
+        const glowMats = [glowMat, horizGlowMat];
         scene.add(sunMesh);
 
         // Soft yellow fill light from opposite sky direction
@@ -2645,105 +2677,163 @@
             } catch(e) {}
         }
 
-        // Procedural Pedestrian Mesh
+        // Procedural Pedestrian Mesh (Realistic character design inspired by reference image)
         function createPedestrianMesh() {
             const group = new THREE.Group();
             
-            // Materials matching the designed character
-            const shirtMat = new THREE.MeshLambertMaterial({ color: 0xff6f91 }); // Coral pink shirt
-            const skirtMat = new THREE.MeshLambertMaterial({ color: 0x4e3629 }); // Dark brown skirt
-            const tightsMat = new THREE.MeshLambertMaterial({ color: 0x3a241b }); // Brown tights
-            const skinMat = new THREE.MeshLambertMaterial({ color: 0xffe0ac }); // Skin tone
-            const hairMat = new THREE.MeshLambertMaterial({ color: 0x24150e }); // Dark brown hair
-            const shoeMat = new THREE.MeshLambertMaterial({ color: 0x1a0e08 }); // Dark flats
+            // Randomized variety colors for outfits, hair, and skin
+            const shirtColors = [
+                0x3d4e61, // blue-grey henley shirt
+                0xa83232, // crimson red shirt
+                0x2e6f40, // forest green shirt
+                0xd97724, // orange shirt
+                0x6e4e8b, // purple shirt
+                0x3273a8  // cobalt blue shirt
+            ];
+            const pantsColors = [
+                0x5a483a, // brown cargo pants
+                0x363d4a, // navy cargo pants
+                0x383838, // grey pants
+                0x47382d  // khaki pants
+            ];
+            const hairColors = [
+                0x4a3319, // dark brown
+                0x1a120b, // black
+                0x8c5b30, // light brown
+                0x593d25  // auburn
+            ];
+            const skinColors = [
+                0xe0a98c, // medium skin tone
+                0xf3d2c1, // fair skin tone
+                0xc58c65, // tan skin tone
+                0x8d5b4c  // dark skin tone
+            ];
 
-            // 1. Torso (Coral Pink Shirt)
-            const torsoGeo = new THREE.BoxGeometry(0.55, 0.6, 0.35);
+            const shirtColor = shirtColors[Math.floor(Math.random() * shirtColors.length)];
+            const pantsColor = pantsColors[Math.floor(Math.random() * pantsColors.length)];
+            const skinColor = skinColors[Math.floor(Math.random() * skinColors.length)];
+            const hairColor = hairColors[Math.floor(Math.random() * hairColors.length)];
+
+            const shirtMat = new THREE.MeshLambertMaterial({ color: shirtColor }); 
+            const pantsMat = new THREE.MeshLambertMaterial({ color: pantsColor });
+            const skinMat = new THREE.MeshLambertMaterial({ color: skinColor }); 
+            const hairMat = new THREE.MeshLambertMaterial({ color: hairColor }); 
+            const shoeMat = new THREE.MeshLambertMaterial({ color: 0x2e2217 }); // dark brown boots
+            const leatherMat = new THREE.MeshLambertMaterial({ color: 0x3b2413 }); // leather holsters/straps/belt
+            const metalMat = new THREE.MeshLambertMaterial({ color: 0x888888, metalness: 0.8 }); // buckle
+
+            // 1. Torso (Henley Shirt) - must be child[0] for event-based material overrides
+            const torsoGeo = new THREE.BoxGeometry(0.55, 0.7, 0.35);
             const torso = new THREE.Mesh(torsoGeo, shirtMat);
             torso.position.y = 1.25;
             torso.castShadow = true;
             group.add(torso);
             
-            // Collar detail
-            const collarGeo = new THREE.BoxGeometry(0.2, 0.08, 0.22);
-            const collar = new THREE.Mesh(collarGeo, shirtMat);
-            collar.position.set(0, 1.57, 0.02);
-            group.add(collar);
+            // Shoulder straps (Holster harness details)
+            const strapLGeo = new THREE.BoxGeometry(0.08, 0.72, 0.37);
+            const strapL = new THREE.Mesh(strapLGeo, leatherMat);
+            strapL.position.set(-0.2, 1.25, 0);
+            group.add(strapL);
 
-            // 2. Skirt (Dark Brown Knee-length Skirt)
-            const skirtGeo = new THREE.CylinderGeometry(0.28, 0.36, 0.5, 10);
-            const skirt = new THREE.Mesh(skirtGeo, skirtMat);
-            skirt.position.y = 0.8;
-            skirt.castShadow = true;
-            group.add(skirt);
+            const strapRGeo = new THREE.BoxGeometry(0.08, 0.72, 0.37);
+            const strapR = new THREE.Mesh(strapRGeo, leatherMat);
+            strapR.position.set(0.2, 1.25, 0);
+            group.add(strapR);
+
+            // 2. Belt & Metal Buckle
+            const beltGeo = new THREE.BoxGeometry(0.57, 0.08, 0.37);
+            const belt = new THREE.Mesh(beltGeo, leatherMat);
+            belt.position.y = 0.86;
+            group.add(belt);
+
+            const buckleGeo = new THREE.BoxGeometry(0.15, 0.1, 0.39);
+            const buckle = new THREE.Mesh(buckleGeo, metalMat);
+            buckle.position.set(0, 0.86, 0.01);
+            group.add(buckle);
 
             // 3. Head (Skin)
-            const headGeo = new THREE.SphereGeometry(0.22, 10, 10);
+            const headGeo = new THREE.SphereGeometry(0.2, 12, 12);
             const head = new THREE.Mesh(headGeo, skinMat);
-            head.position.y = 1.68;
+            head.position.y = 1.72;
             head.castShadow = true;
             group.add(head);
 
-            // 4. Hair (Short Dark Brown)
-            const hairTopGeo = new THREE.SphereGeometry(0.23, 8, 8);
+            // Neck
+            const neckGeo = new THREE.CylinderGeometry(0.08, 0.09, 0.15, 8);
+            const neck = new THREE.Mesh(neckGeo, skinMat);
+            neck.position.y = 1.58;
+            group.add(neck);
+
+            // 4. Hair (Styled brown hair)
+            const hairTopGeo = new THREE.BoxGeometry(0.24, 0.16, 0.24);
             const hairTop = new THREE.Mesh(hairTopGeo, hairMat);
-            hairTop.position.set(0, 1.74, -0.02);
+            hairTop.position.set(0, 1.84, 0);
             group.add(hairTop);
-            
-            const hairBackGeo = new THREE.BoxGeometry(0.44, 0.28, 0.4);
+
+            const hairBackGeo = new THREE.BoxGeometry(0.22, 0.22, 0.1);
             const hairBack = new THREE.Mesh(hairBackGeo, hairMat);
-            hairBack.position.set(0, 1.68, -0.06);
+            hairBack.position.set(0, 1.76, -0.1);
             group.add(hairBack);
 
-            // 5. Arms (Pink sleeves + skin hands)
+            // 5. Arms (Opposite swing sleeves + skin hands)
             const armGroupL = new THREE.Group();
-            armGroupL.position.set(-0.34, 1.45, 0);
-            const sleeveL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.12), shirtMat);
-            sleeveL.position.y = -0.05;
+            armGroupL.position.set(-0.35, 1.48, 0);
+            // Sleeve
+            const sleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), shirtMat);
+            sleeveL.position.y = -0.15;
             sleeveL.castShadow = true;
             armGroupL.add(sleeveL);
-            const handL = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.35, 6), skinMat);
-            handL.position.y = -0.3;
+            // Hand
+            const handL = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), skinMat);
+            handL.position.y = -0.45;
             handL.castShadow = true;
             armGroupL.add(handL);
             group.add(armGroupL);
 
             const armGroupR = new THREE.Group();
-            armGroupR.position.set(0.34, 1.45, 0);
-            const sleeveR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.12), shirtMat);
-            sleeveR.position.y = -0.05;
+            armGroupR.position.set(0.35, 1.48, 0);
+            // Sleeve
+            const sleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), shirtMat);
+            sleeveR.position.y = -0.15;
             sleeveR.castShadow = true;
             armGroupR.add(sleeveR);
-            const handR = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.35, 6), skinMat);
-            handR.position.y = -0.3;
+            // Hand
+            const handR = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), skinMat);
+            handR.position.y = -0.45;
             handR.castShadow = true;
             armGroupR.add(handR);
             group.add(armGroupR);
 
-            // 6. Legs (Tights + Shoes)
+            // 6. Legs (Pants + Boots)
             const leftLeg = new THREE.Group();
-            leftLeg.position.set(-0.16, 0.4, 0);
-            const leftLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 8), tightsMat);
+            leftLeg.position.set(-0.16, 0.8, 0);
+            // Pants/Thigh
+            const leftLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.085, 0.7, 8), pantsMat);
+            leftLegCylinder.position.y = -0.35;
             leftLegCylinder.castShadow = true;
             leftLeg.add(leftLegCylinder);
-            const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), shoeMat);
-            leftShoe.position.set(0, -0.35, 0.05);
+            // Boot
+            const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.22), shoeMat);
+            leftShoe.position.set(0, -0.75, 0.04);
             leftShoe.castShadow = true;
             leftLeg.add(leftShoe);
             group.add(leftLeg);
 
             const rightLeg = new THREE.Group();
-            rightLeg.position.set(0.16, 0.4, 0);
-            const rightLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 8), tightsMat);
+            rightLeg.position.set(0.16, 0.8, 0);
+            // Pants/Thigh
+            const rightLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.085, 0.7, 8), pantsMat);
+            rightLegCylinder.position.y = -0.35;
             rightLegCylinder.castShadow = true;
             rightLeg.add(rightLegCylinder);
-            const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), shoeMat);
-            rightShoe.position.set(0, -0.35, 0.05);
+            // Boot
+            const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.22), shoeMat);
+            rightShoe.position.set(0, -0.75, 0.04);
             rightShoe.castShadow = true;
             rightLeg.add(rightShoe);
             group.add(rightLeg);
 
-            group.userData = { leftLeg, rightLeg };
+            group.userData = { leftLeg, rightLeg, armGroupL, armGroupR, head, torso };
             return group;
         }
 
@@ -3070,6 +3160,41 @@
                     speed: 2.2 + Math.random() * 1.6, // Slow normal walking speed
                     offset: Math.random() * 10
                 });
+
+                // Spawn 1-2 conversation groups of speaking people on the sidewalks (shoulders)
+                const numGroups = Math.random() < 0.65 ? 2 : 1;
+                for (let g = 0; g < numGroups; g++) {
+                    const side = Math.random() > 0.5 ? 1 : -1;
+                    const px = side * 14.2;
+                    const pz = (Math.random() - 0.5) * (CHUNK_SIZE - 60);
+                    
+                    const pedA = createPedestrianMesh();
+                    pedA.position.set(px - 0.25, 0.1, pz - 0.35);
+                    pedA.lookAt(new THREE.Vector3(px + 0.25, 0.1, pz + 0.35));
+                    chunkGroup.add(pedA);
+                    
+                    const pedB = createPedestrianMesh();
+                    pedB.position.set(px + 0.25, 0.1, pz + 0.35);
+                    pedB.lookAt(new THREE.Vector3(px - 0.25, 0.1, pz - 0.35));
+                    chunkGroup.add(pedB);
+                    
+                    peds.push({
+                        group: pedA,
+                        localZ: pedA.position.z,
+                        direction: 0,
+                        speed: 0,
+                        isSpeaking: true,
+                        offset: Math.random() * 20
+                    });
+                    peds.push({
+                        group: pedB,
+                        localZ: pedB.position.z,
+                        direction: 0,
+                        speed: 0,
+                        isSpeaking: true,
+                        offset: Math.random() * 20
+                    });
+                }
                 
                 // Spawn a rescue/cleanup scene at 15.0 KM
                 if (index === rescueSceneChunkIdx) {
@@ -4418,7 +4543,11 @@
             
             // Sun color (vibrant very very very thick red shifting to bright yellow as it rises)
             const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xffea00), sunriseProgress);
-            sunMat.color.copy(sunColor);
+            
+            // Keep the core sun disk bright white/light-yellow so it looks like a saturated light source
+            const coreColor = new THREE.Color(0xffeedd).lerp(new THREE.Color(0xffffff), sunriseProgress);
+            sunMat.color.copy(coreColor);
+            
             glowMats.forEach(mat => mat.color.copy(sunColor));
             
             // Slow plasma surface rotation animation
@@ -4678,24 +4807,65 @@
                         }
                     }
                     
-                    // Normal walking
-                    ped.localZ += ped.direction * ped.speed * delta;
-                    if (ped.localZ > CHUNK_SIZE / 2 - 10) {
-                        ped.localZ = CHUNK_SIZE / 2 - 10;
-                        ped.direction = -1;
-                    } else if (ped.localZ < -CHUNK_SIZE / 2 + 10) {
-                        ped.localZ = -CHUNK_SIZE / 2 + 10;
-                        ped.direction = 1;
-                    }
-                    ped.group.position.z = ped.localZ;
-                    ped.group.rotation.y = ped.direction > 0 ? 0 : Math.PI;
-                    if (ped.group.userData.leftLeg && ped.group.userData.rightLeg) {
-                        // Dynamically adjust swing frequency based on pedestrian speed for realistic walking
-                        const swingFreq = ped.speed * 0.9 + 1.2;
-                        const swingAmp = 0.35; // slightly smaller stride amplitude for slow walking
-                        const swing = Math.sin(time * swingFreq + ped.offset) * swingAmp;
-                        ped.group.userData.leftLeg.rotation.x = swing;
-                        ped.group.userData.rightLeg.rotation.x = -swing;
+                    if (ped.speed > 0) {
+                        // Normal walking
+                        ped.localZ += ped.direction * ped.speed * delta;
+                        if (ped.localZ > CHUNK_SIZE / 2 - 10) {
+                            ped.localZ = CHUNK_SIZE / 2 - 10;
+                            ped.direction = -1;
+                        } else if (ped.localZ < -CHUNK_SIZE / 2 + 10) {
+                            ped.localZ = -CHUNK_SIZE / 2 + 10;
+                            ped.direction = 1;
+                        }
+                        ped.group.position.z = ped.localZ;
+                        ped.group.rotation.y = ped.direction > 0 ? 0 : Math.PI;
+                        if (ped.group.userData.leftLeg && ped.group.userData.rightLeg) {
+                            // Dynamically adjust swing frequency based on pedestrian speed for realistic walking
+                            const swingFreq = ped.speed * 0.9 + 1.2;
+                            const swingAmp = 0.45; 
+                            const swing = Math.sin(time * swingFreq + ped.offset) * swingAmp;
+                            
+                            // Legs swing opposite
+                            ped.group.userData.leftLeg.rotation.x = swing;
+                            ped.group.userData.rightLeg.rotation.x = -swing;
+                            
+                            // Arms swing opposite to legs
+                            if (ped.group.userData.armGroupL && ped.group.userData.armGroupR) {
+                                ped.group.userData.armGroupL.rotation.x = -swing * 0.8;
+                                ped.group.userData.armGroupR.rotation.x = swing * 0.8;
+                            }
+                            
+                            // Body and head bobbing
+                            const bob = -Math.abs(Math.sin(time * swingFreq + ped.offset)) * 0.05;
+                            if (ped.group.userData.torso && ped.group.userData.head) {
+                                ped.group.userData.torso.position.y = 1.25 + bob;
+                                ped.group.userData.head.position.y = 1.72 + bob;
+                            }
+                        }
+                    } else if (ped.isSpeaking) {
+                        // Conversation/Speaking animation
+                        const speakTime = time + ped.offset;
+                        
+                        // Head nods/moves slightly to simulate speaking
+                        if (ped.group.userData.head) {
+                            ped.group.userData.head.rotation.x = Math.sin(speakTime * 3.0) * 0.06;
+                            ped.group.userData.head.rotation.y = Math.cos(speakTime * 1.5) * 0.08;
+                        }
+                        
+                        // Arms gesticulate naturally
+                        if (ped.group.userData.armGroupL && ped.group.userData.armGroupR) {
+                            ped.group.userData.armGroupL.rotation.x = -0.2 + Math.sin(speakTime * 2.0) * 0.15;
+                            ped.group.userData.armGroupL.rotation.z = -0.15 + Math.cos(speakTime * 2.0) * 0.08;
+                            
+                            ped.group.userData.armGroupR.rotation.x = -0.2 - Math.sin(speakTime * 2.2) * 0.15;
+                            ped.group.userData.armGroupR.rotation.z = 0.15 + Math.cos(speakTime * 2.2) * 0.08;
+                        }
+                        
+                        // Relaxed standing pose (one leg slightly back, one slightly forward)
+                        if (ped.group.userData.leftLeg && ped.group.userData.rightLeg) {
+                            ped.group.userData.leftLeg.rotation.x = 0.08;
+                            ped.group.userData.rightLeg.rotation.x = -0.08;
+                        }
                     }
                 });
 
@@ -5578,6 +5748,27 @@
                             
                             const targetAngle = Math.atan2(dirX, dirZ);
                             gp.rotation.y = targetAngle;
+                        }
+                        
+                        // Realistic walking animation cycle
+                        if (gp.userData.leftLeg && gp.userData.rightLeg) {
+                            const swingFreq = person.speed * 0.9 + 1.2;
+                            const swingAmp = 0.45;
+                            const swing = Math.sin(time * swingFreq + person.offset) * swingAmp;
+                            
+                            gp.userData.leftLeg.rotation.x = swing;
+                            gp.userData.rightLeg.rotation.x = -swing;
+                            
+                            if (gp.userData.armGroupL && gp.userData.armGroupR) {
+                                gp.userData.armGroupL.rotation.x = -swing * 0.8;
+                                gp.userData.armGroupR.rotation.x = swing * 0.8;
+                            }
+                            
+                            const bob = -Math.abs(Math.sin(time * swingFreq + person.offset)) * 0.05;
+                            if (gp.userData.torso && gp.userData.head) {
+                                gp.userData.torso.position.y = 1.25 + bob;
+                                gp.userData.head.position.y = 1.72 + bob;
+                            }
                         }
                     });
                 }
