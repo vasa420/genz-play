@@ -2864,12 +2864,55 @@
             return group;
         }
 
+        // ── Geometry & Material Cache ─────────────────────────
+        const geomCache = {
+            // Streetlight geometries
+            slBase: new THREE.CylinderGeometry(0.2, 0.24, 0.6, 8),
+            slPole: new THREE.CylinderGeometry(0.08, 0.14, 9.0, 8),
+            slArm: new THREE.CylinderGeometry(0.03, 0.05, 3.2, 8),
+            slBrace: new THREE.CylinderGeometry(0.02, 0.03, 1.8, 8),
+            slTip: new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8),
+            slHead: new THREE.BoxGeometry(0.4, 0.15, 0.8),
+            slBulb: new THREE.BoxGeometry(0.3, 0.02, 0.6),
+            
+            // Tree geometries
+            treeTrunk: new THREE.CylinderGeometry(0.35, 0.55, 14, 4),
+            treeFol1: new THREE.SphereGeometry(3.5, 4, 4),
+            treeFol2: new THREE.SphereGeometry(2.5, 4, 4),
+            treeBranch: new THREE.CylinderGeometry(0.08, 0.18, 5, 4)
+        };
+        
+        // Rotate streetlight arm geometry once globally so it doesn't need to be rotated on instantiation
+        geomCache.slArm.rotateZ(Math.PI / 2);
+
+        const matCache = {
+            // General metal for streetlights
+            slMetal: new THREE.MeshStandardMaterial({
+                color: 0x77777a,
+                metalness: 0.8,
+                roughness: 0.2
+            }),
+            // Bulbs on/off
+            slBulbOn: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+            slBulbOff: new THREE.MeshBasicMaterial({ color: 0x222222 }),
+            
+            // Tree materials
+            treeTrunk: new THREE.MeshLambertMaterial({ color: 0x3a281d }),
+            treeBranch: new THREE.MeshLambertMaterial({ color: 0x4a3629 }),
+            treeFoliage: [
+                new THREE.MeshLambertMaterial({ color: 0x0f2913 }), // shadow dark green
+                new THREE.MeshLambertMaterial({ color: 0x153c1c }), // forest mid green
+                new THREE.MeshLambertMaterial({ color: 0x22642e }), // vibrant green
+                new THREE.MeshLambertMaterial({ color: 0x5c8e23 })  // highlight yellow green
+            ]
+        };
+
         // Procedural Organic / Spooky Tree Generator
         function createProceduralTree(isDead = false) {
             const treeGroup = new THREE.Group();
             
-            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3a281d }); // Dark brown organic bark
-            const branchMat = new THREE.MeshLambertMaterial({ color: 0x4a3629 });
+            const trunkMat = matCache.treeTrunk;
+            const branchMat = matCache.treeBranch;
             
             // Build gnarled multi-segment trunk
             const trunkSegments = 4;
@@ -2979,7 +3022,7 @@
                             Math.max(0, Math.floor(heightFactor * foliageColors.length))
                         );
                         
-                        const folMat = new THREE.MeshLambertMaterial({ color: foliageColors[colorIdx] });
+                        const folMat = matCache.treeFoliage[colorIdx];
                         const folMesh = new THREE.Mesh(folGeo, folMat);
                         folMesh.castShadow = true;
                         folMesh.receiveShadow = true;
@@ -3002,12 +3045,8 @@
         function createSimplifiedTree(isDead = false) {
             const treeGroup = new THREE.Group();
             
-            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3a281d });
-            const branchMat = new THREE.MeshLambertMaterial({ color: 0x4a3629 });
-            
-            // Simplified trunk: single cylinder with low segments (4)
-            const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 14, 4);
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            // Reused trunk geometry and material
+            const trunk = new THREE.Mesh(geomCache.treeTrunk, matCache.treeTrunk);
             trunk.position.y = 7;
             trunk.rotation.z = (Math.random() - 0.5) * 0.15; // organic tilt
             trunk.castShadow = true;
@@ -3015,27 +3054,22 @@
             treeGroup.add(trunk);
             
             if (!isDead) {
-                // Simplified foliage: 2 overlapping low-segment spheres
-                const foliageColors = [0x0f2913, 0x153c1c, 0x22642e];
-                const fColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
-                const foliageMat = new THREE.MeshLambertMaterial({ color: fColor });
+                // Select a foliage material from cache randomly (index 0, 1, 2)
+                const foliageMat = matCache.treeFoliage[Math.floor(Math.random() * 3)];
                 
-                const fol1Geo = new THREE.SphereGeometry(3.5, 4, 4);
-                const fol1 = new THREE.Mesh(fol1Geo, foliageMat);
+                const fol1 = new THREE.Mesh(geomCache.treeFol1, foliageMat);
                 fol1.position.set(0, 13.5, 0);
                 fol1.castShadow = true;
                 treeGroup.add(fol1);
                 
-                const fol2Geo = new THREE.SphereGeometry(2.5, 4, 4);
-                const fol2 = new THREE.Mesh(fol2Geo, foliageMat);
+                const fol2 = new THREE.Mesh(geomCache.treeFol2, foliageMat);
                 fol2.position.set((Math.random() - 0.5) * 1.5, 15.5, (Math.random() - 0.5) * 1.5);
                 fol2.castShadow = true;
                 treeGroup.add(fol2);
             } else {
                 // Simplified dead branches: 3 low-poly cylinders
                 for (let i = 0; i < 3; i++) {
-                    const branchGeo = new THREE.CylinderGeometry(0.08, 0.18, 5, 4);
-                    const branch = new THREE.Mesh(branchGeo, branchMat);
+                    const branch = new THREE.Mesh(geomCache.treeBranch, matCache.treeBranch);
                     branch.position.set(0, 13.5, 0);
                     
                     const angle = (i / 3) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
@@ -3054,28 +3088,15 @@
             const group = new THREE.Group();
             group.name = "streetlight";
             
-            // Materials
-            const metalMat = new THREE.MeshStandardMaterial({
-                color: 0x77777a,
-                metalness: 0.8,
-                roughness: 0.2
-            });
-            
-            const bulbMat = new THREE.MeshBasicMaterial({
-                color: 0xffffff
-            });
-            
             // Base/Foundation
-            const baseGeo = new THREE.CylinderGeometry(0.2, 0.24, 0.6, 8);
-            const base = new THREE.Mesh(baseGeo, metalMat);
+            const base = new THREE.Mesh(geomCache.slBase, matCache.slMetal);
             base.position.y = 0.3;
             base.castShadow = true;
             base.receiveShadow = true;
             group.add(base);
             
             // Vertical Pole (height 9)
-            const poleGeo = new THREE.CylinderGeometry(0.08, 0.14, 9.0, 8);
-            const pole = new THREE.Mesh(poleGeo, metalMat);
+            const pole = new THREE.Mesh(geomCache.slPole, matCache.slMetal);
             pole.position.y = 4.5 + 0.6; // offset by base height
             pole.castShadow = true;
             pole.receiveShadow = true;
@@ -3087,25 +3108,21 @@
             
             // Horizontal main arm cylinder
             const armLen = 3.2;
-            const armGeo = new THREE.CylinderGeometry(0.03, 0.05, armLen, 8);
-            armGeo.rotateZ(Math.PI / 2);
-            const arm = new THREE.Mesh(armGeo, metalMat);
+            const arm = new THREE.Mesh(geomCache.slArm, matCache.slMetal);
             const dir = isLeft ? 1 : -1;
             arm.position.x = dir * (armLen / 2);
             arm.castShadow = true;
             armGroup.add(arm);
             
-            // Diagonal brace/support
-            const braceGeo = new THREE.CylinderGeometry(0.02, 0.03, 1.8, 8);
-            braceGeo.rotateZ(dir * Math.PI / 4);
-            const brace = new THREE.Mesh(braceGeo, metalMat);
+            // Diagonal brace/support (uses mesh rotation to keep geometry shared)
+            const brace = new THREE.Mesh(geomCache.slBrace, matCache.slMetal);
+            brace.rotation.z = dir * Math.PI / 4;
             brace.position.set(dir * 0.6, -0.6, 0);
             brace.castShadow = true;
             armGroup.add(brace);
             
             // Curved tip pointing down
-            const tipGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8);
-            const tip = new THREE.Mesh(tipGeo, metalMat);
+            const tip = new THREE.Mesh(geomCache.slTip, matCache.slMetal);
             tip.position.set(dir * armLen, -0.25, 0);
             tip.castShadow = true;
             armGroup.add(tip);
@@ -3113,21 +3130,20 @@
             group.add(armGroup);
             
             // Lamp Head
-            const headGeo = new THREE.BoxGeometry(0.4, 0.15, 0.8);
-            const head = new THREE.Mesh(headGeo, metalMat);
+            const head = new THREE.Mesh(geomCache.slHead, matCache.slMetal);
             head.position.set(dir * armLen, 9.0 + 0.6 - 0.5, 0);
             head.castShadow = true;
             group.add(head);
             
             // Light Bulb (Emissive Panel)
-            const bulbGeo = new THREE.BoxGeometry(0.3, 0.02, 0.6);
-            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            const bulb = new THREE.Mesh(geomCache.slBulb, matCache.slBulbOn);
             bulb.position.set(dir * armLen, 9.0 + 0.6 - 0.58, 0);
             group.add(bulb);
             
-            // Keep reference to the light's relative offset
+            // Keep reference to the light's relative offset and bulb mesh
             group.userData = {
-                lightOffset: new THREE.Vector3(dir * armLen, 9.0 + 0.6 - 0.6, 0)
+                lightOffset: new THREE.Vector3(dir * armLen, 9.0 + 0.6 - 0.6, 0),
+                bulbMesh: bulb
             };
             
             return group;
@@ -4872,6 +4888,18 @@
             const sunColor = new THREE.Color(0xff0000).lerp(new THREE.Color(0xffea00), sunriseProgress);
             
             // ── Dynamic Streetlight Pooling ──
+             // Determine light intensity based on time of day and storm status
+             let streetlightIntensity = 0;
+             if (isStormActive) {
+                 streetlightIntensity = 3.5;
+             } else if (isPreStorm) {
+                 streetlightIntensity = 2.0;
+             } else {
+                 // Turn off completely when sunriseProgress reaches 0.25 (early morning dawn)
+                 const factor = Math.max(0, 1.0 - (sunriseProgress / 0.25));
+                 streetlightIntensity = factor * 3.0;
+             }
+
              const activeStreetlights = [];
              const playerZ = (stage === 1) ? carGroup.position.z : camera.position.z;
              
@@ -4881,6 +4909,11 @@
                  for (let i = 0; i < len; i++) {
                      const node = children[i];
                      if (node.name === "streetlight") {
+                         // Turn the physical emissive bulb mesh on/off
+                         if (node.userData.bulbMesh) {
+                             node.userData.bulbMesh.material = streetlightIntensity > 0.05 ? matCache.slBulbOn : matCache.slBulbOff;
+                         }
+
                          const worldPos = new THREE.Vector3();
                          worldPos.copy(node.userData.lightOffset).applyMatrix4(node.matrixWorld);
                          
@@ -4897,16 +4930,6 @@
              });
              
              activeStreetlights.sort((a, b) => a.distZ - b.distZ);
-             
-             // Determine light intensity based on time of day and storm status
-             let streetlightIntensity = 0;
-             if (isStormActive) {
-                 streetlightIntensity = 3.5;
-             } else if (isPreStorm) {
-                 streetlightIntensity = 2.0;
-             } else {
-                 streetlightIntensity = Math.max(0, (1.0 - sunriseProgress) * 3.0);
-             }
              
              // Turn off all lights in the pool first
              streetlightPool.forEach(item => {
