@@ -2971,6 +2971,58 @@
             return treeGroup;
         }
 
+        // Highly optimized low-poly tree generator for background forest density
+        function createSimplifiedTree(isDead = false) {
+            const treeGroup = new THREE.Group();
+            
+            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3a281d });
+            const branchMat = new THREE.MeshLambertMaterial({ color: 0x4a3629 });
+            
+            // Simplified trunk: single cylinder with low segments (4)
+            const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 14, 4);
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 7;
+            trunk.rotation.z = (Math.random() - 0.5) * 0.15; // organic tilt
+            trunk.castShadow = true;
+            trunk.receiveShadow = true;
+            treeGroup.add(trunk);
+            
+            if (!isDead) {
+                // Simplified foliage: 2 overlapping low-segment spheres
+                const foliageColors = [0x0f2913, 0x153c1c, 0x22642e];
+                const fColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
+                const foliageMat = new THREE.MeshLambertMaterial({ color: fColor });
+                
+                const fol1Geo = new THREE.SphereGeometry(3.5, 4, 4);
+                const fol1 = new THREE.Mesh(fol1Geo, foliageMat);
+                fol1.position.set(0, 13.5, 0);
+                fol1.castShadow = true;
+                treeGroup.add(fol1);
+                
+                const fol2Geo = new THREE.SphereGeometry(2.5, 4, 4);
+                const fol2 = new THREE.Mesh(fol2Geo, foliageMat);
+                fol2.position.set((Math.random() - 0.5) * 1.5, 15.5, (Math.random() - 0.5) * 1.5);
+                fol2.castShadow = true;
+                treeGroup.add(fol2);
+            } else {
+                // Simplified dead branches: 3 low-poly cylinders
+                for (let i = 0; i < 3; i++) {
+                    const branchGeo = new THREE.CylinderGeometry(0.08, 0.18, 5, 4);
+                    const branch = new THREE.Mesh(branchGeo, branchMat);
+                    branch.position.set(0, 13.5, 0);
+                    
+                    const angle = (i / 3) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+                    branch.rotation.z = 0.5 + Math.random() * 0.4;
+                    branch.rotation.y = angle;
+                    
+                    branch.castShadow = true;
+                    treeGroup.add(branch);
+                }
+            }
+            
+            return treeGroup;
+        }
+
         // Chunk builder
         function createChunk(index) {
             const isBridge = (Math.abs(index) % 24 === 0 && index !== 0);
@@ -3171,26 +3223,17 @@
                 const trees = [];
                 const fallingTrees = [];
                 
-                // Optimized to 80 detailed trees per chunk for high performance and smooth frame rates
-                const numTrees = 80;
-                for (let i = 0; i < numTrees; i++) {
-                    let tx = (Math.random() - 0.5) * 450;
+                // Spawn 40 detailed roadside trees (which are close and can fall or sway visibly)
+                const numDetailedTrees = 40;
+                for (let i = 0; i < numDetailedTrees; i++) {
+                    const side = Math.random() > 0.5 ? 1 : -1;
+                    // Position them close to the roadside (between X = 32 and X = 60)
+                    let tx = side * (32.0 + Math.random() * 28.0);
                     let tz = (Math.random() - 0.5) * CHUNK_SIZE;
                     
-                    // Clear the road and sidewalks (road is from -16 to 16, sidewalk extends to 32)
-                    if (tx > -32 && tx < 32) {
-                        tx += tx >= 0 ? 32 : -32;
-                    }
-                    // Clear the river (river is from 58 to 92)
-                    if (tx > 58 && tx < 92) {
-                        tx += tx > 75 ? 35 : -35;
-                    }
-                    
-                    // Spawn 75% living organic green trees and 25% bare spooky dead trees
                     const isDead = Math.random() < 0.25;
                     const treeGroup = createProceduralTree(isDead);
                     
-                    // Big Big Trees scaling (slightly random organic sizes)
                     const scaleX = 1.1 + Math.random() * 1.3;
                     const scaleY = 1.0 + Math.random() * 1.6;
                     const scaleZ = 1.1 + Math.random() * 1.3;
@@ -3212,6 +3255,32 @@
                         };
                         fallingTrees.push(treeGroup);
                     }
+                }
+                
+                // Spawn 260 optimized background trees to create a dense forest horizon
+                const numBackgroundTrees = 260;
+                for (let i = 0; i < numBackgroundTrees; i++) {
+                    const side = Math.random() > 0.5 ? 1 : -1;
+                    // Position them further away in the background (between X = 60 and X = 225)
+                    let tx = side * (60.0 + Math.random() * 165.0);
+                    let tz = (Math.random() - 0.5) * CHUNK_SIZE;
+                    
+                    // Avoid river X bounds (from X = 58 to X = 92) on the right side (side = 1)
+                    if (side === 1 && tx > 58 && tx < 92) {
+                        tx += 34; // shift outside river range
+                    }
+                    
+                    const isDead = Math.random() < 0.25;
+                    const treeGroup = createSimplifiedTree(isDead);
+                    
+                    const scaleX = 1.0 + Math.random() * 1.2;
+                    const scaleY = 0.9 + Math.random() * 1.5;
+                    const scaleZ = 1.0 + Math.random() * 1.2;
+                    treeGroup.scale.set(scaleX, scaleY, scaleZ);
+                    
+                    treeGroup.position.set(tx, 0, tz);
+                    chunkGroup.add(treeGroup);
+                    trees.push(treeGroup);
                 }
                 
                 // Buildings (Shops & Grand Hotels)
