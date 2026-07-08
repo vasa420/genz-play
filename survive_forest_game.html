@@ -133,6 +133,10 @@
             pointer-events: none;
         }
 
+        .controls-help:empty {
+            display: none !important;
+        }
+
         .controls-help span {
             color: var(--primary);
             font-weight: 700;
@@ -320,14 +324,14 @@
     <!-- Dashcam HUD overlay -->
     <div class="dashcam-overlay" id="dashcam-hud" style="display: none;">
         <div class="dashcam-top">
-            <div class="dashcam-rec">
+            <div class="dashcam-rec" style="visibility: hidden;">
                 <div class="dashcam-dot"></div>
                 <span>● REC</span>
             </div>
             <div id="dashcam-time">2026-06-25 06:30:00 AM</div>
         </div>
         <div class="dashcam-bottom">
-            <div>CAM_01 · DRIVER_POV</div>
+            <div style="visibility: hidden;">CAM_01 · DRIVER_POV</div>
             <div class="dashcam-speed">
                 <span>SPEED: <span id="dashcam-speed-val">0</span> MPH</span> · GPS: 35.6192° N, 82.4419° W
             </div>
@@ -938,13 +942,13 @@
                         console.log("Engine sound play deferred:", e);
                     });
                 }
-                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span>G</span> (Horn) · <span>Z</span> (Wipers) · <span style='color: #ff3300;'>[V] STOP ENGINE</span>";
+                controlsHelp.innerHTML = "";
             } else {
                 if (engineStartAudio) {
                     engineStartAudio.pause();
                 }
                 carSpeed = 0;
-                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span style='color: #00ffcc; font-weight: bold;'>[V] START ENGINE</span>";
+                controlsHelp.innerHTML = "";
             }
         }
 
@@ -1395,7 +1399,7 @@
                 hudTitle.style.borderColor = "#ff3300";
                 hudTitle.style.boxShadow = "0 0 15px rgba(255,51,0,0.45)";
 
-                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span style='color: #00ffcc; font-weight: bold;'>[V] START ENGINE</span>";
+                controlsHelp.innerHTML = "";
 
                 initAudio();
                 initCarRadio();
@@ -1495,7 +1499,7 @@
                         parkingBorderSegments = null;
                     }
                     
-                    controlsHelp.innerHTML = "DRIVE WITH: <span>W / S</span> (Speed) · <span>A / D</span> (Steer) · <span style='color: #00ffcc; font-weight: bold;'>[V] START ENGINE</span>";
+                    controlsHelp.innerHTML = "";
                 }, 8000);
             }
 
