@@ -293,6 +293,79 @@
             90% { opacity: 0.85; }
             100% { transform: translateY(140px) scaleY(0.65); opacity: 0; }
         }
+
+        /* Camera Switcher HUD */
+        .camera-switcher {
+            position: absolute;
+            top: 90px;
+            right: 25px;
+            background: rgba(2, 2, 5, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 10px;
+            width: 250px;
+            z-index: 5;
+            display: none; /* Only show in stage 1 (driving) */
+            flex-direction: column;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .camera-switcher-title {
+            color: #aaa;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 2px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 4px;
+        }
+
+        .camera-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            padding: 8px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .camera-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .camera-btn.active {
+            background: rgba(57, 255, 20, 0.15);
+            border-color: #39ff14;
+            color: #39ff14;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+        }
+
+        .camera-btn-title {
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .camera-btn-desc {
+            font-size: 9px;
+            color: #888;
+            line-height: 1.25;
+        }
+
+        .camera-btn.active .camera-btn-desc {
+            color: #b3ff9e;
+        }
     </style>
 </head>
 <body>
@@ -347,6 +420,19 @@
 
     <div class="timer-hud" id="timer-display">150.00 KM (LOCKED)</div>
 
+    <!-- Camera Switcher HUD -->
+    <div id="camera-switcher" class="camera-switcher">
+        <div class="camera-switcher-title">Camera Mode [1 / 2]</div>
+        <button id="cam-btn-chase" class="camera-btn active" onclick="setCameraMode('chase')">
+            <span class="camera-btn-title">1. Chase Camera (Third-Person) ⭐</span>
+            <span class="camera-btn-desc">Camera stays behind the car. Best for open-world and racing. Shows the entire vehicle. Easy for beginners.</span>
+        </button>
+        <button id="cam-btn-cockpit" class="camera-btn" onclick="setCameraMode('cockpit')">
+            <span class="camera-btn-title">2. Cockpit Camera (First-Person)</span>
+            <span class="camera-btn-desc">Camera is inside the driver's seat. Shows steering wheel, dashboard, mirrors. Most realistic and immersive.</span>
+        </button>
+    </div>
+
     <div class="controls-help" id="controls-text">
         WALK WITH: <span>W / S / A / D</span> · <span>DRAG MOUSE</span> · <span style="color: #00ffcc;">[B] TORCH</span>
     </div>
@@ -357,6 +443,15 @@
         // Flashlight/Torch Light variables
         let flashlight = null;
         let flashlightActive = false;
+
+        let cameraMode = 'chase'; // Default to Chase Camera (Third-Person)
+        
+        function setCameraMode(mode) {
+            cameraMode = mode;
+            document.querySelectorAll('.camera-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('cam-btn-' + mode);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
 
         let isEngineStarted = false;
         let engineStartAudio = null;
@@ -1399,7 +1494,9 @@
                 hudTitle.style.borderColor = "#ff3300";
                 hudTitle.style.boxShadow = "0 0 15px rgba(255,51,0,0.45)";
 
-                controlsHelp.innerHTML = "";
+                setCameraMode('chase');
+                document.getElementById('camera-switcher').style.display = 'flex';
+                controlsHelp.innerHTML = "DRIVE WITH: <span>W / S / A / D</span> · <span>[G] HORN</span> · <span>[Z] WIPERS</span> · <span>[V] ENGINE</span> · <span>[1 / 2] CAMERA</span>";
 
                 initAudio();
                 initCarRadio();
@@ -1427,6 +1524,12 @@
             }
             if (key === 'v' && stage === 1) {
                 toggleEngine();
+            }
+            if (key === '1' && stage === 1) {
+                setCameraMode('chase');
+            }
+            if (key === '2' && stage === 1) {
+                setCameraMode('cockpit');
             }
             if (key === 'b') {
                 if (stage === 0 || stage === 3) {
@@ -1499,7 +1602,7 @@
                         parkingBorderSegments = null;
                     }
                     
-                    controlsHelp.innerHTML = "";
+                    controlsHelp.innerHTML = "DRIVE WITH: <span>W / S / A / D</span> · <span>[G] HORN</span> · <span>[Z] WIPERS</span> · <span>[V] ENGINE</span> · <span>[1 / 2] CAMERA</span>";
                 }, 8000);
             }
 
@@ -1585,6 +1688,7 @@
                                         if (banner) banner.style.top = '-120px';
                                         
                                         callEventState = 10; // Complete
+                                        controlsHelp.innerHTML = "DRIVE WITH: <span>W / S / A / D</span> · <span>[G] HORN</span> · <span>[Z] WIPERS</span> · <span>[V] ENGINE</span> · <span>[1 / 2] CAMERA</span>";
                                     }, 1000);
                                 });
                             });
@@ -6714,6 +6818,7 @@
                     if (kilometersRemaining <= 0) {
                         kilometersRemaining = 0;
                         stage = 2; // Transition mode
+                        document.getElementById('camera-switcher').style.display = 'none';
                         
                         // Slowly dim the page over 3.5 seconds
                         fadeOverlay.style.transition = 'opacity 3.5s ease-in-out';
@@ -6948,19 +7053,35 @@
                     });
                 }
 
-                // Driver Seat POV (left-hand side)
-                let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
-                let camZ = carGroup.position.z + Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
-                let camY = carGroup.position.y + 1.875;
-                
-                camera.position.set(camX, camY, camZ);
-                
-                let lookTarget = new THREE.Vector3(
-                    camX + Math.sin(carAngle) * 15 + Math.cos(carAngle) * 0.15,
-                    camY - 0.08,
-                    camZ + Math.cos(carAngle) * 15 - Math.sin(carAngle) * 0.15
-                );
-                camera.lookAt(lookTarget);
+                if (cameraMode === 'chase') {
+                    // Chase Camera (Third-Person)
+                    let camX = carGroup.position.x - Math.sin(carAngle) * 6.5;
+                    let camZ = carGroup.position.z - Math.cos(carAngle) * 6.5;
+                    let camY = carGroup.position.y + 2.5;
+                    
+                    camera.position.set(camX, camY, camZ);
+                    
+                    let lookTarget = new THREE.Vector3(
+                        carGroup.position.x,
+                        carGroup.position.y + 1.2,
+                        carGroup.position.z
+                    );
+                    camera.lookAt(lookTarget);
+                } else {
+                    // Driver Seat POV (left-hand side / Cockpit Camera)
+                    let camX = carGroup.position.x - Math.cos(carAngle) * 0.55 + Math.sin(carAngle) * 0.2;
+                    let camZ = carGroup.position.z + Math.sin(carAngle) * 0.55 + Math.cos(carAngle) * 0.2;
+                    let camY = carGroup.position.y + 1.875;
+                    
+                    camera.position.set(camX, camY, camZ);
+                    
+                    let lookTarget = new THREE.Vector3(
+                        camX + Math.sin(carAngle) * 15 + Math.cos(carAngle) * 0.15,
+                        camY - 0.08,
+                        camZ + Math.cos(carAngle) * 15 - Math.sin(carAngle) * 0.15
+                    );
+                    camera.lookAt(lookTarget);
+                }
 
             }
             // ── STAGE 3 or 0: WALKING ────────────────────────
