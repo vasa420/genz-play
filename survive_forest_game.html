@@ -293,11 +293,553 @@
             90% { opacity: 0.85; }
             100% { transform: translateY(140px) scaleY(0.65); opacity: 0; }
         }
+
+        /* ── Unified Game Engine Overlays ── */
+        .engine-overlay-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #020205;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 10010;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+            user-select: none;
+            overflow: hidden;
+            transform-origin: center center;
+        }
+
+        .engine-overlay-screen.active {
+            display: flex;
+        }
+
+        /* Disclaimer & Credits Text */
+        .engine-terminal-text {
+            color: #39ff14;
+            font-size: clamp(15px, 2.8vw, 24px);
+            letter-spacing: 2px;
+            line-height: 2;
+            max-width: 820px;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .engine-dev-text {
+            color: #00F6FF;
+            font-size: clamp(18px, 3.5vw, 32px);
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-shadow: 0 0 14px rgba(0,246,255,0.4);
+            text-align: center;
+        }
+
+        .engine-studio-text {
+            color: #39ff14;
+            font-size: clamp(13px, 2.2vw, 20px);
+            letter-spacing: 8px;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+            margin-top: 40px;
+        }
+
+        .engine-cursor {
+            display: inline-block;
+            width: 11px; height: 1.1em;
+            background: currentColor;
+            margin-left: 4px;
+            animation: engineBlink 0.8s infinite steps(2);
+            vertical-align: middle;
+        }
+        @keyframes engineBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+        /* Skip Hint */
+        .engine-skip-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            letter-spacing: 4px;
+            color: rgba(57, 255, 20, 0.35);
+            text-transform: uppercase;
+            animation: enginePulseHint 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+        @keyframes enginePulseHint {
+            0%,100% { opacity: 0.35; }
+            50%      { opacity: 0.85; }
+        }
+
+        /* Lobby Style */
+        .engine-lobby-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.45) 0%,
+                rgba(0, 10, 5, 0.55) 60%,
+                rgba(0, 0, 0, 0.75) 100%
+            ), url('survive_forest_lobby.png') center/cover no-repeat;
+            z-index: -1;
+        }
+
+        .engine-lobby-layout {
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .engine-lobby-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .engine-lobby-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(20px, 4vw, 30px);
+            font-weight: 900;
+            letter-spacing: 6px;
+            animation: engineLogoColor 15s infinite ease-in-out;
+        }
+        @keyframes engineLogoColor {
+            0%, 28% { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); }
+            33%, 61% { color: #39ff14; text-shadow: 0 0 10px rgba(57,255,20,0.4); }
+            66%, 94% { color: #ffff33; text-shadow: 0 0 10px rgba(255,255,51,0.4); }
+            100% { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); }
+        }
+
+        .engine-btn-quit {
+            background: transparent;
+            border: 1px solid rgba(255, 0, 127, 0.3);
+            color: rgba(255, 0, 127, 0.8);
+            padding: 10px 22px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            outline: none;
+        }
+        .engine-btn-quit:hover {
+            border-color: #FF007F;
+            color: #fff;
+            background: rgba(255, 0, 127, 0.1);
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .engine-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: 100%;
+            max-width: 360px;
+            background: rgba(4, 4, 12, 0.82);
+            border: 1px solid rgba(255, 0, 127, 0.2);
+            border-radius: 20px;
+            padding: 40px 30px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+        }
+
+        .engine-menu-label {
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: rgba(255, 0, 127, 0.6);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .engine-menu-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            color: #fff;
+            padding: 18px 22px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .engine-menu-option:hover {
+            background: rgba(255, 0, 127, 0.1);
+            border-color: #FF007F;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.2);
+            transform: translateX(10px);
+        }
+        .engine-menu-option::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; height: 100%; width: 4px;
+            background: #FF007F;
+            transform: scaleY(0);
+            transition: transform 0.3s;
+            border-radius: 14px 0 0 14px;
+        }
+        .engine-menu-option:hover::before { transform: scaleY(1); }
+
+        .engine-menu-arrow {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s;
+            color: #FF007F;
+            font-size: 18px;
+        }
+        .engine-menu-option:hover .engine-menu-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .engine-lobby-footer {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        .engine-lobby-footer span { color: #FF007F; }
+
+        /* Modals */
+        .engine-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            z-index: 10020;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+        }
+
+        .engine-modal-card {
+            background: rgba(8, 8, 20, 0.92);
+            border: 2px solid rgba(255, 0, 127, 0.25);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 0, 127, 0.15);
+            animation: engineModalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes engineModalIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+
+        .engine-modal-title {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: #FF007F;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .engine-settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            text-align: left;
+        }
+
+        .engine-settings-label {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #ccc;
+            text-transform: uppercase;
+        }
+
+        /* Switch Toggle */
+        .engine-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px; height: 26px;
+        }
+        .engine-switch input { opacity: 0; width: 0; height: 0; }
+        .engine-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .engine-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .engine-switch input:checked + .engine-slider { background-color: #FF007F; }
+        .engine-switch input:checked + .engine-slider:before { transform: translateX(24px); }
+
+        .engine-volume-slider {
+            -webkit-appearance: none;
+            width: 120px; height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+        }
+        .engine-volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #FF007F;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255,0,127,0.45);
+        }
+
+        .engine-btn-close {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #bbb;
+            padding: 12px 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            outline: none;
+        }
+        .engine-btn-close:hover {
+            border-color: #fff;
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Story Page Boxes */
+        .engine-story-box {
+            max-width: 850px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            text-align: left;
+            border: 1px solid rgba(255, 51, 51, 0.15);
+            padding: 40px;
+            background: rgba(4, 4, 12, 0.75);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .engine-story-warning-icon {
+            font-size: clamp(40px, 8vw, 64px);
+            color: #ff3333;
+            text-shadow: 0 0 20px rgba(255, 51, 51, 0.6);
+            animation: enginePulse 1.5s infinite alternate;
+            text-align: center;
+        }
+        @keyframes enginePulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .engine-story-title {
+            color: #ff3333;
+            font-size: clamp(20px, 3.5vw, 32px);
+            font-weight: 900;
+            letter-spacing: 6px;
+            word-spacing: 18px;
+            text-shadow: 0 0 15px rgba(255,51,51,0.45);
+            text-transform: uppercase;
+            white-space: pre-wrap;
+        }
+
+        .engine-story-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: clamp(14px, 2.2vw, 18px);
+            font-weight: 400;
+            letter-spacing: 4px;
+            word-spacing: 12px;
+            margin-top: 5px;
+            white-space: pre-wrap;
+        }
+
+        .engine-story-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, #ff3333, transparent);
+            margin: 10px 0;
+            opacity: 0.7;
+        }
+
+        .engine-story-text {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: clamp(14px, 2.4vw, 18px);
+            font-weight: 400;
+            line-height: 1.8;
+            letter-spacing: 1px;
+            word-wrap: break-word;
+        }
+
+        /* CRT Shuttercollapse styles for entire engine overlays */
+        .engine-crt-collapse {
+            animation: engineCrtCollapse 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .engine-crt-expand {
+            animation: engineCrtExpand 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes engineCrtCollapse {
+            0%   { transform: scaleY(1) scaleX(1); filter: brightness(1); }
+            40%  { transform: scaleY(0.01) scaleX(1.1); filter: brightness(2); }
+            80%  { transform: scaleY(0.01) scaleX(0.02); filter: brightness(5); }
+            100% { transform: scaleY(0) scaleX(0); filter: brightness(10); opacity: 0; }
+        }
+        @keyframes engineCrtExpand {
+            0%   { transform: scaleY(0) scaleX(0); filter: brightness(10); opacity: 0; }
+            40%  { transform: scaleY(0.01) scaleX(1.1); filter: brightness(5); opacity: 1; }
+            80%  { transform: scaleY(1) scaleX(1.02); filter: brightness(1.5); }
+            100% { transform: scaleY(1) scaleX(1); filter: brightness(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="scanlines"></div>
+    <!-- ── Unified Game Engine Overlays ── -->
+    
+    <!-- 1. Disclaimer Overlay -->
+    <div id="engine-disclaimer-screen" class="engine-overlay-screen active">
+        <div class="engine-terminal-text">
+            <span id="engine-disclaimer-text"></span><span class="engine-cursor" id="engine-disclaimer-cursor"></span>
+        </div>
+        <div class="engine-skip-hint">CLICK ANYWHERE TO SKIP ▶</div>
+    </div>
+
+    <!-- 2. Credits Overlay -->
+    <div id="engine-credits-screen" class="engine-overlay-screen">
+        <div class="engine-dev-text">
+            <span id="engine-credits-dev"></span><span class="engine-cursor" id="engine-credits-dev-cursor"></span>
+        </div>
+        <div class="engine-studio-text">
+            <span id="engine-credits-studio"></span><span class="engine-cursor" id="engine-credits-studio-cursor" style="display:none;"></span>
+        </div>
+        <div class="engine-skip-hint">CLICK ANYWHERE TO SKIP ▶</div>
+    </div>
+
+    <!-- 3. Lobby Overlay -->
+    <div id="engine-lobby-screen" class="engine-overlay-screen">
+        <div class="engine-lobby-bg"></div>
+        <div class="engine-lobby-layout">
+            <header class="engine-lobby-header">
+                <div class="engine-lobby-logo">SURVIVE IT</div>
+                <button class="engine-btn-quit" onclick="engineQuitToHub()">← QUIT</button>
+            </header>
+            
+            <div class="engine-menu-container">
+                <div class="engine-menu-label">— SELECT ACTION —</div>
+                <div class="engine-menu-option" onclick="engineStartGame()">
+                    <span>1. SURVIVE</span>
+                    <span class="engine-menu-arrow">➔</span>
+                </div>
+                <div class="engine-menu-option" onclick="engineOpenSettings()">
+                    <span>2. SETTINGS</span>
+                    <span class="engine-menu-arrow">➔</span>
+                </div>
+                <div class="engine-menu-option" onclick="engineQuitToHub()">
+                    <span>3. QUIT</span>
+                    <span class="engine-menu-arrow">➔</span>
+                </div>
+            </div>
+            
+            <div class="engine-lobby-footer">
+                SURVIVE IT · POWERED BY <span>ATC STUDIO</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="engine-settings-modal" class="engine-modal-overlay">
+        <div class="engine-modal-card">
+            <div class="engine-modal-title">SYSTEM SETTINGS</div>
+            <div class="engine-settings-row">
+                <span class="engine-settings-label">MASTER VOLUME</span>
+                <input type="range" class="engine-volume-slider" min="0" max="100" value="50" onchange="engineUpdateVolume(this.value)">
+            </div>
+            <div class="engine-settings-row">
+                <span class="engine-settings-label">CRT SCANLINES</span>
+                <label class="engine-switch">
+                    <input type="checkbox" id="engine-scanline-switch" checked onchange="engineToggleScanlines(this.checked)">
+                    <span class="engine-slider"></span>
+                </label>
+            </div>
+            <div class="engine-settings-row">
+                <span class="engine-settings-label">GRAPHICS</span>
+                <span class="engine-settings-label" style="color: #ff3333;">ULTRA</span>
+            </div>
+            <button class="engine-btn-close" style="margin-top:10px;" onclick="engineCloseSettings()">SAVE</button>
+        </div>
+    </div>
+
+    <!-- 4. Story 1 Overlay -->
+    <div id="engine-story1-screen" class="engine-overlay-screen">
+        <div class="engine-story-box">
+            <div class="engine-story-warning-icon">⚠</div>
+            <div class="engine-story-text" style="text-align: center; font-size: clamp(18px, 3vw, 28px); font-weight: 700; text-transform: uppercase;">
+                <span id="engine-story1-text"></span><span class="engine-cursor" id="engine-story1-cursor"></span>
+            </div>
+        </div>
+        <div class="engine-skip-hint">PRESS Q OR CLICK TO CONTINUE ▶</div>
+    </div>
+
+    <!-- 5. Story 2 Overlay -->
+    <div id="engine-story2-screen" class="engine-overlay-screen">
+        <div class="engine-story-box">
+            <div>
+                <div class="engine-story-title" id="engine-story2-title"></div>
+                <div class="engine-story-subtitle" id="engine-story2-subtitle"></div>
+            </div>
+            <div class="engine-story-divider"></div>
+            <div class="engine-story-text">
+                <span id="engine-story2-body"></span><span class="engine-cursor" id="engine-story2-cursor"></span>
+            </div>
+        </div>
+        <div class="engine-skip-hint">PRESS Q OR CLICK TO CONTINUE ▶</div>
+    </div>
+
+    <!-- 6. Story 3 Overlay -->
+    <div id="engine-story3-screen" class="engine-overlay-screen">
+        <div class="engine-story-box">
+            <div>
+                <div class="engine-story-title" id="engine-story3-title"></div>
+                <div class="engine-story-subtitle" id="engine-story3-subtitle"></div>
+            </div>
+            <div class="engine-story-divider"></div>
+            <div class="engine-story-text">
+                <span id="engine-story3-body"></span><span class="engine-cursor" id="engine-story3-cursor"></span>
+            </div>
+        </div>
+        <div class="engine-skip-hint">PRESS Q OR CLICK TO CONTINUE ▶</div>
+    </div>
+
+    <div class="scanlines" id="scanlines-overlay"></div>
     <div class="crt-glow"></div>
     <div id="fade-overlay"></div>
     <div id="sleep-time-overlay" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-family: 'Courier New', Courier, monospace; font-size: 64px; font-weight: bold; text-shadow: 0 0 25px rgba(255,255,255,0.7); z-index: 10000; letter-spacing: 4px;">TIME:10:00</div>
@@ -357,6 +899,474 @@
         // Flashlight/Torch Light variables
         let flashlight = null;
         let flashlightActive = false;
+
+        // ── Unified Game Engine State & Audio Management ──
+        let engineState = 'disclaimer'; // disclaimer, credits, lobby, story1, story2, story3, gameplay
+        let engineTypingFinished = false;
+        let engineSkipLocked = false;
+        let engineAutoTimeout = null;
+        let engineBackgroundTheme = null;
+        let gameStartTime = 0.0;
+        let engineMasterVolumeSetting = 50; // 0 to 100
+
+        function initEngineAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!engineBackgroundTheme) {
+                engineBackgroundTheme = new Audio('universfield-mystical-music-box-175971.mp3');
+                engineBackgroundTheme.loop = true;
+                engineBackgroundTheme.volume = (engineMasterVolumeSetting / 100) * 0.08;
+                engineBackgroundTheme.play().catch(e => {
+                    console.log("Background music play deferred until click:", e);
+                });
+            }
+        }
+
+        function playEngineBeep(type) {
+            initEngineAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                const curVol = (engineMasterVolumeSetting / 100) * masterVolume;
+                
+                if (type === 'typewriter') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(140 + Math.random() * 90, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(curVol * 0.5, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.035);
+                } else if (type === 'transition') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(60, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(700, audioCtx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(curVol, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                }
+            } catch(e) { console.warn(e); }
+        }
+
+        function engineTransition(onMid) {
+            playEngineBeep('transition');
+            
+            // Apply CRT collapse effect to all active overlay screens
+            const activeScreens = document.querySelectorAll('.engine-overlay-screen.active');
+            activeScreens.forEach(s => {
+                s.classList.remove('engine-crt-expand');
+                s.classList.add('engine-crt-collapse');
+            });
+            
+            setTimeout(() => {
+                if (onMid) onMid();
+                
+                const nextActiveScreens = document.querySelectorAll('.engine-overlay-screen.active');
+                nextActiveScreens.forEach(s => {
+                    s.classList.remove('engine-crt-collapse');
+                    s.classList.add('engine-crt-expand');
+                });
+            }, 620);
+        }
+
+        function engineTypeWriter(text, elementId, speed, onComplete) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.innerText = "";
+            let i = 0;
+            function type() {
+                if (engineTypingFinished) return;
+                if (i < text.length) {
+                    el.innerText += text.charAt(i);
+                    playEngineBeep('typewriter');
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    if (onComplete) onComplete();
+                }
+            }
+            type();
+        }
+
+        function engineSetState(state) {
+            engineState = state;
+            engineTypingFinished = false;
+            if (engineAutoTimeout) {
+                clearTimeout(engineAutoTimeout);
+                engineAutoTimeout = null;
+            }
+            
+            // Hide all overlays
+            document.querySelectorAll('.engine-overlay-screen').forEach(s => {
+                s.classList.remove('active', 'engine-crt-expand', 'engine-crt-collapse');
+            });
+
+            if (state === 'disclaimer') {
+                const screen = document.getElementById('engine-disclaimer-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                setTimeout(() => {
+                    const text = "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                    engineTypeWriter(text, 'engine-disclaimer-text', 52, () => {
+                        engineTypingFinished = true;
+                        const cursor = document.getElementById('engine-disclaimer-cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        engineAutoTimeout = setTimeout(() => {
+                            engineSkipLocked = true;
+                            engineTransition(() => {
+                                engineSkipLocked = false;
+                                engineSetState('credits');
+                            });
+                        }, 1800);
+                    });
+                }, 600);
+            }
+            else if (state === 'credits') {
+                const screen = document.getElementById('engine-credits-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                engineTypeWriter("DEVELOPER NAME: VASANTH", 'engine-credits-dev', 70, () => {
+                    const cursorDev = document.getElementById('engine-credits-dev-cursor');
+                    if (cursorDev) cursorDev.style.display = 'none';
+                    
+                    const cursorStudio = document.getElementById('engine-credits-studio-cursor');
+                    if (cursorStudio) cursorStudio.style.display = 'inline-block';
+                    
+                    engineTypeWriter("ATC STUDIO", 'engine-credits-studio', 90, () => {
+                        if (cursorStudio) cursorStudio.style.display = 'none';
+                        engineAutoTimeout = setTimeout(() => {
+                            engineSkipLocked = true;
+                            engineTransition(() => {
+                                engineSkipLocked = false;
+                                engineSetState('lobby');
+                            });
+                        }, 1800);
+                    });
+                });
+            }
+            else if (state === 'lobby') {
+                const screen = document.getElementById('engine-lobby-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                initEngineAudio();
+            }
+            else if (state === 'story1') {
+                const screen = document.getElementById('engine-story1-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                const text = "THIS STORY BASED ON REAL INCIDENT IN USA!";
+                engineTypeWriter(text, 'engine-story1-text', 70, () => {
+                    engineTypingFinished = true;
+                    const cursor = document.getElementById('engine-story1-cursor');
+                    if (cursor) cursor.style.display = 'none';
+                    engineAutoTimeout = setTimeout(engineGoToNextStory, 5000);
+                });
+            }
+            else if (state === 'story2') {
+                const screen = document.getElementById('engine-story2-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                const titleText = "The National Forest Serial Killer";
+                const subtitleText = "(Inspired by Gary Hilton)";
+                const bodyText = "Between 2007 and 2008, a serial killer named Gary Hilton targeted hikers in remote forests in the United States. He searched for people who were alone on forest trails, attacked them, and used the vast wilderness to hide evidence and avoid being caught. The dense forest made it difficult for police to track his movements.";
+                
+                let i = 0;
+                const titleEl = document.getElementById('engine-story2-title');
+                const subtitleEl = document.getElementById('engine-story2-subtitle');
+                const bodyEl = document.getElementById('engine-story2-body');
+                
+                titleEl.innerText = "";
+                subtitleEl.innerText = "";
+                bodyEl.innerText = "";
+                
+                function typeTitle() {
+                    if (engineTypingFinished) return;
+                    if (i < titleText.length) {
+                        titleEl.innerText += titleText.charAt(i);
+                        playEngineBeep('typewriter');
+                        i++;
+                        setTimeout(typeTitle, 50);
+                    } else {
+                        i = 0;
+                        typeSubtitle();
+                    }
+                }
+                function typeSubtitle() {
+                    if (engineTypingFinished) return;
+                    if (i < subtitleText.length) {
+                        subtitleEl.innerText += subtitleText.charAt(i);
+                        playEngineBeep('typewriter');
+                        i++;
+                        setTimeout(typeSubtitle, 40);
+                    } else {
+                        i = 0;
+                        typeBody();
+                    }
+                }
+                function typeBody() {
+                    if (engineTypingFinished) return;
+                    if (i < bodyText.length) {
+                        bodyEl.innerText += bodyText.charAt(i);
+                        playEngineBeep('typewriter');
+                        i++;
+                        setTimeout(typeBody, 45);
+                    } else {
+                        engineTypingFinished = true;
+                        const cursor = document.getElementById('engine-story2-cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        engineAutoTimeout = setTimeout(engineGoToNextStory, 5000);
+                    }
+                }
+                typeTitle();
+            }
+            else if (state === 'story3') {
+                const screen = document.getElementById('engine-story3-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                const titleText = "First Confirmed Attack";
+                const subtitleText = "(Inspired by Gary Hilton)";
+                const bodyText = "The first confirmed attack by Gary Hilton happened on October 21, 2007. On that day, hikers John and Irene Bryant disappeared while hiking in a national forest in North Carolina.";
+                
+                let i = 0;
+                const titleEl = document.getElementById('engine-story3-title');
+                const subtitleEl = document.getElementById('engine-story3-subtitle');
+                const bodyEl = document.getElementById('engine-story3-body');
+                
+                titleEl.innerText = "";
+                subtitleEl.innerText = "";
+                bodyEl.innerText = "";
+                
+                function typeTitle() {
+                    if (engineTypingFinished) return;
+                    if (i < titleText.length) {
+                        titleEl.innerText += titleText.charAt(i);
+                        playEngineBeep('typewriter');
+                        i++;
+                        setTimeout(typeTitle, 50);
+                    } else {
+                        i = 0;
+                        typeSubtitle();
+                    }
+                }
+                function typeSubtitle() {
+                    if (engineTypingFinished) return;
+                    if (i < subtitleText.length) {
+                        subtitleEl.innerText += subtitleText.charAt(i);
+                        playEngineBeep('typewriter');
+                        i++;
+                        setTimeout(typeSubtitle, 40);
+                    } else {
+                        i = 0;
+                        typeBody();
+                    }
+                }
+                function typeBody() {
+                    if (engineTypingFinished) return;
+                    if (i < bodyText.length) {
+                        bodyEl.innerText += bodyText.charAt(i);
+                        playEngineBeep('typewriter');
+                        i++;
+                        setTimeout(typeBody, 45);
+                    } else {
+                        engineTypingFinished = true;
+                        const cursor = document.getElementById('engine-story3-cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        engineAutoTimeout = setTimeout(engineGoToNextStory, 5000);
+                    }
+                }
+                typeTitle();
+            }
+            else if (state === 'gameplay') {
+                // Fade out background lobby music
+                if (engineBackgroundTheme) {
+                    let vol = engineBackgroundTheme.volume;
+                    const fade = setInterval(() => {
+                        vol -= 0.01;
+                        if (vol <= 0) {
+                            clearInterval(fade);
+                            engineBackgroundTheme.pause();
+                            engineBackgroundTheme = null;
+                        } else {
+                            engineBackgroundTheme.volume = vol;
+                        }
+                    }, 50);
+                }
+                
+                // Record start time to offset clock
+                gameStartTime = clock.getElapsedTime();
+                
+                // Active 3D gameplay
+                initAudio();
+            }
+        }
+
+        function engineGoToNextStory() {
+            if (engineSkipLocked) return;
+            engineSkipLocked = true;
+            if (engineAutoTimeout) clearTimeout(engineAutoTimeout);
+
+            engineTransition(() => {
+                engineSkipLocked = false;
+                if (engineState === 'story1') {
+                    engineSetState('story2');
+                } else if (engineState === 'story2') {
+                    engineSetState('story3');
+                } else if (engineState === 'story3') {
+                    engineSetState('gameplay');
+                }
+            });
+        }
+
+        function engineHandleInteraction() {
+            if (engineSkipLocked) return;
+            
+            initEngineAudio();
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
+            if (engineState === 'disclaimer') {
+                engineSkipLocked = true;
+                engineTypingFinished = true;
+                document.getElementById('engine-disclaimer-text').innerText = 
+                    "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                const cursor = document.getElementById('engine-disclaimer-cursor');
+                if (cursor) cursor.style.display = 'none';
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('credits');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'credits') {
+                engineSkipLocked = true;
+                engineTypingFinished = true;
+                document.getElementById('engine-credits-dev').innerText = "DEVELOPER NAME: VASANTH";
+                document.getElementById('engine-credits-studio').innerText = "ATC STUDIO";
+                const cDev = document.getElementById('engine-credits-dev-cursor');
+                const cStudio = document.getElementById('engine-credits-studio-cursor');
+                if (cDev) cDev.style.display = 'none';
+                if (cStudio) cStudio.style.display = 'none';
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('lobby');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'story1') {
+                if (!engineTypingFinished) {
+                    engineTypingFinished = true;
+                    document.getElementById('engine-story1-text').innerText = "THIS STORY BASED ON REAL INCIDENT IN USA!";
+                    const cursor = document.getElementById('engine-story1-cursor');
+                    if (cursor) cursor.style.display = 'none';
+                    if (engineAutoTimeout) clearTimeout(engineAutoTimeout);
+                    engineAutoTimeout = setTimeout(engineGoToNextStory, 5000);
+                } else {
+                    engineGoToNextStory();
+                }
+            }
+            else if (engineState === 'story2') {
+                if (!engineTypingFinished) {
+                    engineTypingFinished = true;
+                    document.getElementById('engine-story2-title').innerText = "The National Forest Serial Killer";
+                    document.getElementById('engine-story2-subtitle').innerText = "(Inspired by Gary Hilton)";
+                    document.getElementById('engine-story2-body').innerText = 
+                        "Between 2007 and 2008, a serial killer named Gary Hilton targeted hikers in remote forests in the United States. He searched for people who were alone on forest trails, attacked them, and used the vast wilderness to hide evidence and avoid being caught. The dense forest made it difficult for police to track his movements.";
+                    const cursor = document.getElementById('engine-story2-cursor');
+                    if (cursor) cursor.style.display = 'none';
+                    if (engineAutoTimeout) clearTimeout(engineAutoTimeout);
+                    engineAutoTimeout = setTimeout(engineGoToNextStory, 5000);
+                } else {
+                    engineGoToNextStory();
+                }
+            }
+            else if (engineState === 'story3') {
+                if (!engineTypingFinished) {
+                    engineTypingFinished = true;
+                    document.getElementById('engine-story3-title').innerText = "First Confirmed Attack";
+                    document.getElementById('engine-story3-subtitle').innerText = "(Inspired by Gary Hilton)";
+                    document.getElementById('engine-story3-body').innerText = 
+                        "The first confirmed attack by Gary Hilton happened on October 21, 2007. On that day, hikers John and Irene Bryant disappeared while hiking in a national forest in North Carolina.";
+                    const cursor = document.getElementById('engine-story3-cursor');
+                    if (cursor) cursor.style.display = 'none';
+                    if (engineAutoTimeout) clearTimeout(engineAutoTimeout);
+                    engineAutoTimeout = setTimeout(engineGoToNextStory, 5000);
+                } else {
+                    engineGoToNextStory();
+                }
+            }
+        }
+
+        // Lobby Actions
+        function engineStartGame() {
+            playEngineBeep('transition');
+            engineTransition(() => {
+                engineSetState('story1');
+            });
+        }
+
+        function engineOpenSettings() {
+            playEngineBeep('typewriter');
+            document.getElementById('engine-settings-modal').style.display = 'flex';
+        }
+
+        function engineCloseSettings() {
+            playEngineBeep('typewriter');
+            document.getElementById('engine-settings-modal').style.display = 'none';
+        }
+
+        function engineUpdateVolume(val) {
+            engineMasterVolumeSetting = val;
+            const newVolume = (val / 100) * 0.08;
+            if (engineBackgroundTheme) {
+                engineBackgroundTheme.volume = newVolume;
+            }
+            playEngineBeep('typewriter');
+        }
+
+        function engineToggleScanlines(checked) {
+            document.getElementById('scanlines-overlay').style.display = checked ? 'block' : 'none';
+            playEngineBeep('typewriter');
+        }
+
+        function engineQuitToHub() {
+            playEngineBeep('transition');
+            
+            // Collapse CRT before redirecting
+            const activeScreens = document.querySelectorAll('.engine-overlay-screen.active');
+            activeScreens.forEach(s => {
+                s.classList.remove('engine-crt-expand');
+                s.classList.add('engine-crt-collapse');
+            });
+            
+            setTimeout(() => {
+                location.href = 'arcade_hub.html';
+            }, 600);
+        }
+
+        // Window interaction setup for overlays
+        document.addEventListener('click', (e) => {
+            // Only trigger continue if we aren't clicking interactive UI elements (buttons, inputs)
+            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && !e.target.closest('.engine-menu-container') && !e.target.closest('.engine-modal-card')) {
+                engineHandleInteraction();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'q') {
+                engineHandleInteraction();
+            }
+        });
+
+        // Trigger disclaimer start on load
+        window.addEventListener('DOMContentLoaded', () => {
+            engineSetState('disclaimer');
+        });
 
         let cameraMode = 'chase'; // Default to Chase Camera (Third-Person)
         
@@ -992,7 +2002,7 @@
             });
             document.getElementById('fade-overlay').style.opacity = '1';
             setTimeout(() => {
-                location.href = 'survive_it.html';
+                location.reload();
             }, 1000);
         }
 
@@ -1433,6 +2443,7 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = true;
             if (key === 'g' && stage === 1) startHorn();
@@ -1485,7 +2496,7 @@
                     fadeOverlay.style.transition = 'opacity 4.0s ease-in-out';
                     fadeOverlay.style.opacity = '0';
                     
-                    restTimeOffset = 12600 - Math.floor(clock.getElapsedTime());
+                    restTimeOffset = 12600 - Math.floor(clock.getElapsedTime() - gameStartTime);
                     
                     if (scene.fog) {
                         scene.fog.density = 0; // Clear mist/fog
@@ -1628,6 +2639,7 @@
             }
         });
         window.addEventListener('keyup', (e) => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             const key = e.key.toLowerCase();
             if (key in keys) keys[key] = false;
             if (key === 'g') stopHorn();
@@ -1635,16 +2647,19 @@
 
         // ── Mouse & Touch Drag to Look ────────────────────────
         window.addEventListener('mousedown', (e) => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             isMouseDown = true;
             prevMouseX = e.clientX;
             prevMouseY = e.clientY;
         });
 
         window.addEventListener('mouseup', () => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             isMouseDown = false;
         });
 
         window.addEventListener('mousemove', (e) => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             if (!isMouseDown) return;
             if (stage !== 0 && stage !== 3) return;
             const deltaX = e.clientX - prevMouseX;
@@ -1658,6 +2673,7 @@
         });
 
         window.addEventListener('touchstart', (e) => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             if (e.touches.length > 0) {
                 prevMouseX = e.touches[0].clientX;
                 prevMouseY = e.touches[0].clientY;
@@ -1665,6 +2681,7 @@
         });
 
         window.addEventListener('touchmove', (e) => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             if (e.touches.length > 0) {
                 if (stage !== 0 && stage !== 3) return;
                 const deltaX = e.touches[0].clientX - prevMouseX;
@@ -1679,12 +2696,14 @@
         });
 
         window.addEventListener('click', () => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             initAudio();
             if (stage === 1 && !radioActive) {
                 initCarRadio();
             }
         });
         window.addEventListener('touchstart', () => {
+            if (typeof engineState !== 'undefined' && engineState !== 'gameplay') return;
             initAudio();
             if (stage === 1 && !radioActive) {
                 initCarRadio();
@@ -5529,8 +6548,10 @@
         }
 
         function updateGame(delta, time) {
+            if (engineState !== 'gameplay') return;
+
             // ── Update running clock globally ───────────────────
-            let elapsedSec = Math.floor(time) + restTimeOffset;
+            let elapsedSec = Math.floor(time - gameStartTime) + restTimeOffset;
             let s = elapsedSec % 60;
             let m = 30 + Math.floor(elapsedSec / 60);
             let hr = 6;
