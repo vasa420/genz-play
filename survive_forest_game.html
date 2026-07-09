@@ -2870,31 +2870,69 @@
             ctx.fillStyle = '#' + skinColorHex.toString(16).padStart(6, '0');
             ctx.fillRect(0, 0, 64, 128);
             
-            // Draw shading for chest muscles and abs (darker skin tone) using transparency
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            // Subtle skin noise / pores for "smooth skin with subtle pores"
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            for (let i = 0; i < 200; i++) {
+                const px = Math.random() * 64;
+                const py = Math.random() * 128;
+                ctx.fillRect(px, py, 1, 1);
+            }
             
-            // Chest lines (pectorals)
-            ctx.fillRect(8, 20, 20, 20); // Left chest
-            ctx.fillRect(36, 20, 20, 20); // Right chest
+            // Shading color (darker skin tone)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+            ctx.lineWidth = 1.5;
             
-            // Center division line
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-            ctx.fillRect(31, 10, 2, 90);
+            // Defined collarbones
+            ctx.beginPath();
+            ctx.moveTo(8, 14);
+            ctx.quadraticCurveTo(20, 18, 30, 16);
+            ctx.moveTo(56, 14);
+            ctx.quadraticCurveTo(44, 18, 34, 16);
+            ctx.stroke();
             
-            // Pectoral bottom boundaries
+            // Chest lines (pectorals) - shadow
+            ctx.fillRect(8, 22, 21, 18); // Left pec base
+            ctx.fillRect(35, 22, 21, 18); // Right pec base
+            
+            // Highlights (top of pecs/abs)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillRect(8, 22, 21, 3); // Left pec highlight
+            ctx.fillRect(35, 22, 21, 3); // Right pec highlight
+            
+            // Center division line (sternum/linea alba)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            ctx.fillRect(31, 14, 2, 90);
+            
+            // Pectoral bottom boundaries (shadow line)
             ctx.fillRect(8, 40, 48, 2);
             
-            // Abdominal six-pack muscles
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+            // Abdominal six-pack muscles (shadows)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.09)';
             // Row 1
-            ctx.fillRect(12, 48, 16, 12);
-            ctx.fillRect(36, 48, 16, 12);
+            ctx.fillRect(14, 48, 14, 10);
+            ctx.fillRect(36, 48, 14, 10);
             // Row 2
-            ctx.fillRect(12, 66, 16, 12);
-            ctx.fillRect(36, 66, 16, 12);
+            ctx.fillRect(14, 64, 14, 10);
+            ctx.fillRect(36, 64, 14, 10);
             // Row 3
-            ctx.fillRect(12, 84, 16, 12);
-            ctx.fillRect(36, 84, 16, 12);
+            ctx.fillRect(14, 80, 14, 10);
+            ctx.fillRect(36, 80, 14, 10);
+            
+            // Abdominal highlights (top of each ab block)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fillRect(14, 48, 14, 2); ctx.fillRect(36, 48, 14, 2);
+            ctx.fillRect(14, 64, 14, 2); ctx.fillRect(36, 64, 14, 2);
+            ctx.fillRect(14, 80, 14, 2); ctx.fillRect(36, 80, 14, 2);
+            
+            // Toned obliques / V-taper line
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.14)';
+            ctx.beginPath();
+            ctx.moveTo(6, 85);
+            ctx.lineTo(24, 105);
+            ctx.moveTo(58, 85);
+            ctx.lineTo(40, 105);
+            ctx.stroke();
             
             const texture = new THREE.CanvasTexture(canvas);
             const mat = new THREE.MeshLambertMaterial({ map: texture });
@@ -2929,9 +2967,12 @@
             const torsoMat = getTorsoMaterial(skinColor);
 
             // 1. Torso - must be child[0] for event-based material overrides.
-            // Shaded bare chest with abs is used by default.
-            const torsoGeo = new THREE.BoxGeometry(0.55, 0.7, 0.35);
+            // Cylinder rotated 45 degrees, Z-scaled, top-radius 0.28, bottom-radius 0.21.
+            // This provides broad shoulders, slim waist, and a natural V-tapered torso.
+            const torsoGeo = new THREE.CylinderGeometry(0.28, 0.21, 0.7, 4, 1);
             const torso = new THREE.Mesh(torsoGeo, torsoMat);
+            torso.rotation.y = Math.PI / 4;
+            torso.scale.set(1, 1, 0.75); // Flattered chest depth
             torso.position.y = 1.25;
             torso.castShadow = true;
             group.add(torso);
@@ -2974,6 +3015,41 @@
             neck.position.y = 1.58;
             group.add(neck);
 
+            // 3.1 Eyes & Eyebrows (Detailed almond-shaped eyes, brown irises, and soft arched brows)
+            const eyeScleraGeo = new THREE.BoxGeometry(0.05, 0.03, 0.01);
+            const eyeIrisMat = new THREE.MeshLambertMaterial({ color: 0x5a3d25 }); // warm medium-brown iris
+            const eyeIrisGeo = new THREE.BoxGeometry(0.02, 0.02, 0.011);
+            const eyebrowMat = new THREE.MeshLambertMaterial({ color: 0x2e1d0c }); // dark brown eyebrows
+            const eyebrowGeo = new THREE.BoxGeometry(0.06, 0.015, 0.01);
+            
+            // Left eye
+            const scleraL = new THREE.Mesh(eyeScleraGeo, new THREE.MeshLambertMaterial({ color: 0xffffff }));
+            scleraL.position.set(-0.06, 0.02, 0.18);
+            head.add(scleraL);
+            const irisL = new THREE.Mesh(eyeIrisGeo, eyeIrisMat);
+            irisL.position.set(-0.06, 0.02, 0.185);
+            head.add(irisL);
+            
+            // Left eyebrow
+            const eyebrowL = new THREE.Mesh(eyebrowGeo, eyebrowMat);
+            eyebrowL.position.set(-0.06, 0.06, 0.18);
+            eyebrowL.rotation.z = 0.08;
+            head.add(eyebrowL);
+            
+            // Right eye
+            const scleraR = new THREE.Mesh(eyeScleraGeo, new THREE.MeshLambertMaterial({ color: 0xffffff }));
+            scleraR.position.set(0.06, 0.02, 0.18);
+            head.add(scleraR);
+            const irisR = new THREE.Mesh(eyeIrisGeo, eyeIrisMat);
+            irisR.position.set(0.06, 0.02, 0.185);
+            head.add(irisR);
+            
+            // Right eyebrow
+            const eyebrowR = new THREE.Mesh(eyebrowGeo, eyebrowMat);
+            eyebrowR.position.set(0.06, 0.06, 0.18);
+            eyebrowR.rotation.z = -0.08;
+            head.add(eyebrowR);
+
             // 4. Curly Hair (Afro/Mop style inspired by reference image)
             // Curly hair locks added directly to head so they rotate and bob with it
             const lockGeo = new THREE.SphereGeometry(0.065, 6, 6);
@@ -2998,74 +3074,140 @@
                 head.add(lock);
             });
 
-            // 5. Arms (Bare skin)
+            // 5. Arms (Deltoid Cap + Bicep/Tricep + Forearm + Hand with Slender Fingers)
             const armGroupL = new THREE.Group();
-            armGroupL.position.set(-0.35, 1.48, 0);
-            const sleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), skinMat);
-            sleeveL.position.y = -0.15;
-            sleeveL.castShadow = true;
-            armGroupL.add(sleeveL);
-            const handL = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), skinMat);
-            handL.position.y = -0.45;
-            handL.castShadow = true;
-            armGroupL.add(handL);
+            armGroupL.position.set(-0.38, 1.48, 0); // Broad shoulders setting
+            
+            // Deltoid cap
+            const deltoidL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 8), skinMat);
+            deltoidL.scale.set(1, 1.2, 1);
+            deltoidL.position.set(0, 0, 0);
+            armGroupL.add(deltoidL);
+            
+            // Upper Arm (Biceps/Triceps)
+            const upperArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.06, 0.32, 8), skinMat);
+            upperArmL.position.y = -0.16;
+            upperArmL.castShadow = true;
+            armGroupL.add(upperArmL);
+            
+            // Forearm
+            const forearmL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.32, 8), skinMat);
+            forearmL.position.y = -0.44;
+            forearmL.castShadow = true;
+            armGroupL.add(forearmL);
+            
+            // Slender hand
+            const handLGroup = new THREE.Group();
+            handLGroup.position.set(0, -0.62, 0);
+            const palmL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.02), skinMat);
+            handLGroup.add(palmL);
+            const fingersL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.06, 0.015), skinMat);
+            fingersL.position.y = -0.05;
+            handLGroup.add(fingersL);
+            armGroupL.add(handLGroup);
+            
             group.add(armGroupL);
 
             const armGroupR = new THREE.Group();
-            armGroupR.position.set(0.35, 1.48, 0);
-            const sleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), skinMat);
-            sleeveR.position.y = -0.15;
-            sleeveR.castShadow = true;
-            armGroupR.add(sleeveR);
-            const handR = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), skinMat);
-            handR.position.y = -0.45;
-            handR.castShadow = true;
-            armGroupR.add(handR);
+            armGroupR.position.set(0.38, 1.48, 0); // Broad shoulders setting
+            
+            // Deltoid cap
+            const deltoidR = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 8), skinMat);
+            deltoidR.scale.set(1, 1.2, 1);
+            deltoidR.position.set(0, 0, 0);
+            armGroupR.add(deltoidR);
+            
+            // Upper Arm
+            const upperArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.06, 0.32, 8), skinMat);
+            upperArmR.position.y = -0.16;
+            upperArmR.castShadow = true;
+            armGroupR.add(upperArmR);
+            
+            // Forearm
+            const forearmR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.32, 8), skinMat);
+            forearmR.position.y = -0.44;
+            forearmR.castShadow = true;
+            armGroupR.add(forearmR);
+            
+            // Slender hand
+            const handRGroup = new THREE.Group();
+            handRGroup.position.set(0, -0.62, 0);
+            const palmR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.02), skinMat);
+            handRGroup.add(palmR);
+            const fingersR = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.06, 0.015), skinMat);
+            fingersR.position.y = -0.05;
+            handRGroup.add(fingersR);
+            armGroupR.add(handRGroup);
+            
             group.add(armGroupR);
 
-            // 6. Legs (Swim Trunks + Bare Legs + Bare Feet)
+            // 6. Legs (Swim Trunks + Knee cap + Calf + Bare Foot with Toe Details)
             const leftLeg = new THREE.Group();
             leftLeg.position.set(-0.16, 0.8, 0);
             
-            // Swim trunks portion (upper leg)
+            // Swim trunks portion (upper leg/thigh)
             const leftTrunksMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.105, 0.35, 8), trunkMat);
             leftTrunksMesh.position.y = -0.175;
             leftTrunksMesh.castShadow = true;
             leftLeg.add(leftTrunksMesh);
             
-            // Bare leg portion (lower leg)
-            const leftBareLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.35, 8), skinMat);
+            // Knee cap
+            const leftKnee = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), skinMat);
+            leftKnee.position.set(0, -0.35, 0.02);
+            leftLeg.add(leftKnee);
+            
+            // Bare leg portion (lower leg / calf tapering to ankle)
+            const leftBareLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.065, 0.35, 8), skinMat);
             leftBareLegMesh.position.y = -0.525;
             leftBareLegMesh.castShadow = true;
             leftLeg.add(leftBareLegMesh);
             
-            // Bare foot
-            const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.22), skinMat);
-            leftFoot.position.set(0, -0.74, 0.06);
-            leftFoot.castShadow = true;
-            leftLeg.add(leftFoot);
+            // Bare foot with toe detailing
+            const leftFootGroup = new THREE.Group();
+            leftFootGroup.position.set(0, -0.74, 0.05);
+            // Arch/Heel
+            const leftHeel = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.18), skinMat);
+            leftFootGroup.add(leftHeel);
+            // Toes
+            const leftToes = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.06), skinMat);
+            leftToes.position.set(0, -0.01, 0.1);
+            leftFootGroup.add(leftToes);
+            leftLeg.add(leftFootGroup);
+            
             group.add(leftLeg);
 
             const rightLeg = new THREE.Group();
             rightLeg.position.set(0.16, 0.8, 0);
             
-            // Swim trunks portion (upper leg)
+            // Swim trunks portion (upper leg/thigh)
             const rightTrunksMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.105, 0.35, 8), trunkMat);
             rightTrunksMesh.position.y = -0.175;
             rightTrunksMesh.castShadow = true;
             rightLeg.add(rightTrunksMesh);
             
-            // Bare leg portion (lower leg)
-            const rightBareLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.35, 8), skinMat);
+            // Knee cap
+            const rightKnee = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), skinMat);
+            rightKnee.position.set(0, -0.35, 0.02);
+            rightLeg.add(rightKnee);
+            
+            // Bare leg portion (lower leg / calf tapering to ankle)
+            const rightBareLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.065, 0.35, 8), skinMat);
             rightBareLegMesh.position.y = -0.525;
             rightBareLegMesh.castShadow = true;
             rightLeg.add(rightBareLegMesh);
             
-            // Bare foot
-            const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.22), skinMat);
-            rightFoot.position.set(0, -0.74, 0.06);
-            rightFoot.castShadow = true;
-            rightLeg.add(rightFoot);
+            // Bare foot with toe detailing
+            const rightFootGroup = new THREE.Group();
+            rightFootGroup.position.set(0, -0.74, 0.05);
+            // Arch/Heel
+            const rightHeel = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.18), skinMat);
+            rightFootGroup.add(rightHeel);
+            // Toes
+            const rightToes = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.06), skinMat);
+            rightToes.position.set(0, -0.01, 0.1);
+            rightFootGroup.add(rightToes);
+            rightLeg.add(rightFootGroup);
+            
             group.add(rightLeg);
 
             group.userData = { leftLeg, rightLeg, armGroupL, armGroupR, head, torso };
