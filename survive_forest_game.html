@@ -5138,13 +5138,221 @@
         steeringWheel.rotation.x = -Math.PI / 6;
         carGroup.add(steeringWheel);
         
-        // Glowing cyan speedometer gauge
-        const gaugeGeo = new THREE.CircleGeometry(0.06, 12);
-        const gaugeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
-        const gauge = new THREE.Mesh(gaugeGeo, gaugeMat);
-        gauge.position.set(-0.55, 0.86, 0.66);
-        gauge.rotation.x = -Math.PI / 10;
-        carGroup.add(gauge);
+        // ── Custom Instrument Cluster & Infotainment Canvas HUDs ────────────────
+        const clusterCanvas = document.createElement('canvas');
+        clusterCanvas.width = 512;
+        clusterCanvas.height = 256;
+        const clusterCtx = clusterCanvas.getContext('2d');
+        const clusterTexture = new THREE.CanvasTexture(clusterCanvas);
+
+        function drawInstrumentCluster(speedMph, kmsLeft) {
+            const ctx = clusterCtx;
+            const w = 512, h = 256;
+            ctx.clearRect(0, 0, w, h);
+
+            // Dark premium metallic gauge background
+            ctx.fillStyle = '#0f1013';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Bevel borders
+            ctx.strokeStyle = '#22252a';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(2, 2, w - 4, h - 4);
+
+            // Drawing helper function for a gauge
+            function drawGauge(cx, cy, r, valPercent, title, showDigits, digitsVal, subtext) {
+                // Outer glow shadow ring
+                ctx.strokeStyle = 'rgba(0, 246, 255, 0.08)';
+                ctx.lineWidth = 10;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Outer blue scale arc
+                ctx.strokeStyle = '#00F6FF';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, -Math.PI * 1.25, Math.PI * 0.25);
+                ctx.stroke();
+
+                // Inner red accent ring
+                ctx.strokeStyle = 'rgba(255, 0, 127, 0.45)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.72, -Math.PI * 1.25, Math.PI * 0.25);
+                ctx.stroke();
+
+                // Tick marks
+                ctx.lineWidth = 2.5;
+                const startAng = -Math.PI * 1.25;
+                const endAng = Math.PI * 0.25;
+                const totalAng = endAng - startAng;
+                const numTicks = r > 70 ? 32 : 16;
+                
+                for (let i = 0; i <= numTicks; i++) {
+                    const alpha = startAng + (i / numTicks) * totalAng;
+                    const cos = Math.cos(alpha);
+                    const sin = Math.sin(alpha);
+                    
+                    const len = (i % (r > 70 ? 4 : 2) === 0) ? 8 : 4;
+                    const rStart = r - len;
+                    
+                    // Main ticks are cyan, minor ticks are darker cyan
+                    ctx.strokeStyle = (i % (r > 70 ? 4 : 2) === 0) ? '#00F6FF' : 'rgba(0, 246, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.moveTo(cx + cos * rStart, cy + sin * rStart);
+                    ctx.lineTo(cx + cos * r, cy + sin * r);
+                    ctx.stroke();
+
+                    // Numbers for the speedometer
+                    if (r > 70 && i % 4 === 0) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = '10px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        const textR = r - 16;
+                        const labelVal = Math.round((i / numTicks) * 80);
+                        ctx.fillText(labelVal, cx + cos * textR, cy + sin * textR);
+                    }
+                }
+
+                // Needle
+                const needleAngle = startAng + valPercent * totalAng;
+                ctx.strokeStyle = '#FF007F'; // Bright sporty red needle
+                ctx.lineWidth = r > 70 ? 3.5 : 2;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(needleAngle) * (r * 0.88), cy + Math.sin(needleAngle) * (r * 0.88));
+                ctx.stroke();
+
+                // Center Cap
+                ctx.fillStyle = '#1c1e22';
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.18, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#FF007F';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.18, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Digital text readouts (Only for speedometer)
+                if (showDigits) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 24px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(digitsVal, cx, cy - r * 0.35);
+
+                    ctx.fillStyle = '#888';
+                    ctx.font = '7px monospace';
+                    ctx.fillText('MPH', cx, cy - r * 0.1);
+
+                    ctx.fillStyle = '#ffff33';
+                    ctx.font = '9px monospace';
+                    ctx.fillText(subtext, cx, cy + r * 0.4);
+                }
+            }
+
+            // Draw Left Gauge (RPM/Fuel)
+            const rpmPercent = Math.min(0.9, (speedMph / 80) * 0.7 + 0.15 + Math.sin(Date.now() * 0.005) * 0.03);
+            drawGauge(110, 128, 55, rpmPercent, 'RPM', false);
+
+            // Draw Center Speedometer
+            const speedPercent = Math.min(1.0, speedMph / 80);
+            const odometerVal = String(Math.floor((150.0 - kmsLeft) * 10)).padStart(5, '0');
+            drawGauge(256, 128, 85, speedPercent, 'SPEED', true, speedMph, odometerVal);
+
+            // Draw Right Gauge (Fuel/Temp)
+            const fuelPercent = Math.max(0.1, kmsLeft / 150.0);
+            drawGauge(402, 128, 55, fuelPercent, 'FUEL', false);
+
+            clusterTexture.needsUpdate = true;
+        }
+
+        const infoCanvas = document.createElement('canvas');
+        infoCanvas.width = 256;
+        infoCanvas.height = 192;
+        const infoCtx = infoCanvas.getContext('2d');
+        const infoTexture = new THREE.CanvasTexture(infoCanvas);
+
+        function drawInfotainment(speedMph) {
+            const ctx = infoCtx;
+            const w = 256, h = 192;
+            ctx.clearRect(0, 0, w, h);
+
+            // Dark high-tech dashboard UI background
+            ctx.fillStyle = '#0a0b0e';
+            ctx.fillRect(0, 0, w, h);
+
+            // Header bar
+            ctx.fillStyle = '#141822';
+            ctx.fillRect(0, 0, w, 24);
+            ctx.fillStyle = '#888';
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('NAV SYSTEM v2.4', 10, 15);
+            ctx.textAlign = 'right';
+            ctx.fillText('LTE', w - 10, 15);
+
+            // Center speed ring
+            const cx = 128, cy = 108, r = 50;
+
+            // Outer ring
+            ctx.strokeStyle = 'rgba(0, 246, 255, 0.15)';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Active blue arc
+            ctx.strokeStyle = '#00F6FF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI * 2 * (speedMph / 80) - Math.PI / 2);
+            ctx.stroke();
+
+            // Center speed digit
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(speedMph, cx, cy - 5);
+
+            ctx.fillStyle = '#888';
+            ctx.font = '7px monospace';
+            ctx.fillText('km/h', cx, cy + 12);
+
+            // Bottom controls
+            ctx.fillStyle = '#141822';
+            ctx.fillRect(0, h - 28, w, 28);
+            ctx.fillStyle = '#00F6FF';
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('TUNER     MEDIA     INFO     MAPS', w / 2, h - 10);
+
+            infoTexture.needsUpdate = true;
+        }
+
+        // Initialize cluster and infotainment textures
+        drawInstrumentCluster(0, 150.0);
+        drawInfotainment(0);
+
+        // Speedometer instrument cluster mesh (behind steering wheel)
+        const clusterGeo = new THREE.PlaneGeometry(0.24, 0.12);
+        const clusterMat = new THREE.MeshBasicMaterial({ map: clusterTexture, side: THREE.DoubleSide });
+        const clusterMesh = new THREE.Mesh(clusterGeo, clusterMat);
+        clusterMesh.position.set(-0.55, 0.89, 0.62);
+        clusterMesh.rotation.x = -Math.PI / 10;
+        carGroup.add(clusterMesh);
+
+        // Infotainment center console screen mesh
+        const infoGeo = new THREE.PlaneGeometry(0.18, 0.13);
+        const infoMat = new THREE.MeshBasicMaterial({ map: infoTexture, side: THREE.DoubleSide });
+        const infoMesh = new THREE.Mesh(infoGeo, infoMat);
+        infoMesh.position.set(0.0, 0.83, 0.60);
+        infoMesh.rotation.x = -Math.PI / 10;
+        carGroup.add(infoMesh);
         
         // Wipers
         const wiperGroupL = new THREE.Group();
@@ -6556,6 +6764,10 @@
 
                 let speedMph = Math.min(80, Math.abs(carSpeed * (80 / maxCarSpeed))).toFixed(0);
                 document.getElementById('dashcam-speed-val').innerText = speedMph;
+                
+                // Redraw dynamic speedometer and infotainment canvas textures
+                drawInstrumentCluster(parseInt(speedMph), kilometersRemaining);
+                drawInfotainment(parseInt(speedMph));
                 
                 let timeStr = `2026-06-25 ${hrStr}:${minStr}:${secStr} AM`;
                 document.getElementById('dashcam-time').innerText = timeStr;
