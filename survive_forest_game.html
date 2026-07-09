@@ -366,6 +366,7 @@
 
         let isEngineStarted = false;
         let engineStartAudio = null;
+        let reverseAudio = null;
 
         // ── Audio Engine ──────────────────────────────────────
         let audioCtx = null;
@@ -427,6 +428,13 @@
             }
         }
 
+        function initReverseAudio() {
+            if (!reverseAudio) {
+                reverseAudio = new Audio('flutie8211-muscle-car-driving-left-to-right-559148.mp3');
+                reverseAudio.loop = true;
+            }
+        }
+
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (!stormMusic) {
@@ -439,6 +447,7 @@
             }
             initHornAudio();
             initEngineAudio();
+            initReverseAudio();
         }
 
         function initCarRadio() {
@@ -964,6 +973,9 @@
             stopPlayerEngine();
             stopHorn();
             stopCarRadio();
+            if (reverseAudio) {
+                try { reverseAudio.pause(); } catch(e) {}
+            }
             trafficVehicles.forEach(stopTrafficSound);
             trafficVehicles.forEach(v => {
                 if (v.passbyAudio) {
@@ -1125,6 +1137,7 @@
             }
             if (hornAudio) hornAudio.volume = 0;
             if (engineStartAudio) engineStartAudio.volume = 0;
+            if (reverseAudio) reverseAudio.volume = 0;
             if (stormMusic) stormMusic.volume = 0;
             
             trafficVehicles.forEach(v => {
@@ -1143,6 +1156,7 @@
             const masterVol = typeof masterVolume !== 'undefined' ? masterVolume : 1.0;
             if (hornAudio) hornAudio.volume = masterVol;
             if (engineStartAudio) engineStartAudio.volume = masterVol;
+            if (reverseAudio) reverseAudio.volume = masterVol * 8.0;
             if (stormMusic) stormMusic.volume = masterVol * (typeof stormMusicCurrentVol !== 'undefined' ? stormMusicCurrentVol : 0.0);
             
             trafficVehicles.forEach(v => {
@@ -6736,6 +6750,9 @@
                         setTimeout(() => {
                             carSpeed = 0;
                             stopPlayerEngine();
+                            if (reverseAudio) {
+                                try { reverseAudio.pause(); } catch(e) {}
+                            }
                             trafficVehicles.forEach(stopTrafficSound);
                             parkedCarX = carGroup.position.x;
                             parkedCarZ = carGroup.position.z;
@@ -6791,6 +6808,22 @@
                     if (keys.s) carSpeed -= carAccel;
                 } else {
                     carSpeed *= 0.85; // engine off: slow down quickly
+                }
+
+                // Reverse sound logic: play flutie8211-muscle-car-driving-left-to-right-559148.mp3 only when in reverse
+                if (isEngineStarted && keys.s) {
+                    if (reverseAudio) {
+                        reverseAudio.volume = Math.min(1.0, masterVolume * 8.0);
+                        if (reverseAudio.paused) {
+                            reverseAudio.play().catch(e => {
+                                console.log("Reverse sound play deferred:", e);
+                            });
+                        }
+                    }
+                } else {
+                    if (reverseAudio && !reverseAudio.paused) {
+                        reverseAudio.pause();
+                    }
                 }
 
                 carSpeed *= friction;
