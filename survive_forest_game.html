@@ -2786,25 +2786,127 @@
             } catch(e) {}
         }
 
+        // Procedural Swim Trunks Material (Inspired by turtle print trunks in reference image)
+        let trunksMat = null;
+        function getTrunksMaterial() {
+            if (trunksMat) return trunksMat;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            // Navy blue background
+            ctx.fillStyle = '#1b233a';
+            ctx.fillRect(0, 0, 128, 128);
+
+            // Draw small turtles: pink, green, cyan, yellow
+            const colors = ['#39ff14', '#FF007F', '#00F6FF', '#ffff33'];
+            for (let i = 0; i < 16; i++) {
+                const x = (i % 4) * 32 + 8 + Math.random() * 16;
+                const y = Math.floor(i / 4) * 32 + 8 + Math.random() * 16;
+                const color = colors[i % colors.length];
+                
+                ctx.fillStyle = color;
+                
+                // Draw a small stylized turtle shape
+                // Shell
+                ctx.beginPath();
+                ctx.ellipse(x, y, 4, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Head
+                ctx.beginPath();
+                ctx.arc(x, y - 7, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw tiny flippers
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5;
+                
+                // Front flippers
+                ctx.beginPath();
+                ctx.moveTo(x - 3, y - 3);
+                ctx.quadraticCurveTo(x - 8, y - 5, x - 9, y - 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x + 3, y - 3);
+                ctx.quadraticCurveTo(x + 8, y - 5, x + 9, y - 2);
+                ctx.stroke();
+
+                // Back flippers
+                ctx.beginPath();
+                ctx.moveTo(x - 3, y + 3);
+                ctx.quadraticCurveTo(x - 6, y + 6, x - 7, y + 7);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x + 3, y + 3);
+                ctx.quadraticCurveTo(x + 6, y + 6, x + 7, y + 7);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(1.5, 1.5);
+            
+            trunksMat = new THREE.MeshLambertMaterial({ map: texture });
+            return trunksMat;
+        }
+
+        // Procedural Bare Chest / Abs Torso Shading Material
+        const torsoMatCache = {};
+        function getTorsoMaterial(skinColorHex) {
+            if (torsoMatCache[skinColorHex]) return torsoMatCache[skinColorHex];
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill background with skin color
+            ctx.fillStyle = '#' + skinColorHex.toString(16).padStart(6, '0');
+            ctx.fillRect(0, 0, 64, 128);
+            
+            // Draw shading for chest muscles and abs (darker skin tone) using transparency
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            
+            // Chest lines (pectorals)
+            ctx.fillRect(8, 20, 20, 20); // Left chest
+            ctx.fillRect(36, 20, 20, 20); // Right chest
+            
+            // Center division line
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(31, 10, 2, 90);
+            
+            // Pectoral bottom boundaries
+            ctx.fillRect(8, 40, 48, 2);
+            
+            // Abdominal six-pack muscles
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+            // Row 1
+            ctx.fillRect(12, 48, 16, 12);
+            ctx.fillRect(36, 48, 16, 12);
+            // Row 2
+            ctx.fillRect(12, 66, 16, 12);
+            ctx.fillRect(36, 66, 16, 12);
+            // Row 3
+            ctx.fillRect(12, 84, 16, 12);
+            ctx.fillRect(36, 84, 16, 12);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.MeshLambertMaterial({ map: texture });
+            torsoMatCache[skinColorHex] = mat;
+            return mat;
+        }
+
         // Procedural Pedestrian Mesh (Realistic character design inspired by reference image)
         function createPedestrianMesh() {
             const group = new THREE.Group();
             
-            // Randomized variety colors for outfits, hair, and skin
-            const shirtColors = [
-                0x3d4e61, // blue-grey henley shirt
-                0xa83232, // crimson red shirt
-                0x2e6f40, // forest green shirt
-                0xd97724, // orange shirt
-                0x6e4e8b, // purple shirt
-                0x3273a8  // cobalt blue shirt
-            ];
-            const pantsColors = [
-                0x5a483a, // brown cargo pants
-                0x363d4a, // navy cargo pants
-                0x383838, // grey pants
-                0x47382d  // khaki pants
-            ];
+            // Randomized variety colors for hair and skin (shirt and pants are replaced by bare chest and trunks)
             const hairColors = [
                 0x4a3319, // dark brown
                 0x1a120b, // black
@@ -2818,47 +2920,46 @@
                 0x8d5b4c  // dark skin tone
             ];
 
-            const shirtColor = shirtColors[Math.floor(Math.random() * shirtColors.length)];
-            const pantsColor = pantsColors[Math.floor(Math.random() * pantsColors.length)];
             const skinColor = skinColors[Math.floor(Math.random() * skinColors.length)];
             const hairColor = hairColors[Math.floor(Math.random() * hairColors.length)];
 
-            const shirtMat = new THREE.MeshLambertMaterial({ color: shirtColor }); 
-            const pantsMat = new THREE.MeshLambertMaterial({ color: pantsColor });
             const skinMat = new THREE.MeshLambertMaterial({ color: skinColor }); 
             const hairMat = new THREE.MeshLambertMaterial({ color: hairColor }); 
-            const shoeMat = new THREE.MeshLambertMaterial({ color: 0x2e2217 }); // dark brown boots
-            const leatherMat = new THREE.MeshLambertMaterial({ color: 0x3b2413 }); // leather holsters/straps/belt
-            const metalMat = new THREE.MeshLambertMaterial({ color: 0x888888, metalness: 0.8 }); // buckle
+            const trunkMat = getTrunksMaterial();
+            const torsoMat = getTorsoMaterial(skinColor);
 
-            // 1. Torso (Henley Shirt) - must be child[0] for event-based material overrides
+            // 1. Torso - must be child[0] for event-based material overrides.
+            // Shaded bare chest with abs is used by default.
             const torsoGeo = new THREE.BoxGeometry(0.55, 0.7, 0.35);
-            const torso = new THREE.Mesh(torsoGeo, shirtMat);
+            const torso = new THREE.Mesh(torsoGeo, torsoMat);
             torso.position.y = 1.25;
             torso.castShadow = true;
             group.add(torso);
+
+            // 2. Cyan drawstring/cord at the front center of the trunks (waist level)
+            const cordMat = new THREE.MeshLambertMaterial({ color: 0x00F6FF }); // Cyan color
+            const cordGroup = new THREE.Group();
             
-            // Shoulder straps (Holster harness details)
-            const strapLGeo = new THREE.BoxGeometry(0.08, 0.72, 0.37);
-            const strapL = new THREE.Mesh(strapLGeo, leatherMat);
-            strapL.position.set(-0.2, 1.25, 0);
-            group.add(strapL);
-
-            const strapRGeo = new THREE.BoxGeometry(0.08, 0.72, 0.37);
-            const strapR = new THREE.Mesh(strapRGeo, leatherMat);
-            strapR.position.set(0.2, 1.25, 0);
-            group.add(strapR);
-
-            // 2. Belt & Metal Buckle
-            const beltGeo = new THREE.BoxGeometry(0.57, 0.08, 0.37);
-            const belt = new THREE.Mesh(beltGeo, leatherMat);
-            belt.position.y = 0.86;
-            group.add(belt);
-
-            const buckleGeo = new THREE.BoxGeometry(0.15, 0.1, 0.39);
-            const buckle = new THREE.Mesh(buckleGeo, metalMat);
-            buckle.position.set(0, 0.86, 0.01);
-            group.add(buckle);
+            // Left knot lace
+            const laceL = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.15, 6), cordMat);
+            laceL.position.set(-0.03, 0.76, 0.2);
+            laceL.rotation.z = Math.PI / 6;
+            laceL.rotation.x = Math.PI / 6;
+            cordGroup.add(laceL);
+            
+            // Right knot lace
+            const laceR = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.15, 6), cordMat);
+            laceR.position.set(0.03, 0.76, 0.2);
+            laceR.rotation.z = -Math.PI / 6;
+            laceR.rotation.x = Math.PI / 6;
+            cordGroup.add(laceR);
+            
+            // Center knot/bow
+            const knot = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), cordMat);
+            knot.position.set(0, 0.82, 0.18);
+            cordGroup.add(knot);
+            
+            group.add(cordGroup);
 
             // 3. Head (Skin)
             const headGeo = new THREE.SphereGeometry(0.2, 12, 12);
@@ -2873,26 +2974,37 @@
             neck.position.y = 1.58;
             group.add(neck);
 
-            // 4. Hair (Styled brown hair)
-            const hairTopGeo = new THREE.BoxGeometry(0.24, 0.16, 0.24);
-            const hairTop = new THREE.Mesh(hairTopGeo, hairMat);
-            hairTop.position.set(0, 1.84, 0);
-            group.add(hairTop);
+            // 4. Curly Hair (Afro/Mop style inspired by reference image)
+            // Curly hair locks added directly to head so they rotate and bob with it
+            const lockGeo = new THREE.SphereGeometry(0.065, 6, 6);
+            const lockPositions = [
+                // Top curls
+                [0, 0.12, 0], [0.06, 0.11, 0.06], [-0.06, 0.11, 0.06], [0.06, 0.11, -0.06], [-0.06, 0.11, -0.06],
+                // Left side curls
+                [-0.14, 0.08, 0.04], [-0.16, 0.02, 0.02], [-0.15, -0.04, 0], [-0.12, -0.1, -0.02],
+                // Right side curls
+                [0.14, 0.08, 0.04], [0.16, 0.02, 0.02], [0.15, -0.04, 0], [0.12, -0.1, -0.02],
+                // Back curls
+                [0, 0.08, -0.14], [0.07, 0.04, -0.13], [-0.07, 0.04, -0.13], 
+                [0, -0.02, -0.14], [0.06, -0.08, -0.12], [-0.06, -0.08, -0.12],
+                // Front / bangs curls
+                [0.06, 0.1, 0.11], [-0.06, 0.1, 0.11], [0, 0.11, 0.11],
+                [0.04, 0.04, 0.12], [-0.04, 0.04, 0.12]
+            ];
+            lockPositions.forEach(pos => {
+                const lock = new THREE.Mesh(lockGeo, hairMat);
+                lock.position.set(pos[0], pos[1], pos[2]);
+                lock.castShadow = true;
+                head.add(lock);
+            });
 
-            const hairBackGeo = new THREE.BoxGeometry(0.22, 0.22, 0.1);
-            const hairBack = new THREE.Mesh(hairBackGeo, hairMat);
-            hairBack.position.set(0, 1.76, -0.1);
-            group.add(hairBack);
-
-            // 5. Arms (Opposite swing sleeves + skin hands)
+            // 5. Arms (Bare skin)
             const armGroupL = new THREE.Group();
             armGroupL.position.set(-0.35, 1.48, 0);
-            // Sleeve
-            const sleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), shirtMat);
+            const sleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), skinMat);
             sleeveL.position.y = -0.15;
             sleeveL.castShadow = true;
             armGroupL.add(sleeveL);
-            // Hand
             const handL = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), skinMat);
             handL.position.y = -0.45;
             handL.castShadow = true;
@@ -2901,45 +3013,59 @@
 
             const armGroupR = new THREE.Group();
             armGroupR.position.set(0.35, 1.48, 0);
-            // Sleeve
-            const sleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), shirtMat);
+            const sleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.35, 8), skinMat);
             sleeveR.position.y = -0.15;
             sleeveR.castShadow = true;
             armGroupR.add(sleeveR);
-            // Hand
             const handR = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), skinMat);
             handR.position.y = -0.45;
             handR.castShadow = true;
             armGroupR.add(handR);
             group.add(armGroupR);
 
-            // 6. Legs (Pants + Boots)
+            // 6. Legs (Swim Trunks + Bare Legs + Bare Feet)
             const leftLeg = new THREE.Group();
             leftLeg.position.set(-0.16, 0.8, 0);
-            // Pants/Thigh
-            const leftLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.085, 0.7, 8), pantsMat);
-            leftLegCylinder.position.y = -0.35;
-            leftLegCylinder.castShadow = true;
-            leftLeg.add(leftLegCylinder);
-            // Boot
-            const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.22), shoeMat);
-            leftShoe.position.set(0, -0.75, 0.04);
-            leftShoe.castShadow = true;
-            leftLeg.add(leftShoe);
+            
+            // Swim trunks portion (upper leg)
+            const leftTrunksMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.105, 0.35, 8), trunkMat);
+            leftTrunksMesh.position.y = -0.175;
+            leftTrunksMesh.castShadow = true;
+            leftLeg.add(leftTrunksMesh);
+            
+            // Bare leg portion (lower leg)
+            const leftBareLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.35, 8), skinMat);
+            leftBareLegMesh.position.y = -0.525;
+            leftBareLegMesh.castShadow = true;
+            leftLeg.add(leftBareLegMesh);
+            
+            // Bare foot
+            const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.22), skinMat);
+            leftFoot.position.set(0, -0.74, 0.06);
+            leftFoot.castShadow = true;
+            leftLeg.add(leftFoot);
             group.add(leftLeg);
 
             const rightLeg = new THREE.Group();
             rightLeg.position.set(0.16, 0.8, 0);
-            // Pants/Thigh
-            const rightLegCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.085, 0.7, 8), pantsMat);
-            rightLegCylinder.position.y = -0.35;
-            rightLegCylinder.castShadow = true;
-            rightLeg.add(rightLegCylinder);
-            // Boot
-            const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.22), shoeMat);
-            rightShoe.position.set(0, -0.75, 0.04);
-            rightShoe.castShadow = true;
-            rightLeg.add(rightShoe);
+            
+            // Swim trunks portion (upper leg)
+            const rightTrunksMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.105, 0.35, 8), trunkMat);
+            rightTrunksMesh.position.y = -0.175;
+            rightTrunksMesh.castShadow = true;
+            rightLeg.add(rightTrunksMesh);
+            
+            // Bare leg portion (lower leg)
+            const rightBareLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.35, 8), skinMat);
+            rightBareLegMesh.position.y = -0.525;
+            rightBareLegMesh.castShadow = true;
+            rightLeg.add(rightBareLegMesh);
+            
+            // Bare foot
+            const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.22), skinMat);
+            rightFoot.position.set(0, -0.74, 0.06);
+            rightFoot.castShadow = true;
+            rightLeg.add(rightFoot);
             group.add(rightLeg);
 
             group.userData = { leftLeg, rightLeg, armGroupL, armGroupR, head, torso };
