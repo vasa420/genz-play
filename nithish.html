@@ -294,6 +294,51 @@
             box-shadow: 0 0 20px var(--primary-glow);
             transform: translateY(-2px);
         }
+
+        /* Bell button styling */
+        .bell-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: rgba(4, 4, 12, 0.7);
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 15;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            outline: none;
+            backdrop-filter: blur(8px);
+        }
+
+        .bell-btn:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            transform: scale(1.1);
+        }
+
+        .bell-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Bell shake animation */
+        .bell-btn.ringing {
+            animation: bellShake 0.15s ease-in-out infinite;
+        }
+
+        @keyframes bellShake {
+            0%, 100% { transform: rotate(0) scale(1.1); }
+            25% { transform: rotate(-15deg) scale(1.1); }
+            75% { transform: rotate(15deg) scale(1.1); }
+        }
     </style>
 </head>
 <body>
@@ -327,6 +372,8 @@
         <!-- Main Image Frame -->
         <div class="image-frame">
             <div class="scanner-beam"></div>
+            <!-- Bell icon at the top-left of the image -->
+            <button class="bell-btn" id="btn-bell" onclick="ringBell()" title="Ring Temple Bell">🔔</button>
             <img src="nithish.png" alt="Nithish acting as temple priest ringing bell">
         </div>
 
@@ -396,6 +443,58 @@
             }
             draw();
         })();
+
+        // Web Audio API Bell Sound Synthesizer
+        let isRinging = false;
+        function ringBell() {
+            if (isRinging) return;
+            isRinging = true;
+
+            const btn = document.getElementById('btn-bell');
+            btn.classList.add('ringing');
+
+            playBellSound();
+
+            setTimeout(() => {
+                btn.classList.remove('ringing');
+                isRinging = false;
+            }, 1800);
+        }
+
+        function playBellSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = audioCtx.currentTime;
+
+                // Bell sound is comprised of inharmonic overtones
+                const ratios = [1, 2, 2.4, 3, 4.4, 4.5, 5.1];
+                const baseFreq = 220; // 220Hz fundamental
+
+                ratios.forEach((ratio, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(baseFreq * ratio, now);
+
+                    // Deeper overtones decay slower, higher ones decay faster
+                    const initialGain = index === 0 ? 0.35 : 0.12 / ratio;
+                    const decayTime = index === 0 ? 3.5 : 2.5 / ratio;
+
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(initialGain, now + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + decayTime);
+
+                    osc.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + decayTime + 0.1);
+                });
+            } catch (e) {
+                console.error("Audio Context initialization failed", e);
+            }
+        }
 
         // Fade in entrance effect
         document.body.style.opacity = '0';
