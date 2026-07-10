@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | Record - VAISAL</title>
+    <title>ATTACKS | Record - DHANISH</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -53,12 +53,12 @@
         .backdrop-blur {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('dhanish.jpg');
             background-size: cover;
             background-position: center;
             filter: blur(25px) brightness(0.28);
             z-index: 1;
             transform: scale(1.05); /* Avoid white edges */
-            transition: background-image 0.4s ease;
         }
 
         /* Main Viewport Container */
@@ -136,12 +136,12 @@
         }
 
         .info-value.status {
-            color: var(--gold);
-            text-shadow: 0 0 15px var(--gold-glow);
-            animation: pulseGold 2s infinite ease-in-out;
+            color: var(--red);
+            text-shadow: 0 0 15px var(--red-glow);
+            animation: pulseRed 2s infinite ease-in-out;
         }
 
-        @keyframes pulseGold {
+        @keyframes pulseRed {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.78; }
         }
@@ -300,7 +300,7 @@
     <div class="scanlines"></div>
 
     <!-- Background Image blur -->
-    <div class="backdrop-blur" id="rec-backdrop"></div>
+    <div class="backdrop-blur"></div>
 
     <!-- Background particles -->
     <canvas id="particle-bg"></canvas>
@@ -315,23 +315,23 @@
         <header class="floating-header">
             <div class="info-block">
                 <span class="info-label">DATABASE RECORD NAME</span>
-                <h1 class="info-value name">VAISAL</h1>
+                <h1 class="info-value name">DHANISH</h1>
             </div>
             <div class="info-block">
                 <span class="info-label">ACTIVE THREAT STATUS</span>
-                <div class="info-value status" id="rec-status">DRIVING THE BUS</div>
+                <div class="info-value status">FIGHTING COBRAS 🐍</div>
             </div>
         </header>
 
         <!-- Main Image Frame -->
         <div class="image-frame">
             <div class="scanner-beam"></div>
-            <img>
+            <img src="dhanish.jpg" alt="Dhanish fighting cobras in forest">
         </div>
 
         <!-- Download Badge -->
         <div class="floating-download">
-            <a class="btn-download" id="btn-download-img">
+            <a class="btn-download" id="btn-download-img" href="dhanish.jpg" download="dhanish_fighting_cobras.jpg">
                 <span>⬇</span> DOWNLOAD FULLSCREEN IMAGE
             </a>
         </div>
@@ -395,40 +395,6 @@
             }
             draw();
         })();
-
-        // Randomly select image and status configuration
-        const VAISAL_RECORDS = [
-            {
-                image: 'vaisal.jpg',
-                status: 'DRIVING THE BUS',
-                downloadName: 'vaisal_driving_bus.jpg',
-                alt: 'Vaisal driving the bus on duty'
-            },
-            {
-                image: 'vaisal2.jpg',
-                status: 'CONDUCTING THE BUS',
-                downloadName: 'vaisal_conducting_bus.jpg',
-                alt: 'Vaisal conducting the bus on duty'
-            }
-        ];
-
-        const selectedRecord = VAISAL_RECORDS[Math.floor(Math.random() * VAISAL_RECORDS.length)];
-
-        // Set status
-        document.getElementById('rec-status').textContent = selectedRecord.status;
-
-        // Set backdrop blur image
-        document.getElementById('rec-backdrop').style.backgroundImage = `url('${selectedRecord.image}')`;
-
-        // Set image source and alt text
-        const imageElement = document.querySelector('.image-frame img');
-        imageElement.src = selectedRecord.image;
-        imageElement.alt = selectedRecord.alt;
-
-        // Set download link parameters
-        const downloadBtn = document.getElementById('btn-download-img');
-        downloadBtn.href = selectedRecord.image;
-        downloadBtn.download = selectedRecord.downloadName;
 
         // Fade in entrance effect
         document.body.style.opacity = '0';
