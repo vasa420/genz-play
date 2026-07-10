@@ -720,14 +720,108 @@
             100% { transform: scaleY(1) scaleX(1); filter: brightness(1); opacity: 1; }
         }
 
+        /* Unity Splash Screen Styles */
+        .engine-unity-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            animation: unityFadeScaleIn 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
 
+        .engine-unity-logo {
+            width: clamp(60px, 12vw, 90px);
+            height: clamp(60px, 12vw, 90px);
+            fill: #ffffff;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+        }
+
+        .engine-unity-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: lowercase;
+            margin-top: 5px;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+        }
+
+        .engine-unity-loader-container {
+            width: clamp(140px, 25vw, 200px);
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-top: 40px;
+            overflow: hidden;
+            opacity: 0;
+            animation: unityFadeIn 1s ease 0.5s forwards;
+        }
+
+        .engine-unity-loader-bar {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+        }
+        
+        .engine-unity-loader-bar.animate {
+            animation: unityProgressBar 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes unityFadeScaleIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes unityFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes unityProgressBar {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
     <!-- ── Unified Game Engine Overlays ── -->
     
+    <!-- 0. Unity Splash Screen Overlay -->
+    <div id="engine-unity-screen" class="engine-overlay-screen active">
+        <div class="engine-unity-logo-container">
+            <svg class="engine-unity-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                <path d="M15 12.774V8.516l-3.323 1.918-3.323-1.918v-3.836l3.323-1.918L15 4.646v4.258l-1.661.96-1.662-.96V5.606l1.662-.96v1.918l1.661.96v1.919l-3.323 1.918-3.323-1.918V6.566l1.661-.96v1.918l1.662.96L15 8.516v4.258zM4.338 10.434l1.662.96v-1.918l1.661-.96V6.566l-3.323-1.918L1 6.566v3.868l3.338 1.927zM7.662 2.808l-3.323 1.918 3.323 1.918 3.323-1.918-3.323-1.918zM0 4.646v6.708l3.338 1.927 3.323-1.918V7.564L3.338 5.646 0 4.646z"/>
+            </svg>
+            <div class="engine-unity-text">unity</div>
+        </div>
+        <div class="engine-unity-loader-container">
+            <div class="engine-unity-loader-bar"></div>
+        </div>
+    </div>
 
+    <!-- 1. Disclaimer Overlay -->
+    <div id="engine-disclaimer-screen" class="engine-overlay-screen">
+        <div class="engine-terminal-text">
+            <span id="engine-disclaimer-text"></span><span class="engine-cursor" id="engine-disclaimer-cursor"></span>
+        </div>
+        <div class="engine-skip-hint">CLICK ANYWHERE TO SKIP ▶</div>
+    </div>
+
+    <!-- 2. Credits Overlay -->
+    <div id="engine-credits-screen" class="engine-overlay-screen">
+        <div class="engine-dev-text">
+            <span id="engine-credits-dev"></span><span class="engine-cursor" id="engine-credits-dev-cursor"></span>
+        </div>
+        <div class="engine-studio-text">
+            <span id="engine-credits-studio"></span><span class="engine-cursor" id="engine-credits-studio-cursor" style="display:none;"></span>
+        </div>
+        <div class="engine-skip-hint">CLICK ANYWHERE TO SKIP ▶</div>
+    </div>
 
     <!-- 3. Lobby Overlay -->
     <div id="engine-lobby-screen" class="engine-overlay-screen">
@@ -977,6 +1071,53 @@
             type();
         }
 
+        function playEngineUnitySynth() {
+            initEngineAudio();
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const now = audioCtx.currentTime;
+                
+                // Warm C2 sub-bass
+                const oscLow = audioCtx.createOscillator();
+                const gainLow = audioCtx.createGain();
+                oscLow.type = 'sine';
+                oscLow.frequency.setValueAtTime(65.41, now);
+                oscLow.connect(gainLow);
+                gainLow.connect(audioCtx.destination);
+                
+                // C Major chime notes (C5, E5, G5, C6) with arpeggio
+                const freqs = [523.25, 659.25, 783.99, 1046.50];
+                const vol = (engineMasterVolumeSetting / 100) * masterVolume;
+                
+                gainLow.gain.setValueAtTime(0, now);
+                gainLow.gain.linearRampToValueAtTime(vol * 0.4, now + 0.3);
+                gainLow.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+                
+                oscLow.start(now);
+                oscLow.stop(now + 2.6);
+                
+                freqs.forEach((f, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + index * 0.08);
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(vol * 0.15, now + index * 0.08 + 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 1.8);
+                    
+                    osc.start(now + index * 0.08);
+                    osc.stop(now + index * 0.08 + 2.0);
+                });
+            } catch(e) {}
+        }
+
         function engineSetState(state) {
             engineState = state;
             engineTypingFinished = false;
@@ -989,8 +1130,73 @@
             document.querySelectorAll('.engine-overlay-screen').forEach(s => {
                 s.classList.remove('active', 'engine-crt-expand', 'engine-crt-collapse');
             });
-            
-            if (state === 'lobby') {
+
+            if (state === 'unity') {
+                const screen = document.getElementById('engine-unity-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                // Restart loader progress bar animation smoothly
+                const loaderBar = screen.querySelector('.engine-unity-loader-bar');
+                if (loaderBar) {
+                    loaderBar.classList.remove('animate');
+                    void loaderBar.offsetWidth; // Force reflow
+                    loaderBar.classList.add('animate');
+                }
+                
+                playEngineUnitySynth();
+
+                engineAutoTimeout = setTimeout(() => {
+                    engineSkipLocked = true;
+                    engineTransition(() => {
+                        engineSkipLocked = false;
+                        engineSetState('disclaimer');
+                    });
+                }, 3500);
+            }
+            else if (state === 'disclaimer') {
+                const screen = document.getElementById('engine-disclaimer-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                setTimeout(() => {
+                    const text = "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                    engineTypeWriter(text, 'engine-disclaimer-text', 52, () => {
+                        engineTypingFinished = true;
+                        const cursor = document.getElementById('engine-disclaimer-cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        engineAutoTimeout = setTimeout(() => {
+                            engineSkipLocked = true;
+                            engineTransition(() => {
+                                engineSkipLocked = false;
+                                engineSetState('credits');
+                            });
+                        }, 1800);
+                    });
+                }, 600);
+            }
+            else if (state === 'credits') {
+                const screen = document.getElementById('engine-credits-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                engineTypeWriter("DEVELOPER NAME: VASANTH", 'engine-credits-dev', 70, () => {
+                    const cursorDev = document.getElementById('engine-credits-dev-cursor');
+                    if (cursorDev) cursorDev.style.display = 'none';
+                    
+                    const cursorStudio = document.getElementById('engine-credits-studio-cursor');
+                    if (cursorStudio) cursorStudio.style.display = 'inline-block';
+                    
+                    engineTypeWriter("ATC STUDIO", 'engine-credits-studio', 90, () => {
+                        if (cursorStudio) cursorStudio.style.display = 'none';
+                        engineAutoTimeout = setTimeout(() => {
+                            engineSkipLocked = true;
+                            engineTransition(() => {
+                                engineSkipLocked = false;
+                                engineSetState('lobby');
+                            });
+                        }, 1800);
+                    });
+                });
+            }
+            else if (state === 'lobby') {
                 const screen = document.getElementById('engine-lobby-screen');
                 screen.classList.add('active', 'engine-crt-expand');
                 initEngineAudio();
@@ -1168,7 +1374,50 @@
             initEngineAudio();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
-            if (engineState === 'story1') {
+            if (engineState === 'unity') {
+                engineSkipLocked = true;
+                if (engineAutoTimeout) clearTimeout(engineAutoTimeout);
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('disclaimer');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'disclaimer') {
+                engineSkipLocked = true;
+                engineTypingFinished = true;
+                document.getElementById('engine-disclaimer-text').innerText = 
+                    "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                const cursor = document.getElementById('engine-disclaimer-cursor');
+                if (cursor) cursor.style.display = 'none';
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('credits');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'credits') {
+                engineSkipLocked = true;
+                engineTypingFinished = true;
+                document.getElementById('engine-credits-dev').innerText = "DEVELOPER NAME: VASANTH";
+                document.getElementById('engine-credits-studio').innerText = "ATC STUDIO";
+                const cDev = document.getElementById('engine-credits-dev-cursor');
+                const cStudio = document.getElementById('engine-credits-studio-cursor');
+                if (cDev) cDev.style.display = 'none';
+                if (cStudio) cStudio.style.display = 'none';
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('lobby');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'story1') {
                 if (!engineTypingFinished) {
                     engineTypingFinished = true;
                     document.getElementById('engine-story1-text').innerText = "THIS STORY BASED ON REAL INCIDENT IN USA!";
@@ -1275,7 +1524,7 @@
 
         // Trigger disclaimer start on load
         window.addEventListener('DOMContentLoaded', () => {
-            engineSetState('lobby');
+            engineSetState('unity');
         });
 
         let cameraMode = 'chase'; // Default to Chase Camera (Third-Person)

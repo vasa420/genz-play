@@ -1679,7 +1679,50 @@
             100% { transform: scaleY(1) scaleX(1); filter: brightness(1); opacity: 1; }
         }
 
+        /* Orbis Splash Screen */
+        .engine-orbis-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
+        .engine-orbis-title {
+            font-size: clamp(28px, 6vw, 54px);
+            font-weight: 900;
+            letter-spacing: 16px;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            animation: orbisFadeInOut 3.5s forwards;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .engine-orbis-subtitle {
+            font-size: clamp(11px, 2.2vw, 18px);
+            letter-spacing: 8px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 18px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: orbisFadeInOutSub 3.5s forwards;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        @keyframes orbisFadeInOut {
+            0%   { opacity: 0; transform: scale(0.85); letter-spacing: 24px; filter: blur(12px); }
+            35%  { opacity: 1; transform: scale(1.0); letter-spacing: 16px; filter: blur(0); }
+            70%  { opacity: 1; transform: scale(1.0); letter-spacing: 16px; filter: blur(0); }
+            100% { opacity: 0; transform: scale(1.06); letter-spacing: 10px; filter: blur(16px); }
+        }
+
+        @keyframes orbisFadeInOutSub {
+            0%   { opacity: 0; filter: blur(12px); }
+            45%  { opacity: 1; filter: blur(0); }
+            70%  { opacity: 1; filter: blur(0); }
+            100% { opacity: 0; filter: blur(16px); }
+        }
     </style>
 </head>
 <body>
@@ -1743,7 +1786,32 @@
 
     <!-- ── Unified Game Engine Overlays ── -->
     
+    <!-- 0. Orbis Splash Screen Overlay -->
+    <div id="engine-orbis-screen" class="engine-overlay-screen active">
+        <div class="engine-orbis-logo-container">
+            <div class="engine-orbis-title">ORBIS</div>
+            <div class="engine-orbis-subtitle">MADE BY ORBIS</div>
+        </div>
+    </div>
 
+    <!-- 1. Disclaimer Overlay -->
+    <div id="engine-disclaimer-screen" class="engine-overlay-screen">
+        <div class="engine-terminal-text">
+            <span id="engine-disclaimer-text"></span><span class="engine-cursor" id="engine-disclaimer-cursor"></span>
+        </div>
+        <div class="engine-skip-hint">CLICK ANYWHERE TO SKIP ▶</div>
+    </div>
+
+    <!-- 2. Credits Overlay -->
+    <div id="engine-credits-screen" class="engine-overlay-screen">
+        <div class="engine-dev-text">
+            <span id="engine-credits-dev"></span><span class="engine-cursor" id="engine-credits-dev-cursor"></span>
+        </div>
+        <div class="engine-studio-text">
+            <span id="engine-credits-studio"></span><span class="engine-cursor" id="engine-credits-studio-cursor" style="display:none;"></span>
+        </div>
+        <div class="engine-skip-hint">CLICK ANYWHERE TO SKIP ▶</div>
+    </div>
 
     <!-- 3. Lobby Overlay -->
     <div id="engine-lobby-screen" class="engine-overlay-screen">
@@ -2134,6 +2202,29 @@
             type();
         }
 
+        function playEngineOrbisSynth() {
+            try {
+                const ctx = getAudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(55, ctx.currentTime); // Low A sub-bass
+                osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 1.2);
+                
+                const vol = (masterVolume / 100);
+                gain.gain.setValueAtTime(vol * 0.45, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 1.85);
+            } catch(e) {}
+        }
+
         function engineSetState(state) {
             engineState = state;
             engineTypingFinished = false;
@@ -2146,8 +2237,65 @@
             document.querySelectorAll('.engine-overlay-screen').forEach(s => {
                 s.classList.remove('active', 'engine-crt-expand', 'engine-crt-collapse');
             });
-            
-            if (state === 'lobby') {
+
+            if (state === 'orbis') {
+                const screen = document.getElementById('engine-orbis-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                playEngineOrbisSynth();
+
+                engineAutoTimeout = setTimeout(() => {
+                    engineSkipLocked = true;
+                    engineTransition(() => {
+                        engineSkipLocked = false;
+                        engineSetState('disclaimer');
+                    });
+                }, 3500);
+            }
+            else if (state === 'disclaimer') {
+                const screen = document.getElementById('engine-disclaimer-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                setTimeout(() => {
+                    const text = "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                    engineTypeWriter(text, 'engine-disclaimer-text', 52, () => {
+                        engineTypingFinished = true;
+                        const cursor = document.getElementById('engine-disclaimer-cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        engineAutoTimeout = setTimeout(() => {
+                            engineSkipLocked = true;
+                            engineTransition(() => {
+                                engineSkipLocked = false;
+                                engineSetState('credits');
+                            });
+                        }, 1800);
+                    });
+                }, 600);
+            }
+            else if (state === 'credits') {
+                const screen = document.getElementById('engine-credits-screen');
+                screen.classList.add('active', 'engine-crt-expand');
+                
+                engineTypeWriter("DEVELOPER NAME: VASANTH", 'engine-credits-dev', 70, () => {
+                    const cursorDev = document.getElementById('engine-credits-dev-cursor');
+                    if (cursorDev) cursorDev.style.display = 'none';
+                    
+                    const cursorStudio = document.getElementById('engine-credits-studio-cursor');
+                    if (cursorStudio) cursorStudio.style.display = 'inline-block';
+                    
+                    engineTypeWriter("ATC STUDIO", 'engine-credits-studio', 90, () => {
+                        if (cursorStudio) cursorStudio.style.display = 'none';
+                        engineAutoTimeout = setTimeout(() => {
+                            engineSkipLocked = true;
+                            engineTransition(() => {
+                                engineSkipLocked = false;
+                                engineSetState('lobby');
+                            });
+                        }, 1800);
+                    });
+                });
+            }
+            else if (state === 'lobby') {
                 const screen = document.getElementById('engine-lobby-screen');
                 screen.classList.add('active', 'engine-crt-expand');
                 
@@ -2324,7 +2472,50 @@
             // Resume Audio Context on interaction
             getAudioContext();
             
-            if (engineState === 'story1') {
+            if (engineState === 'orbis') {
+                engineSkipLocked = true;
+                if (engineAutoTimeout) clearTimeout(engineAutoTimeout);
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('disclaimer');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'disclaimer') {
+                engineSkipLocked = true;
+                engineTypingFinished = true;
+                document.getElementById('engine-disclaimer-text').innerText = 
+                    "FIRST TIME I WAS DEVELOPED THIS SO THERE IS SOME BUGS IN THE GAME SO PLEASE CO-OPERATE ME";
+                const cursor = document.getElementById('engine-disclaimer-cursor');
+                if (cursor) cursor.style.display = 'none';
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('credits');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'credits') {
+                engineSkipLocked = true;
+                engineTypingFinished = true;
+                document.getElementById('engine-credits-dev').innerText = "DEVELOPER NAME: VASANTH";
+                document.getElementById('engine-credits-studio').innerText = "ATC STUDIO";
+                const cDev = document.getElementById('engine-credits-dev-cursor');
+                const cStudio = document.getElementById('engine-credits-studio-cursor');
+                if (cDev) cDev.style.display = 'none';
+                if (cStudio) cStudio.style.display = 'none';
+                
+                setTimeout(() => {
+                    engineSkipLocked = false;
+                    engineTransition(() => {
+                        engineSetState('lobby');
+                    });
+                }, 400);
+            }
+            else if (engineState === 'story1') {
                 if (!engineTypingFinished) {
                     engineTypingFinished = true;
                     document.getElementById('engine-story1-text').innerText = "THIS EXPERIMENT IS BASED ON CLASSIFIED PARANORMAL DOCUMENTS.";
@@ -2730,7 +2921,7 @@
 
         // Start sequence on page load
         window.addEventListener('DOMContentLoaded', () => {
-            engineSetState('lobby');
+            engineSetState('orbis');
 
             // Set up parallax 3D on lobby background once globally
             const lobbyEl = document.getElementById('engine-lobby-screen');
