@@ -867,6 +867,22 @@
                     return;
                 }
 
+                if (query === 'GIRISH') {
+                    const dimmer = document.createElement('div');
+                    dimmer.style.cssText = `
+                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                        background: #000; z-index: 99999; opacity: 0;
+                        transition: opacity 0.8s ease;
+                    `;
+                    document.body.appendChild(dimmer);
+                    requestAnimationFrame(() => requestAnimationFrame(() => {
+                        dimmer.style.opacity = '1';
+                        setTimeout(() => { window.location.href = 'girish.html'; }, 900);
+                    }));
+                    analyzing = false;
+                    return;
+                }
+
                 const db = getDB();
                 const found = db.some(n => n === query || n.includes(query) || query.includes(n));
 

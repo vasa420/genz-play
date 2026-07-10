@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | Record - GIRISH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.45);
+            --green: #00FF88;
+            --green-glow: rgba(0, 255, 136, 0.35);
+            --red: #FF2244;
+            --red-glow: rgba(255, 34, 68, 0.35);
+            --gold: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --bg: #04040c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanline overlay */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.7;
+        }
+
+        /* Ambient particles bg */
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2;
+        }
+
+        /* Blurred image backdrop */
+        .backdrop-blur {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('girish.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(25px) brightness(0.28);
+            z-index: 1;
+            transform: scale(1.05); /* Avoid white edges */
+        }
+
+        /* Main Viewport Container */
+        .fullscreen-viewport {
+            position: relative;
+            z-index: 5;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Header Information Grid */
+        .floating-header {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 15;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(4, 4, 12, 0.45);
+            padding: 20px 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 100, 0, 0.15);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+            .floating-header {
+                flex-direction: column;
+                gap: 10px;
+                top: 20px;
+                left: 20px;
+                right: 80px; /* Leave space for close button */
+                padding: 12px 20px;
+            }
+        }
+
+        .info-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .info-value.name {
+            color: var(--primary);
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .info-value.status {
+            color: var(--gold);
+            text-shadow: 0 0 15px var(--gold-glow);
+            animation: pulseGold 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGold {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.78; }
+        }
+
+        /* Floating Cross / Return Button */
+        .btn-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 100, 0, 0.1);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            color: var(--primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 20;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        @media (max-width: 640px) {
+            .btn-close {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        .btn-close:hover {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: rotate(90deg) scale(1.05);
+        }
+
+        /* Centered Image Frame */
+        .image-frame {
+            position: relative;
+            max-height: 75vh;
+            max-width: 90vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 100, 0, 0.22);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 100, 0, 0.1);
+            background: #000;
+            overflow: hidden;
+            z-index: 10;
+            animation: zoomIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .image-frame img {
+            max-height: 75vh;
+            max-width: 90vw;
+            display: block;
+            object-fit: contain;
+            transition: transform 0.4s ease;
+        }
+
+        .image-frame:hover img {
+            transform: scale(1.012);
+        }
+
+        /* Scanning overlay effect */
+        .scanner-beam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            box-shadow: 0 0 10px var(--primary);
+            animation: scan 4s linear infinite;
+            z-index: 12;
+            pointer-events: none;
+            opacity: 0.65;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        /* Floating Download Button */
+        .floating-download {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            z-index: 15;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+            .floating-download {
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                display: flex;
+                justify-content: center;
+            }
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .btn-download {
+            background: rgba(4, 4, 12, 0.6);
+            border: 1.5px solid var(--primary);
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-download:hover {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <!-- Background Image blur -->
+    <div class="backdrop-blur"></div>
+
+    <!-- Background particles -->
+    <canvas id="particle-bg"></canvas>
+
+    <!-- Main Viewport -->
+    <main class="fullscreen-viewport">
+
+        <!-- Close / Return -->
+        <button class="btn-close" id="btn-return" onclick="goBack()" title="Return to Analyzer">✕</button>
+
+        <!-- Stats overlay -->
+        <header class="floating-header">
+            <div class="info-block">
+                <span class="info-label">DATABASE RECORD NAME</span>
+                <h1 class="info-value name">GIRISH</h1>
+            </div>
+            <div class="info-block">
+                <span class="info-label">ACTIVE THREAT STATUS</span>
+                <div class="info-value status">DRIVING THE TRUCK 🚚</div>
+            </div>
+        </header>
+
+        <!-- Main Image Frame -->
+        <div class="image-frame">
+            <div class="scanner-beam"></div>
+            <img src="girish.jpg" alt="Girish acting as truck driver sitting inside cabin">
+        </div>
+
+        <!-- Download Badge -->
+        <div class="floating-download">
+            <a class="btn-download" id="btn-download-img" href="girish.jpg" download="girish_driving_truck.jpg">
+                <span>⬇</span> DOWNLOAD FULLSCREEN IMAGE
+            </a>
+        </div>
+
+    </main>
+
+    <script>
+        // Smooth return transition
+        function goBack() {
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
+            }));
+        }
+
+        // Particle canvas background
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 55; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.4 + 0.4,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    alpha: Math.random() * 0.35 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // Fade in entrance effect
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.8s ease';
+        window.addEventListener('load', () => {
+            requestAnimationFrame(() => { document.body.style.opacity = '1'; });
+        });
+    </script>
+</body>
+</html>
