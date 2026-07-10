@@ -369,6 +369,37 @@
             draw();
         })();
 
+        // Randomly select image and status configuration
+        const VAISAL_RECORDS = [
+            {
+                image: 'vaisal.jpg',
+                status: 'DRIVING THE BUS',
+                downloadName: 'vaisal_driving_bus.jpg',
+                alt: 'Vaisal driving the bus on duty'
+            },
+            {
+                image: 'vaisal2.jpg',
+                status: 'CONDUCTING THE BUS',
+                downloadName: 'vaisal_conducting_bus.jpg',
+                alt: 'Vaisal conducting the bus on duty'
+            }
+        ];
+
+        const selectedRecord = VAISAL_RECORDS[Math.floor(Math.random() * VAISAL_RECORDS.length)];
+
+        // Set status
+        document.getElementById('rec-status').textContent = selectedRecord.status;
+
+        // Set image source and alt text
+        const imageElement = document.querySelector('.image-panel img');
+        imageElement.src = selectedRecord.image;
+        imageElement.alt = selectedRecord.alt;
+
+        // Set download link parameters
+        const downloadBtn = document.getElementById('btn-download-img');
+        downloadBtn.href = selectedRecord.image;
+        downloadBtn.download = selectedRecord.downloadName;
+
         // Fade in entrance effect
         document.body.style.opacity = '0';
         document.body.style.transition = 'opacity 0.8s ease';
