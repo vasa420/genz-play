@@ -444,8 +444,10 @@
             draw();
         })();
 
-        // Web Audio API Bell Sound Synthesizer
+        // Play local bell audio file on click
+        const bellAudio = new Audio('soundreality-bell-fx-410608.mp3');
         let isRinging = false;
+
         function ringBell() {
             if (isRinging) return;
             isRinging = true;
@@ -453,47 +455,23 @@
             const btn = document.getElementById('btn-bell');
             btn.classList.add('ringing');
 
-            playBellSound();
+            bellAudio.currentTime = 0;
+            bellAudio.play().catch(err => {
+                console.error("Audio playback failed:", err);
+            });
 
-            setTimeout(() => {
+            bellAudio.onended = () => {
                 btn.classList.remove('ringing');
                 isRinging = false;
-            }, 1800);
-        }
+            };
 
-        function playBellSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const now = audioCtx.currentTime;
-
-                // Bell sound is comprised of inharmonic overtones
-                const ratios = [1, 2, 2.4, 3, 4.4, 4.5, 5.1];
-                const baseFreq = 220; // 220Hz fundamental
-
-                ratios.forEach((ratio, index) => {
-                    const osc = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
-
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(baseFreq * ratio, now);
-
-                    // Deeper overtones decay slower, higher ones decay faster
-                    const initialGain = index === 0 ? 0.35 : 0.12 / ratio;
-                    const decayTime = index === 0 ? 3.5 : 2.5 / ratio;
-
-                    gainNode.gain.setValueAtTime(0, now);
-                    gainNode.gain.linearRampToValueAtTime(initialGain, now + 0.01);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + decayTime);
-
-                    osc.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-
-                    osc.start(now);
-                    osc.stop(now + decayTime + 0.1);
-                });
-            } catch (e) {
-                console.error("Audio Context initialization failed", e);
-            }
+            // Fallback timeout in case ended event is missed
+            setTimeout(() => {
+                if (isRinging) {
+                    btn.classList.remove('ringing');
+                    isRinging = false;
+                }
+            }, 3000);
         }
 
         // Fade in entrance effect
