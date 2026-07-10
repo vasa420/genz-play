@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | SQUAD FLAMES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.45);
+            --gold: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --red: #FF2244;
+            --green: #00FF88;
+            --bg: #04040c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanlines and particles */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.7;
+        }
+
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2;
+        }
+
+        /* Return cross button */
+        .btn-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 100, 0, 0.1);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            color: var(--primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 20;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-close:hover {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: rotate(90deg) scale(1.05);
+        }
+
+        /* Main Panel container */
+        .calc-panel {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 480px;
+            background: rgba(10, 10, 22, 0.65);
+            border: 1.5px solid rgba(255, 100, 0, 0.2);
+            border-radius: 16px;
+            padding: 35px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 100, 0, 0.05);
+            backdrop-filter: blur(16px);
+            transition: all 0.5s ease;
+        }
+
+        /* Header layout */
+        .panel-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .panel-header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-shadow: 0 0 15px var(--primary-glow);
+            margin-bottom: 8px;
+        }
+
+        .panel-header p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.5;
+        }
+
+        /* Form elements arranged vertically */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            background: rgba(255, 100, 0, 0.04);
+            border: 1.5px solid rgba(255, 100, 0, 0.2);
+            padding: 14px 18px;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            letter-spacing: 1px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 100, 0, 0.08);
+            box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
+        }
+
+        /* Calculate button styling */
+        .btn-calc {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 100, 0, 0.2);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-calc:hover {
+            box-shadow: 0 0 25px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-calc:active {
+            transform: translateY(1px);
+        }
+
+        /* Progress Loading Screen styling */
+        .loader-block {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 10px;
+            text-align: center;
+        }
+
+        .loader-circle {
+            width: 70px;
+            height: 70px;
+            border: 4px solid rgba(255, 100, 0, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+            box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            height: 18px;
+        }
+
+        .loader-bar-bg {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loader-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        /* Result Panel styling */
+        .result-block {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-orb-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 100, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .result-orb {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 100, 0, 0.15), rgba(0, 0, 0, 0.9));
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 46px;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary-glow);
+            box-shadow: 0 0 30px var(--primary-glow);
+            animation: pulseOrb 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseOrb {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px var(--primary-glow); }
+            50% { transform: scale(1.03); box-shadow: 0 0 45px var(--primary-glow); }
+        }
+
+        .result-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            padding: 6px 16px;
+            border-radius: 4px;
+            background: rgba(255, 100, 0, 0.1);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .result-label {
+            font-size: clamp(24px, 4vw, 32px);
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .result-detail {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 360px;
+        }
+
+        .btn-retry {
+            width: 100%;
+            background: transparent;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-retry:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* Error notification */
+        .error-toast {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(50px);
+            opacity: 0;
+            background: rgba(20, 0, 0, 0.95);
+            border: 1px solid var(--red);
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: var(--red);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            text-align: center;
+        }
+
+        .error-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <!-- Background particles -->
+    <canvas id="particle-bg"></canvas>
+
+    <!-- Return button -->
+    <button class="btn-close" onclick="goBack()" title="Return to Analyzer">✕</button>
+
+    <!-- Main Panel -->
+    <div class="calc-panel" id="main-panel">
+        
+        <!-- State 1: Input Form -->
+        <div id="form-state">
+            <header class="panel-header">
+                <h1>SQUAD FLAMES</h1>
+                <p>Analyse combat synchronisation and compatibility status between two squad members.</p>
+            </header>
+
+            <div class="input-group">
+                <label for="name1">SQUAD MEMBER 1</label>
+                <input type="text" id="name1" autocomplete="off" placeholder="Enter first name...">
+            </div>
+
+            <div class="input-group">
+                <label for="name2">SQUAD MEMBER 2</label>
+                <input type="text" id="name2" autocomplete="off" placeholder="Enter second name...">
+            </div>
+
+            <button class="btn-calc" onclick="startCalculation()">RUN ANOMALY CALCULATION</button>
+        </div>
+
+        <!-- State 2: Cyber Loader -->
+        <div class="loader-block" id="loader-state">
+            <div class="loader-circle"></div>
+            <div class="loader-status" id="loader-txt">BOOTING CALCULATOR...</div>
+            <div class="loader-bar-bg">
+                <div class="loader-bar-fill" id="loader-bar"></div>
+            </div>
+        </div>
+
+        <!-- State 3: Final Compatibility Result -->
+        <div class="result-block" id="result-state">
+            <div class="result-orb-ring">
+                <div class="result-orb" id="result-char">F</div>
+            </div>
+            <div class="result-badge" id="result-category">STATUS DETERMINED</div>
+            <h2 class="result-label" id="result-name">FRIENDS</h2>
+            <p class="result-detail" id="result-desc"></p>
+            <button class="btn-retry" onclick="resetCalculator()">CALCULATE AGAIN</button>
+        </div>
+
+    </div>
+
+    <!-- Alert Dialog -->
+    <div class="error-toast" id="error-toast">ERROR: INPUT FIELDS CANNOT BE EMPTY</div>
+
+    <script>
+        // Smooth return transitions
+        function goBack() {
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
+            }));
+        }
+
+        // Show validation warning
+        function showToast(message) {
+            const toast = document.getElementById('error-toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Flame calculation controller
+        function startCalculation() {
+            const n1 = document.getElementById('name1').value.trim();
+            const n2 = document.getElementById('name2').value.trim();
+
+            if (!n1 || !n2) {
+                showToast("ERROR: BOTH SQUAD MEMBER NAMES REQUIRED");
+                return;
+            }
+
+            // Hide form, show loader
+            document.getElementById('form-state').style.display = 'none';
+            document.getElementById('loader-state').style.display = 'flex';
+
+            const statusStages = [
+                { text: "CROSS-EXAMINING SQUAD CHARACTERS...", progress: 20 },
+                { text: "CANCELLING IDENTICAL SPECTRUMS...", progress: 50 },
+                { text: "RESOLVING FLAMES ALGORITHM...", progress: 80 },
+                { text: "CALCULATING COMPATIBILITY STATUS...", progress: 100 }
+            ];
+
+            const bar = document.getElementById('loader-bar');
+            const label = document.getElementById('loader-txt');
+
+            let stageIdx = 0;
+            function runLoader() {
+                if (stageIdx < statusStages.length) {
+                    label.textContent = statusStages[stageIdx].text;
+                    bar.style.width = statusStages[stageIdx].progress + '%';
+                    stageIdx++;
+                    setTimeout(runLoader, 650);
+                } else {
+                    // Show final calculations
+                    showResults(n1, n2);
+                }
+            }
+            runLoader();
+        }
+
+        // Compute Flames Algorithm
+        function showResults(name1, name2) {
+            let n1 = name1.toLowerCase().replace(/[^a-z]/g, '').split('');
+            let n2 = name2.toLowerCase().replace(/[^a-z]/g, '').split('');
+
+            // Cancel out common elements
+            for (let i = 0; i < n1.length; i++) {
+                let idx = n2.indexOf(n1[i]);
+                if (idx !== -1) {
+                    n1.splice(i, 1);
+                    n2.splice(idx, 1);
+                    i--;
+                }
+            }
+
+            const remainingCount = n1.length + n2.length;
+            
+            let flames = ['F', 'L', 'A', 'M', 'E', 'S'];
+            if (remainingCount > 0) {
+                let index = 0;
+                while (flames.length > 1) {
+                    index = (index + remainingCount - 1) % flames.length;
+                    flames.splice(index, 1);
+                }
+            }
+
+            const letter = flames[0];
+            const resultData = {
+                'F': { title: 'FRIENDS', emoji: '🤝', msg: 'You share an unbreakable squad bond. Pure brotherhood and synergy on the battlefield!' },
+                'L': { title: 'LOVERS', emoji: '❤️', msg: 'Dangerous levels of synchronization. ATC Studio detects a perfect match!' },
+                'A': { title: 'AFFECTION', emoji: '🥰', msg: 'Genuine fondness and respect. Positive energy fields detected between you two.' },
+                'M': { title: 'MARRIAGE', emoji: '💍', msg: 'The ultimate pairing. Destined to conquer challenges together as partners-in-crime!' },
+                'E': { title: 'ENEMIES', emoji: '⚡', msg: 'WARNING: Extreme squad dissonance. Keep distance to avoid head-on collision!' },
+                'S': { title: 'SIBLINGS', emoji: '👥', msg: 'A family-like connection. Always looking out for each other like siblings-in-arms.' }
+            };
+
+            const data = resultData[letter];
+
+            document.getElementById('result-char').textContent = letter;
+            document.getElementById('result-category').textContent = `REMAINING SPECTRA COUNT: ${remainingCount}`;
+            document.getElementById('result-name').textContent = `${data.emoji} ${data.title}`;
+            document.getElementById('result-desc').textContent = data.msg;
+
+            // Transition states
+            document.getElementById('loader-state').style.display = 'none';
+            document.getElementById('result-state').style.display = 'flex';
+        }
+
+        // Reset to initial screen
+        function resetCalculator() {
+            document.getElementById('name1').value = '';
+            document.getElementById('name2').value = '';
+            document.getElementById('loader-bar').style.width = '0%';
+            document.getElementById('result-state').style.display = 'none';
+            document.getElementById('form-state').style.display = 'block';
+        }
+
+        // Particle background canvas animations
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 45; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.3 + 0.3,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.3 + 0.08
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // Body fade entrance transition
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.8s ease';
+        window.addEventListener('load', () => {
+            requestAnimationFrame(() => { document.body.style.opacity = '1'; });
+        });
+    </script>
+</body>
+</html>
