@@ -10,10 +10,8 @@
             --primary: #FF6400;
             --primary-glow: rgba(255, 100, 0, 0.45);
             --green: #00FF88;
-            --green-glow: rgba(0, 255, 136, 0.35);
             --gold: #FFD700;
             --gold-glow: rgba(255, 215, 0, 0.35);
-            --red: #FF2244;
             --bg: #04040c;
         }
 
@@ -46,7 +44,7 @@
 
         /* Header */
         .header {
-            width: 100%; padding: 18px 30px 16px;
+            width: 100%; padding: 22px 30px 18px;
             display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid rgba(255, 100, 0, 0.12);
             background: rgba(4,4,12,0.9);
@@ -86,19 +84,25 @@
 
         /* Main Container */
         .main-container {
-            width: 100%; max-width: 720px;
-            padding: 30px 20px 80px;
+            width: 100%; max-width: 760px;
+            padding: 40px 20px 80px;
             position: relative; z-index: 1;
             display: flex; flex-direction: column; align-items: center;
         }
 
+        /* Input Card */
         .card {
-            width: 100%; background: rgba(10, 10, 24, 0.85);
+            width: 100%; background: rgba(10, 10, 24, 0.8);
             border: 1.5px solid rgba(255, 100, 0, 0.35);
-            border-radius: 18px; padding: 30px;
+            border-radius: 18px; padding: 35px 30px;
             backdrop-filter: blur(14px);
             box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
             margin-bottom: 30px; text-align: center;
+        }
+
+        .card-icon {
+            font-size: 44px; color: var(--primary);
+            text-shadow: 0 0 15px var(--primary-glow); margin-bottom: 10px;
         }
 
         .card-title {
@@ -115,64 +119,80 @@
             letter-spacing: 2px; margin-bottom: 25px;
         }
 
-        /* Video Player Frame */
-        .video-player-wrapper {
-            position: relative; width: 100%;
-            background: #000; border-radius: 16px; overflow: hidden;
-            border: 2px solid rgba(255, 100, 0, 0.4);
-            box-shadow: 0 0 25px rgba(255, 100, 0, 0.25);
-            margin-bottom: 25px;
+        /* Prompt Textarea Space */
+        .prompt-group {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-bottom: 25px; text-align: left;
         }
 
-        .video-player-wrapper video {
-            width: 100%; display: block;
-            border-radius: 14px; max-height: 450px;
-            object-fit: cover;
-        }
-
-        .video-overlay-badge {
-            position: absolute; top: 12px; left: 12px;
-            background: rgba(0,0,0,0.7); border: 1px solid var(--primary);
-            color: var(--primary); font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 2px;
-            padding: 4px 12px; border-radius: 20px;
-            backdrop-filter: blur(8px);
-        }
-
-        /* Actions Grid */
-        .controls-grid {
-            display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
-            width: 100%; margin-top: 15px;
-        }
-
-        .btn-action {
-            flex: 1; min-width: 160px; padding: 14px;
-            background: rgba(255, 100, 0, 0.1);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            color: #fff; font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; font-weight: 700;
-            border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-
-        .btn-action:hover {
-            background: var(--primary); color: #000;
-            box-shadow: 0 0 15px var(--primary-glow);
-            transform: translateY(-2px);
-        }
-
-        .select-input {
-            width: 100%; padding: 14px 18px;
-            background: rgba(4, 4, 12, 0.85);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            border-radius: 10px; color: #fff;
+        .prompt-label {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px; letter-spacing: 2px;
-            outline: none; margin-bottom: 20px;
+            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
         }
 
-        .select-input option {
-            background: #0b0b14; color: #fff;
+        .prompt-textarea {
+            width: 100%; height: 130px; padding: 16px 20px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(255, 100, 0, 0.4);
+            border-radius: 12px; color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px; font-weight: 400; line-height: 1.5;
+            outline: none; resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .prompt-textarea::placeholder {
+            color: rgba(255,255,255,0.3); font-size: 14px;
+        }
+
+        /* Presets Grid */
+        .presets-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; text-align: left; margin-bottom: 10px;
+        }
+
+        .presets-container {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            background: rgba(255, 100, 0, 0.08);
+            border: 1px solid rgba(255, 100, 0, 0.25);
+            color: rgba(255,255,255,0.75);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 1px;
+            padding: 6px 14px; border-radius: 20px;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--primary); color: var(--primary);
+            background: rgba(255, 100, 0, 0.15);
+        }
+
+        /* Start Generate Bar Downside */
+        .btn-start-generate {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            width: 100%; padding: 18px;
+            background: linear-gradient(135deg, #FF6400, #FF9D00);
+            border: none; border-radius: 12px;
+            color: #000; font-family: 'JetBrains Mono', monospace;
+            font-size: 15px; font-weight: 900; letter-spacing: 3px;
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 25px var(--primary-glow);
+            text-transform: uppercase;
+        }
+
+        .btn-start-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px var(--primary);
         }
     </style>
 </head>
@@ -181,43 +201,40 @@
     <div class="scanlines"></div>
     <canvas id="particle-bg"></canvas>
 
+    <!-- Header -->
     <header class="header">
         <div>
             <div class="header-logo">ATTACKS</div>
             <div class="header-tag">VIDEO AS MY OWN v1.0</div>
         </div>
-
         <button class="btn-back" onclick="goBack()">← SEARCH ENGINE</button>
     </header>
 
+    <!-- Main Container -->
     <main class="main-container">
         
         <div class="card">
-            <div style="font-size: 40px; margin-bottom: 10px;">📹</div>
+            <div class="card-icon">🎥</div>
             <h1 class="card-title">VIDEO AS MY OWN</h1>
-            <p class="card-sub">PLAY CUSTOM SQUAD RECORDINGS OR UPLOAD YOUR OWN VIDEO</p>
+            <p class="card-sub">TYPE A PROMPT BELOW TO GENERATE AN AI VIDEO SCENE</p>
 
-            <select id="squad-video-select" class="select-input" onchange="changeSquadVideo(this.value)">
-                <option value="vaisal_video.mp4">📹 VAISAL VIDEO RECORD</option>
-                <option value="WhatsApp nithish 2026-07-23 at 1.39.57 AM.mp4 .mp4">📹 NITHISH VIDEO RECORD</option>
-                <option value="custom">📁 UPLOAD MY OWN CUSTOM VIDEO...</option>
-            </select>
-
-            <input type="file" id="custom-video-file" accept="video/*" style="display:none" onchange="handleCustomVideoUpload(event)">
-
-            <div class="video-player-wrapper">
-                <div class="video-overlay-badge" id="video-badge">📹 VAISAL VIDEO RECORDING</div>
-                <video id="main-video-player" src="vaisal_video.mp4" controls autoplay loop playsinline></video>
+            <div class="prompt-group">
+                <label class="prompt-label" for="prompt-input">YOUR VIDEO PROMPT</label>
+                <textarea id="prompt-input" class="prompt-textarea" placeholder="Describe the video scene you want to generate... e.g. A boy driving a fast bus along a mountain highway at sunset, or a massive lorry with snakes chasing..."></textarea>
             </div>
 
-            <div class="controls-grid">
-                <button class="btn-action" onclick="document.getElementById('custom-video-file').click()">
-                    <span>📁</span> UPLOAD VIDEO
-                </button>
-                <button class="btn-action" onclick="toggleFullscreen()">
-                    <span>⛶</span> FULLSCREEN
-                </button>
+            <div class="presets-label">QUICK PROMPT PRESETS:</div>
+            <div class="presets-container">
+                <button class="preset-btn" onclick="usePreset('A young boy driving a fast passenger bus along a scenic mountain highway at sunset with cinematic lighting')">🚌 Bus Highway Drive</button>
+                <button class="preset-btn" onclick="usePreset('Massive green king cobra snakes chasing a heavy cargo lorry truck through a dark jungle road')">🐍 Snakes Chasing Lorry</button>
+                <button class="preset-btn" onclick="usePreset('A warrior wielding a giant sharp blade knife striking a golden conductor bell with blood splatters')">🔪 Knife Bell Showdown</button>
+                <button class="preset-btn" onclick="usePreset('Kaveri river running smoothly through dense green tropical forest with rocks and sunlight rays')">🌊 Kaveri River Forest</button>
             </div>
+
+            <!-- Start Generate Button Bar Downside -->
+            <button class="btn-start-generate" onclick="startVideoGeneration()">
+                <span>⚡</span> START GENERATE
+            </button>
         </div>
 
     </main>
@@ -237,40 +254,33 @@
             }));
         }
 
-        function changeSquadVideo(src) {
-            if (src === 'custom') {
-                document.getElementById('custom-video-file').click();
+        function usePreset(text) {
+            document.getElementById('prompt-input').value = text;
+        }
+
+        function startVideoGeneration() {
+            const promptText = document.getElementById('prompt-input').value.trim();
+            if (!promptText) {
+                alert('Please type a prompt first before clicking START GENERATE!');
                 return;
             }
-            const player = document.getElementById('main-video-player');
-            player.src = src;
-            player.play();
-            const badge = document.getElementById('video-badge');
-            if (src.includes('vaisal')) badge.textContent = '📹 VAISAL VIDEO RECORDING';
-            else if (src.includes('nithish')) badge.textContent = '📹 NITHISH VIDEO RECORDING';
-            else badge.textContent = '📹 SQUAD VIDEO RECORDING';
+
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { 
+                    window.location.href = 'video_prompt_result.html?prompt=' + encodeURIComponent(promptText); 
+                }, 900);
+            }));
         }
 
-        function handleCustomVideoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const url = URL.createObjectURL(file);
-            const player = document.getElementById('main-video-player');
-            player.src = url;
-            player.play();
-
-            document.getElementById('video-badge').textContent = `📹 AS MY OWN: ${file.name.toUpperCase()}`;
-        }
-
-        function toggleFullscreen() {
-            const player = document.getElementById('main-video-player');
-            if (player.requestFullscreen) player.requestFullscreen();
-            else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
-            else if (player.msRequestFullscreen) player.msRequestFullscreen();
-        }
-
-        // Particle background
+        // Particle Canvas Background
         (function() {
             const canvas = document.getElementById('particle-bg');
             const ctx = canvas.getContext('2d');
