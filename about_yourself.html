@@ -67,40 +67,6 @@
             text-transform: uppercase;
         }
 
-        /* Language Selector in Top Right Corner */
-        .header-actions {
-            display: flex; align-items: center; gap: 12px;
-        }
-
-        .lang-select-box {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(255, 100, 0, 0.1);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            padding: 6px 12px; border-radius: 8px;
-            box-shadow: 0 0 12px rgba(255, 100, 0, 0.15);
-            transition: all 0.3s ease;
-        }
-
-        .lang-select-box:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 18px var(--primary-glow);
-        }
-
-        .lang-select-box label {
-            font-size: 13px;
-        }
-
-        .lang-select-dropdown {
-            background: transparent; border: none; color: #fff;
-            font-family: 'JetBrains Mono', monospace; font-size: 11px;
-            letter-spacing: 1px; outline: none; cursor: pointer;
-            font-weight: 700;
-        }
-
-        .lang-select-dropdown option {
-            background: #0b0b14; color: #fff; padding: 6px;
-        }
-
         .btn-back {
             background: transparent;
             border: 1px solid rgba(255,100,0,0.3);
@@ -128,12 +94,51 @@
 
         /* Form Card */
         .card {
+            position: relative;
             width: 100%; background: rgba(10, 10, 24, 0.75);
             border: 1.5px solid rgba(255, 100, 0, 0.3);
             border-radius: 18px; padding: 35px 30px;
             backdrop-filter: blur(14px);
             box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
             margin-bottom: 30px; text-align: center;
+        }
+
+        /* Language Selector Box - Positioned inside top right upside */
+        .lang-select-box {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 100, 0, 0.12);
+            border: 1.5px solid rgba(255, 100, 0, 0.4);
+            padding: 5px 10px; border-radius: 8px;
+            box-shadow: 0 0 12px rgba(255, 100, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .card-lang-pos {
+            position: absolute; top: 18px; right: 18px; z-index: 10;
+        }
+
+        @media (max-width: 480px) {
+            .card-lang-pos {
+                position: static; margin: 0 auto 15px auto; width: fit-content;
+            }
+        }
+
+        .lang-select-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 18px var(--primary-glow);
+        }
+
+        .lang-select-box label { font-size: 12px; }
+
+        .lang-select-dropdown {
+            background: transparent; border: none; color: #fff;
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            letter-spacing: 1px; outline: none; cursor: pointer;
+            font-weight: 700;
+        }
+
+        .lang-select-dropdown option {
+            background: #0b0b14; color: #fff; padding: 6px;
         }
 
         .card-icon {
@@ -252,6 +257,7 @@
         }
 
         .result-card {
+            position: relative;
             width: 100%; background: rgba(10, 10, 24, 0.85);
             border: 1.5px solid rgba(255, 100, 0, 0.4);
             border-radius: 18px; padding: 30px;
@@ -325,24 +331,23 @@
             <div class="header-tag">ABOUT YOURSELF v1.0</div>
         </div>
 
-        <div class="header-actions">
-            <!-- Language Selector Dropdown in Top Right Corner -->
-            <div class="lang-select-box" title="Select Story Language">
-                <label for="lang-select">🌐</label>
-                <select id="lang-select" class="lang-select-dropdown" onchange="handleLanguageChange()">
-                    <option value="en" selected>ENGLISH 🇬🇧</option>
-                    <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
-                    <option value="hi">हिंदी (HINDI) 🇮🇳</option>
-                </select>
-            </div>
-            <button class="btn-back" onclick="goBack()">← SEARCH ENGINE</button>
-        </div>
+        <button class="btn-back" onclick="goBack()">← SEARCH ENGINE</button>
     </header>
 
     <main class="main-container">
         
         <!-- Input Card (Only Name Asked) -->
         <div class="card" id="form-card">
+            <!-- Language Selector Shifted Inside Card Right Side Corner Upside -->
+            <div class="lang-select-box card-lang-pos" title="Select Language">
+                <label for="lang-select">🌐</label>
+                <select id="lang-select" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
+                    <option value="en" selected>ENGLISH 🇬🇧</option>
+                    <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
+                    <option value="hi">हिंदी (HINDI) 🇮🇳</option>
+                </select>
+            </div>
+
             <div class="card-icon">👤</div>
             <h1 class="card-title">ABOUT YOURSELF</h1>
             <p class="card-sub">SELECT YOUR OPERATIVE NAME & GENERATE YOUR FUNNY AI STORY</p>
@@ -383,8 +388,22 @@
                 <!-- Story box typed at the down side -->
                 <div class="story-container">
                     <div class="story-header">
-                        <span>🤖 AI GENERATED STORY LORE</span>
-                        <span id="typing-status" style="color: var(--primary); font-size: 10px;">TYPING STORY...</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>🤖 AI GENERATED STORY LORE</span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- Language Selector inside Story Box Top Right Corner Upside -->
+                            <div class="lang-select-box" style="padding: 3px 8px;" title="Switch Language">
+                                <label for="lang-select-story">🌐</label>
+                                <select id="lang-select-story" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
+                                    <option value="en">ENGLISH 🇬🇧</option>
+                                    <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
+                                    <option value="hi">हिंदी (HINDI) 🇮🇳</option>
+                                </select>
+                            </div>
+                            <span id="typing-status" style="color: var(--primary); font-size: 10px;">TYPING STORY...</span>
+                        </div>
                     </div>
                     <div class="story-body" id="story-body"></div>
                 </div>
@@ -595,9 +614,17 @@
         };
 
         let currentActiveName = 'VAISAL';
+        let currentLang = 'en';
         let typingInterval = null;
 
-        function handleLanguageChange() {
+        function handleLanguageChange(newLang) {
+            currentLang = newLang;
+            // Sync both language select elements
+            const sel1 = document.getElementById('lang-select');
+            const sel2 = document.getElementById('lang-select-story');
+            if (sel1) sel1.value = newLang;
+            if (sel2) sel2.value = newLang;
+
             // If story is currently visible, re-type it in the new language immediately!
             const resPanel = document.getElementById('result-panel');
             if (resPanel && resPanel.style.display === 'flex') {
@@ -613,7 +640,7 @@
             document.getElementById('form-card').style.display = 'none';
             document.getElementById('loader-block').style.display = 'flex';
 
-            const lang = document.getElementById('lang-select').value;
+            const lang = currentLang;
             let statusText = "GENERATING FUNNY AI STORY...";
             if (lang === 'ta') statusText = "தமிழ் கதையை உருவாக்குகிறது...";
             if (lang === 'hi') statusText = "हिंदी कहानी तैयार की जा रही है...";
@@ -648,7 +675,7 @@
             document.getElementById('res-user-name').textContent = name;
             document.getElementById('result-panel').style.display = 'flex';
 
-            const lang = document.getElementById('lang-select').value || 'en';
+            const lang = currentLang || 'en';
             const squadData = SQUAD_STORIES[name] || SQUAD_STORIES['VAISAL'];
             const lines = squadData[lang] || squadData['en'];
 
