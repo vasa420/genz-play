@@ -509,9 +509,16 @@
                 timeText.textContent = `ESTIMATED TIME: ~${remain}s REMAINING (GENERATING BATTLE ARTWORK)`;
             }, 1000);
 
-            // Pollinations AI prompt for Vaisal & Nithish bus bell battle
+            // Highly targeted AI prompts focusing on both the BUS and the GIANT BRASS BUS BELL (Nithish ringing the bell)
+            const PROMPTS = [
+                "photorealistic 3D cinematic render of a large futuristic red city bus with a GIANT SHINY BRASS BUS BELL mounted on top, young conductor Nithish holding a massive golden bell and ringing it loudly, young bus driver Vaisal steering the bus, clear giant brass bell in foreground, dramatic lighting, 8K resolution, octane render",
+                "hyperdetailed 3D battle scene of a young man named Nithish ringing a HUGE GLOWING BRASS CONDUCTOR BELL inside a futuristic passenger bus driven by Vaisal, giant shiny brass bell prominently visible in front view, epic cinematic lighting, photorealistic 8K, unreal engine 5 render",
+                "epic 3D poster art of a high speed bus with a GIANT BRASS BELL emblem and huge golden bus bell, driver Vaisal and bell ringer Nithish, ultra detailed, bright golden bell illumination, photorealistic, 8K render"
+            ];
+
+            const selectedPrompt = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
             const seed = Math.floor(Math.random() * 999999);
-            const promptText = encodeURIComponent("cinematic 3D realistic illustration of a large futuristic city bus with a giant glowing bus bell mounted on top, young Indian bus driver named Vaisal driving and conductor named Nithish ringing the bell, epic battle explosion background, ultra-detailed, photorealistic, 8K resolution, octane render");
+            const promptText = encodeURIComponent(selectedPrompt);
             const imageUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
 
             const imgLoader = new Image();
