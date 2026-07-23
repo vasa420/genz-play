@@ -364,6 +364,21 @@
                 return;
             }
 
+            if ((op1 === 'VAISAL' && op2 === 'GIRISH') || (op1 === 'GIRISH' && op2 === 'VAISAL')) {
+                const dimmer = document.createElement('div');
+                dimmer.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: #000; z-index: 99999; opacity: 0;
+                    transition: opacity 0.8s ease;
+                `;
+                document.body.appendChild(dimmer);
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    dimmer.style.opacity = '1';
+                    setTimeout(() => { window.location.href = 'vaisal_girish_battle.html'; }, 900);
+                }));
+                return;
+            }
+
             const st1 = OPERATIVE_STATS[op1] || { atk: 88, spd: 88, syn: 88 };
             const st2 = OPERATIVE_STATS[op2] || { atk: 88, spd: 88, syn: 88 };
 
