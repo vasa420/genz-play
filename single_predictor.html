@@ -247,6 +247,7 @@
                     <option value="THAYA">THAYA</option>
                     <option value="KISHOOR">KISHOOR</option>
                     <option value="VASANTH">VASANTH</option>
+                    <option value="SUDHISH">SUDHISH</option>
                 </select>
             </div>
 
@@ -311,24 +312,17 @@
 
         function runPrediction() {
             const name = document.getElementById('op-select').value;
-            const info = DATA[name] || { status: 'UNKNOWN THREAT', atk: 85, spd: 85, syn: 85, vic: 85 };
-
-            document.getElementById('res-name').textContent = name;
-            document.getElementById('res-status').textContent = `STATUS: ${info.status}`;
-
-            document.getElementById('st-atk').textContent = info.atk + '%';
-            document.getElementById('st-atk-fill').style.width = info.atk + '%';
-
-            document.getElementById('st-spd').textContent = info.spd + '%';
-            document.getElementById('st-spd-fill').style.width = info.spd + '%';
-
-            document.getElementById('st-syn').textContent = info.syn + '%';
-            document.getElementById('st-syn-fill').style.width = info.syn + '%';
-
-            document.getElementById('st-vic').textContent = info.vic + '%';
-            document.getElementById('st-vic-fill').style.width = info.vic + '%';
-
-            document.getElementById('result-panel').style.display = 'flex';
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = 'single_predictor_result.html?name=' + encodeURIComponent(name); }, 900);
+            }));
         }
 
         // Particle canvas background
