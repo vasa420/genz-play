@@ -771,8 +771,8 @@
 
         // Names are hidden — only stored in localStorage, not shown to user
 
-        // ── Single Media Button Mode & Upload Handler ────────────────
-        let currentMediaMode = 'photo'; // 'photo', 'video', or 'audio'
+        // ── Single Media Button Mode & Upload Handler (Photo & Video Only) ──
+        let currentMediaMode = 'photo'; // 'photo' or 'video'
 
         function setMediaMode(mode) {
             currentMediaMode = mode;
@@ -780,22 +780,17 @@
             if (!btn) return;
             if (mode === 'photo') {
                 btn.innerHTML = `📷<span class="shortcut-tag" id="media-shortcut-tag">P</span>`;
-                btn.title = "Mode: Photo (P). Click to switch mode";
-            } else if (mode === 'video') {
+                btn.title = "Mode: Photo (P). Click to switch to Video mode";
+            } else {
                 btn.innerHTML = `📹<span class="shortcut-tag" id="media-shortcut-tag">V</span>`;
-                btn.title = "Mode: Video (V). Click to switch mode";
-            } else if (mode === 'audio') {
-                btn.innerHTML = `🎙️<span class="shortcut-tag" id="media-shortcut-tag">A</span>`;
-                btn.title = "Mode: Audio (A). Click to switch mode";
+                btn.title = "Mode: Video (V). Click to switch to Photo mode";
             }
         }
 
-        // Clicking button switches mode smoothly WITHOUT popping open file manager!
+        // Toggles smoothly between Photo (P) and Video (V) ONLY
         function handleMediaToggleClick() {
             if (currentMediaMode === 'photo') {
                 setMediaMode('video');
-            } else if (currentMediaMode === 'video') {
-                setMediaMode('audio');
             } else {
                 setMediaMode('photo');
             }
@@ -1021,9 +1016,7 @@
                 }
 
                 if (query === 'NITHISH') {
-                    let targetPage = 'nithish.html';
-                    if (currentMediaMode === 'video') targetPage = 'nithish_video.html';
-                    else if (currentMediaMode === 'audio') targetPage = 'nithish_audio.html';
+                    const targetPage = currentMediaMode === 'video' ? 'nithish_video.html' : 'nithish.html';
 
                     const dimmer = document.createElement('div');
                     dimmer.style.cssText = `
