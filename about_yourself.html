@@ -10,8 +10,10 @@
             --primary: #FF6400;
             --primary-glow: rgba(255, 100, 0, 0.45);
             --green: #00FF88;
+            --green-glow: rgba(0, 255, 136, 0.35);
             --gold: #FFD700;
             --gold-glow: rgba(255, 215, 0, 0.35);
+            --red: #FF2244;
             --bg: #04040c;
         }
 
@@ -84,8 +86,8 @@
 
         /* Main Container */
         .main-container {
-            width: 100%; max-width: 720px;
-            padding: 50px 20px 80px;
+            width: 100%; max-width: 680px;
+            padding: 40px 20px 80px;
             position: relative; z-index: 1;
             display: flex; flex-direction: column; align-items: center;
         }
@@ -115,12 +117,12 @@
         .card-sub {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px; color: rgba(255,255,255,0.45);
-            letter-spacing: 2px; margin-bottom: 30px;
+            letter-spacing: 2px; margin-bottom: 25px;
         }
 
         .form-group {
             display: flex; flex-direction: column; gap: 8px;
-            margin-bottom: 20px; text-align: left;
+            margin-bottom: 24px; text-align: left;
         }
 
         .form-label {
@@ -129,9 +131,9 @@
             text-transform: uppercase;
         }
 
-        .text-input {
+        .select-input, .text-input {
             width: 100%; padding: 14px 18px;
-            background: rgba(4, 4, 12, 0.8);
+            background: rgba(4, 4, 12, 0.85);
             border: 1.5px solid rgba(255, 100, 0, 0.35);
             border-radius: 10px; color: #fff;
             font-family: 'JetBrains Mono', monospace;
@@ -139,7 +141,11 @@
             outline: none; transition: all 0.3s ease;
         }
 
-        .text-input:focus {
+        .select-input option {
+            background: #0b0b14; color: #fff;
+        }
+
+        .select-input:focus, .text-input:focus {
             border-color: var(--primary);
             box-shadow: 0 0 15px var(--primary-glow);
         }
@@ -159,10 +165,50 @@
             box-shadow: 0 0 30px var(--primary);
         }
 
-        /* Profile Result Card */
+        /* Cyber Loader */
+        .loader-block {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 10px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .loader-circle {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 100, 0, 0.15);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 100, 0, 0.2);
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loader-txt {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; letter-spacing: 2px; color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .loader-bar-bg {
+            width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px; overflow: hidden;
+        }
+
+        .loader-bar-fill {
+            width: 0%; height: 100%; background: var(--primary);
+            box-shadow: 0 0 10px var(--primary); transition: width 0.3s ease;
+        }
+
+        /* Profile Result & Story Card */
         .result-panel {
             width: 100%; display: none;
-            flex-direction: column; align-items: center; gap: 20px;
+            flex-direction: column; align-items: center; gap: 24px;
             animation: fadeIn 0.6s ease forwards;
         }
 
@@ -174,15 +220,15 @@
         .result-card {
             width: 100%; background: rgba(10, 10, 24, 0.85);
             border: 1.5px solid rgba(255, 100, 0, 0.4);
-            border-radius: 16px; padding: 30px;
-            backdrop-filter: blur(12px); box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border-radius: 18px; padding: 30px;
+            backdrop-filter: blur(12px); box-shadow: 0 0 35px rgba(0,0,0,0.8);
         }
 
         .user-name {
             font-family: 'JetBrains Mono', monospace;
             font-size: 28px; font-weight: 900; letter-spacing: 4px;
             color: var(--gold); text-shadow: 0 0 15px rgba(255,215,0,0.4);
-            margin-bottom: 4px; text-transform: uppercase; text-align: center;
+            margin-bottom: 6px; text-transform: uppercase; text-align: center;
         }
 
         .user-title-badge {
@@ -192,26 +238,46 @@
             text-shadow: 0 0 10px rgba(0,255,136,0.3);
         }
 
-        .stat-group { margin-bottom: 16px; }
+        /* Typing Story Box at Down Side */
+        .story-container {
+            width: 100%; margin-top: 20px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            border-radius: 14px; padding: 22px;
+            box-shadow: 0 0 20px rgba(255, 100, 0, 0.15);
+        }
 
-        .stat-label {
-            display: flex; justify-content: space-between;
+        .story-header {
+            display: flex; align-items: center; justify-content: space-between;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.6);
-            margin-bottom: 6px;
+            font-size: 11px; letter-spacing: 2px; color: var(--primary);
+            margin-bottom: 14px; border-bottom: 1px dashed rgba(255,100,0,0.25);
+            padding-bottom: 10px;
         }
 
-        .stat-bar-track {
-            height: 8px; background: rgba(255,255,255,0.06);
-            border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,100,0,0.2);
+        .story-body {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; line-height: 1.8; color: #fff;
+            letter-spacing: 0.8px; white-space: pre-line;
+            min-height: 110px;
         }
 
-        .stat-bar-fill {
-            height: 100%; border-radius: 6px;
-            background: linear-gradient(90deg, #FF6400, #FFD700);
-            box-shadow: 0 0 10px var(--primary-glow);
-            transition: width 0.8s ease;
+        .typing-cursor {
+            display: inline-block; width: 8px; height: 16px;
+            background: var(--primary); margin-left: 3px;
+            animation: blink 0.7s infinite; vertical-align: middle;
         }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .btn-retry {
+            width: 100%; background: transparent; border: 1.5px solid var(--primary);
+            color: var(--primary); padding: 14px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; font-weight: 700; letter-spacing: 3px; border-radius: 10px;
+            cursor: pointer; transition: all 0.3s ease; margin-top: 20px;
+        }
+
+        .btn-retry:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
     </style>
 </head>
 <body>
@@ -229,48 +295,55 @@
 
     <main class="main-container">
         
-        <div class="card">
+        <!-- Input Card (Only Name Asked) -->
+        <div class="card" id="form-card">
             <div class="card-icon">👤</div>
             <h1 class="card-title">ABOUT YOURSELF</h1>
-            <p class="card-sub">ENTER YOUR OPERATIVE PROFILE & GENERATE YOUR AI CYBER IDENTITY</p>
+            <p class="card-sub">SELECT YOUR OPERATIVE NAME & GENERATE YOUR FUNNY AI STORY</p>
 
             <div class="form-group">
-                <label class="form-label" for="user-name-input">YOUR OPERATIVE NAME</label>
-                <input type="text" id="user-name-input" class="text-input" placeholder="ENTER YOUR NAME..." autocomplete="off">
+                <label class="form-label" for="user-name-select">SELECT OPERATIVE NAME</label>
+                <select id="user-name-select" class="select-input">
+                    <option value="VAISAL" selected>VAISAL</option>
+                    <option value="NITHISH">NITHISH</option>
+                    <option value="GIRISH">GIRISH</option>
+                    <option value="DHARNISH">DHARNISH</option>
+                    <option value="SURYA">SURYA</option>
+                    <option value="THAYA">THAYA</option>
+                    <option value="KISHOOR">KISHOOR</option>
+                    <option value="VASANTH">VASANTH</option>
+                    <option value="LOGITH">LOGITH</option>
+                </select>
             </div>
 
-            <div class="form-group">
-                <label class="form-label" for="user-role-input">YOUR SPECIAL ROLE / CLASS</label>
-                <input type="text" id="user-role-input" class="text-input" placeholder="e.g. CYBER DRIVER, BLADE MASTER..." autocomplete="off">
-            </div>
-
-            <button class="btn-analyze" onclick="generateProfile()">GENERATE MY CYBER IDENTITY</button>
+            <button class="btn-analyze" onclick="startStoryGeneration()">RUN AI STORY GENERATOR</button>
         </div>
 
+        <!-- Cyber Loader -->
+        <div class="loader-block" id="loader-block">
+            <div class="loader-circle"></div>
+            <div class="loader-txt" id="loader-txt">BOOTING AI STORY GENERATOR...</div>
+            <div class="loader-bar-bg">
+                <div class="loader-bar-fill" id="loader-bar"></div>
+            </div>
+        </div>
+
+        <!-- Profile Result & AI Story Card (Typed at down side) -->
         <div class="result-panel" id="result-panel">
             <div class="result-card">
-                <div class="user-name" id="res-user-name">OPERATIVE</div>
-                <div class="user-title-badge" id="res-user-role">SQUAD CLASS: CYBER LEADER</div>
+                <div class="user-name" id="res-user-name">VAISAL</div>
+                <div class="user-title-badge" id="res-user-role">OPERATIVE THREAT PROFILE DETECTED</div>
 
-                <div class="stat-group">
-                    <div class="stat-label"><span>COMBAT POTENTIAL</span><span id="st-comb">96%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-comb-fill" style="width: 96%;"></div></div>
+                <!-- Story box typed at the down side -->
+                <div class="story-container">
+                    <div class="story-header">
+                        <span>🤖 AI GENERATED STORY LORE</span>
+                        <span id="typing-status" style="color: var(--primary); font-size: 10px;">TYPING STORY...</span>
+                    </div>
+                    <div class="story-body" id="story-body"></div>
                 </div>
 
-                <div class="stat-group">
-                    <div class="stat-label"><span>TACTICAL REFLEXES</span><span id="st-refl">94%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-refl-fill" style="width: 94%;"></div></div>
-                </div>
-
-                <div class="stat-group">
-                    <div class="stat-label"><span>INTELLIGENCE & SPECTRUM</span><span id="st-intel">98%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-intel-fill" style="width: 98%;"></div></div>
-                </div>
-
-                <div class="stat-group">
-                    <div class="stat-label"><span>SQUAD LEADER SYNERGY</span><span id="st-syn">97%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-syn-fill" style="width: 97%;"></div></div>
-                </div>
+                <button class="btn-retry" onclick="resetPage()">GENERATE ANOTHER STORY</button>
             </div>
         </div>
 
@@ -291,35 +364,133 @@
             }));
         }
 
-        function generateProfile() {
-            const nameInput = document.getElementById('user-name-input').value.trim();
-            const roleInput = document.getElementById('user-role-input').value.trim();
+        const SQUAD_STORIES = {
+            'VAISAL': [
+                "Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!",
+                "Known to drift a 40-ton government bus around tight city sharp turns while casually conducting tickets.",
+                "Once shifted into 6th gear so fast that passengers accidentally travelled through a space-time continuum!",
+                "Legend says he once overtook a fighter jet on the highway while calling out 'RIGHT... RIGHT... HOLD ON!'"
+            ],
+            'NITHISH': [
+                "Nithish ringed the temple bell with such holy force that the entire colony thought a thunderstorm landed!",
+                "Master of tactical mantras and high-vibration sacred priest frequency attacks.",
+                "Can perform a 360-degree bell strike while blessing squad mates with infinite armor boost.",
+                "Enemy threats automatically surrender the moment they hear his sacred battle roar!"
+            ],
+            'GIRISH': [
+                "Girish once out-calculated a supercomputer using pure street intelligence!",
+                "Known as the tactical squad mastermind who plans 50 moves ahead while drinking hot tea.",
+                "Can spot enemy camouflage from 3 kilometers away using zero equipment.",
+                "Squad members refuse to play chess against him because he wins before the first move is played!"
+            ],
+            'DHARNISH': [
+                "Dharnish moves with phantom stealth speed that confuses enemy radar systems.",
+                "Legend has it he can sprint across the entire city field without leaving a single footprint!",
+                "Master of sudden surprise attacks and hyper-speed squad flanking maneuvers.",
+                "When Dharnish says 'I'm right behind you', even his own shadow gets scared!"
+            ],
+            'SURYA': [
+                "Surya's solar energy output is so high that street lights turn on automatically when he walks past!",
+                "Known to recharge squad batteries using pure hand power during night missions.",
+                "Always brings 100% heat to every battle scenario.",
+                "Enemies wear sunglasses even indoors when fighting Operative Surya!"
+            ],
+            'THAYA': [
+                "Thaya's defense armor is built out of pure solid willpower and unstoppable energy.",
+                "Can tank a direct cannon hit without losing a single line of health!",
+                "The ultimate frontline shield of ATC Studio operations.",
+                "When Thaya stands guard, even gravity takes a step back!"
+            ],
+            'KISHOOR': [
+                "Kishoor's precision targeting system never misses a single shot.",
+                "Calculates wind speed, humidity, and atmospheric pressure in 0.001 seconds.",
+                "Known as the squad's sharpshooter guardian angel.",
+                "Can hit a moving target while drinking fruit juice with one hand!"
+            ],
+            'VASANTH': [
+                "Vasanth is the master architect who built the core cyber matrix of ATTACKS!",
+                "Can write 10,000 lines of bug-free code while eating popcorn.",
+                "Controls the entire squad command hub with supreme authority.",
+                "When Vasanth presses Enter, the entire system aligns to his command!"
+            ],
+            'LOGITH': [
+                "Logith's tactical reflexes react faster than light speed speed-bumps!",
+                "Unstoppable in close-quarter battle encounters.",
+                "Known to defeat three enemy bosses before his morning coffee gets cold.",
+                "Always enters the battlefield with a confident smile and maximum power!"
+            ]
+        };
 
-            const name = nameInput || 'OPERATIVE USER';
-            const role = roleInput || 'CYBER SQUAD LEADER';
+        let typingInterval = null;
 
+        function startStoryGeneration() {
+            const name = document.getElementById('user-name-select').value;
+
+            // Show loader state
+            document.getElementById('form-card').style.display = 'none';
+            document.getElementById('loader-block').style.display = 'flex';
+
+            const stages = [
+                { text: "SCANNING BIOGRAPHY DATABASE...", progress: 25 },
+                { text: "RETRIEVING OPERATIVE LORE RECORD...", progress: 55 },
+                { text: "GENERATING FUNNY AI STORY...", progress: 85 },
+                { text: "STORY READY FOR TYPING...", progress: 100 }
+            ];
+
+            const bar = document.getElementById('loader-bar');
+            const txt = document.getElementById('loader-txt');
+
+            let idx = 0;
+            function step() {
+                if (idx < stages.length) {
+                    txt.textContent = stages[idx].text;
+                    bar.style.width = stages[idx].progress + '%';
+                    idx++;
+                    setTimeout(step, 650);
+                } else {
+                    document.getElementById('loader-block').style.display = 'none';
+                    showProfileAndTypeStory(name);
+                }
+            }
+            step();
+        }
+
+        function showProfileAndTypeStory(name) {
             document.getElementById('res-user-name').textContent = name;
-            document.getElementById('res-user-role').textContent = `CLASS: ${role.toUpperCase()}`;
-
-            // Generate fun high stats
-            const c = 92 + Math.floor(Math.random() * 7);
-            const r = 90 + Math.floor(Math.random() * 8);
-            const i = 94 + Math.floor(Math.random() * 6);
-            const s = 93 + Math.floor(Math.random() * 7);
-
-            document.getElementById('st-comb').textContent = c + '%';
-            document.getElementById('st-comb-fill').style.width = c + '%';
-
-            document.getElementById('st-refl').textContent = r + '%';
-            document.getElementById('st-refl-fill').style.width = r + '%';
-
-            document.getElementById('st-intel').textContent = i + '%';
-            document.getElementById('st-intel-fill').style.width = i + '%';
-
-            document.getElementById('st-syn').textContent = s + '%';
-            document.getElementById('st-syn-fill').style.width = s + '%';
-
             document.getElementById('result-panel').style.display = 'flex';
+
+            const lines = SQUAD_STORIES[name] || SQUAD_STORIES['VAISAL'];
+            const fullStoryText = lines.map((line, i) => `${i + 1}. ${line}`).join('\n\n');
+
+            const storyBody = document.getElementById('story-body');
+            const typingStatus = document.getElementById('typing-status');
+            storyBody.innerHTML = '';
+            typingStatus.textContent = 'TYPING STORY...';
+
+            let charIdx = 0;
+            if (typingInterval) clearInterval(typingInterval);
+
+            // Typing effect letter by letter (~25-30ms per character, taking under 1 minute)
+            typingInterval = setInterval(() => {
+                if (charIdx < fullStoryText.length) {
+                    const currentText = fullStoryText.substring(0, charIdx + 1);
+                    storyBody.innerHTML = currentText.replace(/\n/g, '<br>') + '<span class="typing-cursor"></span>';
+                    charIdx++;
+                } else {
+                    clearInterval(typingInterval);
+                    storyBody.innerHTML = fullStoryText.replace(/\n/g, '<br>');
+                    typingStatus.textContent = '✅ STORY GENERATED';
+                    typingStatus.style.color = 'var(--green)';
+                }
+            }, 32);
+        }
+
+        function resetPage() {
+            if (typingInterval) clearInterval(typingInterval);
+            document.getElementById('result-panel').style.display = 'none';
+            document.getElementById('loader-block').style.display = 'none';
+            document.getElementById('loader-bar').style.width = '0%';
+            document.getElementById('form-card').style.display = 'block';
         }
 
         // Particle canvas background
