@@ -61,57 +61,6 @@
             transition: background-image 0.4s ease;
         }
 
-        /* Gallery Navigation Buttons */
-        .gallery-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 44px;
-            height: 44px;
-            background: rgba(4, 4, 12, 0.6);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            color: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 25;
-            backdrop-filter: blur(8px);
-            opacity: 0.6;
-        }
-
-        .gallery-nav:hover {
-            opacity: 1;
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        .gallery-nav.prev {
-            left: 15px;
-        }
-
-        .gallery-nav.next {
-            right: 15px;
-        }
-
-        @media (max-width: 640px) {
-            .gallery-nav {
-                width: 36px;
-                height: 36px;
-                font-size: 14px;
-            }
-            .gallery-nav.prev {
-                left: 8px;
-            }
-            .gallery-nav.next {
-                right: 8px;
-            }
-        }
 
         /* Main Viewport Container */
         .fullscreen-viewport {
@@ -379,9 +328,7 @@
         <!-- Main Image Frame -->
         <div class="image-frame">
             <div class="scanner-beam"></div>
-            <button class="gallery-nav prev" id="btn-prev" onclick="changeRecord(-1)" title="Previous Record">❮</button>
             <img src="" alt="">
-            <button class="gallery-nav next" id="btn-next" onclick="changeRecord(1)" title="Next Record">❯</button>
         </div>
 
         <!-- Download Badge -->
@@ -451,7 +398,7 @@
             draw();
         })();
 
-        // Records array with multiple items
+        // Randomly select image and status configuration
         const DHANISH_RECORDS = [
             {
                 image: 'dhanish.jpg',
@@ -467,38 +414,28 @@
             }
         ];
 
-        let currentIndex = Math.floor(Math.random() * DHANISH_RECORDS.length);
+        const selectedRecord = DHANISH_RECORDS[Math.floor(Math.random() * DHANISH_RECORDS.length)];
 
-        function updateRecord(index) {
-            currentIndex = (index + DHANISH_RECORDS.length) % DHANISH_RECORDS.length;
-            const record = DHANISH_RECORDS[currentIndex];
+        // Set status
+        document.getElementById('rec-status').textContent = selectedRecord.status;
 
-            // Set status
-            document.getElementById('rec-status').textContent = record.status;
+        // Set backdrop blur image
+        document.getElementById('rec-backdrop').style.backgroundImage = `url('${selectedRecord.image}')`;
 
-            // Set backdrop blur image
-            document.getElementById('rec-backdrop').style.backgroundImage = `url('${record.image}')`;
+        // Set image source and alt text
+        const imageElement = document.querySelector('.image-frame img');
+        imageElement.src = selectedRecord.image;
+        imageElement.alt = selectedRecord.alt;
 
-            // Set image source and alt text
-            const imageElement = document.querySelector('.image-frame img');
-            imageElement.src = record.image;
-            imageElement.alt = record.alt;
+        // Set download link parameters
+        const downloadBtn = document.getElementById('btn-download-img');
+        downloadBtn.href = selectedRecord.image;
+        downloadBtn.download = selectedRecord.downloadName;
 
-            // Set download link parameters
-            const downloadBtn = document.getElementById('btn-download-img');
-            downloadBtn.href = record.image;
-            downloadBtn.download = record.downloadName;
-        }
-
-        function changeRecord(dir) {
-            updateRecord(currentIndex + dir);
-        }
-
-        // Fade in entrance effect & initialize record
+        // Fade in entrance effect
         document.body.style.opacity = '0';
         document.body.style.transition = 'opacity 0.8s ease';
         window.addEventListener('load', () => {
-            updateRecord(currentIndex);
             requestAnimationFrame(() => { document.body.style.opacity = '1'; });
         });
     </script>
