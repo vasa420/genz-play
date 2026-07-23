@@ -176,6 +176,36 @@
         }
 
         .btn-retry:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
+
+        /* Error notification toast */
+        .error-toast {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(50px);
+            opacity: 0;
+            background: rgba(20, 0, 0, 0.95);
+            border: 1.5px solid var(--red);
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: #FF4466;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(255, 34, 68, 0.4);
+            width: 85%;
+            max-width: 450px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .error-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -271,7 +301,19 @@
         <button class="btn-retry" id="btn-retry" onclick="resetComparison()">COMPARE AGAIN</button>
     </div>
 
+    <!-- Alert Toast Dialog -->
+    <div class="error-toast" id="error-toast">⚠️ TWO NAMES ARE THE SAME! PLEASE SELECT A DIFFERENT NAME.</div>
+
     <script>
+        function showToast(message) {
+            const toast = document.getElementById('error-toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+
         function goBack() {
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
@@ -301,6 +343,11 @@
         function runComparison() {
             const op1 = document.getElementById('op1').value;
             const op2 = document.getElementById('op2').value;
+
+            if (op1 === op2) {
+                showToast("⚠️ BOTH OPERATIVE NAMES ARE THE SAME! PLEASE CHANGE TO A DIFFERENT NAME.");
+                return;
+            }
 
             const st1 = OPERATIVE_STATS[op1] || { atk: 88, spd: 88, syn: 88 };
             const st2 = OPERATIVE_STATS[op2] || { atk: 88, spd: 88, syn: 88 };
