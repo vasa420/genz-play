@@ -120,7 +120,7 @@
         }
 
         .search-bar {
-            width: 100%; padding: 18px 152px 18px 24px;
+            width: 100%; padding: 18px 240px 18px 24px;
             background: rgba(255,255,255,0.03);
             border: 1.5px solid rgba(255,100,0,0.25);
             border-radius: 14px;
@@ -143,22 +143,38 @@
 
         .search-btns {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            display: flex; gap: 8px; align-items: center;
+            display: flex; gap: 6px; align-items: center;
         }
 
-        .btn-mic, .btn-search {
-            width: 38px; height: 38px; border-radius: 10px; border: none;
+        .btn-photo, .btn-video, .btn-mic, .btn-search {
+            height: 38px; border-radius: 10px; border: none;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 17px; transition: 0.25s;
+            font-size: 16px; transition: 0.25s;
         }
 
-        .btn-mic {
+        .btn-photo, .btn-video, .btn-mic {
             background: rgba(255,100,0,0.1);
             border: 1.5px solid rgba(255,100,0,0.25);
             color: var(--primary);
+            padding: 0 8px;
+            gap: 4px;
         }
 
-        .btn-mic:hover { background: rgba(255,100,0,0.2); box-shadow: 0 0 12px var(--primary-glow); }
+        .btn-photo:hover, .btn-video:hover, .btn-mic:hover {
+            background: rgba(255,100,0,0.22);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+            transform: translateY(-1px);
+        }
+
+        .shortcut-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; font-weight: 800;
+            background: rgba(255, 100, 0, 0.22);
+            color: var(--primary);
+            border: 1px solid rgba(255, 100, 0, 0.4);
+            padding: 1px 4px; border-radius: 4px; line-height: 1;
+        }
 
         .btn-mic.listening {
             background: rgba(255,34,68,0.2);
@@ -622,8 +638,9 @@
             <span class="db-label">DATABASE ONLINE</span>
         </div>
 
-        <!-- Hidden file input -->
-        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(event)">
+        <!-- Hidden file inputs -->
+        <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+        <input type="file" id="video-file-input" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
 
         <!-- Search bar -->
         <div class="search-wrapper">
@@ -636,6 +653,8 @@
                 spellcheck="false"
             >
             <div class="search-btns">
+                <button class="btn-photo" id="photo-btn" title="Upload Photo (Shortcut: P)" onclick="triggerPhotoUpload()">📷<span class="shortcut-tag">P</span></button>
+                <button class="btn-video" id="video-btn" title="Upload Video (Shortcut: V)" onclick="triggerVideoUpload()">📹<span class="shortcut-tag">V</span></button>
                 <button class="btn-mic" id="mic-btn" title="Search by voice" onclick="toggleMic()">🎤</button>
                 <button class="btn-search" title="Search" onclick="runSearch()">⏎</button>
             </div>
@@ -643,7 +662,8 @@
 
         <!-- Upload preview -->
         <div class="upload-preview" id="upload-preview">
-            <img id="preview-img" src="" alt="uploaded">
+            <img id="preview-img" src="" alt="uploaded" style="display:none;">
+            <video id="preview-video" src="" style="display:none; width:64px; height:64px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,100,0,0.35); box-shadow:0 0 10px rgba(255,100,0,0.2);" controls></video>
             <div class="upload-preview-info">
                 <div class="upload-preview-name" id="preview-name"></div>
                 <div class="upload-preview-size" id="preview-size"></div>
@@ -750,34 +770,86 @@
 
         // Names are hidden — only stored in localStorage, not shown to user
 
-        // ── Upload photo handler ─────────────────────────────────────
-        function handleUpload(event) {
+        // ── Upload photo & video handlers ─────────────────────────────
+        function triggerPhotoUpload() {
+            document.getElementById('photo-file-input').click();
+        }
+
+        function triggerVideoUpload() {
+            document.getElementById('video-file-input').click();
+        }
+
+        function handlePhotoUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = (e) => {
-                document.getElementById('preview-img').src = e.target.result;
-                document.getElementById('preview-name').textContent = file.name;
+                const imgEl = document.getElementById('preview-img');
+                const vidEl = document.getElementById('preview-video');
+                imgEl.src = e.target.result;
+                imgEl.style.display = 'block';
+                if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause(); }
+
+                document.getElementById('preview-name').textContent = `📷 ${file.name}`;
                 const kb = (file.size / 1024).toFixed(1);
-                document.getElementById('preview-size').textContent = `${kb} KB · IMAGE UPLOADED`;
+                document.getElementById('preview-size').textContent = `${kb} KB · PHOTO UPLOADED [KEY P]`;
                 document.getElementById('upload-preview').classList.add('active');
             };
             reader.readAsDataURL(file);
-            // Reset input so same file can be re-selected
+            event.target.value = '';
+        }
+
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgEl = document.getElementById('preview-img');
+                const vidEl = document.getElementById('preview-video');
+                vidEl.src = e.target.result;
+                vidEl.style.display = 'block';
+                if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+
+                document.getElementById('preview-name').textContent = `📹 ${file.name}`;
+                const kb = (file.size / 1024).toFixed(1);
+                document.getElementById('preview-size').textContent = `${kb} KB · VIDEO UPLOADED [KEY V]`;
+                document.getElementById('upload-preview').classList.add('active');
+            };
+            reader.readAsDataURL(file);
             event.target.value = '';
         }
 
         function removeUpload() {
-            document.getElementById('preview-img').src = '';
+            const imgEl = document.getElementById('preview-img');
+            const vidEl = document.getElementById('preview-video');
+            if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+            if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause(); }
             document.getElementById('preview-name').textContent = '';
             document.getElementById('preview-size').textContent = '';
             document.getElementById('upload-preview').classList.remove('active');
         }
 
-        // ── Keyboard enter ───────────────────────────────────────────
-        document.getElementById('search-input').addEventListener('keydown', e => {
-            if (e.key === 'Enter') runSearch();
+        // ── Keyboard shortcuts (P for Photo, V for Video, Enter for Search) ─
+        document.addEventListener('keydown', e => {
+            const active = document.activeElement;
+            const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+
+            if (e.key === 'Enter' && active && active.id === 'search-input') {
+                runSearch();
+                return;
+            }
+
+            if (!isTyping) {
+                if (e.key === 'p' || e.key === 'P') {
+                    e.preventDefault();
+                    triggerPhotoUpload();
+                } else if (e.key === 'v' || e.key === 'V') {
+                    e.preventDefault();
+                    triggerVideoUpload();
+                }
+            }
         });
 
         // ── State ────────────────────────────────────────────────────
@@ -949,10 +1021,11 @@
                     document.getElementById('found-name').textContent = query;
                     foundBlock.classList.add('active');
 
-                    // If a photo was uploaded → trigger AI scene generation
+                    // If a photo or video was uploaded → trigger AI scene generation
                     const uploadedImg = document.getElementById('preview-img').src;
-                    const hasPhoto = uploadedImg && uploadedImg.startsWith('data:image');
-                    if (hasPhoto) {
+                    const uploadedVid = document.getElementById('preview-video').src;
+                    const hasMedia = (uploadedImg && uploadedImg.startsWith('data:image')) || (uploadedVid && uploadedVid.startsWith('data:video'));
+                    if (hasMedia) {
                         triggerSceneGen(query);
                     } else {
                         document.getElementById('scene-gen-block').style.display = 'none';
