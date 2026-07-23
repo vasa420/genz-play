@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | Single Predictor AI HUD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>ATTACKS | Single Predictor Result</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #FF6400;
-            --primary-glow: rgba(255, 100, 0, 0.5);
-            --cyan: #00FFC8;
-            --cyan-glow: rgba(0, 255, 200, 0.4);
+            --primary-glow: rgba(255, 100, 0, 0.45);
+            --green: #00FF88;
+            --red: #FF2244;
             --gold: #FFD700;
-            --gold-glow: rgba(255, 215, 0, 0.4);
-            --dark-card: rgba(8, 9, 22, 0.85);
-            --bg: #03030a;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --bg: #04040c;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -31,384 +30,287 @@
             position: relative;
         }
 
-        /* Ambient animated gradient backdrop */
-        .ambient-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 20%, rgba(255, 100, 0, 0.08) 0%, transparent 60%),
-                        radial-gradient(circle at 80% 80%, rgba(0, 255, 200, 0.05) 0%, transparent 50%);
-            pointer-events: none; z-index: 0;
-        }
-
         /* Scanline overlay */
         .scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18), rgba(0,0,0,0.18) 1.5px, transparent 1.5px, transparent 3px);
-            pointer-events: none; z-index: 9999; opacity: 0.65;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.7;
         }
 
-        /* Particle Canvas */
+        /* Ambient particles bg */
         #particle-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 1;
+            pointer-events: none; z-index: 0;
         }
 
-        /* Cyberpunk Header */
+        /* Header */
         .header {
-            width: 100%; padding: 18px 32px;
+            width: 100%; padding: 20px 30px;
             display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 100, 0, 0.2);
-            background: rgba(3, 4, 14, 0.94);
-            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 100, 0, 0.15);
+            background: rgba(4,4,12,0.92);
+            backdrop-filter: blur(12px);
             position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
         }
-
-        .header-logo-group {
-            display: flex; align-items: center; gap: 12px;
-        }
-
-        .header-badge {
-            width: 10px; height: 10px; border-radius: 50%;
-            background: var(--cyan); box-shadow: 0 0 12px var(--cyan);
-            animation: pulse-dot 1.8s ease-in-out infinite;
-        }
-
-        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.4; } }
 
         .header-logo {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 19px; font-weight: 900; letter-spacing: 5px;
-            background: linear-gradient(90deg, #FF6400, #FFD700);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        .header-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 3px; color: var(--cyan);
-            text-transform: uppercase; margin-left: 8px; opacity: 0.85;
+            font-size: 18px; font-weight: 900; letter-spacing: 5px;
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary-glow);
         }
 
         .btn-back {
-            background: rgba(255, 100, 0, 0.06);
-            border: 1.5px solid rgba(255, 100, 0, 0.4);
+            background: transparent;
+            border: 1px solid rgba(255,100,0,0.35);
             color: var(--primary);
-            padding: 9px 20px;
+            padding: 8px 18px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; font-weight: 700;
-            border-radius: 8px; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(8px);
+            font-size: 11px; letter-spacing: 2px;
+            border-radius: 6px; cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .btn-back:hover {
             background: var(--primary);
             color: #000;
-            box-shadow: 0 0 20px var(--primary-glow);
-            transform: translateY(-2px);
+            box-shadow: 0 0 15px var(--primary-glow);
         }
 
         /* Main Container */
         .main-container {
-            width: 100%; max-width: 880px;
+            width: 100%; max-width: 860px;
             padding: 40px 20px 80px;
             position: relative; z-index: 5;
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* HUD Title Deck */
-        .hud-header {
-            text-align: center; margin-bottom: 35px;
-            position: relative;
+        /* Title Header */
+        .page-header {
+            text-align: center; margin-bottom: 30px;
         }
 
-        .hud-status-chip {
-            display: inline-flex; align-items: center; gap: 8px;
+        .page-tag {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 3.5px; color: var(--cyan);
-            text-transform: uppercase;
-            padding: 6px 18px; background: rgba(0, 255, 200, 0.08);
-            border: 1px solid rgba(0, 255, 200, 0.3); border-radius: 30px;
-            margin-bottom: 12px;
-            box-shadow: 0 0 15px rgba(0, 255, 200, 0.15);
+            font-size: 11px; letter-spacing: 4px; color: var(--gold);
+            text-transform: uppercase; margin-bottom: 8px;
+            display: inline-block;
+            padding: 4px 14px; background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.25); border-radius: 20px;
         }
 
-        .hud-title {
-            font-size: clamp(28px, 6vw, 48px);
-            font-weight: 900; letter-spacing: 4px;
-            background: linear-gradient(135deg, #FFF, #FF6400 60%, #FFD700);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        .page-title {
+            font-size: clamp(24px, 5vw, 42px);
+            font-weight: 900; letter-spacing: 3px;
+            background: linear-gradient(135deg, #FF6400, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-transform: uppercase;
-            filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.3));
         }
 
-        .hud-sub {
+        .page-sub {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; color: rgba(255,255,255,0.55);
-            letter-spacing: 3px; margin-top: 8px; text-transform: uppercase;
+            font-size: 12px; color: rgba(255,255,255,0.45);
+            letter-spacing: 2px; margin-top: 6px;
         }
 
-        /* Holographic Card Wrapper */
-        .holo-card {
-            width: 100%; background: var(--dark-card);
-            border: 1px solid rgba(255, 100, 0, 0.3);
-            border-radius: 20px; padding: 45px 35px;
+        /* Loading / Generating State Card */
+        .gen-card {
+            width: 100%; background: rgba(10, 10, 24, 0.75);
+            border: 1.5px solid rgba(255, 100, 0, 0.3);
+            border-radius: 16px; padding: 45px 30px;
             display: flex; flex-direction: column; align-items: center;
-            text-align: center; backdrop-filter: blur(20px);
-            box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(255,100,0,0.05);
+            text-align: center; backdrop-filter: blur(14px);
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
             position: relative; overflow: hidden;
-            transition: all 0.4s ease;
         }
 
-        /* Sci-fi Corner Brackets */
-        .holo-card::before, .holo-card::after {
-            content: ''; position: absolute; width: 16px; height: 16px;
-            border: 2px solid var(--cyan); pointer-events: none;
-        }
-        .holo-card::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
-        .holo-card::after { bottom: 12px; right: 12px; border-left: none; border-top: none; }
-
-        /* Arc Reactor Spinner Unit */
-        .arc-reactor-wrapper {
-            position: relative; width: 120px; height: 120px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 30px;
-        }
-
-        .arc-ring-outer {
-            position: absolute; width: 120px; height: 120px;
+        .radar-spinner {
+            width: 80px; height: 80px;
             border: 3px solid rgba(255, 100, 0, 0.15);
             border-top-color: var(--primary);
-            border-bottom-color: var(--gold);
+            border-right-color: var(--gold);
             border-radius: 50%;
-            animation: spin-cw 1.8s linear infinite;
+            animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
             box-shadow: 0 0 25px var(--primary-glow);
+            margin-bottom: 25px;
         }
 
-        .arc-ring-inner {
-            position: absolute; width: 88px; height: 88px;
-            border: 2px dashed rgba(0, 255, 200, 0.3);
-            border-left-color: var(--cyan);
-            border-right-color: var(--cyan);
-            border-radius: 50%;
-            animation: spin-ccw 1.2s linear infinite;
-            box-shadow: 0 0 15px var(--cyan-glow);
-        }
-
-        .arc-percent {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px; font-weight: 800; color: var(--gold);
-            text-shadow: 0 0 12px var(--gold-glow); z-index: 2;
-        }
-
-        @keyframes spin-cw { to { transform: rotate(360deg); } }
-        @keyframes spin-ccw { to { transform: rotate(-360deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .gen-status-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 17px; font-weight: 800; letter-spacing: 4px;
-            color: var(--primary); text-shadow: 0 0 12px var(--primary-glow);
+            font-size: 16px; font-weight: 700; letter-spacing: 4px;
+            color: var(--primary); text-shadow: 0 0 10px var(--primary-glow);
             margin-bottom: 10px; text-transform: uppercase;
         }
 
         .gen-status-phase {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 2.5px; color: var(--cyan);
-            margin-bottom: 25px; min-height: 22px;
-            text-shadow: 0 0 10px var(--cyan-glow);
+            font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.6);
+            margin-bottom: 25px; min-height: 20px;
         }
 
         .gen-progress-track {
-            width: 100%; max-width: 520px; height: 10px;
-            background: rgba(255,255,255,0.05); border-radius: 12px;
-            overflow: hidden; border: 1px solid rgba(255,100,0,0.3);
-            margin-bottom: 14px; position: relative;
+            width: 100%; max-width: 500px; height: 8px;
+            background: rgba(255,255,255,0.06); border-radius: 10px;
+            overflow: hidden; border: 1px solid rgba(255,100,0,0.2);
+            margin-bottom: 12px;
         }
 
         .gen-progress-fill {
             height: 100%; width: 0%;
-            background: linear-gradient(90deg, #FF6400, #00FFC8, #FFD700);
-            border-radius: 12px;
-            box-shadow: 0 0 15px var(--cyan-glow);
+            background: linear-gradient(90deg, #FF6400, #FFD700);
+            border-radius: 10px;
+            box-shadow: 0 0 12px var(--primary-glow);
             transition: width 0.3s ease;
         }
 
         .gen-time-text {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
+            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.35);
         }
 
-        /* Result View HUD Section */
+        /* Result Section */
         .result-section {
             width: 100%; display: none;
-            flex-direction: column; align-items: center; gap: 32px;
-            animation: fadeInHUD 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            flex-direction: column; align-items: center; gap: 30px;
+            animation: fadeIn 0.8s ease forwards;
         }
 
-        @keyframes fadeInHUD {
-            from { opacity: 0; transform: translateY(20px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Holographic Image Frame */
+        /* Image Frame */
         .image-frame {
             position: relative;
-            width: 100%; max-width: 800px;
-            border-radius: 20px;
-            border: 2px solid rgba(0, 255, 200, 0.4);
-            box-shadow: 0 0 50px rgba(0,0,0,0.95), 0 0 25px var(--cyan-glow);
+            width: 100%; max-width: 760px;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 100, 0, 0.4);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 20px var(--primary-glow);
             overflow: hidden; background: #000;
             display: flex; align-items: center; justify-content: center;
         }
 
         .image-frame img {
-            width: 100%; height: auto; max-height: 540px;
+            width: 100%; height: auto; max-height: 520px;
             object-fit: cover; display: block;
         }
 
-        /* Holographic Scanner Beams */
+        /* Scanner beam */
         .scanner-beam {
-            position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, transparent, var(--cyan), var(--gold), transparent);
-            box-shadow: 0 0 20px var(--cyan);
-            animation: scan-laser 4s ease-in-out infinite; z-index: 10;
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            box-shadow: 0 0 15px var(--primary);
+            animation: scan 4s ease-in-out infinite; z-index: 10;
         }
 
-        @keyframes scan-laser {
+        @keyframes scan {
             0%, 100% { top: 0%; opacity: 0; }
-            50% { top: 98%; opacity: 0.9; }
+            50% { top: 98%; opacity: 0.8; }
         }
 
         .caption-badge {
-            background: rgba(3, 4, 16, 0.88);
-            border: 1.5px solid rgba(0, 255, 200, 0.35);
-            border-radius: 30px; padding: 12px 28px;
+            background: rgba(4, 4, 12, 0.85);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            border-radius: 30px; padding: 10px 24px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; font-weight: 700; letter-spacing: 2px;
-            color: var(--gold); backdrop-filter: blur(14px); text-align: center;
-            box-shadow: 0 0 20px rgba(0, 255, 200, 0.15);
+            font-size: 12px; letter-spacing: 2px; color: var(--gold);
+            backdrop-filter: blur(10px); text-align: center;
         }
 
         /* Buttons Container */
         .action-btns {
-            display: flex; gap: 18px; flex-wrap: wrap; justify-content: center;
+            display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
         }
 
         .btn-action {
             display: inline-flex; align-items: center; gap: 10px;
-            padding: 15px 32px; border-radius: 30px;
+            padding: 14px 28px; border-radius: 30px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; font-weight: 800; letter-spacing: 2px;
-            cursor: pointer; text-decoration: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 12px; font-weight: 700; letter-spacing: 2px;
+            cursor: pointer; text-decoration: none; transition: all 0.3s ease;
         }
 
         .btn-download {
-            background: linear-gradient(135deg, #FF6400, #FF9D00);
-            color: #000; border: none;
-            box-shadow: 0 0 25px var(--primary-glow);
+            background: var(--primary); color: #000; border: none;
+            box-shadow: 0 0 20px var(--primary-glow);
         }
 
         .btn-download:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 0 35px var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--primary);
         }
 
         .btn-regen {
-            background: rgba(0, 255, 200, 0.08);
-            border: 1.5px solid rgba(0, 255, 200, 0.4);
-            color: var(--cyan); backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 215, 0, 0.4);
+            color: var(--gold);
         }
 
         .btn-regen:hover {
-            background: rgba(0, 255, 200, 0.2);
-            color: #fff; transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 0 25px var(--cyan-glow);
+            background: rgba(255, 215, 0, 0.15);
+            transform: translateY(-2px);
         }
 
-        /* Cyber Telemetry Stats Card */
-        .telemetry-card {
-            width: 100%; max-width: 800px;
-            background: var(--dark-card);
-            border: 1px solid rgba(0, 255, 200, 0.25);
-            border-radius: 18px; padding: 28px 30px;
-            backdrop-filter: blur(14px); margin-top: 10px;
-            position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.7);
+        /* Stats Card */
+        .stat-card {
+            width: 100%; max-width: 760px;
+            background: rgba(10, 10, 24, 0.7);
+            border: 1px solid rgba(255, 100, 0, 0.25);
+            border-radius: 14px; padding: 25px;
+            backdrop-filter: blur(10px); margin-top: 10px;
         }
 
-        .telemetry-header {
+        .stat-card-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 16px; font-weight: 800; letter-spacing: 3px;
-            color: var(--cyan); margin-bottom: 20px;
+            font-size: 16px; font-weight: 700; letter-spacing: 3px;
+            color: var(--primary); margin-bottom: 15px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(0, 255, 200, 0.15); padding-bottom: 12px;
         }
 
-        .stat-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px;
-        }
-
-        @media (max-width: 600px) {
-            .stat-grid { grid-template-columns: 1fr; }
-        }
-
-        .stat-row { margin-bottom: 6px; }
+        .stat-row { margin-bottom: 12px; }
 
         .stat-row-label {
             display: flex; justify-content: space-between;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.6);
-            margin-bottom: 6px;
+            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.5);
+            margin-bottom: 4px;
         }
 
         .stat-bar-track {
-            height: 7px; background: rgba(255,255,255,0.06);
-            border-radius: 6px; overflow: hidden; border: 1px solid rgba(0,255,200,0.2);
+            height: 6px; background: rgba(255,255,255,0.06);
+            border-radius: 5px; overflow: hidden;
         }
 
         .stat-bar-fill {
-            height: 100%; border-radius: 6px;
-            background: linear-gradient(90deg, #FF6400, #00FFC8);
-            box-shadow: 0 0 12px var(--cyan-glow);
-            transition: width 1s ease;
+            height: 100%; border-radius: 5px; background: var(--primary);
         }
     </style>
 </head>
 <body>
 
-    <div class="ambient-bg"></div>
     <div class="scanlines"></div>
     <canvas id="particle-bg"></canvas>
 
-    <!-- Cyberpunk Header -->
     <header class="header">
-        <div class="header-logo-group">
-            <div class="header-badge"></div>
-            <div class="header-logo">ATTACKS</div>
-            <div class="header-tag">// SINGLE PREDICTOR HUD v2.0</div>
-        </div>
-        <button class="btn-back" onclick="goBack()">✕ RETURN PREDICTOR</button>
+        <div class="header-logo">ATTACKS // PREDICTOR</div>
+        <button class="btn-back" onclick="goBack()">✕ PREDICTOR</button>
     </header>
 
-    <!-- Main Container -->
     <main class="main-container">
 
-        <div class="hud-header">
-            <div class="hud-status-chip">
-                <span>🔮 AI PREDICTION TELEMETRY</span>
-            </div>
-            <h1 class="hud-title" id="display-name">OPERATIVE PREDICTION</h1>
-            <p class="hud-sub" id="display-sub">CLASSIFIED SINGLE OPERATIVE SCENE & POWER SPECTRUM</p>
+        <div class="page-header">
+            <span class="page-tag">🔮 AI SINGLE OPERATIVE PREDICTOR</span>
+            <h1 class="page-title" id="display-name">OPERATIVE PREDICTION</h1>
+            <p class="page-sub" id="display-sub">GENERATING THREAT ARTWORK & POWER SPECTRUM</p>
         </div>
 
-        <!-- Arc Reactor Loading Card -->
-        <div class="holo-card" id="gen-card">
-            
-            <div class="arc-reactor-wrapper">
-                <div class="arc-ring-outer"></div>
-                <div class="arc-ring-inner"></div>
-                <div class="arc-percent" id="arc-percent">0%</div>
-            </div>
-
+        <!-- Loading Card -->
+        <div class="gen-card" id="gen-card">
+            <div class="radar-spinner"></div>
             <div class="gen-status-title" id="gen-status-title">GENERATING SINGLE OPERATIVE ARTWORK</div>
             <div class="gen-status-phase" id="gen-status-phase">PHASE 1/4: ANALYZING OPERATIVE THREAT MATRIX...</div>
             
@@ -416,10 +318,10 @@
                 <div class="gen-progress-fill" id="gen-progress-fill"></div>
             </div>
 
-            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: ~60s REMAINING (SYNTHESIZING REALISTIC 8K SCENE)</div>
+            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: ~1 MINUTE (GENERATING REALISTIC AI SCENE)</div>
         </div>
 
-        <!-- Result View HUD Section -->
+        <!-- Result Section -->
         <div class="result-section" id="result-section">
             
             <div class="image-frame">
@@ -440,30 +342,27 @@
                 </button>
             </div>
 
-            <!-- Cyber Telemetry Card -->
-            <div class="telemetry-card">
-                <div class="telemetry-header">
+            <!-- Stats Card -->
+            <div class="stat-card">
+                <div class="stat-card-title">
                     <span id="stat-name-label">🔮 OPERATIVE THREAT MATRIX</span>
-                    <span style="color: var(--gold);" id="stat-score-label">95% OVERALL</span>
+                    <span style="color: var(--gold);" id="stat-score-label">95% POWER</span>
                 </div>
-                
-                <div class="stat-grid">
-                    <div class="stat-row">
-                        <div class="stat-row-label"><span>ATTACK POTENTIAL</span><span id="st-atk-val">95%</span></div>
-                        <div class="stat-bar-track"><div class="stat-bar-fill" id="st-atk-bar" style="width: 95%;"></div></div>
-                    </div>
-                    <div class="stat-row">
-                        <div class="stat-row-label"><span>AGILITY & SPEED</span><span id="st-spd-val">88%</span></div>
-                        <div class="stat-bar-track"><div class="stat-bar-fill" id="st-spd-bar" style="width: 88%;"></div></div>
-                    </div>
-                    <div class="stat-row">
-                        <div class="stat-row-label"><span>TACTICAL SYNCHRONY</span><span id="st-syn-val">96%</span></div>
-                        <div class="stat-bar-track"><div class="stat-bar-fill" id="st-syn-bar" style="width: 96%;"></div></div>
-                    </div>
-                    <div class="stat-row">
-                        <div class="stat-row-label"><span>VICTORY PROBABILITY</span><span id="st-vic-val">94%</span></div>
-                        <div class="stat-bar-track"><div class="stat-bar-fill" id="st-vic-bar" style="width: 94%;"></div></div>
-                    </div>
+                <div class="stat-row">
+                    <div class="stat-row-label"><span>ATTACK POTENTIAL</span><span id="st-atk-val">95%</span></div>
+                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-atk-bar" style="width: 95%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-row-label"><span>AGILITY & SPEED</span><span id="st-spd-val">88%</span></div>
+                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-spd-bar" style="width: 88%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-row-label"><span>TACTICAL SYNCHRONY</span><span id="st-syn-val">96%</span></div>
+                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-syn-bar" style="width: 96%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-row-label"><span>VICTORY PROBABILITY</span><span id="st-vic-val">94%</span></div>
+                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-vic-bar" style="width: 94%;"></div></div>
                 </div>
             </div>
 
@@ -473,7 +372,6 @@
 
     <script>
         function goBack() {
-            playAudioBeep(600, 0.1);
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -485,27 +383,6 @@
                 dimmer.style.opacity = '1';
                 setTimeout(() => { window.location.href = 'single_predictor.html'; }, 900);
             }));
-        }
-
-        // Web Audio API Synthesizer for Cyber Audio Cues
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        let audioCtx = null;
-
-        function playAudioBeep(freq = 520, duration = 0.15) {
-            try {
-                if (!audioCtx) audioCtx = new AudioCtx();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
         }
 
         // Particle Canvas Background
@@ -522,11 +399,11 @@
             resize();
             window.addEventListener('resize', resize);
 
-            for (let i = 0; i < 55; i++) {
+            for (let i = 0; i < 50; i++) {
                 particles.push({
                     x: Math.random() * window.innerWidth,
                     y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.5 + 0.4,
+                    r: Math.random() * 1.4 + 0.4,
                     vx: (Math.random() - 0.5) * 0.35,
                     vy: (Math.random() - 0.5) * 0.35,
                     alpha: Math.random() * 0.35 + 0.1
@@ -542,7 +419,7 @@
                     if (p.y < 0 || p.y > H) p.vy *= -1;
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(0, 255, 200, ${p.alpha})`;
+                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
                     ctx.fill();
                 });
                 requestAnimationFrame(draw);
@@ -634,7 +511,7 @@
         // Populate header & stats
         document.getElementById('display-name').textContent = opData.title;
         document.getElementById('display-sub').textContent = opData.sub;
-        document.getElementById('stat-name-label').textContent = `🔮 ${opData.title} TELEMETRY`;
+        document.getElementById('stat-name-label').textContent = `🔮 ${opData.title} THREAT SPECTRUM`;
         document.getElementById('stat-score-label').textContent = `${opData.vic}% POWER`;
 
         document.getElementById('st-atk-val').textContent = opData.atk + '%';
@@ -663,20 +540,17 @@
         let progressInterval = null;
 
         function startGeneration() {
-            playAudioBeep(750, 0.1);
             const genCard = document.getElementById('gen-card');
             const resultSec = document.getElementById('result-section');
             const progressBar = document.getElementById('gen-progress-fill');
             const phaseLabel = document.getElementById('gen-status-phase');
             const timeText = document.getElementById('gen-time-text');
-            const percentLabel = document.getElementById('arc-percent');
             const predImg = document.getElementById('prediction-img');
             const btnDownload = document.getElementById('btn-download');
 
             genCard.style.display = 'flex';
             resultSec.style.display = 'none';
             progressBar.style.width = '0%';
-            percentLabel.textContent = '0%';
 
             let currentProgress = 0;
             let currentPhase = 0;
@@ -692,7 +566,6 @@
             phaseInterval = setInterval(() => {
                 currentPhase = (currentPhase + 1) % PHASES.length;
                 phaseLabel.textContent = PHASES[currentPhase];
-                playAudioBeep(480 + (currentPhase * 60), 0.08);
             }, 12000);
 
             // Progress tracking over ~60s
@@ -700,10 +573,9 @@
                 elapsedTime++;
                 currentProgress = Math.min(95, Math.floor((elapsedTime / totalTimeSeconds) * 100));
                 progressBar.style.width = currentProgress + '%';
-                percentLabel.textContent = currentProgress + '%';
 
                 let remain = Math.max(0, totalTimeSeconds - elapsedTime);
-                timeText.textContent = `ESTIMATED TIME: ~${remain}s REMAINING (SYNTHESIZING REALISTIC 8K SCENE)`;
+                timeText.textContent = `ESTIMATED TIME: ~${remain}s REMAINING (GENERATING PREDICTION ARTWORK)`;
             }, 1000);
 
             // Build Pollinations URL
@@ -718,9 +590,7 @@
                 clearInterval(phaseInterval);
                 clearInterval(progressInterval);
                 progressBar.style.width = '100%';
-                percentLabel.textContent = '100%';
                 phaseLabel.textContent = "GENERATION COMPLETE! PREPARING DISPLAY...";
-                playAudioBeep(880, 0.25);
 
                 setTimeout(() => {
                     genCard.style.display = 'none';
