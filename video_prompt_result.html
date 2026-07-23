@@ -410,7 +410,7 @@
 
             let currentProgress = 0;
             let currentPhase = 0;
-            let totalTimeSeconds = 60; // 60 seconds simulated progress for ~1-2 min realistic feel
+            let totalTimeSeconds = 8; // Ultra-fast 8-second observation and rendering
             let elapsedTime = 0;
 
             phaseLabel.textContent = PHASES[0];
@@ -418,20 +418,20 @@
             if (phaseInterval) clearInterval(phaseInterval);
             if (progressInterval) clearInterval(progressInterval);
 
-            // Phase cycling
+            // Fast phase cycling every 2 seconds
             phaseInterval = setInterval(() => {
                 currentPhase = (currentPhase + 1) % PHASES.length;
                 phaseLabel.textContent = PHASES[currentPhase];
-            }, 12000);
+            }, 2000);
 
-            // Progress tracking over ~60s
+            // Ultra-fast progress tracking over ~8s
             progressInterval = setInterval(() => {
                 elapsedTime++;
                 currentProgress = Math.min(95, Math.floor((elapsedTime / totalTimeSeconds) * 100));
                 progressBar.style.width = currentProgress + '%';
 
                 let remain = Math.max(0, totalTimeSeconds - elapsedTime);
-                timeText.textContent = `ESTIMATED TIME: ~${remain}s REMAINING (RENDERING AI VIDEO SCENE)`;
+                timeText.textContent = `FAST OBSERVATION: ~${remain}s REMAINING (RENDERING AI VIDEO SCENE)`;
             }, 1000);
 
             // Attempt 1: Pollinations AI Video API Stream
