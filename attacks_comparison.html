@@ -456,6 +456,21 @@
                 return;
             }
 
+            if ((op1 === 'LOGITH' && op2 === 'VAISAL') || (op1 === 'VAISAL' && op2 === 'LOGITH')) {
+                const dimmer = document.createElement('div');
+                dimmer.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: #000; z-index: 99999; opacity: 0;
+                    transition: opacity 0.8s ease;
+                `;
+                document.body.appendChild(dimmer);
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    dimmer.style.opacity = '1';
+                    setTimeout(() => { window.location.href = 'logith_vaisal_battle.html'; }, 900);
+                }));
+                return;
+            }
+
             if ((op1 === 'LOGITH' && op2 === 'THAYA') || (op1 === 'THAYA' && op2 === 'LOGITH')) {
                 const dimmer = document.createElement('div');
                 dimmer.style.cssText = `
