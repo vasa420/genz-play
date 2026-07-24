@@ -759,35 +759,40 @@
             const intent = analyzeQuestionCarefully(raw);
             const intentTag = `<div style="font-size:10px; color:var(--primary); font-weight:bold; letter-spacing:1px; margin-bottom:6px; font-family:'JetBrains Mono', monospace;">🎯 INTENT ANALYZED: ${intent.label} | ACCURACY: ${intent.confidence}</div>`;
 
-            // 1. REAL-TIME TIME & DATE CLOCK
-            if (upper.includes('TIME') || upper.includes('CLOCK') || upper.includes('DATE') || upper.includes('DAY') || upper.includes('TIMEZONE')) {
-                if (!upper.includes('TIME TABLE') && !upper.includes('TIME COMPLEXITY') && !upper.includes('TIMER')) {
-                    const now = new Date();
-                    const timeFmt = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-                    const dateFmt = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                    const clockMsg = `Calculated in real time ➔ Current Time: ${timeFmt} | Date: ${dateFmt} | Timezone: ${tz}`;
-                    if (currentMode === 'chat') {
-                        appendChatMessage('👤 YOU', raw, 'user');
-                        appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + clockMsg, 'ai');
-                    }
-                    speakCallResponse(clockMsg);
-                    return;
-                }
-            }
-
-            // 2. LIVE TODAY'S WEATHER ANALYZER
-            if (upper.includes('WEATHER') || upper.includes('TEMPERATURE') || upper.includes('CLIMATE') || upper.includes('RAIN') || upper.includes('FORECAST')) {
-                const weatherReport = await fetchLiveWeatherReport(raw);
+            // 1. MATH SOLVER & CALCULATIONS (Prime, Factorial, Decimals, Fibonacci, Pythagoras)
+            const mathResult = solveMathQuery(raw);
+            if (mathResult) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + weatherReport, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + mathResult, 'ai');
                 }
-                speakCallResponse(weatherReport);
+                speakCallResponse(mathResult);
                 return;
             }
 
-            // 3. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM, Prime Minister, President, etc.)
+            // 2. CODE GENERATION (C, C++, Java, Python, HTML, SQL, etc.)
+            const codeResult = generateRealTimeCode(raw);
+            if (codeResult) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + codeResult.htmlCard, 'ai');
+                }
+                speakCallResponse(codeResult.spokenText);
+                return;
+            }
+
+            // 3. FULLSTACK, FRONTEND, BACKEND, OOPS & SOFTWARE ENGINEERING CONCEPTS
+            const softConceptMsg = lookupSoftwareConcept(raw);
+            if (softConceptMsg) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + softConceptMsg, 'ai');
+                }
+                speakCallResponse(softConceptMsg);
+                return;
+            }
+
+            // 4. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, etc.)
             const currentAffairsMsg = lookupCurrentAffairs(raw);
             if (currentAffairsMsg) {
                 if (currentMode === 'chat') {
@@ -795,17 +800,6 @@
                     appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + currentAffairsMsg, 'ai');
                 }
                 speakCallResponse(currentAffairsMsg);
-                return;
-            }
-
-            // 4. LIVE WEB SEARCH & KNOWLEDGE BASE SYNC (Wikipedia / DuckDuckGo Sync)
-            const liveWebResult = await fetchRealTimeWebSearch(raw);
-            if (liveWebResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + liveWebResult, 'ai');
-                }
-                speakCallResponse(liveWebResult);
                 return;
             }
 
@@ -820,29 +814,7 @@
                 return;
             }
 
-            // 6. FULLSTACK, FRONTEND, BACKEND, OOPS & SOFTWARE ENGINEERING CONCEPTS
-            const softConceptMsg = lookupSoftwareConcept(raw);
-            if (softConceptMsg) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + softConceptMsg, 'ai');
-                }
-                speakCallResponse(softConceptMsg);
-                return;
-            }
-
-            // 7. CODE GENERATION REQUEST
-            const codeResult = generateRealTimeCode(raw);
-            if (codeResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + codeResult.htmlCard, 'ai');
-                }
-                speakCallResponse(codeResult.spokenText);
-                return;
-            }
-
-            // 8. 500+ ACRONYMS, IPL TEAMS & OBSERVATIONS
+            // 6. 500+ ACRONYMS & IPL OBSERVATIONS (CSK, RCB, MI, ISRO, HTML)
             const obsResult = lookupAcronymObservation(raw);
             if (obsResult) {
                 if (currentMode === 'chat') {
@@ -850,6 +822,34 @@
                     appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + obsResult, 'ai');
                 }
                 speakCallResponse(obsResult);
+                return;
+            }
+
+            // 7. REAL-TIME TIME & DATE CLOCK (Strict Intent Check)
+            const isClockQuery = /\b(time is it|current time|time now|what time|what date|today's date|current date|what day|timezone)\b/i.test(raw);
+            if (isClockQuery && !upper.includes('TIME TABLE') && !upper.includes('TIME COMPLEXITY')) {
+                const now = new Date();
+                const timeFmt = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+                const dateFmt = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const clockMsg = `Calculated in real time ➔ Current Time: ${timeFmt} | Date: ${dateFmt} | Timezone: ${tz}`;
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + clockMsg, 'ai');
+                }
+                speakCallResponse(clockMsg);
+                return;
+            }
+
+            // 8. LIVE TODAY'S WEATHER ANALYZER (Strict Intent Check)
+            const isWeatherQuery = /\b(weather|temperature|climate|rain|forecast)\b/i.test(raw);
+            if (isWeatherQuery) {
+                const weatherReport = await fetchLiveWeatherReport(raw);
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + weatherReport, 'ai');
+                }
+                speakCallResponse(weatherReport);
                 return;
             }
 
@@ -864,7 +864,18 @@
                 return;
             }
 
-            // 10. MATH & GENERAL AI INTELLIGENCE
+            // 10. LIVE WEB SEARCH & GOOGLE NEWS SYNC (Wikipedia / DuckDuckGo / Google News)
+            const liveWebResult = await fetchRealTimeWebSearch(raw);
+            if (liveWebResult) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + liveWebResult, 'ai');
+                }
+                speakCallResponse(liveWebResult);
+                return;
+            }
+
+            // 11. GENERAL AI SPOKEN INTELLIGENCE FALLBACK
             const aiReplyText = generateAISpokenReply(raw);
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', raw, 'user');
@@ -1092,8 +1103,38 @@
             const upper = text.trim().toUpperCase();
 
             for (let key in CURRENT_AFFAIRS_DB) {
-                if (upper.includes(key)) {
+                const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
+                if (regex.test(upper)) {
                     return `Current Affairs & Real-Time Intelligence ➔ ${CURRENT_AFFAIRS_DB[key]}`;
+                }
+            }
+
+            return null;
+        }
+
+        function lookupAcronymObservation(text) {
+            if (!text) return null;
+            let clean = text.trim().toUpperCase()
+                .replace(/^WHAT\s+IS\s+THE\s+FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^WHAT\s+IS\s+FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^WHAT\s+IS\s+/, '')
+                .replace(/^WHO\s+IS\s+/, '')
+                .replace(/^STANDS?\s+FOR\s+/, '')
+                .replace(/\?/g, '').trim();
+
+            if (ACRONYM_DB[clean]) {
+                return `Observation & Full Form for ${clean} ➔ ${ACRONYM_DB[clean]}`;
+            }
+
+            for (let key in ACRONYM_DB) {
+                if (key.length >= 2) {
+                    const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                    const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
+                    if (regex.test(clean)) {
+                        return `Observation & Full Form for ${key} ➔ ${ACRONYM_DB[key]}`;
+                    }
                 }
             }
 
