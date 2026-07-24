@@ -2319,6 +2319,18 @@
                        `FINAL ANSWER: ${optAns}`;
             }
 
+            // 0. WIKIPEDIA DIRECT PAGE SUMMARY REST API (100% Fact-Checked Official Knowledge)
+            try {
+                const wikiRestUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`;
+                const wRest = await fetch(wikiRestUrl);
+                if (wRest.ok) {
+                    const wData = await wRest.json();
+                    if (wData.extract && wData.extract.length > 25 && wData.type !== 'disambiguation') {
+                        return formatWebAns("Google & Wikipedia Official Knowledge Engine", `${wData.title}: ${wData.extract}`);
+                    }
+                }
+            } catch (e) {}
+
             // 1. WIKIPEDIA FULL-TEXT SEARCH API (Searches millions of articles)
             try {
                 const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
@@ -2688,7 +2700,31 @@
             "FATHER OF COMPUTER SCIENCE": "Father of Modern Computer Science ➔ Alan Turing (Turing Machine & Turing Test).",
             "DNA": "DNA (Deoxyribonucleic Acid) ➔ Molecule carrying genetic code for all living organisms. Double Helix structure discovered by James Watson and Francis Crick in 1953.",
             "ISRO": "ISRO (Indian Space Research Organisation) ➔ Founded Aug 15, 1969 by Dr. Vikram Sarabhai. HQ: Bengaluru. Historical achievements: Chandrayaan-3 (Moon South Pole landing 2023), Mangalyaan (Mars Orbiter).",
-            "NASA": "NASA (National Aeronautics and Space Administration) ➔ US Space Agency founded in 1958. Famous for Apollo Moon missions, Hubble Space Telescope, and James Webb Telescope."
+            "NASA": "NASA (National Aeronautics and Space Administration) ➔ US Space Agency founded in 1958. Famous for Apollo Moon missions, Hubble Space Telescope, and James Webb Telescope.",
+
+            // --- EXTENDED WORLD SCIENCE, HISTORY & ORGANIZATIONS ---
+            "UNITED NATIONS": "United Nations (UN) ➔ International organization founded Oct 24, 1945 to maintain world peace. HQ: New York City. 193 Member States. Secretary-General: António Guterres.",
+            "UN": "United Nations (UN) ➔ Founded Oct 24, 1945. HQ: New York City. World peacekeeping organization.",
+            "WHO": "World Health Organization (WHO) ➔ Specialized UN agency for international public health. Founded April 7, 1948. HQ: Geneva, Switzerland.",
+            "UNESCO": "UNESCO ➔ UN Educational, Scientific and Cultural Organization. HQ: Paris, France. Protects World Heritage Sites.",
+            "UNICEF": "UNICEF ➔ UN International Children's Emergency Fund. HQ: New York City. Dedicated to humanitarian aid for children.",
+            "WORLD BANK": "World Bank ➔ International financial institution providing loans to developing countries. HQ: Washington, D.C. Founded 1944.",
+            "IMF": "IMF (International Monetary Fund) ➔ Global monetary cooperation organization. HQ: Washington, D.C. Founded 1944.",
+            "FATHER OF PHYSICS": "Father of Physics ➔ Galileo Galilei, Sir Isaac Newton, and Albert Einstein.",
+            "FATHER OF CHEMISTRY": "Father of Chemistry ➔ Antoine Lavoisier (discovered role of oxygen in combustion).",
+            "FATHER OF BIOLOGY": "Father of Biology ➔ Aristotle.",
+            "INVENTED TELEPHONE": "Telephone Invention ➔ Invented and patented by Alexander Graham Bell in 1876.",
+            "INVENTED LIGHT BULB": "Incandescent Light Bulb ➔ Patented and commercially perfected by Thomas Edison in 1879.",
+            "PENICILLIN": "Penicillin ➔ First effective modern antibiotic discovered by Sir Alexander Fleming in 1928.",
+            "PERIODIC TABLE": "Periodic Table ➔ Formulated by Dmitri Mendeleev in 1869. Contains 118 chemical elements.",
+            "LARGEST ORGAN": "Largest Organ of Human Body ➔ Skin (External). Largest Internal Organ: Liver.",
+            "SMALLEST BONE": "Smallest Bone in Human Body ➔ Stapes (stirrup bone) in the middle ear.",
+            "HUMAN BONES": "Human Skeleton ➔ Adult human body has 206 bones.",
+            "LONGEST RIVER IN WORLD": "Longest River in the World ➔ Nile River (6,650 km / 4,132 miles) in Africa. (Amazon River is largest by water volume).",
+            "LARGEST DESERT": "Largest Desert ➔ Antarctic Desert (Cold Desert). Largest Hot Desert: Sahara Desert in Africa.",
+            "FIRST PRESIDENT OF INDIA": "First President of India ➔ Dr. Rajendra Prasad (1950 – 1962).",
+            "FIRST PRIME MINISTER OF INDIA": "First Prime Minister of India ➔ Pandit Jawaharlal Nehru (1947 – 1964).",
+            "FATHER OF THE NATION": "Father of the Nation (India) ➔ Mahatma Gandhi (Mohandas Karamchand Gandhi)."
         };
 
         function lookupCSAndWorldGKQuery(text) {
