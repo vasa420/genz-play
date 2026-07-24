@@ -2338,7 +2338,45 @@
 
             if (cleanQ.length < 2) return null;
 
-            // 1. DUCKDUCKGO LIVE SEARCH / GOOGLE INSTANT ANSWER API
+            // 1. WIKIPEDIA FULL-TEXT SEARCH API (Searches millions of articles for terms/questions)
+            try {
+                const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
+                const wRes = await fetch(wikiSearchUrl);
+                if (wRes.ok) {
+                    const wData = await wRes.json();
+                    if (wData.query && wData.query.search && wData.query.search.length > 0) {
+                        const topResult = wData.query.search[0];
+                        const tmpDiv = document.createElement('div');
+                        tmpDiv.innerHTML = topResult.snippet;
+                        const cleanSnippet = (tmpDiv.textContent || tmpDiv.innerText || '').trim();
+                        if (cleanSnippet && cleanSnippet.length > 20) {
+                            return `Live Google & Wiki Knowledge Base ➔ ${topResult.title}: ${cleanSnippet}...`;
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            // 2. DUCKDUCKGO HTML WEB SEARCH via AllOrigins Proxy
+            try {
+                const ddgHtmlUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
+                const dRes = await fetch(ddgHtmlUrl);
+                if (dRes.ok) {
+                    const dData = await dRes.json();
+                    if (dData.contents) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(dData.contents, 'text/html');
+                        const snippets = doc.querySelectorAll('.result__snippet, .result__body');
+                        if (snippets && snippets.length > 0) {
+                            const snippetText = snippets[0].textContent.trim();
+                            if (snippetText && snippetText.length > 20) {
+                                return `Live Real-Time Web Search Result ➔ ${snippetText}`;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            // 3. DUCKDUCKGO INSTANT ANSWER API
             try {
                 const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`;
                 const dRes = await fetch(ddgUrl);
@@ -2352,19 +2390,7 @@
                 }
             } catch (e) {}
 
-            // 2. WIKIPEDIA REAL-TIME KNOWLEDGE BASE API
-            try {
-                const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`;
-                const wRes = await fetch(wikiUrl);
-                if (wRes.ok) {
-                    const wData = await wRes.json();
-                    if (wData.extract && wData.extract.length > 25) {
-                        return `Live Knowledge Base Sync ➔ ${wData.extract}`;
-                    }
-                }
-            } catch (e) {}
-
-            // 3. GOOGLE NEWS / LIVE CURRENT UPDATES RSS FEED FETCH
+            // 4. GOOGLE NEWS / LIVE CURRENT UPDATES RSS FEED FETCH
             try {
                 const newsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${encodeURIComponent(cleanQ)}&hl=en-IN&gl=IN&ceid=IN:en`)}`;
                 const nRes = await fetch(newsUrl);
@@ -3799,29 +3825,8 @@
                 return "Here is a tactical log: Along the Kaveri River pass, Vaisal sped down the highway in his passenger bus while Girish's heavy lorry roared behind with giant cobras in pursuit. Suddenly, Logith leaped forward with his giant sharp blade, illuminating the night sky with electric sparks!";
             }
 
-            // 5. Intelligent NLP Real-Time Question Parsing Engine
-            if (query.startsWith('WHO IS') || query.startsWith('WHO ARE')) {
-                const subject = rawText.replace(/^who\s+(is|are)\s+/i, '').replace(/\?/g, '').trim();
-                return `Analyzing database record for "${subject}": In the ATC Studio network, ${subject} is a recognized operative entity registered with active combat stats and tactical spectrums.`;
-            }
-
-            if (query.startsWith('WHAT IS') || query.startsWith('WHAT ARE')) {
-                const subject = rawText.replace(/^what\s+(is|are)\s+/i, '').replace(/\?/g, '').trim();
-                return `Analyzing topic "${subject}": In the ATC Studio system, ${subject} represents a core operational directive designed to analyze threat levels and enhance squad synchrony.`;
-            }
-
-            if (query.startsWith('HOW TO') || query.startsWith('HOW DO')) {
-                const task = rawText.replace(/^how\s+(to|do|can|i)\s+/i, '').replace(/\?/g, '').trim();
-                return `Instructions for "${task}": Navigate using the top header menu buttons to access Search Engine, Photo Generator, Video Generator, or Attack Comparison tools!`;
-            }
-
-            if (query.startsWith('WHY IS') || query.startsWith('WHY DOES') || query.startsWith('WHY')) {
-                const topic = rawText.replace(/^why\s+(is|does|did)\s+/i, '').replace(/\?/g, '').trim();
-                return `Analyzing cause for "${topic}": Squad dynamics are tuned for maximum tactical output, ensuring every operative's vehicle, blade, and weapon operates at peak power!`;
-            }
-
-            // 6. Generic Intelligent Synthesis Fallback for Any User Question
-            return `ATC Studio AI analyzed your input: "${rawText}". All neural intelligence channels are active and ready for your next question or voice command!`;
+            // 5. Generic Intelligent Synthesis Fallback for Any User Question
+            return `ATC Studio AI analyzed your question: "${rawText}". Here is the solution overview: Make sure to check formulas and step-by-step logic for accurate answers!`;
         }
 
         // Waveform Animation Canvas
