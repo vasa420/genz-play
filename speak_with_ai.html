@@ -579,8 +579,8 @@
                 </div>
 
                 <div class="chat-input-wrapper">
-                    <input type="text" id="chat-input" class="chat-input" placeholder="Type a message to AI..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-                    <button class="btn-send" onclick="sendChatMessage()">SEND</button>
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Type a message to AI... (Press Enter or click SEND)">
+                    <button class="btn-send" id="btn-send-msg" onclick="sendChatMessage()">SEND</button>
                 </div>
             </div>
         </div>
@@ -751,9 +751,20 @@
             }
         }
 
-        async function processCallQuery(userText) {
+        async function processCallQuery(userText, thinkingId) {
             const raw = userText.trim();
             const upper = raw.toUpperCase();
+
+            // Helper: remove thinking bubble and show AI reply
+            function aiReply(htmlMsg) {
+                if (thinkingId) {
+                    const el = document.getElementById(thinkingId);
+                    if (el) el.remove();
+                }
+                if (currentMode === 'chat') {
+                    appendChatMessage('🤖 ATC AI ASSISTANT', htmlMsg, 'ai');
+                }
+            }
 
             // 🔍 CAREFUL QUESTION INTENT ANALYSIS
             const intent = analyzeQuestionCarefully(raw);
@@ -762,10 +773,7 @@
             // 1. MATH SOLVER & CALCULATIONS (Prime, Factorial, Decimals, Fibonacci, Pythagoras)
             const mathResult = solveMathQuery(raw);
             if (mathResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + mathResult, 'ai');
-                }
+                aiReply(intentTag + mathResult);
                 speakCallResponse(mathResult);
                 return;
             }
@@ -773,10 +781,7 @@
             // 2. CODE GENERATION (C, C++, Java, Python, HTML, SQL, etc.)
             const codeResult = generateRealTimeCode(raw);
             if (codeResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + codeResult.htmlCard, 'ai');
-                }
+                aiReply(intentTag + codeResult.htmlCard);
                 speakCallResponse(codeResult.spokenText);
                 return;
             }
@@ -784,10 +789,7 @@
             // 3. FULLSTACK, FRONTEND, BACKEND, OOPS & SOFTWARE ENGINEERING CONCEPTS
             const softConceptMsg = lookupSoftwareConcept(raw);
             if (softConceptMsg) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + softConceptMsg, 'ai');
-                }
+                aiReply(intentTag + softConceptMsg);
                 speakCallResponse(softConceptMsg);
                 return;
             }
@@ -795,10 +797,7 @@
             // 4. POPULAR APPS & SOCIAL MEDIA (Instagram, Facebook, YouTube, Netflix, etc.)
             const appResult = lookupApp(raw);
             if (appResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + appResult, 'ai');
-                }
+                aiReply(intentTag + appResult);
                 speakCallResponse(appResult);
                 return;
             }
@@ -806,10 +805,7 @@
             // 5. TAMIL MOVIES — HORROR & COMEDY (Real IMDB Ratings)
             const movieResult = lookupTamilMovie(raw);
             if (movieResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + movieResult, 'ai');
-                }
+                aiReply(intentTag + movieResult);
                 speakCallResponse(movieResult);
                 return;
             }
@@ -817,10 +813,7 @@
             // 6. MOBILE PHONES & BEST PHONE RECOMMENDATIONS
             const mobileResult = lookupMobile(raw);
             if (mobileResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + mobileResult, 'ai');
-                }
+                aiReply(intentTag + mobileResult);
                 speakCallResponse(mobileResult);
                 return;
             }
@@ -828,37 +821,28 @@
             // 7. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, etc.)
             const currentAffairsMsg = lookupCurrentAffairs(raw);
             if (currentAffairsMsg) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + currentAffairsMsg, 'ai');
-                }
+                aiReply(intentTag + currentAffairsMsg);
                 speakCallResponse(currentAffairsMsg);
                 return;
             }
 
-            // 7. WORLD COUNTRIES & CAPITALS
+            // 8. WORLD COUNTRIES & CAPITALS
             const capitalReport = lookupWorldCapital(raw);
             if (capitalReport) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + capitalReport, 'ai');
-                }
+                aiReply(intentTag + capitalReport);
                 speakCallResponse(capitalReport);
                 return;
             }
 
-            // 8. 500+ ACRONYMS & IPL OBSERVATIONS (CSK, RCB, MI, ISRO, HTML)
+            // 9. 500+ ACRONYMS & IPL OBSERVATIONS (CSK, RCB, MI, ISRO, HTML)
             const obsResult = lookupAcronymObservation(raw);
             if (obsResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + obsResult, 'ai');
-                }
+                aiReply(intentTag + obsResult);
                 speakCallResponse(obsResult);
                 return;
             }
 
-            // 7. REAL-TIME TIME & DATE CLOCK (Strict Intent Check)
+            // 10. REAL-TIME TIME & DATE CLOCK (Strict Intent Check)
             const isClockQuery = /\b(time is it|current time|time now|what time|what date|today's date|current date|what day|timezone)\b/i.test(raw);
             if (isClockQuery && !upper.includes('TIME TABLE') && !upper.includes('TIME COMPLEXITY')) {
                 const now = new Date();
@@ -866,59 +850,45 @@
                 const dateFmt = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
                 const clockMsg = `Calculated in real time ➔ Current Time: ${timeFmt} | Date: ${dateFmt} | Timezone: ${tz}`;
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + clockMsg, 'ai');
-                }
+                aiReply(intentTag + clockMsg);
                 speakCallResponse(clockMsg);
                 return;
             }
 
-            // 8. LIVE TODAY'S WEATHER ANALYZER (Strict Intent Check)
+            // 11. LIVE TODAY'S WEATHER ANALYZER (Strict Intent Check)
             const isWeatherQuery = /\b(weather|temperature|climate|rain|forecast)\b/i.test(raw);
             if (isWeatherQuery) {
                 const weatherReport = await fetchLiveWeatherReport(raw);
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + weatherReport, 'ai');
-                }
+                aiReply(intentTag + weatherReport);
                 speakCallResponse(weatherReport);
                 return;
             }
 
-            // 9. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
+            // 12. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
             const emotionResult = analyzeUserEmotion(raw);
             if (emotionResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + emotionResult, 'ai');
-                }
+                aiReply(intentTag + emotionResult);
                 speakCallResponse(emotionResult);
                 return;
             }
 
-            // 10. LIVE WEB SEARCH & GOOGLE NEWS SYNC (Wikipedia / DuckDuckGo / Google News)
+            // 13. LIVE WEB SEARCH & GOOGLE NEWS SYNC (Wikipedia / DuckDuckGo / Google News)
             const liveWebResult = await fetchRealTimeWebSearch(raw);
             if (liveWebResult) {
-                if (currentMode === 'chat') {
-                    appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + liveWebResult, 'ai');
-                }
+                aiReply(intentTag + liveWebResult);
                 speakCallResponse(liveWebResult);
                 return;
             }
 
-            // 11. GENERAL AI SPOKEN INTELLIGENCE FALLBACK
+            // 14. GENERAL AI SPOKEN INTELLIGENCE FALLBACK
             const aiReplyText = generateAISpokenReply(raw);
-            if (currentMode === 'chat') {
-                appendChatMessage('👤 YOU', raw, 'user');
-                appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + aiReplyText, 'ai');
-            }
+            aiReply(intentTag + aiReplyText);
             speakCallResponse(aiReplyText);
         }
 
         // ==========================================
         // MOBILE PHONES DATABASE (Specs, Price, Ratings)
+
         // ==========================================
         const MOBILES_DB = {
             // ---- APPLE iPHONE ----
@@ -2393,13 +2363,80 @@
             return null;
         }
 
-        function sendChatMessage() {
+        // Chat state flag to prevent double sending
+        let isChatProcessing = false;
+
+        async function sendChatMessage() {
+            // Prevent double-send while AI is processing
+            if (isChatProcessing) return;
+
             const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('btn-send-msg');
             const text = input.value.trim();
             if (!text) return;
+
+            // Lock input while processing
+            isChatProcessing = true;
             input.value = '';
-            processCallQuery(text);
+            input.disabled = true;
+            input.placeholder = 'AI is thinking...';
+            if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '...'; }
+
+            // Show user message immediately
+            appendChatMessage('👤 YOU', text, 'user');
+
+            // Show AI thinking indicator
+            const thinkingId = 'thinking-' + Date.now();
+            const box = document.getElementById('terminal-box');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'chat-msg ai';
+            thinkingDiv.id = thinkingId;
+            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 ATC AI ASSISTANT</span><div class="msg-body" style="color:var(--gold);animation:pulse 1s infinite;">🟡 Analyzing your question... please wait</div>`;
+            box.appendChild(thinkingDiv);
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                await processCallQuery(text, thinkingId);
+            } catch(e) {
+                // Remove thinking bubble on error
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
+                appendChatMessage('🤖 ATC AI ASSISTANT', '⚠️ Sorry, something went wrong. Please try again!', 'ai');
+            } finally {
+                // Unlock input
+                isChatProcessing = false;
+                input.disabled = false;
+                input.placeholder = 'Type a message to AI... (Press Enter or click SEND)';
+                if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'SEND'; }
+                input.focus();
+            }
         }
+
+        // Enter key listener — registered once on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const inp = document.getElementById('chat-input');
+            if (inp) {
+                inp.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
+        // Also attach immediately in case DOM is already loaded
+        (function() {
+            const inp = document.getElementById('chat-input');
+            if (inp && !inp._enterBound) {
+                inp._enterBound = true;
+                inp.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+        })();
 
         function appendChatMessage(sender, textOrHtml, type) {
             const box = document.getElementById('terminal-box');
@@ -2419,20 +2456,26 @@
                               q.includes('write') || q.includes('function') || q.includes('syntax') ||
                               q.includes('c++') || q.includes('java') || q.includes('python') ||
                               q.includes('javascript') || q.includes('html') || q.includes('sql') ||
-                              q.includes('rust') || q.includes('c#') || q.includes('golang') || q.includes('go lang');
+                              q.includes('rust') || q.includes('c#') || q.includes('golang') || q.includes('go lang') ||
+                              q.includes('in c') || q.includes('c code') || q.includes('c program') ||
+                              q.includes('c language') || q.includes('using c') || q.includes('c lang') ||
+                              q.includes('in python') || q.includes('in java') || q.includes('in c++') ||
+                              q.includes('prime') || q.includes('fibonacci') || q.includes('factorial') ||
+                              q.includes('palindrome') || q.includes('armstrong') || q.includes('bubble sort') ||
+                              q.includes('sorting') || q.includes('algorithm');
 
             if (!isCodeReq) return null;
 
-            let lang = 'C';
+            let lang = 'C'; // default
             if (q.includes('c++') || q.includes('cpp')) lang = 'C++';
-            else if (q.includes('java') && !q.includes('script')) lang = 'Java';
+            else if (q.includes('java') && !q.includes('script') && !q.includes('javascript')) lang = 'Java';
             else if (q.includes('python') || q.includes('py')) lang = 'Python';
-            else if (q.includes('javascript') || q.includes('js')) lang = 'JavaScript';
+            else if (q.includes('javascript') || q.includes(' js ') || q.endsWith(' js') || q.includes('node')) lang = 'JavaScript';
             else if (q.includes('typescript') || q.includes('ts')) lang = 'TypeScript';
             else if (q.includes('html') || q.includes('css')) lang = 'HTML/CSS';
             else if (q.includes('sql') || q.includes('database')) lang = 'SQL';
             else if (q.includes('rust')) lang = 'Rust';
-            else if (q.includes('go') || q.includes('golang')) lang = 'Go';
+            else if (q.includes('golang') || q.includes('go lang')) lang = 'Go';
             else if (q.includes('c#') || q.includes('csharp')) lang = 'C#';
             else if (q.includes('php')) lang = 'PHP';
             else if (q.includes('swift')) lang = 'Swift';
@@ -2499,6 +2542,15 @@
                         'Python':     `n = int(input("Enter a number: "))\nif n % 2 == 0:\n    print(f"{n} is Even")\nelse:\n    print(f"{n} is Odd")`,
                         'JavaScript': `const n = parseInt(prompt("Enter a number:"));\nconsole.log(n % 2 === 0 ? \`${n} is Even\` : \`${n} is Odd\`);`,
                         'default':    `# Even or Odd\nn = int(input("Enter: "))\nprint("Even" if n % 2 == 0 else "Odd")`
+                    },
+                    'Prime Numbers': {
+                        'C':          `#include <stdio.h>\n\nint isPrime(int n) {\n    if (n < 2) return 0;\n    for (int i = 2; i * i <= n; i++)\n        if (n % i == 0) return 0;\n    return 1;\n}\n\nint main() {\n    int limit;\n    printf("Enter limit: ");\n    scanf("%d", &limit);\n    printf("Prime numbers up to %d:\\n", limit);\n    for (int i = 2; i <= limit; i++)\n        if (isPrime(i)) printf("%d ", i);\n    printf("\\n");\n    return 0;\n}`,
+                        'C++':        `#include <iostream>\nusing namespace std;\n\nbool isPrime(int n) {\n    if (n < 2) return false;\n    for (int i = 2; i * i <= n; i++)\n        if (n % i == 0) return false;\n    return true;\n}\n\nint main() {\n    int limit;\n    cout << "Enter limit: ";\n    cin >> limit;\n    cout << "Prime numbers up to " << limit << ":\\n";\n    for (int i = 2; i <= limit; i++)\n        if (isPrime(i)) cout << i << " ";\n    cout << endl;\n    return 0;\n}`,
+                        'Java':       `import java.util.Scanner;\npublic class PrimeNumbers {\n    static boolean isPrime(int n) {\n        if (n < 2) return false;\n        for (int i = 2; i * i <= n; i++)\n            if (n % i == 0) return false;\n        return true;\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        System.out.print("Enter limit: ");\n        int limit = sc.nextInt();\n        System.out.println("Prime numbers up to " + limit + ":");\n        for (int i = 2; i <= limit; i++)\n            if (isPrime(i)) System.out.print(i + " ");\n    }\n}`,
+                        'Python':     `def is_prime(n):\n    if n < 2: return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0: return False\n    return True\n\nlimit = int(input("Enter limit: "))\nprimes = [i for i in range(2, limit+1) if is_prime(i)]\nprint(f"Prime numbers up to {limit}:")\nprint(primes)`,
+                        'JavaScript': `function isPrime(n) {\n    if (n < 2) return false;\n    for (let i = 2; i <= Math.sqrt(n); i++)\n        if (n % i === 0) return false;\n    return true;\n}\nconst limit = 50;\nconst primes = [];\nfor (let i = 2; i <= limit; i++)\n    if (isPrime(i)) primes.push(i);\nconsole.log("Prime numbers up to " + limit + ":", primes);`,
+                        'default':    `def is_prime(n):\n    if n < 2: return False\n    for i in range(2, int(n**0.5)+1):\n        if n % i == 0: return False\n    return True\n\nprimes = [i for i in range(2, 51) if is_prime(i)]\nprint("Primes up to 50:", primes)`
+
                     },
                     'Calculator': {
                         'C':          `#include <stdio.h>\nint main() {\n    float a, b; char op;\n    printf("Enter expression (e.g. 5 + 3): ");\n    scanf("%f %c %f", &a, &op, &b);\n    if (op=='+') printf("= %.2f\\n", a+b);\n    else if (op=='-') printf("= %.2f\\n", a-b);\n    else if (op=='*') printf("= %.2f\\n", a*b);\n    else if (op=='/') printf(b!=0 ? "= %.2f\\n" : "Error: Div by zero\\n", a/b);\n    return 0;\n}`,
