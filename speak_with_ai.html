@@ -2426,33 +2426,7 @@
             return null;
         }
 
-        function lookupAcronymObservation(text) {
-            if (!text) return null;
-            let clean = text.trim().toUpperCase()
-                .replace(/^WHAT\s+IS\s+THE\s+FULL\s+FORM\s+OF\s+/, '')
-                .replace(/^WHAT\s+IS\s+FULL\s+FORM\s+OF\s+/, '')
-                .replace(/^FULL\s+FORM\s+OF\s+/, '')
-                .replace(/^WHAT\s+IS\s+/, '')
-                .replace(/^WHO\s+IS\s+/, '')
-                .replace(/^STANDS?\s+FOR\s+/, '')
-                .replace(/\?/g, '').trim();
 
-            if (ACRONYM_DB[clean]) {
-                return `Observation & Full Form for ${clean} ➔ ${ACRONYM_DB[clean]}`;
-            }
-
-            for (let key in ACRONYM_DB) {
-                if (key.length >= 2) {
-                    const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                    const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
-                    if (regex.test(clean)) {
-                        return `Observation & Full Form for ${key} ➔ ${ACRONYM_DB[key]}`;
-                    }
-                }
-            }
-
-            return null;
-        }
 
         // Real-Time Emotional Intelligence & Sentiment Analysis Engine
         function analyzeUserEmotion(text) {
@@ -2777,22 +2751,51 @@
 
         function lookupAcronymObservation(text) {
             if (!text) return null;
-            let clean = text.trim().toUpperCase()
+            const raw = text.trim();
+            const upper = raw.toUpperCase().replace(/[?.,!]/g, '').trim();
+
+            // 1. Direct exact acronym match (e.g. user just types "CSK", "ISRO", "HTML", "API")
+            if (ACRONYM_DB[upper]) {
+                return `Observation & Full Form for ${upper} ➔ ${ACRONYM_DB[upper]}`;
+            }
+
+            // Check if user is explicitly asking for an abbreviation / full form / meaning
+            const isAbbrevIntent = /\b(full form|fullform|abbreviation|stands for|meaning of|short form|expand|what does .* stand for)\b/i.test(raw);
+
+            // ONLY respond if user explicitly asked for abbreviation/full form; otherwise return null
+            if (!isAbbrevIntent) {
+                return null;
+            }
+
+            // 2. Explicit abbreviation query (e.g. "what is full form of CSK", "CSK stands for what")
+            let cleanedTarget = upper
                 .replace(/^WHAT\s+IS\s+THE\s+FULL\s+FORM\s+OF\s+/, '')
                 .replace(/^WHAT\s+IS\s+FULL\s+FORM\s+OF\s+/, '')
                 .replace(/^FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^WHAT\s+IS\s+THE\s+ABBREVIATION\s+OF\s+/, '')
+                .replace(/^ABBREVIATION\s+OF\s+/, '')
                 .replace(/^WHAT\s+IS\s+/, '')
                 .replace(/^WHO\s+IS\s+/, '')
                 .replace(/^STANDS?\s+FOR\s+/, '')
-                .replace(/\?/g, '').trim();
+                .replace(/\bSTANDS?\s+FOR\b/g, '')
+                .replace(/\bFULL\s+FORM\b/g, '')
+                .replace(/\bABBREVIATION\b/g, '')
+                .replace(/\bMEANING\s+OF\b/g, '')
+                .replace(/\bSHORT\s+FORM\b/g, '')
+                .replace(/\bEXPAND\b/g, '')
+                .trim();
 
-            if (ACRONYM_DB[clean]) {
-                return `Observation & Full Form for ${clean} ➔ ${ACRONYM_DB[clean]}`;
+            if (ACRONYM_DB[cleanedTarget]) {
+                return `Observation & Full Form for ${cleanedTarget} ➔ ${ACRONYM_DB[cleanedTarget]}`;
             }
 
             for (let key in ACRONYM_DB) {
-                if (clean.includes(key) && key.length >= 2) {
-                    return `Observation & Full Form for ${key} ➔ ${ACRONYM_DB[key]}`;
+                if (key.length >= 2) {
+                    const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                    const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
+                    if (regex.test(cleanedTarget) || regex.test(upper)) {
+                        return `Observation & Full Form for ${key} ➔ ${ACRONYM_DB[key]}`;
+                    }
                 }
             }
 
