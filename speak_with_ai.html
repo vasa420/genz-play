@@ -734,10 +734,23 @@
             try { speechRecognizer.start(); } catch(e){}
         }
 
+        function stripUrls(text) {
+            if (!text || typeof text !== 'string') return text;
+            return text
+                .replace(/https?:\/\/[^\s<)]+/gi, '')
+                .replace(/www\.[^\s<)]+/gi, '')
+                .replace(/🌐\s*Official Website:?\s*/gi, '')
+                .replace(/🌐\s*Website:?\s*/gi, '')
+                .replace(/🔗\s*Link:?\s*/gi, '')
+                .replace(/\n\s*\n\s*\n/g, '\n\n')
+                .trim();
+        }
+
         function speakCallResponse(text) {
+            const cleanText = stripUrls(text);
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
+                const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.rate = 1.0; utterance.pitch = 1.0;
                 utterance.onstart = () => {
                     isSpeaking = true;
@@ -755,14 +768,15 @@
             const raw = userText.trim();
             const upper = raw.toUpperCase();
 
-            // Helper: remove thinking bubble and show AI reply
+            // Helper: remove thinking bubble and show AI reply (Strictly NO URLs/Links)
             function aiReply(htmlMsg) {
                 if (thinkingId) {
                     const el = document.getElementById(thinkingId);
                     if (el) el.remove();
                 }
+                const cleanMsg = stripUrls(htmlMsg);
                 if (currentMode === 'chat') {
-                    appendChatMessage('🤖 ATC AI ASSISTANT', htmlMsg, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', cleanMsg, 'ai');
                 }
             }
 
@@ -1706,8 +1720,7 @@
                            `💻 Platforms: ${g.platforms}\n` +
                            `⚙️ Engine: ${g.engine}\n` +
                            `${g.rating}\n\n` +
-                           `📖 About: ${g.about}\n\n` +
-                           `🌐 Official Website: ${g.website}`;
+                           `📖 About: ${g.about}`;
                 }
             }
 
