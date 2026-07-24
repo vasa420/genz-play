@@ -784,79 +784,7 @@
             const intent = analyzeQuestionCarefully(raw);
             const intentTag = `<div style="font-size:10px; color:var(--primary); font-weight:bold; letter-spacing:1px; margin-bottom:6px; font-family:'JetBrains Mono', monospace;">🎯 INTENT ANALYZED: ${intent.label} | ACCURACY: ${intent.confidence}</div>`;
 
-            // 1. MATH SOLVER & CALCULATIONS (Prime, Factorial, Decimals, Fibonacci, Pythagoras)
-            const mathResult = solveMathQuery(raw);
-            if (mathResult) {
-                aiReply(intentTag + mathResult);
-                speakCallResponse(mathResult);
-                return;
-            }
-
-            // 1.5 NUMERICAL APTITUDE & QUANTITATIVE REASONING SOLVER (Time & Work, Speed, Profit/Loss, Series, Google Sync)
-            const aptResult = await solveAptitudeQuery(raw);
-            if (aptResult) {
-                aiReply(intentTag + aptResult);
-                speakCallResponse(aptResult);
-                return;
-            }
-
-            // 2. CODE GENERATION (C, C++, Java, Python, HTML, SQL, etc.)
-            const codeResult = generateRealTimeCode(raw);
-            if (codeResult) {
-                aiReply(intentTag + codeResult.htmlCard);
-                speakCallResponse(codeResult.spokenText);
-                return;
-            }
-
-            // 3. FULLSTACK, FRONTEND, BACKEND, OOPS & SOFTWARE ENGINEERING CONCEPTS
-            const softConceptMsg = lookupSoftwareConcept(raw);
-            if (softConceptMsg) {
-                aiReply(intentTag + softConceptMsg);
-                speakCallResponse(softConceptMsg);
-                return;
-            }
-
-            // 4. POPULAR APPS & SOCIAL MEDIA (Instagram, Facebook, YouTube, Netflix, etc.)
-            const appResult = lookupApp(raw);
-            if (appResult) {
-                aiReply(intentTag + appResult);
-                speakCallResponse(appResult);
-                return;
-            }
-
-            // 5. TAMIL MOVIES — HORROR & COMEDY (Real IMDB Ratings)
-            const movieResult = lookupTamilMovie(raw);
-            if (movieResult) {
-                aiReply(intentTag + movieResult);
-                speakCallResponse(movieResult);
-                return;
-            }
-
-            // 6. MOBILE PHONES & BEST PHONE RECOMMENDATIONS
-            const mobileResult = lookupMobile(raw);
-            if (mobileResult) {
-                aiReply(intentTag + mobileResult);
-                speakCallResponse(mobileResult);
-                return;
-            }
-
-            // 6.5 VIDEO GAMES, DEVELOPERS & ESPORTS INTELLIGENCE
-            const gameResult = lookupGame(raw);
-            if (gameResult) {
-                aiReply(intentTag + gameResult);
-                speakCallResponse(gameResult);
-                return;
-            }
-
-            // 7. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, etc.)
-            const currentAffairsMsg = lookupCurrentAffairs(raw);
-            if (currentAffairsMsg) {
-                aiReply(intentTag + currentAffairsMsg);
-                speakCallResponse(currentAffairsMsg);
-                return;
-            }
-
-            // 8. WORLD COUNTRIES & CAPITALS
+            // 1. WORLD COUNTRIES & CAPITALS
             const capitalReport = lookupWorldCapital(raw);
             if (capitalReport) {
                 aiReply(intentTag + capitalReport);
@@ -864,7 +792,15 @@
                 return;
             }
 
-            // 8.5 COMPUTER SCIENCE & WORLD GENERAL KNOWLEDGE (CS & GK ENGINE)
+            // 2. CURRENT AFFAIRS & WORLD LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, US President, etc.)
+            const currentAffairsMsg = lookupCurrentAffairs(raw);
+            if (currentAffairsMsg) {
+                aiReply(intentTag + currentAffairsMsg);
+                speakCallResponse(currentAffairsMsg);
+                return;
+            }
+
+            // 3. COMPUTER SCIENCE & WORLD GENERAL KNOWLEDGE (CS & GK ENGINE)
             const csGkResult = lookupCSAndWorldGKQuery(raw);
             if (csGkResult) {
                 aiReply(intentTag + csGkResult);
@@ -872,11 +808,27 @@
                 return;
             }
 
-            // 9. 500+ ACRONYMS & IPL OBSERVATIONS (GG, AFK, CSK, RCB, MI, ISRO, HTML, API, etc.)
+            // 4. 1000+ ACRONYMS & DEPARTMENT OBSERVATIONS (CSE, ECE, EEE, GG, ISRO, HTML, API, etc.)
             const obsResult = await lookupAcronymObservation(raw);
             if (obsResult) {
                 aiReply(intentTag + obsResult);
                 speakCallResponse(obsResult);
+                return;
+            }
+
+            // 5. MATH SOLVER & CALCULATIONS (Prime, Factorial, Decimals, Fibonacci, Pythagoras)
+            const mathResult = solveMathQuery(raw);
+            if (mathResult) {
+                aiReply(intentTag + mathResult);
+                speakCallResponse(mathResult);
+                return;
+            }
+
+            // 6. NUMERICAL APTITUDE & QUANTITATIVE REASONING SOLVER (Time & Work, Speed, Profit/Loss, Series, Google Sync)
+            const aptResult = await solveAptitudeQuery(raw);
+            if (aptResult) {
+                aiReply(intentTag + aptResult);
+                speakCallResponse(aptResult);
                 return;
             }
 
@@ -3959,9 +3911,11 @@
             const clean = text.trim();
             const topicLabel = detectAptitudeTopicLabel(clean);
 
-            const isAptitudeQuestion = /\b(aptitude|numerical|quantitative|reasoning|math|maths|solve|solution|calculate|how many|how much|what is|how long|how fast|ratio|percentage|percent|fraction|decimal|probability|permutation|combination|speed|distance|velocity|time|work|men|women|days|hours|minutes|seconds|train|bus|boat|stream|upstream|downstream|cost price|selling price|cp|sp|profit|loss|discount|interest|si|ci|simple interest|compound interest|age|ages|father|son|mother|pipe|cistern|tank|leak|mixture|alligation|average|mean|median|mode|series|sequence|pattern|odd one out|missing number|coding decoding|blood relation|direction|seating arrangement|syllogism|clock|calendar|angle|cube|dice|cards|deck|marbles|balls|perimeter|area|volume|radius|diameter|triangle|circle|square|rectangle|cylinder|sphere|cone|hypotenuse|pythagoras|equation|algebra|trigonometry|calculus|matrix|physics|problem|question)\b/i.test(clean) ||
+            const isAptitudeQuestion = (
+                /\b(aptitude|numerical|quantitative|reasoning|math|maths|solve|calculate|how many|how much|how long|how fast|ratio|percentage|percent|fraction|decimal|probability|permutation|combination|speed|distance|velocity|time|work|men|women|days|hours|minutes|seconds|train|bus|boat|stream|upstream|downstream|cost price|selling price|cp|sp|profit|loss|discount|interest|si|ci|simple interest|compound interest|age|ages|father|son|mother|pipe|cistern|tank|leak|mixture|alligation|average|mean|median|mode|series|sequence|pattern|odd one out|missing number|coding decoding|blood relation|direction|seating arrangement|syllogism|clock|calendar|angle|cube|dice|cards|deck|marbles|balls|perimeter|area|volume|radius|diameter|triangle|circle|square|rectangle|cylinder|sphere|cone|hypotenuse|pythagoras|equation|algebra|trigonometry|calculus|matrix|physics)\b/i.test(clean) ||
                 /(\d+\s*[\+\-\*\/\%\=]\s*\d+)/.test(clean) ||
-                (clean.includes('?') && /\d/.test(clean));
+                (clean.includes('?') && /\d/.test(clean))
+            ) && !/\b(who is|capital of|full form|abbreviation|what is array|what is stack|what is queue|what is cse|what is ece|what is os|what is dbms|what is sql|what is oops|what is rest api|what is python|what is java|what is html|what is css|what is the capital|what is the full form|what is the abbreviation|who is the)\b/i.test(clean);
 
             if (isAptitudeQuestion) {
                 // Search online learning models & Google Web Search specifically for solution
