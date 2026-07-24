@@ -768,35 +768,46 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // Real-Time Advanced Math Engine (Arithmetic, Percentages, Square Roots, Powers, Factorials, Trig)
+        // Real-Time Advanced Math Engine (Arithmetic, Decimals, Percentages, Square Roots, Powers, Factorials, Trig)
         function solveMathQuery(text) {
             if (!text) return null;
             let clean = text.trim().toLowerCase();
 
-            // 1. Percentage queries: "50% of 200", "what is 20 percent of 500"
+            // Replace word math operators & decimal word "point"
+            clean = clean
+                .replace(/\bpoint\b/g, '.')
+                .replace(/\bplus\b|\badded to\b|\badd\b/g, '+')
+                .replace(/\bminus\b|\bsubtracted from\b|\bsubtract\b|\btake away\b/g, '-')
+                .replace(/\btimes\b|\bmultiplied by\b|\bmultiply\b/g, '*')
+                .replace(/\bdivided by\b|\bover\b/g, '/');
+
+            // 1. Percentage queries: "12.5% of 250.5", "what is 20.5 percent of 500.25"
             const pctMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:%|percent)\s*(?:of)?\s*(\d+(?:\.\d+)?)/i);
             if (pctMatch) {
                 const pct = parseFloat(pctMatch[1]);
                 const total = parseFloat(pctMatch[2]);
                 const res = (pct / 100) * total;
-                return `Calculated in real time: ${pct}% of ${total} = ${res}`;
+                const roundedRes = Number.isInteger(res) ? res : Number(res.toFixed(6));
+                return `Calculated in real time: ${pct}% of ${total} = ${roundedRes}`;
             }
 
-            // 2. Square Root queries: "square root of 144", "sqrt 144", "sqrt(144)"
+            // 2. Square Root queries: "square root of 12.25", "sqrt 12.25", "sqrt(12.25)"
             const sqrtMatch = clean.match(/(?:square\s*root\s*of|sqrt)\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/i);
             if (sqrtMatch) {
                 const val = parseFloat(sqrtMatch[1]);
                 const res = Math.sqrt(val);
-                return `Calculated in real time: Square root of ${val} = ${res}`;
+                const roundedRes = Number.isInteger(res) ? res : Number(res.toFixed(6));
+                return `Calculated in real time: Square root of ${val} = ${roundedRes}`;
             }
 
-            // 3. Power queries: "2 ^ 10", "2 power 10", "2 to the power of 10"
+            // 3. Power queries: "2.5 ^ 3", "2.5 power 3", "2.5 to the power of 3"
             const powMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:\^|power\s*of|to\s*the\s*power\s*of|pow)\s*(\d+(?:\.\d+)?)/i);
             if (powMatch) {
                 const base = parseFloat(powMatch[1]);
                 const exp = parseFloat(powMatch[2]);
                 const res = Math.pow(base, exp);
-                return `Calculated in real time: ${base} ^ ${exp} = ${res}`;
+                const roundedRes = Number.isInteger(res) ? res : Number(res.toFixed(6));
+                return `Calculated in real time: ${base} ^ ${exp} = ${roundedRes}`;
             }
 
             // 4. Factorial queries: "5 factorial" or "5!"
@@ -821,10 +832,11 @@
                 else if (fn === 'tan') res = Math.tan(val * (Math.PI / 180));
                 else if (fn === 'log') res = Math.log10(val);
                 else if (fn === 'ln') res = Math.log(val);
-                return `Calculated in real time: ${fn}(${val}) = ${Number(res.toFixed(6))}`;
+                const roundedRes = Number.isInteger(res) ? res : Number(res.toFixed(6));
+                return `Calculated in real time: ${fn}(${val}) = ${roundedRes}`;
             }
 
-            // 6. General Math Expressions (+, -, *, /, ^, %, parentheses)
+            // 6. General Math Expressions (+, -, *, /, ^, %, parentheses) with Decimals!
             let expr = clean
                 .replace(/what\s+is|calculate|evaluate|equal\s+to|\?/gi, '')
                 .replace(/x/gi, '*')
@@ -837,7 +849,8 @@
                     const res = Function(`"use strict"; return (${expr})`)();
                     if (typeof res === 'number' && !isNaN(res) && isFinite(res)) {
                         const readableExpr = expr.replace(/\*\*/g, '^');
-                        return `Calculated in real time: ${readableExpr} = ${res}`;
+                        const roundedRes = Number.isInteger(res) ? res : Number(res.toFixed(6));
+                        return `Calculated in real time: ${readableExpr} = ${roundedRes}`;
                     }
                 } catch(e){}
             }
