@@ -14,6 +14,7 @@
             --gold: #FFD700;
             --gold-glow: rgba(255, 215, 0, 0.35);
             --red: #FF2244;
+            --red-glow: rgba(255, 34, 68, 0.4);
             --bg: #04040c;
         }
 
@@ -31,7 +32,7 @@
             position: relative;
         }
 
-        /* Scanline overlay */
+        /* Scanlines overlay */
         .scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
@@ -87,181 +88,275 @@
 
         /* Main Container */
         .main-container {
-            width: 100%; max-width: 760px;
+            width: 100%; max-width: 860px;
             padding: 40px 20px 80px;
-            position: relative; z-index: 1;
+            position: relative; z-index: 5;
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* Input Card */
-        .card {
-            width: 100%; background: rgba(10, 10, 24, 0.8);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            border-radius: 18px; padding: 35px 30px;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
-            margin-bottom: 30px; text-align: center;
+        /* Menu Section: 3 Options Hub */
+        .hub-section {
+            width: 100%; display: flex; flex-direction: column; align-items: center;
+            animation: fadeIn 0.5s ease;
         }
 
-        .card-icon {
-            font-size: 44px; color: var(--primary);
-            text-shadow: 0 0 15px var(--primary-glow); margin-bottom: 10px;
+        .hub-header {
+            text-align: center; margin-bottom: 35px;
         }
 
-        .card-title {
+        .hub-title {
+            font-size: clamp(24px, 5vw, 40px);
+            font-weight: 900; letter-spacing: 4px;
+            background: linear-gradient(135deg, #FF6400, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase; margin-bottom: 8px;
+        }
+
+        .hub-sub {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 24px; font-weight: 900; letter-spacing: 4px;
-            color: var(--primary); margin-bottom: 6px;
-            text-transform: uppercase;
-            text-shadow: 0 0 15px var(--primary-glow);
+            font-size: 12px; color: rgba(255,255,255,0.45);
+            letter-spacing: 2px;
         }
 
-        .card-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; color: rgba(255,255,255,0.45);
-            letter-spacing: 2px; margin-bottom: 25px;
+        .options-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;
         }
 
-        /* Audio Waveform Canvas */
-        .waveform-container {
-            width: 100%; height: 90px;
-            background: rgba(4, 4, 12, 0.9);
+        @media (max-width: 768px) {
+            .options-grid { grid-template-columns: 1fr; }
+        }
+
+        .option-card {
+            background: rgba(10, 10, 24, 0.8);
             border: 1.5px solid rgba(255, 100, 0, 0.3);
-            border-radius: 14px; margin-bottom: 25px;
-            position: relative; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
+            border-radius: 18px; padding: 32px 24px;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; backdrop-filter: blur(14px);
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer; position: relative; overflow: hidden;
         }
 
-        #waveform-canvas {
-            width: 100%; height: 100%; display: block;
-        }
-
-        /* Voice Status Banner */
-        .voice-status-bar {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 3px;
-            padding: 6px 18px; border-radius: 20px;
-            display: inline-flex; align-items: center; gap: 8px;
-            margin-bottom: 25px; background: rgba(0,255,136,0.08);
-            border: 1px solid rgba(0,255,136,0.3); color: var(--green);
-            text-transform: uppercase; transition: all 0.3s ease;
-        }
-
-        .voice-status-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--green); box-shadow: 0 0 8px var(--green);
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
-
-        /* Giant Voice Mic Orb Button */
-        .mic-orb-wrapper {
-            display: flex; justify-content: center; margin-bottom: 30px;
-        }
-
-        .btn-mic-orb {
-            width: 110px; height: 110px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,100,0,0.25) 0%, rgba(10,10,24,0.9) 70%);
-            border: 2px solid var(--primary);
-            color: var(--primary); font-size: 42px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 0 30px var(--primary-glow);
-            position: relative; outline: none;
-        }
-
-        .btn-mic-orb:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 45px var(--primary);
-            background: radial-gradient(circle, rgba(255,100,0,0.4) 0%, rgba(10,10,24,0.9) 70%);
-        }
-
-        .btn-mic-orb.listening {
-            border-color: var(--red); color: var(--red);
-            box-shadow: 0 0 50px rgba(255, 34, 68, 0.7);
-            animation: micPulse 1.2s infinite alternate;
-        }
-
-        .btn-mic-orb.speaking {
-            border-color: var(--gold); color: var(--gold);
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.7);
-            animation: micPulse 1s infinite alternate;
-        }
-
-        @keyframes micPulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.12); }
-        }
-
-        /* Preset Voice Chips */
-        .presets-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
-            text-transform: uppercase; text-align: left; margin-bottom: 10px;
-        }
-
-        .presets-container {
-            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;
-        }
-
-        .preset-btn {
-            background: rgba(255, 100, 0, 0.08);
-            border: 1px solid rgba(255, 100, 0, 0.25);
-            color: rgba(255,255,255,0.75);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 1px;
-            padding: 8px 14px; border-radius: 20px;
-            cursor: pointer; transition: all 0.25s ease;
-        }
-
-        .preset-btn:hover {
-            border-color: var(--primary); color: var(--primary);
-            background: rgba(255, 100, 0, 0.15);
-        }
-
-        /* Text Input Bar */
-        .chat-input-wrapper {
-            display: flex; gap: 12px; margin-bottom: 30px;
-        }
-
-        .chat-input {
-            flex: 1; padding: 14px 20px;
-            background: rgba(4, 4, 12, 0.9);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            border-radius: 12px; color: #fff;
-            font-family: 'Outfit', sans-serif; font-size: 15px;
-            outline: none; transition: 0.3s;
-        }
-
-        .chat-input:focus {
+        .option-card:hover {
+            transform: translateY(-6px);
             border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
+            box-shadow: 0 0 35px var(--primary-glow);
+            background: rgba(15, 15, 34, 0.9);
         }
 
-        .btn-send {
-            padding: 14px 24px;
-            background: var(--primary); color: #000; border: none;
-            border-radius: 12px; font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; font-weight: 900; letter-spacing: 2px;
-            cursor: pointer; transition: 0.3s;
-            box-shadow: 0 0 15px var(--primary-glow);
+        .option-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; letter-spacing: 2px;
+            color: var(--gold); background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.25);
+            padding: 4px 10px; border-radius: 20px;
+            margin-bottom: 18px; text-transform: uppercase;
         }
 
-        .btn-send:hover {
+        .option-icon {
+            font-size: 48px; margin-bottom: 16px;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+        }
+
+        .option-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700; color: var(--primary);
+            letter-spacing: 3px; margin-bottom: 6px;
+        }
+
+        .option-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px; font-weight: 900; letter-spacing: 2px;
+            color: #fff; margin-bottom: 10px; text-transform: uppercase;
+        }
+
+        .option-desc {
+            font-size: 12px; color: rgba(255,255,255,0.5);
+            line-height: 1.5; margin-bottom: 22px; flex: 1;
+        }
+
+        .btn-launch {
+            width: 100%; padding: 12px;
+            background: linear-gradient(135deg, #FF6400, #FF9D00);
+            border: none; border-radius: 10px;
+            color: #000; font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 900; letter-spacing: 2px;
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--primary-glow);
+            text-transform: uppercase;
+        }
+
+        .btn-launch:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 25px var(--primary);
         }
 
-        /* Conversation Log Terminal */
+        /* Active Mode Views */
+        .mode-view {
+            width: 100%; display: none; flex-direction: column; align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .mode-header {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .mode-title-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px; font-weight: 900; letter-spacing: 3px;
+            color: var(--primary); text-transform: uppercase;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .btn-switch-mode {
+            background: rgba(255,100,0,0.08); border: 1px solid rgba(255,100,0,0.3);
+            color: var(--primary); padding: 6px 14px; border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            letter-spacing: 1px; cursor: pointer; transition: 0.25s;
+        }
+
+        .btn-switch-mode:hover {
+            background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* 📞 MODE 1: AUDIO CALL UI */
+        .audio-call-card {
+            width: 100%; background: rgba(10, 10, 24, 0.85);
+            border: 1.5px solid rgba(255, 100, 0, 0.4);
+            border-radius: 20px; padding: 40px 30px;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; backdrop-filter: blur(14px);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8); position: relative;
+        }
+
+        .avatar-glow-ring {
+            width: 130px; height: 130px; border-radius: 50%;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary-glow);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; position: relative;
+            background: radial-gradient(circle, rgba(255,100,0,0.2) 0%, rgba(10,10,24,0.9) 70%);
+            animation: avatarPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes avatarPulse { 0%, 100% { box-shadow: 0 0 25px var(--primary-glow); } 50% { box-shadow: 0 0 45px var(--primary); } }
+
+        .avatar-glow-ring img {
+            width: 110px; height: 110px; border-radius: 50%; object-fit: cover;
+        }
+
+        .call-timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; letter-spacing: 3px; color: var(--gold);
+            margin-bottom: 6px;
+        }
+
+        .call-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 2px; color: var(--green);
+            margin-bottom: 25px; text-transform: uppercase;
+        }
+
+        .waveform-box {
+            width: 100%; height: 80px; background: rgba(4,4,12,0.9);
+            border: 1px solid rgba(255,100,0,0.25); border-radius: 12px;
+            margin-bottom: 30px; overflow: hidden;
+        }
+
+        #audio-wave-canvas { width: 100%; height: 100%; display: block; }
+
+        .call-controls {
+            display: flex; gap: 20px; align-items: center; justify-content: center;
+        }
+
+        .btn-call-action {
+            width: 56px; height: 56px; border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.06); color: #fff;
+            font-size: 22px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+
+        .btn-call-action:hover {
+            border-color: #fff; transform: scale(1.1); background: rgba(255,255,255,0.15);
+        }
+
+        .btn-call-end {
+            width: 68px; height: 68px; border-radius: 50%;
+            background: var(--red); border: none; color: #fff;
+            font-size: 26px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 0 25px var(--red-glow);
+        }
+
+        .btn-call-end:hover {
+            transform: scale(1.12); box-shadow: 0 0 35px var(--red);
+        }
+
+        /* 📹 MODE 2: VIDEO CALL UI */
+        .video-call-card {
+            width: 100%; background: rgba(10, 10, 24, 0.85);
+            border: 1.5px solid rgba(255, 100, 0, 0.4);
+            border-radius: 20px; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
+            backdrop-filter: blur(14px); box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .video-viewport {
+            position: relative; width: 100%; height: 420px; background: #000;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-avatar-img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+
+        .video-hud-overlay {
+            position: absolute; top: 15px; left: 15px;
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(4,4,12,0.8); border: 1px solid rgba(0,255,136,0.4);
+            padding: 6px 14px; border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            letter-spacing: 2px; color: var(--green); backdrop-filter: blur(8px);
+        }
+
+        .pip-user-video {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 130px; height: 95px; border-radius: 12px;
+            border: 2px solid var(--primary); background: #111;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8); overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .pip-user-video video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .video-controls-bar {
+            width: 100%; padding: 20px 30px;
+            background: rgba(4,4,12,0.95); border-top: 1px solid rgba(255,100,0,0.2);
+            display: flex; align-items: center; justify-content: space-around;
+        }
+
+        /* 💬 MODE 3: TEXT CHAT UI */
+        .chat-card {
+            width: 100%; background: rgba(10, 10, 24, 0.85);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            border-radius: 18px; padding: 30px;
+            backdrop-filter: blur(14px); box-shadow: 0 0 35px rgba(0,0,0,0.6);
+        }
+
         .terminal-box {
-            width: 100%; height: 260px;
+            width: 100%; height: 320px;
             background: rgba(4, 4, 12, 0.95);
             border: 1.5px solid rgba(255, 100, 0, 0.3);
             border-radius: 14px; padding: 20px;
             overflow-y: auto; text-align: left;
             display: flex; flex-direction: column; gap: 16px;
-            scroll-behavior: smooth;
+            scroll-behavior: smooth; margin-bottom: 20px;
         }
 
         .terminal-box::-webkit-scrollbar { width: 6px; }
@@ -300,6 +395,29 @@
             color: var(--green); border-bottom-left-radius: 2px;
             text-shadow: 0 0 5px rgba(0,255,136,0.2);
         }
+
+        .chat-input-wrapper { display: flex; gap: 12px; }
+
+        .chat-input {
+            flex: 1; padding: 14px 20px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            border-radius: 12px; color: #fff;
+            font-family: 'Outfit', sans-serif; font-size: 15px;
+            outline: none; transition: 0.3s;
+        }
+
+        .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+
+        .btn-send {
+            padding: 14px 24px;
+            background: var(--primary); color: #000; border: none;
+            border-radius: 12px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; font-weight: 900; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-send:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--primary); }
     </style>
 </head>
 <body>
@@ -311,7 +429,7 @@
     <header class="header">
         <div>
             <div class="header-logo">ATTACKS</div>
-            <div class="header-tag">SPEAK WITH AI v1.0</div>
+            <div class="header-tag">SPEAK WITH AI v2.0</div>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a class="btn-back" href="photo_as_my_own.html">📸 PHOTO AS MY OWN</a>
@@ -322,51 +440,122 @@
 
     <!-- Main Container -->
     <main class="main-container">
-        
-        <div class="card">
-            <div class="card-icon">🤖</div>
-            <h1 class="card-title">SPEAK WITH AI</h1>
-            <p class="card-sub">TALK OR TYPE TO COMMUNICATE WITH ATC STUDIO AI ASSISTANT</p>
 
-            <!-- Status Bar -->
-            <div class="voice-status-bar" id="voice-status-bar">
-                <div class="voice-status-dot" id="status-dot"></div>
-                <span id="status-text">AI READY · TAP MIC OR TYPE TO SPEAK</span>
+        <!-- 3 OPTIONS HUB SELECTION SCREEN -->
+        <div class="hub-section" id="hub-section">
+            <div class="hub-header">
+                <h1 class="hub-title">SPEAK WITH AI</h1>
+                <p class="hub-sub">CHOOSE YOUR PREFERRED INTERACTION MODE WITH ATC AI ASSISTANT</p>
             </div>
 
-            <!-- Waveform Canvas -->
-            <div class="waveform-container">
-                <canvas id="waveform-canvas"></canvas>
+            <div class="options-grid">
+                <!-- Option 1: Audio Call -->
+                <div class="option-card" onclick="openMode('audio')">
+                    <div class="option-badge">VOICE CALL</div>
+                    <div class="option-icon">📞</div>
+                    <div class="option-num">OPTION 1</div>
+                    <div class="option-title">AUDIO CALL</div>
+                    <div class="option-desc">Real-time hands-free audio voice calling. Speak aloud & hear live AI voice responses with waveform visualizer.</div>
+                    <button class="btn-launch">START AUDIO CALL 📞</button>
+                </div>
+
+                <!-- Option 2: Video Call -->
+                <div class="option-card" onclick="openMode('video')">
+                    <div class="option-badge">AVATAR STREAM</div>
+                    <div class="option-icon">📹</div>
+                    <div class="option-num">OPTION 2</div>
+                    <div class="option-title">VIDEO CALL</div>
+                    <div class="option-desc">Interactive 3D Video Call experience with AI Avatar video feed, live camera stream & voice response.</div>
+                    <button class="btn-launch">START VIDEO CALL 📹</button>
+                </div>
+
+                <!-- Option 3: Chat With Me -->
+                <div class="option-card" onclick="openMode('chat')">
+                    <div class="option-badge">TEXT TERMINAL</div>
+                    <div class="option-icon">💬</div>
+                    <div class="option-num">OPTION 3</div>
+                    <div class="option-title">CHAT WITH ME</div>
+                    <div class="option-desc">Sci-Fi text messaging terminal. Ask squad questions, get instant intelligence & operative analysis responses.</div>
+                    <button class="btn-launch">START TEXT CHAT 💬</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE 1: AUDIO CALL VIEW -->
+        <div class="mode-view" id="mode-audio">
+            <div class="mode-header">
+                <div class="mode-title-tag"><span>📞</span> OPTION 1: AUDIO CALL WITH AI</div>
+                <button class="btn-switch-mode" onclick="showHub()">← BACK TO 3 OPTIONS</button>
             </div>
 
-            <!-- Giant Microphone Orb -->
-            <div class="mic-orb-wrapper">
-                <button class="btn-mic-orb" id="mic-orb-btn" onclick="toggleVoiceRecording()" title="Click to speak with AI">
-                    <span id="mic-icon">🎙️</span>
-                </button>
+            <div class="audio-call-card">
+                <div class="avatar-glow-ring">
+                    <img src="stalker_hero_selfie_1776590484686.png" alt="AI Avatar">
+                </div>
+                <div class="call-timer" id="audio-timer">00:00</div>
+                <div class="call-status" id="audio-status">AI ASSISTANT CONNECTED · LISTENING...</div>
+
+                <div class="waveform-box">
+                    <canvas id="audio-wave-canvas"></canvas>
+                </div>
+
+                <div class="call-controls">
+                    <button class="btn-call-action" id="btn-audio-mute" onclick="toggleMuteAudio()" title="Mute/Unmute Mic">🎙️</button>
+                    <button class="btn-call-end" onclick="endCall()" title="End Call">📞</button>
+                    <button class="btn-call-action" id="btn-audio-spk" onclick="toggleSpeaker()" title="Toggle Speaker">🔊</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE 2: VIDEO CALL VIEW -->
+        <div class="mode-view" id="mode-video">
+            <div class="mode-header">
+                <div class="mode-title-tag"><span>📹</span> OPTION 2: VIDEO CALL WITH AI</div>
+                <button class="btn-switch-mode" onclick="showHub()">← BACK TO 3 OPTIONS</button>
             </div>
 
-            <!-- Quick Voice Presets -->
-            <div class="presets-label">QUICK VOICE PROMPTS:</div>
-            <div class="presets-container">
-                <button class="preset-btn" onclick="sendPresetPrompt('Who is Vaisal?')">🚌 Who is Vaisal?</button>
-                <button class="preset-btn" onclick="sendPresetPrompt('Who is Logith with the giant knife?')">🔪 Who is Logith?</button>
-                <button class="preset-btn" onclick="sendPresetPrompt('Who is Nithish?')">🔔 Who is Nithish?</button>
-                <button class="preset-btn" onclick="sendPresetPrompt('Who is the strongest operative in ATC Studio?')">👑 Strongest Operative</button>
-                <button class="preset-btn" onclick="sendPresetPrompt('Tell me about Kaveri river highway!')">🌊 Kaveri River</button>
+            <div class="video-call-card">
+                <div class="video-viewport">
+                    <div class="video-hud-overlay">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green);"></span>
+                        <span>LIVE 3D AI AVATAR VIDEO STREAM</span>
+                    </div>
+
+                    <!-- AI Video Avatar Stream -->
+                    <img class="video-avatar-img" id="video-avatar" src="stalker_hero_selfie_1776590484686.png" alt="AI Video Stream">
+
+                    <!-- User WebCam PIP -->
+                    <div class="pip-user-video">
+                        <video id="user-webcam" autoplay muted playsinline></video>
+                    </div>
+                </div>
+
+                <div class="video-controls-bar">
+                    <button class="btn-call-action" id="btn-video-mute" onclick="toggleMuteVideo()" title="Mute Mic">🎙️</button>
+                    <button class="btn-call-action" id="btn-cam-toggle" onclick="toggleCamera()" title="Toggle Camera">📷</button>
+                    <button class="btn-call-end" onclick="endCall()" title="End Video Call">📹</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE 3: TEXT CHAT VIEW -->
+        <div class="mode-view" id="mode-chat">
+            <div class="mode-header">
+                <div class="mode-title-tag"><span>💬</span> OPTION 3: CHAT WITH AI</div>
+                <button class="btn-switch-mode" onclick="showHub()">← BACK TO 3 OPTIONS</button>
             </div>
 
-            <!-- Text Input Bar -->
-            <div class="chat-input-wrapper">
-                <input type="text" id="chat-input" class="chat-input" placeholder="Type a message or question to AI..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-                <button class="btn-send" onclick="sendChatMessage()">SEND</button>
-            </div>
+            <div class="chat-card">
+                <div class="terminal-box" id="terminal-box">
+                    <div class="chat-msg ai">
+                        <span class="msg-sender">🤖 ATC AI ASSISTANT</span>
+                        <div class="msg-body">Welcome to ATC STUDIO AI Text Intelligence! Type any message or question below to start chatting.</div>
+                    </div>
+                </div>
 
-            <!-- Chat Terminal Log -->
-            <div class="terminal-box" id="terminal-box">
-                <div class="chat-msg ai">
-                    <span class="msg-sender">🤖 ATC AI ASSISTANT</span>
-                    <div class="msg-body">Welcome to ATC STUDIO AI Intelligence! Tap the microphone button or type below to speak with me. I am online and listening.</div>
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Type a message to AI..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                    <button class="btn-send" onclick="sendChatMessage()">SEND</button>
                 </div>
             </div>
         </div>
@@ -388,91 +577,162 @@
             }));
         }
 
-        // Web Speech API Voice Recognition & Synthesis
-        let isListening = false;
-        let recognition = null;
+        // Mode Switching Logic
+        let currentMode = 'hub';
+        let callTimerInterval = null;
+        let callSeconds = 0;
+        let isMuted = false;
         let isSpeaking = false;
+        let webcamStream = null;
 
+        function showHub() {
+            endCall();
+            document.getElementById('hub-section').style.display = 'flex';
+            document.getElementById('mode-audio').style.display = 'none';
+            document.getElementById('mode-video').style.display = 'none';
+            document.getElementById('mode-chat').style.display = 'none';
+            currentMode = 'hub';
+        }
+
+        function openMode(mode) {
+            document.getElementById('hub-section').style.display = 'none';
+            document.getElementById('mode-audio').style.display = 'none';
+            document.getElementById('mode-video').style.display = 'none';
+            document.getElementById('mode-chat').style.display = 'none';
+
+            currentMode = mode;
+            if (mode === 'audio') {
+                document.getElementById('mode-audio').style.display = 'flex';
+                startCallTimer('audio-timer');
+                startVoiceRecognition();
+            } else if (mode === 'video') {
+                document.getElementById('mode-video').style.display = 'flex';
+                startCallTimer(null);
+                startWebcam();
+                startVoiceRecognition();
+            } else if (mode === 'chat') {
+                document.getElementById('mode-chat').style.display = 'flex';
+            }
+        }
+
+        function startCallTimer(timerId) {
+            callSeconds = 0;
+            if (callTimerInterval) clearInterval(callTimerInterval);
+            callTimerInterval = setInterval(() => {
+                callSeconds++;
+                const mins = Math.floor(callSeconds / 60);
+                const secs = callSeconds % 60;
+                const fmt = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                if (timerId) {
+                    const el = document.getElementById(timerId);
+                    if (el) el.textContent = fmt;
+                }
+            }, 1000);
+        }
+
+        function endCall() {
+            if (callTimerInterval) clearInterval(callTimerInterval);
+            if (speechRecognizer) {
+                try { speechRecognizer.stop(); } catch(e){}
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(t => t.stop());
+                webcamStream = null;
+            }
+            if (currentMode !== 'hub') {
+                showHub();
+            }
+        }
+
+        function startWebcam() {
+            const videoEl = document.getElementById('user-webcam');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(stream => {
+                        webcamStream = stream;
+                        if (videoEl) videoEl.srcObject = stream;
+                    })
+                    .catch(err => {
+                        console.log('Webcam not available');
+                    });
+            }
+        }
+
+        function toggleMuteAudio() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('btn-audio-mute');
+            btn.style.background = isMuted ? 'rgba(255,34,68,0.3)' : 'rgba(255,255,255,0.06)';
+            btn.style.borderColor = isMuted ? '#FF2244' : 'rgba(255,255,255,0.2)';
+            document.getElementById('audio-status').textContent = isMuted ? 'MICROPHONE MUTED' : 'AI ASSISTANT CONNECTED · LISTENING...';
+        }
+
+        function toggleMuteVideo() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('btn-video-mute');
+            btn.style.background = isMuted ? 'rgba(255,34,68,0.3)' : 'rgba(255,255,255,0.06)';
+            btn.style.borderColor = isMuted ? '#FF2244' : 'rgba(255,255,255,0.2)';
+        }
+
+        function toggleSpeaker() {
+            alert('Speaker level adjusted to maximum volume!');
+        }
+
+        function toggleCamera() {
+            if (webcamStream) {
+                const track = webcamStream.getVideoTracks()[0];
+                if (track) {
+                    track.enabled = !track.enabled;
+                }
+            }
+        }
+
+        // Web Speech API Voice Recognition & Synthesis
+        let speechRecognizer = null;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
+        function startVoiceRecognition() {
+            if (!SpeechRecognition) return;
+            speechRecognizer = new SpeechRecognition();
+            speechRecognizer.continuous = true;
+            speechRecognizer.interimResults = false;
+            speechRecognizer.lang = 'en-US';
 
-            recognition.onstart = () => {
-                isListening = true;
-                setVoiceStatus('LISTENING... SPEAK NOW INTO MICROPHONE', 'listening');
+            speechRecognizer.onresult = (event) => {
+                if (isMuted) return;
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                processCallQuery(transcript);
             };
 
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                processUserPrompt(transcript);
-            };
-
-            recognition.onerror = (event) => {
-                isListening = false;
-                setVoiceStatus('MIC ERROR / TIMEOUT · TRY AGAIN', 'error');
-            };
-
-            recognition.onend = () => {
-                isListening = false;
-                if (!isSpeaking) {
-                    setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
-                }
-            };
+            try { speechRecognizer.start(); } catch(e){}
         }
 
-        function toggleVoiceRecording() {
-            if (isSpeaking) {
+        function speakCallResponse(text) {
+            if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                isSpeaking = false;
-                setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
-                return;
-            }
-
-            if (!recognition) {
-                alert('Speech recognition is not supported in this browser window. Please type your query in the input bar below!');
-                return;
-            }
-
-            if (isListening) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    recognition.stop();
-                }
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0; utterance.pitch = 1.0;
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    if (currentMode === 'audio') document.getElementById('audio-status').textContent = 'AI SPEAKING RESPONSE...';
+                };
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    if (currentMode === 'audio') document.getElementById('audio-status').textContent = 'AI ASSISTANT CONNECTED · LISTENING...';
+                };
+                window.speechSynthesis.speak(utterance);
             }
         }
 
-        function setVoiceStatus(text, mode) {
-            const bar = document.getElementById('voice-status-bar');
-            const statusText = document.getElementById('status-text');
-            const dot = document.getElementById('status-dot');
-            const orbBtn = document.getElementById('mic-orb-btn');
-
-            statusText.textContent = text;
-            orbBtn.classList.remove('listening', 'speaking');
-
-            if (mode === 'listening') {
-                bar.style.color = '#FF2244'; bar.style.borderColor = 'rgba(255,34,68,0.4)'; bar.style.background = 'rgba(255,34,68,0.08)';
-                dot.style.background = '#FF2244'; dot.style.boxShadow = '0 0 10px #FF2244';
-                orbBtn.classList.add('listening');
-            } else if (mode === 'speaking') {
-                bar.style.color = '#FFD700'; bar.style.borderColor = 'rgba(255,215,0,0.4)'; bar.style.background = 'rgba(255,215,0,0.08)';
-                dot.style.background = '#FFD700'; dot.style.boxShadow = '0 0 10px #FFD700';
-                orbBtn.classList.add('speaking');
-            } else {
-                bar.style.color = '#00FF88'; bar.style.borderColor = 'rgba(0,255,136,0.3)'; bar.style.background = 'rgba(0,255,136,0.08)';
-                dot.style.background = '#00FF88'; dot.style.boxShadow = '0 0 8px #00FF88';
+        function processCallQuery(userText) {
+            const aiReply = generateAIResponse(userText);
+            if (currentMode === 'chat') {
+                appendChatMessage('👤 YOU', userText, 'user');
+                appendChatMessage('🤖 ATC AI ASSISTANT', aiReply, 'ai');
             }
-        }
-
-        function sendPresetPrompt(text) {
-            processUserPrompt(text);
+            speakCallResponse(aiReply);
         }
 
         function sendChatMessage() {
@@ -480,96 +740,32 @@
             const text = input.value.trim();
             if (!text) return;
             input.value = '';
-            processUserPrompt(text);
+            processCallQuery(text);
         }
 
-        function appendMessage(sender, text, type) {
+        function appendChatMessage(sender, text, type) {
             const box = document.getElementById('terminal-box');
             const msg = document.createElement('div');
             msg.className = `chat-msg ${type}`;
-            msg.innerHTML = `
-                <span class="msg-sender">${sender}</span>
-                <div class="msg-body">${text}</div>
-            `;
+            msg.innerHTML = `<span class="msg-sender">${sender}</span><div class="msg-body">${text}</div>`;
             box.appendChild(msg);
             box.scrollTop = box.scrollHeight;
         }
 
-        function speakText(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-
-                utterance.onstart = () => {
-                    isSpeaking = true;
-                    setVoiceStatus('AI SPEAKING RESPONSE...', 'speaking');
-                };
-
-                utterance.onend = () => {
-                    isSpeaking = false;
-                    setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
-                };
-
-                utterance.onerror = () => {
-                    isSpeaking = false;
-                    setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
-                };
-
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
-        // Intelligent Knowledge Base Responses
         function generateAIResponse(prompt) {
             const query = prompt.toUpperCase();
-
-            if (query.includes('VAISAL')) {
-                return "Operative Vausal is a high-level adversary in ATC Studio, renowned for driving the high-speed passenger bus along mountain highways with maximum precision!";
-            }
-            if (query.includes('LOGITH') || query.includes('KNIFE')) {
-                return "Operative Logith wields the giant sharp blade knife! In battle comparisons, Logith's sharp blade cuts through Vaisal's speed bus with epic power!";
-            }
-            if (query.includes('NITHISH') || query.includes('BELL')) {
-                return "Operative Nithish is famous for ringing the golden bus conductor bell with unmatched agility and tactical synchrony!";
-            }
-            if (query.includes('GIRISH') || query.includes('TRUCK') || query.includes('LORRY')) {
-                return "Operative Girish commands the massive heavy cargo lorry truck, driving through dark jungle roads with snakes in pursuit!";
-            }
-            if (query.includes('DHANISH') || query.includes('DHARNISH') || query.includes('COBRA') || query.includes('SNAKE')) {
-                return "Operative Dhanish is known for his intense showdowns against king cobras along dark highway routes!";
-            }
-            if (query.includes('SURYA') || query.includes('RIVER') || query.includes('KAVERI')) {
-                return "Operative Surya dominates the Kaveri River forest, swimming smoothly through dense tropical rapids under golden sunlight!";
-            }
-            if (query.includes('STRONGEST') || query.includes('LEADER') || query.includes('VASANTH')) {
-                return "Vasanth is the Squad Leader with a 98% synchrony rating! However, each operative holds unique legendary powers!";
-            }
-            if (query.includes('JOKE') || query.includes('FUNNY')) {
-                return "Why did Logith bring his giant knife to the bus stop? Because he heard Vaisal's bus was cutting corners!";
-            }
-            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY')) {
-                return "Greetings, agent! ATC Studio AI is operational. Ask me about any operative, battle scenario, or video and photo generators!";
-            }
-
-            return `Processing intel for: "${prompt}". ATC Studio AI acknowledges your prompt. You can generate custom 8K photos and videos of this scene using the PHOTO AS MY OWN and VIDEO AS MY OWN tabs!`;
-        }
-
-        function processUserPrompt(userText) {
-            appendMessage('👤 YOU', userText, 'user');
-            setVoiceStatus('THINKING & PROCESSING INTEL...', 'listening');
-
-            setTimeout(() => {
-                const aiReply = generateAIResponse(userText);
-                appendMessage('🤖 ATC AI ASSISTANT', aiReply, 'ai');
-                speakText(aiReply);
-            }, 600);
+            if (query.includes('VAISAL')) return "Vausal is driving the speed bus along mountain highways!";
+            if (query.includes('LOGITH') || query.includes('KNIFE')) return "Logith carries the giant sharp knife capable of cutting through the highway bus!";
+            if (query.includes('NITHISH') || query.includes('BELL')) return "Nithish is the master conductor ringing the golden bus bell!";
+            if (query.includes('GIRISH') || query.includes('TRUCK')) return "Girish commands the heavy cargo lorry truck!";
+            if (query.includes('DHANISH') || query.includes('COBRA')) return "Dhanish fights massive king cobras along jungle roads!";
+            if (query.includes('HELLO') || query.includes('HI')) return "Hello agent! ATC Studio AI is connected. How can I assist your mission?";
+            return `ATC AI received your input: "${prompt}". All squad operative records are active.`;
         }
 
         // Waveform Animation Canvas
         (function() {
-            const canvas = document.getElementById('waveform-canvas');
+            const canvas = document.getElementById('audio-wave-canvas');
             const ctx = canvas.getContext('2d');
             let phase = 0;
 
@@ -588,16 +784,8 @@
                 const centerY = H / 2;
 
                 ctx.lineWidth = 2;
-                let amplitude = 12;
-                let strokeColor = '#FF6400';
-
-                if (isListening) {
-                    amplitude = 35;
-                    strokeColor = '#FF2244';
-                } else if (isSpeaking) {
-                    amplitude = 28;
-                    strokeColor = '#FFD700';
-                }
+                let amplitude = isSpeaking ? 28 : (isMuted ? 2 : 12);
+                let strokeColor = isSpeaking ? '#FFD700' : '#FF6400';
 
                 ctx.strokeStyle = strokeColor;
                 ctx.shadowColor = strokeColor;
@@ -605,7 +793,7 @@
 
                 ctx.beginPath();
                 for (let x = 0; x < W; x++) {
-                    const y = centerY + Math.sin((x * 0.02) + phase) * Math.cos((x * 0.01) - phase) * amplitude;
+                    const y = centerY + Math.sin((x * 0.025) + phase) * Math.cos((x * 0.015) - phase) * amplitude;
                     if (x === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 }
