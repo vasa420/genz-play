@@ -232,7 +232,7 @@
             <p class="card-sub">TYPE A USER PROMPT BELOW TO GENERATE AN AI PHOTO</p>
             
             <div class="limit-badge" id="limit-badge-display">
-                ⚡ DAILY LIMIT: 4 PHOTOS PER 24 HOURS (REMAINING: 4/4)
+                ⚡ UNLIMITED AI PHOTO GENERATIONS
             </div>
 
             <div class="prompt-group">
@@ -257,41 +257,8 @@
     </main>
 
     <script>
-        const LIMIT_COUNT = 4;
-        const LIMIT_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-        function getUsageData() {
-            let usageData = JSON.parse(localStorage.getItem('photo_gen_usage_data') || '[]');
-            const now = Date.now();
-            // Filter out usage records older than 24 hours
-            usageData = usageData.filter(timestamp => (now - timestamp) < LIMIT_TIME_MS);
-            localStorage.setItem('photo_gen_usage_data', JSON.stringify(usageData));
-            return usageData;
-        }
-
-        function updateLimitDisplay() {
-            const usageData = getUsageData();
-            const remaining = Math.max(0, LIMIT_COUNT - usageData.length);
-            const badge = document.getElementById('limit-badge-display');
-            if (badge) {
-                if (remaining === 0) {
-                    const oldestUsage = usageData[0];
-                    const now = Date.now();
-                    const timeRemainingMs = LIMIT_TIME_MS - (now - oldestUsage);
-                    const hoursLeft = Math.floor(timeRemainingMs / (1000 * 60 * 60));
-                    const minsLeft = Math.ceil((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                    badge.innerHTML = `⚠️ DAILY LIMIT REACHED (0/4 REMAINING) · RESETS IN ${hoursLeft}h ${minsLeft}m`;
-                    badge.style.color = '#FF2244';
-                    badge.style.borderColor = 'rgba(255,34,68,0.4)';
-                    badge.style.background = 'rgba(255,34,68,0.08)';
-                } else {
-                    badge.innerHTML = `⚡ DAILY LIMIT: 4 PHOTOS PER 24 HOURS (REMAINING: ${remaining}/4)`;
-                    badge.style.color = '#FFD700';
-                    badge.style.borderColor = 'rgba(255,215,0,0.25)';
-                    badge.style.background = 'rgba(255,215,0,0.08)';
-                }
-            }
-        }
+        // Clear any old limit data to allow unlimited generations
+        localStorage.removeItem('photo_gen_usage_data');
 
         function goBack() {
             const dimmer = document.createElement('div');
@@ -317,24 +284,6 @@
                 alert('Please type a prompt first before clicking START GENERATE PHOTO!');
                 return;
             }
-
-            const usageData = getUsageData();
-            const now = Date.now();
-
-            if (usageData.length >= LIMIT_COUNT) {
-                const oldestUsage = usageData[0];
-                const timeRemainingMs = LIMIT_TIME_MS - (now - oldestUsage);
-                const hoursLeft = Math.floor(timeRemainingMs / (1000 * 60 * 60));
-                const minsLeft = Math.ceil((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
-
-                alert(`⚠️ DAILY LIMIT REACHED!\n\nYou can create up to ${LIMIT_COUNT} photos per 24 hours.\n\nPlease wait ${hoursLeft}h ${minsLeft}m before creating your next AI photo. Limits reset automatically after 24 hours!`);
-                return;
-            }
-
-            // Record this generation attempt timestamp
-            usageData.push(now);
-            localStorage.setItem('photo_gen_usage_data', JSON.stringify(usageData));
-            updateLimitDisplay();
 
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
