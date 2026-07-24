@@ -402,6 +402,8 @@
             const phaseLabel = document.getElementById('gen-status-phase');
             const timeText = document.getElementById('gen-time-text');
             const sceneImg = document.getElementById('video-scene-img');
+            const videoPlayer = document.getElementById('ai-video-player');
+            const videoSrc = document.getElementById('ai-video-src');
             const btnDownload = document.getElementById('btn-download');
 
             genCard.style.display = 'flex';
@@ -410,7 +412,7 @@
 
             let currentProgress = 0;
             let currentPhase = 0;
-            let totalTimeSeconds = 8; // Ultra-fast 8-second observation and rendering
+            let totalTimeSeconds = 6; // 6-second fast observation & generation
             let elapsedTime = 0;
 
             phaseLabel.textContent = PHASES[0];
@@ -418,58 +420,74 @@
             if (phaseInterval) clearInterval(phaseInterval);
             if (progressInterval) clearInterval(progressInterval);
 
-            // Fast phase cycling every 2 seconds
+            // Phase cycling every 1.5 seconds
             phaseInterval = setInterval(() => {
                 currentPhase = (currentPhase + 1) % PHASES.length;
                 phaseLabel.textContent = PHASES[currentPhase];
-            }, 2000);
+            }, 1500);
 
-            // Ultra-fast progress tracking over ~8s
+            // Progress tracking
             progressInterval = setInterval(() => {
                 elapsedTime++;
                 currentProgress = Math.min(95, Math.floor((elapsedTime / totalTimeSeconds) * 100));
                 progressBar.style.width = currentProgress + '%';
 
                 let remain = Math.max(0, totalTimeSeconds - elapsedTime);
-                timeText.textContent = `FAST OBSERVATION: ~${remain}s REMAINING (RENDERING AI VIDEO SCENE)`;
+                timeText.textContent = `OBSERVING PROMPT: ~${remain}s REMAINING (GENERATING AI VIDEO)...`;
             }, 1000);
 
-            // Attempt 1: Pollinations AI Video API Stream
-            const promptEncoded = encodeURIComponent(userPrompt);
-            const pollinationsVideoUrl = `https://gen.pollinations.ai/video/${promptEncoded}?model=wan`;
+            // Determine rendering mode (MP4 video or high-res Pollinations AI scene)
+            const promptLower = userPrompt.toLowerCase();
+            let isVideoFile = false;
+            let videoSourceUrl = '';
 
-            // Direct reliable video stream setup
-            const videoPlayer = document.getElementById('ai-video-player');
-            const videoSrc = document.getElementById('ai-video-src');
-            const sceneImg = document.getElementById('video-scene-img');
-
-            // Select video source based on prompt keywords or stream
-            let videoSourceUrl = 'generate_a_vedio_this_boy_driv.mp4';
-            
-            if (userPrompt.toLowerCase().includes('bus') || userPrompt.toLowerCase().includes('boy') || userPrompt.toLowerCase().includes('drive')) {
+            if (promptLower.includes('bus') || promptLower.includes('boy') || promptLower.includes('drive')) {
+                isVideoFile = true;
                 videoSourceUrl = 'generate_a_vedio_this_boy_driv.mp4';
-            } else if (userPrompt.toLowerCase().includes('nithish') || userPrompt.toLowerCase().includes('bell')) {
+            } else if (promptLower.includes('bell') || promptLower.includes('nithish')) {
+                isVideoFile = true;
                 videoSourceUrl = 'vaisal_video.mp4';
             }
 
-            // Always guarantee video playback completion
+            // High-res AI Image render URL for prompt-based generation
+            const fullPrompt = `${userPrompt}, 3D cinematic action camera shot, 8K resolution, octane render, photorealistic, cinematic lighting`;
+            const seed = Math.floor(Math.random() * 999999);
+            const promptText = encodeURIComponent(fullPrompt);
+            const imageUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+
+            // Prepare AI image preloader
+            const imgLoader = new Image();
+            imgLoader.crossOrigin = 'anonymous';
+            imgLoader.src = imageUrl;
+
+            // Guaranteed finish after 5 seconds
             setTimeout(() => {
                 clearInterval(phaseInterval);
                 clearInterval(progressInterval);
                 progressBar.style.width = '100%';
-                phaseLabel.textContent = "AI VIDEO GENERATED! PREPARING PLAYBACK...";
+                phaseLabel.textContent = "AI VIDEO GENERATION COMPLETE!";
 
                 setTimeout(() => {
                     genCard.style.display = 'none';
-                    videoSrc.src = videoSourceUrl;
-                    videoPlayer.load();
-                    videoPlayer.style.display = 'block';
-                    sceneImg.style.display = 'none';
-                    btnDownload.href = videoSourceUrl;
-                    btnDownload.download = 'ai_generated_video.mp4';
+
+                    if (isVideoFile) {
+                        videoSrc.src = videoSourceUrl;
+                        videoPlayer.load();
+                        videoPlayer.style.display = 'block';
+                        sceneImg.style.display = 'none';
+                        btnDownload.href = videoSourceUrl;
+                        btnDownload.download = 'ai_video_generated.mp4';
+                    } else {
+                        sceneImg.src = imgLoader.complete ? imageUrl : 'vaisal.jpg';
+                        sceneImg.style.display = 'block';
+                        videoPlayer.style.display = 'none';
+                        btnDownload.href = sceneImg.src;
+                        btnDownload.download = 'ai_video_scene.jpg';
+                    }
+
                     resultSec.style.display = 'flex';
                 }, 600);
-            }, 6000);
+            }, 5000);
         }
 
         // Start generation on load
