@@ -987,17 +987,24 @@
                     return `Calculated in real time: Prime factorization of ${original} ➔ ${original} = ${factors.join(' × ')}`;
                 }
 
-                const checkMatch = clean.match(/(?:is|check)\s*(\d+)\s*(?:a)?\s*prime/i) || clean.match(/prime\s*(?:number)?\s*(\d+)/i);
+                // Check if a specific number N is prime (e.g. "123 is a prime", "is 123 prime", "123 prime", "check 123 prime")
+                const checkMatch = clean.match(/(\d+)\s*(?:is|a|number|\?|\s)*\s*prime/i) ||
+                                   clean.match(/prime\s*(?:number|is|check|\?|\s)*\s*(\d+)/i) ||
+                                   clean.match(/(\d+)\s*prime/i);
                 if (checkMatch) {
                     const num = parseInt(checkMatch[1]);
-                    if (num < 2) return `Calculated in real time: ${num} is NOT a prime number.`;
+                    if (num < 2) return `Calculated in real time for ${num}: ${num} is NOT a prime number (Primes must be greater than 1).`;
                     let isP = true;
                     let div = 0;
                     for (let i = 2; i * i <= num; i++) {
                         if (num % i === 0) { isP = false; div = i; break; }
                     }
-                    if (isP) return `Calculated in real time: ${num} IS a Prime number! (It has no divisors other than 1 and ${num}).`;
-                    else return `Calculated in real time: ${num} is NOT a prime number (Divisible by ${div}).`;
+                    if (isP) {
+                        return `Calculated in real time for ${num}: ${num} IS a Prime number! (It has no divisors other than 1 and ${num}).`;
+                    } else {
+                        const divB = num / div;
+                        return `Calculated in real time for ${num}: ${num} is NOT a prime number! It is a composite number divisible by ${div} (${num} = ${div} × ${divB}).`;
+                    }
                 }
             }
 
