@@ -465,33 +465,33 @@
 
             <div class="options-grid">
                 <!-- Option 1: Audio Call -->
-                <div class="option-card" onclick="openMode('audio')">
+                <div class="option-card" onclick="openMode('audio', event)">
                     <div class="option-badge">VOICE CALL</div>
                     <div class="option-icon">📞</div>
                     <div class="option-num">OPTION 1</div>
                     <div class="option-title">AUDIO CALL</div>
                     <div class="option-desc">Real-time hands-free audio voice calling. Speak aloud & hear live AI voice responses with waveform visualizer.</div>
-                    <button class="btn-launch">START AUDIO CALL 📞</button>
+                    <button class="btn-launch" onclick="openMode('audio', event)">START AUDIO CALL 📞</button>
                 </div>
 
                 <!-- Option 2: Video Call -->
-                <div class="option-card" onclick="openMode('video')">
+                <div class="option-card" onclick="openMode('video', event)">
                     <div class="option-badge">AVATAR STREAM</div>
                     <div class="option-icon">📹</div>
                     <div class="option-num">OPTION 2</div>
                     <div class="option-title">VIDEO CALL</div>
                     <div class="option-desc">Interactive 3D Video Call experience with AI Avatar video feed, live camera stream & voice response.</div>
-                    <button class="btn-launch">START VIDEO CALL 📹</button>
+                    <button class="btn-launch" onclick="openMode('video', event)">START VIDEO CALL 📹</button>
                 </div>
 
                 <!-- Option 3: Chat With Me -->
-                <div class="option-card" onclick="openMode('chat')">
+                <div class="option-card" onclick="openMode('chat', event)">
                     <div class="option-badge">TEXT TERMINAL</div>
                     <div class="option-icon">💬</div>
                     <div class="option-num">OPTION 3</div>
                     <div class="option-title">CHAT WITH ME</div>
                     <div class="option-desc">Sci-Fi text messaging terminal. Ask squad questions, get instant intelligence & operative analysis responses.</div>
-                    <button class="btn-launch">START TEXT CHAT 💬</button>
+                    <button class="btn-launch" onclick="openMode('chat', event)">START TEXT CHAT 💬</button>
                 </div>
             </div>
         </div>
@@ -609,25 +609,39 @@
             currentMode = 'hub';
         }
 
-        function openMode(mode) {
-            document.getElementById('hub-section').style.display = 'none';
-            document.getElementById('mode-audio').style.display = 'none';
-            document.getElementById('mode-video').style.display = 'none';
-            document.getElementById('mode-chat').style.display = 'none';
+        function openMode(mode, evt) {
+            if (evt) {
+                try { evt.stopPropagation(); } catch(e){}
+            }
+
+            const hub = document.getElementById('hub-section');
+            const modeAudio = document.getElementById('mode-audio');
+            const modeVideo = document.getElementById('mode-video');
+            const modeChat = document.getElementById('mode-chat');
+
+            if (hub) hub.style.display = 'none';
+            if (modeAudio) modeAudio.style.display = 'none';
+            if (modeVideo) modeVideo.style.display = 'none';
+            if (modeChat) modeChat.style.display = 'none';
 
             currentMode = mode;
-            if (mode === 'audio') {
-                document.getElementById('mode-audio').style.display = 'flex';
+            if (mode === 'audio' && modeAudio) {
+                modeAudio.style.display = 'flex';
                 startCallTimer('audio-timer');
                 startVoiceRecognition();
-            } else if (mode === 'video') {
-                document.getElementById('mode-video').style.display = 'flex';
+            } else if (mode === 'video' && modeVideo) {
+                modeVideo.style.display = 'flex';
                 startCallTimer(null);
                 startWebcam();
                 startVoiceRecognition();
-            } else if (mode === 'chat') {
-                document.getElementById('mode-chat').style.display = 'flex';
+            } else if (mode === 'chat' && modeChat) {
+                modeChat.style.display = 'flex';
+                setTimeout(() => {
+                    const inp = document.getElementById('chat-input');
+                    if (inp) inp.focus();
+                }, 150);
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function startCallTimer(timerId) {
