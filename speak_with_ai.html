@@ -820,7 +820,18 @@
                 return;
             }
 
-            // 6. CODE GENERATION REQUEST
+            // 6. FULLSTACK, FRONTEND, BACKEND, OOPS & SOFTWARE ENGINEERING CONCEPTS
+            const softConceptMsg = lookupSoftwareConcept(raw);
+            if (softConceptMsg) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + softConceptMsg, 'ai');
+                }
+                speakCallResponse(softConceptMsg);
+                return;
+            }
+
+            // 7. CODE GENERATION REQUEST
             const codeResult = generateRealTimeCode(raw);
             if (codeResult) {
                 if (currentMode === 'chat') {
@@ -831,7 +842,7 @@
                 return;
             }
 
-            // 7. 500+ ACRONYMS, IPL TEAMS & OBSERVATIONS
+            // 8. 500+ ACRONYMS, IPL TEAMS & OBSERVATIONS
             const obsResult = lookupAcronymObservation(raw);
             if (obsResult) {
                 if (currentMode === 'chat') {
@@ -842,7 +853,7 @@
                 return;
             }
 
-            // 8. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
+            // 9. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
             const emotionResult = analyzeUserEmotion(raw);
             if (emotionResult) {
                 if (currentMode === 'chat') {
@@ -853,13 +864,86 @@
                 return;
             }
 
-            // 9. MATH & GENERAL AI INTELLIGENCE
+            // 10. MATH & GENERAL AI INTELLIGENCE
             const aiReplyText = generateAISpokenReply(raw);
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', raw, 'user');
                 appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
+        }
+
+        // Full Stack, Frontend, Backend, OOPS & Software Engineering Database
+        const SOFTWARE_CONCEPTS_DB = {
+            // --- FULLSTACK & ARCHITECTURE ---
+            "FULL STACK": "Full Stack Development ➔ Complete software engineering covering Front-end UI (HTML, CSS, React, JS), Back-end servers (Node.js, Express, Python, Java), Database management (SQL, MongoDB), APIs (REST, GraphQL), and Cloud deployment.",
+            "FULLSTACK": "Full Stack Development ➔ Complete software engineering covering Front-end UI, Back-end server logic, Database storage, REST APIs, and DevOps deployment pipelines.",
+            "MERN STACK": "MERN Stack ➔ Popular Full Stack JavaScript architecture: MongoDB (Database), Express.js (Backend Framework), React.js (Frontend Framework), and Node.js (Runtime Environment).",
+            "MEAN STACK": "MEAN Stack ➔ Full Stack JavaScript architecture: MongoDB (Database), Express.js (Backend), Angular (Frontend Framework), and Node.js (Runtime).",
+            "MICROSERVICES": "Microservices Architecture ➔ Architectural style structuring an application as a collection of small, autonomous, independently deployable services communicating over lightweight APIs (HTTP/REST/gRPC).",
+            "MONOLITH": "Monolithic Architecture ➔ Single unified software application where UI, business logic, and database access are tightly coupled within one codebase.",
+
+            // --- FRONTEND DEVELOPMENT ---
+            "FRONTEND": "Frontend Development ➔ Building client-side visual interfaces and user interactions using HTML5, CSS3, JavaScript, TypeScript, React, Next.js, Vue, Angular, and state management tools.",
+            "FRONT-END": "Frontend Development ➔ Building client-side user interfaces, responsive layouts, micro-animations, and interactive components.",
+            "VIRTUAL DOM": "Virtual DOM ➔ In-memory lightweight copy of the real HTML DOM used by React. When state changes, React compares Virtual DOMs (Diffing Algorithm) and updates only changed real DOM nodes for peak performance.",
+            "DOM": "Document Object Model (DOM) ➔ Tree-structured programming interface representing HTML/XML document elements as nodes accessible by JavaScript.",
+            "SINGLE PAGE APPLICATION": "Single Page Application (SPA) ➔ Web app (React, Vue, Angular) loading a single HTML shell page and dynamically updating content via JavaScript APIs without full page reloads.",
+            "SPA": "Single Page Application (SPA) ➔ Web application delivering seamless user experiences by dynamically updating page content without browser reloads.",
+            "SERVER SIDE RENDERING": "Server-Side Rendering (SSR) ➔ Pre-rendering HTML on the server for each request (Next.js), boosting initial page load speeds and search engine optimization (SEO).",
+            "SSR": "Server-Side Rendering (SSR) ➔ Pre-rendering HTML pages on the server per request for superfast initial load and maximum SEO ranking.",
+            "STATE MANAGEMENT": "State Management ➔ Pattern and tools (Redux, Context API, Zustand, MobX) managing centralized application state across nested component trees.",
+
+            // --- BACKEND DEVELOPMENT ---
+            "BACKEND": "Backend Development ➔ Server-side engineering handling business logic, database queries (SQL/NoSQL), RESTful APIs, authentication (JWT/OAuth), security, and server scalability.",
+            "BACK-END": "Backend Development ➔ Building server architecture, business logic, API endpoints, database ORMs, and secure data pipelines.",
+            "NODE.JS": "Node.js ➔ Asynchronous event-driven JavaScript runtime built on Chrome's V8 engine, executing JavaScript server-side with high concurrent I/O throughput.",
+            "NODEJS": "Node.js ➔ Non-blocking event-driven JavaScript runtime environment for building scalable backend network applications.",
+            "EXPRESS.JS": "Express.js ➔ Fast, unopinionated, minimalist web framework for Node.js, providing robust routing and middleware capabilities for REST APIs.",
+            "REST API": "RESTful API (Representational State Transfer) ➔ Architectural style for designing networked web APIs using standard HTTP verbs: GET (Read), POST (Create), PUT/PATCH (Update), DELETE (Remove).",
+            "GRAPHQL": "GraphQL ➔ Query language for APIs created by Meta, allowing clients to request exact data structures, preventing over-fetching and under-fetching.",
+            "WEBSOCKET": "WebSocket ➔ Full-duplex bidirectional communication protocol establishing persistent low-latency TCP connections for real-time applications (chat, live stream, gaming).",
+            "JWT": "JSON Web Token (JWT) ➔ Compact, URL-safe cryptographic token format used for stateless authentication and secure claim transmission.",
+            "OAUTH": "OAuth 2.0 ➔ Open authorization framework enabling third-party applications to access user data securely without exposing passwords.",
+
+            // --- OBJECT-ORIENTED PROGRAMMING (OOPS CONCEPTS) ---
+            "OOPS": "Object-Oriented Programming (OOP) ➔ Programming paradigm organized around Objects and Classes. Core pillars: 1. Abstraction, 2. Encapsulation, 3. Inheritance, 4. Polymorphism.",
+            "OOP": "Object-Oriented Programming (OOP) ➔ Paradigm based on Classes and Objects. Pillars: Encapsulation, Abstraction, Inheritance, and Polymorphism.",
+            "ABSTRACTION": "Abstraction (OOP) ➔ Hiding internal implementation details and showing only essential interfaces to users. Achieved via Abstract Classes and Interfaces.",
+            "ENCAPSULATION": "Encapsulation (OOP) ➔ Bundling data (variables) and code (methods) together into a single unit (Class), restricting direct variable access using private/protected access modifiers and getter/setter methods.",
+            "INHERITANCE": "Inheritance (OOP) ➔ Mechanism where a child derived class inherits properties, methods, and behavior from a parent base class (`extends` in Java/C++), promoting code reuse.",
+            "POLYMORPHISM": "Polymorphism (OOP) ➔ Ability of a method or object to take multiple forms. Two types: 1. Method Overloading (Compile-time / Static), 2. Method Overriding (Runtime / Dynamic).",
+            "METHOD OVERLOADING": "Method Overloading ➔ Defining multiple methods in the same class with the same name but different parameter signatures (Compile-time Polymorphism).",
+            "METHOD OVERRIDING": "Method Overriding ➔ Redefining a parent class method in a child class with the exact same signature (Runtime Polymorphism).",
+            "CLASS": "Class (OOP) ➔ User-defined blueprint or template defining variables and methods from which individual runtime Objects are instantiated.",
+            "OBJECT": "Object (OOP) ➔ Basic runtime instance of a Class containing specific state (attributes) and behavior (methods).",
+            "INTERFACE": "Interface (OOP) ➔ Abstract type specifying contract methods that implementing classes MUST provide without containing state or concrete logic.",
+
+            // --- DATABASES & SYSTEM DESIGN ---
+            "DATABASE": "Database Management ➔ Structured collection of data. Types: Relational SQL (MySQL, PostgreSQL - tables, rows, foreign keys) vs Non-Relational NoSQL (MongoDB, Redis - documents, key-value stores).",
+            "SQL VS NOSQL": "SQL vs NoSQL ➔ SQL (Relational, Structured tables, ACID compliant, fixed schema) vs NoSQL (Document/Key-Value, Unstructured JSON, Scalable horizontally).",
+            "ACID": "ACID Properties (Databases) ➔ 1. Atomicity (All or nothing), 2. Consistency (Valid state), 3. Isolation (Concurrent execution safety), 4. Durability (Persistent commits).",
+            "CAP THEOREM": "CAP Theorem (Distributed Systems) ➔ A distributed system can guarantee at most 2 out of 3 properties: Consistency, Availability, and Partition Tolerance.",
+            "CACHING": "Caching ➔ Technique storing high-frequency data in lightning-fast RAM memory (Redis, Memcached) to reduce database workload and latency.",
+
+            // --- DEVOPS & SYSTEM TOOLS ---
+            "DOCKER": "Docker ➔ Containerization platform packaging applications and all dependencies into lightweight, isolated, portable containers running anywhere.",
+            "KUBERNETES": "Kubernetes (K8s) ➔ Open-source container orchestration platform automating deployment, scaling, load balancing, and management of containerized apps.",
+            "CI/CD": "CI/CD Pipeline ➔ Continuous Integration & Continuous Deployment automating code building, testing, and automated release deployment into production.",
+            "GIT": "Git ➔ Distributed version control system tracking source code history, supporting branching, merging, rebasing, pull requests, and multi-developer collaboration."
+        };
+
+        function lookupSoftwareConcept(text) {
+            if (!text) return null;
+            const upper = text.trim().toUpperCase();
+
+            for (let key in SOFTWARE_CONCEPTS_DB) {
+                if (upper.includes(key)) {
+                    return `Software Engineering Intelligence ➔ ${SOFTWARE_CONCEPTS_DB[key]}`;
+                }
+            }
+
+            return null;
         }
 
         // Careful Question Intent Analyzer Engine
