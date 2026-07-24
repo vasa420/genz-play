@@ -778,6 +778,14 @@
                 return;
             }
 
+            // 1.5 NUMERICAL APTITUDE & QUANTITATIVE REASONING SOLVER (Time & Work, Speed, Profit/Loss, Series, Google Sync)
+            const aptResult = await solveAptitudeQuery(raw);
+            if (aptResult) {
+                aiReply(intentTag + aptResult);
+                speakCallResponse(aptResult);
+                return;
+            }
+
             // 2. CODE GENERATION (C, C++, Java, Python, HTML, SQL, etc.)
             const codeResult = generateRealTimeCode(raw);
             if (codeResult) {
@@ -3155,6 +3163,200 @@
 
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // ==========================================
+        // NUMERICAL APTITUDE & QUANTITATIVE REASONING ENGINE
+        // ==========================================
+        function solveAptitudeQuerySync(text) {
+            if (!text) return null;
+            const clean = text.trim();
+            const q = clean.toLowerCase();
+
+            // 1. TIME & WORK: "A in 10 days, B in 15 days"
+            const twMatch = q.match(/(?:a|person 1|man 1)\s*(?:can do|takes|in)?\s*(\d+)\s*days?,?\s*(?:b|person 2|man 2)\s*(?:can do|takes|in)?\s*(\d+)\s*days?/i) ||
+                            q.match(/(\d+)\s*days?\s*(?:and|&)\s*(\d+)\s*days?\s*(?:together|both)/i);
+            if (twMatch && (q.includes('together') || q.includes('both') || q.includes('work') || q.includes('days'))) {
+                const a = parseFloat(twMatch[1]);
+                const b = parseFloat(twMatch[2]);
+                if (a > 0 && b > 0) {
+                    const together = (a * b) / (a + b);
+                    const rounded = Number.isInteger(together) ? together : together.toFixed(2);
+                    return `🧩 Numerical Aptitude Solution — Time & Work\n\n` +
+                        `• Work done by A in 1 day = 1/${a}\n` +
+                        `• Work done by B in 1 day = 1/${b}\n` +
+                        `• Combined 1-day work = (1/${a}) + (1/${b}) = (${a}+${b})/(${a}×${b}) = ${a+b}/${a*b}\n\n` +
+                        `✅ Total time taken together = (${a} × ${b}) / (${a} + ${b}) = ${a*b}/${a+b} = ${rounded} Days!`;
+                }
+            }
+
+            // 2. SPEED, DISTANCE & TRAINS: "train 150m speed 60 km/h cross pole", "speed 60 km/h distance 180 km"
+            const trainMatch = q.match(/(?:train|car|vehicle)?\s*(?:length|is)?\s*(\d+)\s*m(?:eters?)?\s*(?:moving|running|speed)?\s*(?:at)?\s*(\d+(?:\.\d+)?)\s*km\/h/i);
+            if (trainMatch) {
+                const lengthM = parseFloat(trainMatch[1]);
+                const speedKmph = parseFloat(trainMatch[2]);
+                const speedMs = speedKmph * (5 / 18);
+                const timeSec = lengthM / speedMs;
+                return `🧩 Numerical Aptitude Solution — Train & Speed\n\n` +
+                    `• Train Length (Distance) = ${lengthM} meters\n` +
+                    `• Speed in km/h = ${speedKmph} km/h\n` +
+                    `• Speed converted to m/s = ${speedKmph} × (5/18) = ${speedMs.toFixed(2)} m/s\n` +
+                    `• Formula: Time = Distance / Speed\n\n` +
+                    `✅ Time to cross pole = ${lengthM} / ${speedMs.toFixed(2)} = ${timeSec.toFixed(2)} Seconds!`;
+            }
+
+            const sdtMatch = q.match(/(?:speed|rate)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?\s*(?:distance)\s*(\d+(?:\.\d+)?)\s*km/i) ||
+                             q.match(/(?:distance)\s*(\d+(?:\.\d+)?)\s*km\s*(?:speed)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?/i);
+            if (sdtMatch) {
+                let speed, dist;
+                if (q.indexOf('distance') > q.indexOf('speed') && q.indexOf('speed') !== -1) {
+                    speed = parseFloat(sdtMatch[1]); dist = parseFloat(sdtMatch[2]);
+                } else {
+                    dist = parseFloat(sdtMatch[1]); speed = parseFloat(sdtMatch[2]);
+                }
+                if (speed > 0) {
+                    const timeH = dist / speed;
+                    return `🧩 Numerical Aptitude Solution — Speed & Distance\n\n` +
+                        `• Distance = ${dist} km | Speed = ${speed} km/h\n` +
+                        `• Formula: Time = Distance / Speed\n\n` +
+                        `✅ Time taken = ${dist} / ${speed} = ${timeH.toFixed(2)} Hours (${(timeH * 60).toFixed(0)} minutes)!`;
+                }
+            }
+
+            // 3. PROFIT & LOSS: "cost price 500 selling price 650", "CP 500 SP 650"
+            const plMatch = q.match(/(?:cost price|cp)\s*(?:is|=|:)?\s*(\d+(?:\.\d+)?)\s*(?:selling price|sp)\s*(?:is|=|:)?\s*(\d+(?:\.\d+)?)/i) ||
+                            q.match(/(?:cp)\s*(\d+(?:\.\d+)?)\s*(?:sp)\s*(\d+(?:\.\d+)?)/i);
+            if (plMatch) {
+                const cp = parseFloat(plMatch[1]);
+                const sp = parseFloat(plMatch[2]);
+                const diff = sp - cp;
+                if (diff >= 0) {
+                    const profitPct = (diff / cp) * 100;
+                    return `🧩 Numerical Aptitude Solution — Profit & Loss\n\n` +
+                        `• Cost Price (CP) = ₹${cp}\n` +
+                        `• Selling Price (SP) = ₹${sp}\n` +
+                        `• Profit Amount = SP - CP = ₹${sp} - ₹${cp} = ₹${diff}\n` +
+                        `• Formula: Profit % = (Profit / CP) × 100\n\n` +
+                        `✅ Profit Percentage = (${diff} / ${cp}) × 100 = ${profitPct.toFixed(2)}%!`;
+                } else {
+                    const lossAmount = Math.abs(diff);
+                    const lossPct = (lossAmount / cp) * 100;
+                    return `🧩 Numerical Aptitude Solution — Profit & Loss\n\n` +
+                        `• Cost Price (CP) = ₹${cp}\n` +
+                        `• Selling Price (SP) = ₹${sp}\n` +
+                        `• Loss Amount = CP - SP = ₹${cp} - ₹${sp} = ₹${lossAmount}\n` +
+                        `• Formula: Loss % = (Loss / CP) × 100\n\n` +
+                        `✅ Loss Percentage = (${lossAmount} / ${cp}) × 100 = ${lossPct.toFixed(2)}%!`;
+                }
+            }
+
+            // 4. RATIO & AGES: "ratio of ages A and B is 3:5 sum is 40"
+            const ratioAgeMatch = q.match(/ratio\s*(?:of|is)?\s*(\d+)\s*(?::|to)\s*(\d+)\s*(?:and|with)?\s*sum\s*(?:is)?\s*(\d+)/i);
+            if (ratioAgeMatch) {
+                const r1 = parseFloat(ratioAgeMatch[1]);
+                const r2 = parseFloat(ratioAgeMatch[2]);
+                const sum = parseFloat(ratioAgeMatch[3]);
+                const totalParts = r1 + r2;
+                const onePart = sum / totalParts;
+                const val1 = r1 * onePart;
+                const val2 = r2 * onePart;
+                return `🧩 Numerical Aptitude Solution — Ratio & Proportion\n\n` +
+                    `• Given Ratio = ${r1} : ${r2} | Total Sum = ${sum}\n` +
+                    `• Total Parts = ${r1} + ${r2} = ${totalParts}\n` +
+                    `• Value per part = ${sum} / ${totalParts} = ${onePart}\n\n` +
+                    `✅ First Part (A) = ${r1} × ${onePart} = ${val1}\n` +
+                    `✅ Second Part (B) = ${r2} × ${onePart} = ${val2}`;
+            }
+
+            // 5. PIPES & CISTERNS: "pipe A fills in 10 hours pipe B empties in 15 hours"
+            const pipeMatch = q.match(/pipe\s*a\s*(?:fills)?\s*in\s*(\d+)\s*h(?:ou)?rs?\s*pipe\s*b\s*(?:empties|drains)\s*in\s*(\d+)\s*h(?:ou)?rs?/i);
+            if (pipeMatch) {
+                const fill = parseFloat(pipeMatch[1]);
+                const empty = parseFloat(pipeMatch[2]);
+                const netRate = (1 / fill) - (1 / empty);
+                if (netRate > 0) {
+                    const timeTaken = 1 / netRate;
+                    return `🧩 Numerical Aptitude Solution — Pipes & Cisterns\n\n` +
+                        `• Pipe A filling rate = +1/${fill} per hour\n` +
+                        `• Pipe B emptying rate = -1/${empty} per hour\n` +
+                        `• Net rate per hour = (1/${fill}) - (1/${empty}) = (${empty} - ${fill}) / (${fill} × ${empty}) = ${(empty - fill)}/${fill * empty}\n\n` +
+                        `✅ Tank will be completely filled in = ${timeTaken.toFixed(2)} Hours!`;
+                }
+            }
+
+            // 6. NUMBER SERIES PATTERN SOLVER: "series 2, 4, 8, 16" or "series 2, 5, 10, 17, 26"
+            const seriesMatch = q.match(/(?:series|sequence|pattern|next number in)?\s*([0-9]+(?:\s*,\s*[0-9]+){3,})/i);
+            if (seriesMatch && (q.includes('series') || q.includes('next') || q.includes('pattern') || q.includes('sequence'))) {
+                const arr = seriesMatch[1].split(/[\s,]+/).map(Number);
+                if (arr.length >= 4) {
+                    // Check Arithmetic Progression (AP)
+                    const diff1 = arr[1] - arr[0];
+                    let isAP = true;
+                    for (let i = 1; i < arr.length - 1; i++) {
+                        if (arr[i+1] - arr[i] !== diff1) { isAP = false; break; }
+                    }
+                    if (isAP) {
+                        const nextTerm = arr[arr.length - 1] + diff1;
+                        return `🧩 Numerical Aptitude Solution — Number Series\n\n` +
+                            `• Given Series: [ ${arr.join(', ')}, ? ]\n` +
+                            `• Pattern Identified: Arithmetic Progression (Constant Difference d = +${diff1})\n\n` +
+                            `✅ Next Number in Series = ${arr[arr.length - 1]} + ${diff1} = ${nextTerm}!`;
+                    }
+
+                    // Check Geometric Progression (GP)
+                    if (arr[0] !== 0) {
+                        const ratio = arr[1] / arr[0];
+                        let isGP = true;
+                        for (let i = 1; i < arr.length - 1; i++) {
+                            if (arr[i] === 0 || (arr[i+1] / arr[i]) !== ratio) { isGP = false; break; }
+                        }
+                        if (isGP && ratio !== 1) {
+                            const nextTerm = arr[arr.length - 1] * ratio;
+                            return `🧩 Numerical Aptitude Solution — Number Series\n\n` +
+                                `• Given Series: [ ${arr.join(', ')}, ? ]\n` +
+                                `• Pattern Identified: Geometric Progression (Constant Multiplier r = ×${ratio})\n\n` +
+                                `✅ Next Number in Series = ${arr[arr.length - 1]} × ${ratio} = ${nextTerm}!`;
+                        }
+                    }
+
+                    // Check Quadratic / Squares Pattern
+                    const diffs = [];
+                    for (let i = 0; i < arr.length - 1; i++) diffs.push(arr[i+1] - arr[i]);
+                    const diffsOfDiffs = [];
+                    for (let i = 0; i < diffs.length - 1; i++) diffsOfDiffs.push(diffs[i+1] - diffs[i]);
+                    let isSecondDiffConstant = diffsOfDiffs.length >= 2 && diffsOfDiffs.every(v => v === diffsOfDiffs[0]);
+                    if (isSecondDiffConstant) {
+                        const nextDiff = diffs[diffs.length - 1] + diffsOfDiffs[0];
+                        const nextTerm = arr[arr.length - 1] + nextDiff;
+                        return `🧩 Numerical Aptitude Solution — Number Series\n\n` +
+                            `• Given Series: [ ${arr.join(', ')}, ? ]\n` +
+                            `• Differences: [ ${diffs.join(', ')} ]\n` +
+                            `• Pattern Identified: Quadratic / 2nd-level constant difference (+${diffsOfDiffs[0]})\n\n` +
+                            `✅ Next Number in Series = ${arr[arr.length - 1]} + ${nextDiff} = ${nextTerm}!`;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // Async Aptitude Solver with Real-Time Google Search Sync
+        async function solveAptitudeQuery(text) {
+            if (!text) return null;
+            const syncRes = solveAptitudeQuerySync(text);
+            if (syncRes) return syncRes;
+
+            const clean = text.trim();
+            const isAptitudeQuestion = /\b(aptitude|numerical reasoning|quantitative|probability|train speed|work and time|pipes and cisterns|profit and loss|discount|ratio and proportion|permutation|combination|probability|number series|clock angle|calendar reasoning|solve step by step|how to solve)\b/i.test(clean);
+
+            if (isAptitudeQuestion) {
+                const webSolution = await fetchRealTimeWebSearch(clean);
+                if (webSolution) {
+                    return `🧩 Aptitude Real-Time Google Solution\n\n` + webSolution;
+                }
+            }
+
+            return null;
         }
 
         // Universal Real-Time Math Concepts Engine (Primes, GCD/LCM, Geometry, Combinatorics, Statistics, Decimals)
