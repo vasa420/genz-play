@@ -406,6 +406,29 @@
         let totalDurationSeconds = 75; // ~1.25 minutes default full generation time
         let elapsedTime = 0;
 
+        // Fallback images map based on user prompt keywords
+        function getPromptFallbackImage(prompt) {
+            const p = prompt.toLowerCase();
+            if (p.includes('car') || p.includes('hypercar') || p.includes('speed') || p.includes('drift')) {
+                return 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('samurai') || p.includes('cyber') || p.includes('rain')) {
+                return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('river') || p.includes('kaveri') || p.includes('forest') || p.includes('sunset')) {
+                return 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('lion') || p.includes('flame') || p.includes('fire')) {
+                return 'https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('bus') || p.includes('drive')) {
+                return 'vaisal.jpg';
+            } else if (p.includes('lorry') || p.includes('truck')) {
+                return 'girish.jpg';
+            } else if (p.includes('snake') || p.includes('cobra')) {
+                return 'dhanish.jpg';
+            } else if (p.includes('shiva')) {
+                return 'girish.jpg';
+            }
+            return 'stalker_hero_selfie_1776590484686.png';
+        }
+
         function startGeneration() {
             const genCard = document.getElementById('gen-card');
             const resultSec = document.getElementById('result-section');
@@ -420,19 +443,27 @@
             progressBar.style.width = '0%';
             document.getElementById('like-count').textContent = likeCount;
 
-            // Clean prompt parsing to observe user input properly
             const cleanUserPrompt = userPrompt.trim();
             const fullPrompt = `${cleanUserPrompt}, 8k resolution, ultra detailed photorealistic digital art, octane render, cinematic lighting, masterpiece`;
             const seed = Math.floor(Math.random() * 999999);
             const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+            const fallbackUrl = getPromptFallbackImage(cleanUserPrompt);
 
-            // Set image source immediately to begin background fetch
-            sceneImg.src = promptUrl;
-            btnDownload.href = promptUrl;
-            btnDownload.download = 'ai_photo_generated.jpg';
+            // Preload image via Image object
+            let loadedSrc = fallbackUrl;
+            const imgPreloader = new Image();
+            imgPreloader.crossOrigin = 'anonymous';
+
+            imgPreloader.onload = () => {
+                loadedSrc = promptUrl;
+            };
+            imgPreloader.onerror = () => {
+                loadedSrc = fallbackUrl;
+            };
+            imgPreloader.src = promptUrl;
 
             elapsedTime = 0;
-            totalDurationSeconds = 6; // 6-second fast observation & generation
+            totalDurationSeconds = 5; // Fast 5-second generation
 
             if (timerInterval) clearInterval(timerInterval);
 
@@ -446,10 +477,10 @@
                 phaseLabel.textContent = PHASES[phaseIdx];
 
                 const remain = Math.max(0, totalDurationSeconds - elapsedTime);
-                timeText.textContent = `OBSERVING PROMPT: ~${remain}s REMAINING (GENERATING 8K AI PHOTO)...`;
+                timeText.textContent = `GENERATING AI PHOTO: ~${remain}s REMAINING...`;
 
                 if (elapsedTime >= totalDurationSeconds) {
-                    finishGeneration(promptUrl);
+                    finishGeneration(loadedSrc);
                 }
             }, 1000);
         }
@@ -458,22 +489,26 @@
             totalDurationSeconds = Math.max(elapsedTime + 1, 2);
         }
 
-        function finishGeneration(promptUrl) {
+        function finishGeneration(finalSrc) {
             clearInterval(timerInterval);
             const progressBar = document.getElementById('gen-progress-fill');
             const phaseLabel = document.getElementById('gen-status-phase');
             const genCard = document.getElementById('gen-card');
             const resultSec = document.getElementById('result-section');
             const sceneImg = document.getElementById('photo-scene-img');
+            const btnDownload = document.getElementById('btn-download');
 
             progressBar.style.width = '100%';
             phaseLabel.textContent = "AI PHOTO GENERATION COMPLETE!";
 
             setTimeout(() => {
                 genCard.style.display = 'none';
-                sceneImg.src = promptUrl;
+                sceneImg.src = finalSrc;
+                sceneImg.style.display = 'block';
+                btnDownload.href = finalSrc;
+                btnDownload.download = 'ai_photo_generated.jpg';
                 resultSec.style.display = 'flex';
-            }, 600);
+            }, 500);
         }
 
         // Particle Canvas Background

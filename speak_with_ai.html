@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | Speak With AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.45);
+            --green: #00FF88;
+            --green-glow: rgba(0, 255, 136, 0.35);
+            --gold: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --red: #FF2244;
+            --bg: #04040c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Scanline overlay */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.7;
+        }
+
+        /* Background particle canvas */
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            width: 100%; padding: 22px 30px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 100, 0, 0.12);
+            background: rgba(4,4,12,0.9);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px; font-weight: 900; letter-spacing: 6px;
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .header-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 3px; color: #555;
+            text-transform: uppercase;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid rgba(255,100,0,0.3);
+            color: rgba(255,100,0,0.7);
+            padding: 8px 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 2px;
+            border-radius: 6px; cursor: pointer;
+            transition: 0.25s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        .btn-back:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 100%; max-width: 760px;
+            padding: 40px 20px 80px;
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Input Card */
+        .card {
+            width: 100%; background: rgba(10, 10, 24, 0.8);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            border-radius: 18px; padding: 35px 30px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+            margin-bottom: 30px; text-align: center;
+        }
+
+        .card-icon {
+            font-size: 44px; color: var(--primary);
+            text-shadow: 0 0 15px var(--primary-glow); margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px; font-weight: 900; letter-spacing: 4px;
+            color: var(--primary); margin-bottom: 6px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .card-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: rgba(255,255,255,0.45);
+            letter-spacing: 2px; margin-bottom: 25px;
+        }
+
+        /* Audio Waveform Canvas */
+        .waveform-container {
+            width: 100%; height: 90px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(255, 100, 0, 0.3);
+            border-radius: 14px; margin-bottom: 25px;
+            position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #waveform-canvas {
+            width: 100%; height: 100%; display: block;
+        }
+
+        /* Voice Status Banner */
+        .voice-status-bar {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 3px;
+            padding: 6px 18px; border-radius: 20px;
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-bottom: 25px; background: rgba(0,255,136,0.08);
+            border: 1px solid rgba(0,255,136,0.3); color: var(--green);
+            text-transform: uppercase; transition: all 0.3s ease;
+        }
+
+        .voice-status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--green); box-shadow: 0 0 8px var(--green);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+
+        /* Giant Voice Mic Orb Button */
+        .mic-orb-wrapper {
+            display: flex; justify-content: center; margin-bottom: 30px;
+        }
+
+        .btn-mic-orb {
+            width: 110px; height: 110px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,100,0,0.25) 0%, rgba(10,10,24,0.9) 70%);
+            border: 2px solid var(--primary);
+            color: var(--primary); font-size: 42px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 30px var(--primary-glow);
+            position: relative; outline: none;
+        }
+
+        .btn-mic-orb:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 45px var(--primary);
+            background: radial-gradient(circle, rgba(255,100,0,0.4) 0%, rgba(10,10,24,0.9) 70%);
+        }
+
+        .btn-mic-orb.listening {
+            border-color: var(--red); color: var(--red);
+            box-shadow: 0 0 50px rgba(255, 34, 68, 0.7);
+            animation: micPulse 1.2s infinite alternate;
+        }
+
+        .btn-mic-orb.speaking {
+            border-color: var(--gold); color: var(--gold);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.7);
+            animation: micPulse 1s infinite alternate;
+        }
+
+        @keyframes micPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.12); }
+        }
+
+        /* Preset Voice Chips */
+        .presets-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; text-align: left; margin-bottom: 10px;
+        }
+
+        .presets-container {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            background: rgba(255, 100, 0, 0.08);
+            border: 1px solid rgba(255, 100, 0, 0.25);
+            color: rgba(255,255,255,0.75);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 1px;
+            padding: 8px 14px; border-radius: 20px;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--primary); color: var(--primary);
+            background: rgba(255, 100, 0, 0.15);
+        }
+
+        /* Text Input Bar */
+        .chat-input-wrapper {
+            display: flex; gap: 12px; margin-bottom: 30px;
+        }
+
+        .chat-input {
+            flex: 1; padding: 14px 20px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            border-radius: 12px; color: #fff;
+            font-family: 'Outfit', sans-serif; font-size: 15px;
+            outline: none; transition: 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-send {
+            padding: 14px 24px;
+            background: var(--primary); color: #000; border: none;
+            border-radius: 12px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; font-weight: 900; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px var(--primary);
+        }
+
+        /* Conversation Log Terminal */
+        .terminal-box {
+            width: 100%; height: 260px;
+            background: rgba(4, 4, 12, 0.95);
+            border: 1.5px solid rgba(255, 100, 0, 0.3);
+            border-radius: 14px; padding: 20px;
+            overflow-y: auto; text-align: left;
+            display: flex; flex-direction: column; gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .terminal-box::-webkit-scrollbar { width: 6px; }
+        .terminal-box::-webkit-scrollbar-thumb { background: rgba(255, 100, 0, 0.3); border-radius: 4px; }
+
+        .chat-msg {
+            display: flex; flex-direction: column; gap: 4px;
+            max-width: 85%; animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .chat-msg.user { align-self: flex-end; align-items: flex-end; }
+        .chat-msg.ai { align-self: flex-start; align-items: flex-start; }
+
+        .msg-sender {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+        }
+
+        .msg-body {
+            padding: 10px 16px; border-radius: 12px;
+            font-family: 'Outfit', sans-serif; font-size: 14px; line-height: 1.5;
+        }
+
+        .chat-msg.user .msg-body {
+            background: rgba(255, 100, 0, 0.15);
+            border: 1px solid rgba(255, 100, 0, 0.4);
+            color: #fff; border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.ai .msg-body {
+            background: rgba(10, 24, 40, 0.8);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--green); border-bottom-left-radius: 2px;
+            text-shadow: 0 0 5px rgba(0,255,136,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="particle-bg"></canvas>
+
+    <!-- Header -->
+    <header class="header">
+        <div>
+            <div class="header-logo">ATTACKS</div>
+            <div class="header-tag">SPEAK WITH AI v1.0</div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a class="btn-back" href="photo_as_my_own.html">📸 PHOTO AS MY OWN</a>
+            <a class="btn-back" href="video_as_my_own.html">🎥 VIDEO AS MY OWN</a>
+            <button class="btn-back" onclick="goBack()">← SEARCH ENGINE</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        
+        <div class="card">
+            <div class="card-icon">🤖</div>
+            <h1 class="card-title">SPEAK WITH AI</h1>
+            <p class="card-sub">TALK OR TYPE TO COMMUNICATE WITH ATC STUDIO AI ASSISTANT</p>
+
+            <!-- Status Bar -->
+            <div class="voice-status-bar" id="voice-status-bar">
+                <div class="voice-status-dot" id="status-dot"></div>
+                <span id="status-text">AI READY · TAP MIC OR TYPE TO SPEAK</span>
+            </div>
+
+            <!-- Waveform Canvas -->
+            <div class="waveform-container">
+                <canvas id="waveform-canvas"></canvas>
+            </div>
+
+            <!-- Giant Microphone Orb -->
+            <div class="mic-orb-wrapper">
+                <button class="btn-mic-orb" id="mic-orb-btn" onclick="toggleVoiceRecording()" title="Click to speak with AI">
+                    <span id="mic-icon">🎙️</span>
+                </button>
+            </div>
+
+            <!-- Quick Voice Presets -->
+            <div class="presets-label">QUICK VOICE PROMPTS:</div>
+            <div class="presets-container">
+                <button class="preset-btn" onclick="sendPresetPrompt('Who is Vaisal?')">🚌 Who is Vaisal?</button>
+                <button class="preset-btn" onclick="sendPresetPrompt('Who is Logith with the giant knife?')">🔪 Who is Logith?</button>
+                <button class="preset-btn" onclick="sendPresetPrompt('Who is Nithish?')">🔔 Who is Nithish?</button>
+                <button class="preset-btn" onclick="sendPresetPrompt('Who is the strongest operative in ATC Studio?')">👑 Strongest Operative</button>
+                <button class="preset-btn" onclick="sendPresetPrompt('Tell me about Kaveri river highway!')">🌊 Kaveri River</button>
+            </div>
+
+            <!-- Text Input Bar -->
+            <div class="chat-input-wrapper">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Type a message or question to AI..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                <button class="btn-send" onclick="sendChatMessage()">SEND</button>
+            </div>
+
+            <!-- Chat Terminal Log -->
+            <div class="terminal-box" id="terminal-box">
+                <div class="chat-msg ai">
+                    <span class="msg-sender">🤖 ATC AI ASSISTANT</span>
+                    <div class="msg-body">Welcome to ATC STUDIO AI Intelligence! Tap the microphone button or type below to speak with me. I am online and listening.</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function goBack() {
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
+            }));
+        }
+
+        // Web Speech API Voice Recognition & Synthesis
+        let isListening = false;
+        let recognition = null;
+        let isSpeaking = false;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                setVoiceStatus('LISTENING... SPEAK NOW INTO MICROPHONE', 'listening');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                processUserPrompt(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                setVoiceStatus('MIC ERROR / TIMEOUT · TRY AGAIN', 'error');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                if (!isSpeaking) {
+                    setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
+                }
+            };
+        }
+
+        function toggleVoiceRecording() {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                isSpeaking = false;
+                setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
+                return;
+            }
+
+            if (!recognition) {
+                alert('Speech recognition is not supported in this browser window. Please type your query in the input bar below!');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch(e) {
+                    recognition.stop();
+                }
+            }
+        }
+
+        function setVoiceStatus(text, mode) {
+            const bar = document.getElementById('voice-status-bar');
+            const statusText = document.getElementById('status-text');
+            const dot = document.getElementById('status-dot');
+            const orbBtn = document.getElementById('mic-orb-btn');
+
+            statusText.textContent = text;
+            orbBtn.classList.remove('listening', 'speaking');
+
+            if (mode === 'listening') {
+                bar.style.color = '#FF2244'; bar.style.borderColor = 'rgba(255,34,68,0.4)'; bar.style.background = 'rgba(255,34,68,0.08)';
+                dot.style.background = '#FF2244'; dot.style.boxShadow = '0 0 10px #FF2244';
+                orbBtn.classList.add('listening');
+            } else if (mode === 'speaking') {
+                bar.style.color = '#FFD700'; bar.style.borderColor = 'rgba(255,215,0,0.4)'; bar.style.background = 'rgba(255,215,0,0.08)';
+                dot.style.background = '#FFD700'; dot.style.boxShadow = '0 0 10px #FFD700';
+                orbBtn.classList.add('speaking');
+            } else {
+                bar.style.color = '#00FF88'; bar.style.borderColor = 'rgba(0,255,136,0.3)'; bar.style.background = 'rgba(0,255,136,0.08)';
+                dot.style.background = '#00FF88'; dot.style.boxShadow = '0 0 8px #00FF88';
+            }
+        }
+
+        function sendPresetPrompt(text) {
+            processUserPrompt(text);
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            processUserPrompt(text);
+        }
+
+        function appendMessage(sender, text, type) {
+            const box = document.getElementById('terminal-box');
+            const msg = document.createElement('div');
+            msg.className = `chat-msg ${type}`;
+            msg.innerHTML = `
+                <span class="msg-sender">${sender}</span>
+                <div class="msg-body">${text}</div>
+            `;
+            box.appendChild(msg);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    setVoiceStatus('AI SPEAKING RESPONSE...', 'speaking');
+                };
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
+                };
+
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    setVoiceStatus('AI READY · TAP MIC OR TYPE TO SPEAK', 'ready');
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Intelligent Knowledge Base Responses
+        function generateAIResponse(prompt) {
+            const query = prompt.toUpperCase();
+
+            if (query.includes('VAISAL')) {
+                return "Operative Vausal is a high-level adversary in ATC Studio, renowned for driving the high-speed passenger bus along mountain highways with maximum precision!";
+            }
+            if (query.includes('LOGITH') || query.includes('KNIFE')) {
+                return "Operative Logith wields the giant sharp blade knife! In battle comparisons, Logith's sharp blade cuts through Vaisal's speed bus with epic power!";
+            }
+            if (query.includes('NITHISH') || query.includes('BELL')) {
+                return "Operative Nithish is famous for ringing the golden bus conductor bell with unmatched agility and tactical synchrony!";
+            }
+            if (query.includes('GIRISH') || query.includes('TRUCK') || query.includes('LORRY')) {
+                return "Operative Girish commands the massive heavy cargo lorry truck, driving through dark jungle roads with snakes in pursuit!";
+            }
+            if (query.includes('DHANISH') || query.includes('DHARNISH') || query.includes('COBRA') || query.includes('SNAKE')) {
+                return "Operative Dhanish is known for his intense showdowns against king cobras along dark highway routes!";
+            }
+            if (query.includes('SURYA') || query.includes('RIVER') || query.includes('KAVERI')) {
+                return "Operative Surya dominates the Kaveri River forest, swimming smoothly through dense tropical rapids under golden sunlight!";
+            }
+            if (query.includes('STRONGEST') || query.includes('LEADER') || query.includes('VASANTH')) {
+                return "Vasanth is the Squad Leader with a 98% synchrony rating! However, each operative holds unique legendary powers!";
+            }
+            if (query.includes('JOKE') || query.includes('FUNNY')) {
+                return "Why did Logith bring his giant knife to the bus stop? Because he heard Vaisal's bus was cutting corners!";
+            }
+            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY')) {
+                return "Greetings, agent! ATC Studio AI is operational. Ask me about any operative, battle scenario, or video and photo generators!";
+            }
+
+            return `Processing intel for: "${prompt}". ATC Studio AI acknowledges your prompt. You can generate custom 8K photos and videos of this scene using the PHOTO AS MY OWN and VIDEO AS MY OWN tabs!`;
+        }
+
+        function processUserPrompt(userText) {
+            appendMessage('👤 YOU', userText, 'user');
+            setVoiceStatus('THINKING & PROCESSING INTEL...', 'listening');
+
+            setTimeout(() => {
+                const aiReply = generateAIResponse(userText);
+                appendMessage('🤖 ATC AI ASSISTANT', aiReply, 'ai');
+                speakText(aiReply);
+            }, 600);
+        }
+
+        // Waveform Animation Canvas
+        (function() {
+            const canvas = document.getElementById('waveform-canvas');
+            const ctx = canvas.getContext('2d');
+            let phase = 0;
+
+            function resize() {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            function drawWave() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const W = canvas.width;
+                const H = canvas.height;
+                const centerY = H / 2;
+
+                ctx.lineWidth = 2;
+                let amplitude = 12;
+                let strokeColor = '#FF6400';
+
+                if (isListening) {
+                    amplitude = 35;
+                    strokeColor = '#FF2244';
+                } else if (isSpeaking) {
+                    amplitude = 28;
+                    strokeColor = '#FFD700';
+                }
+
+                ctx.strokeStyle = strokeColor;
+                ctx.shadowColor = strokeColor;
+                ctx.shadowBlur = 10;
+
+                ctx.beginPath();
+                for (let x = 0; x < W; x++) {
+                    const y = centerY + Math.sin((x * 0.02) + phase) * Math.cos((x * 0.01) - phase) * amplitude;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                phase += 0.08;
+                requestAnimationFrame(drawWave);
+            }
+            drawWave();
+        })();
+
+        // Ambient Particle Background
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 45; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.3 + 0.3,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.3 + 0.08
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+</body>
+</html>
