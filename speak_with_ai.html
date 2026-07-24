@@ -3441,6 +3441,9 @@
         // ==========================================
         // NUMERICAL APTITUDE & QUANTITATIVE REASONING ENGINE
         // ==========================================
+        // ==========================================
+        // NUMERICAL APTITUDE & QUANTITATIVE REASONING ENGINE
+        // ==========================================
         function solveAptitudeQuerySync(text) {
             if (!text) return null;
             const clean = text.trim();
@@ -3456,11 +3459,11 @@
                     const together = (a * b) / (a + b);
                     const rounded = Number.isInteger(together) ? together : together.toFixed(2);
                     return `🧩 Step-by-Step Aptitude Solution — Time & Work\n\n` +
-                        `📌 Question: Time taken by A (${a} days) and B (${b} days) working together.\n\n` +
-                        `• Step 1: Work done by A in 1 day = 1/${a}\n` +
-                        `• Step 2: Work done by B in 1 day = 1/${b}\n` +
-                        `• Step 3: Combined 1-day work = (1/${a}) + (1/${b}) = (${a}+${b})/(${a}×${b}) = ${a+b}/${a*b}\n\n` +
-                        `✅ Final Answer: Total time taken together = (${a} × ${b}) / (${a} + ${b}) = ${a*b}/${a+b} = ${rounded} Days!`;
+                        `1. Given Data: Work done by A = ${a} days, Work done by B = ${b} days\n` +
+                        `2. Formula Used: Combined Time = (A × B) / (A + B)\n` +
+                        `3. Step-by-Step Substitution: Total Time = (${a} × ${b}) / (${a} + ${b}) = ${a*b} / ${a+b}\n` +
+                        `4. Simplification: ${a*b} / ${a+b} = ${rounded} Days\n\n` +
+                        `FINAL ANSWER: ${rounded} Days`;
                 }
             }
 
@@ -3474,11 +3477,11 @@
                     const d2 = (m1 * d1) / m2;
                     const rounded = Number.isInteger(d2) ? d2 : d2.toFixed(2);
                     return `🧩 Step-by-Step Aptitude Solution — Men & Work Days\n\n` +
-                        `📌 Question: If ${m1} men complete work in ${d1} days, how many days will ${m2} men take?\n\n` +
-                        `• Step 1: Formula used (Inverse Ratio) ➔ M₁ × D₁ = M₂ × D₂\n` +
-                        `• Step 2: Total Man-Days required = ${m1} × ${d1} = ${m1 * d1} man-days\n` +
-                        `• Step 3: D₂ = (M₁ × D₁) / M₂ = (${m1} × ${d1}) / ${m2}\n\n` +
-                        `✅ Final Answer: ${m2} men will take ${rounded} Days!`;
+                        `1. Given Data: Initial Men (M₁) = ${m1}, Initial Days (D₁) = ${d1}, Target Men (M₂) = ${m2}\n` +
+                        `2. Formula Used: M₁ × D₁ = M₂ × D₂ (Inverse Variation)\n` +
+                        `3. Step-by-Step Substitution: D₂ = (${m1} × ${d1}) / ${m2} = ${m1 * d1} / ${m2}\n` +
+                        `4. Simplification: D₂ = ${rounded} Days\n\n` +
+                        `FINAL ANSWER: ${rounded} Days`;
                 }
             }
 
@@ -3489,13 +3492,13 @@
                 const speedKmph = parseFloat(trainMatch[2]);
                 const speedMs = speedKmph * (5 / 18);
                 const timeSec = lengthM / speedMs;
+                const roundedTime = Number.isInteger(timeSec) ? timeSec : timeSec.toFixed(2);
                 return `🧩 Step-by-Step Aptitude Solution — Train & Speed\n\n` +
-                    `📌 Question: Train length ${lengthM}m running at ${speedKmph} km/h crossing a pole.\n\n` +
-                    `• Step 1: Train Length (Distance to cover) = ${lengthM} meters\n` +
-                    `• Step 2: Convert Speed from km/h to m/s ➔ ${speedKmph} × (5/18) = ${speedMs.toFixed(2)} m/s\n` +
-                    `• Step 3: Formula: Time = Distance / Speed\n` +
-                    `• Step 4: Time = ${lengthM} / ${speedMs.toFixed(2)}\n\n` +
-                    `✅ Final Answer: Time to cross pole = ${timeSec.toFixed(2)} Seconds!`;
+                    `1. Given Data: Train Length (Distance) = ${lengthM} meters, Speed = ${speedKmph} km/h\n` +
+                    `2. Formula Used: Speed in m/s = Speed × (5/18), Time = Distance / Speed\n` +
+                    `3. Step-by-Step Substitution: Speed in m/s = ${speedKmph} × (5/18) = ${speedMs.toFixed(2)} m/s, Time = ${lengthM} / ${speedMs.toFixed(2)}\n` +
+                    `4. Simplification: Time = ${roundedTime} Seconds\n\n` +
+                    `FINAL ANSWER: ${roundedTime} Seconds`;
             }
 
             const sdtMatch = q.match(/(?:speed|rate)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?\s*(?:distance)\s*(\d+(?:\.\d+)?)\s*km/i) ||
@@ -3509,15 +3512,78 @@
                 }
                 if (speed > 0) {
                     const timeH = dist / speed;
+                    const roundedTime = Number.isInteger(timeH) ? timeH : timeH.toFixed(2);
                     return `🧩 Step-by-Step Aptitude Solution — Speed & Distance\n\n` +
-                        `📌 Question: Distance = ${dist} km, Speed = ${speed} km/h.\n\n` +
-                        `• Step 1: Formula: Time = Distance / Speed\n` +
-                        `• Step 2: Calculation = ${dist} / ${speed}\n\n` +
-                        `✅ Final Answer: Time taken = ${timeH.toFixed(2)} Hours (${(timeH * 60).toFixed(0)} minutes)!`;
+                        `1. Given Data: Distance = ${dist} km, Speed = ${speed} km/h\n` +
+                        `2. Formula Used: Time = Distance / Speed\n` +
+                        `3. Step-by-Step Substitution: Time = ${dist} / ${speed}\n` +
+                        `4. Simplification: Time = ${roundedTime} Hours (${(timeH * 60).toFixed(0)} minutes)\n\n` +
+                        `FINAL ANSWER: ${roundedTime} Hours`;
                 }
             }
 
-            // 3. PROFIT & LOSS: "cost price 500 selling price 650"
+            // 3. PROFIT & LOSS SOLVER (CP, SP, Profit %, Loss %)
+            const hasLoss = q.includes('loss');
+            const hasProfit = q.includes('profit') || q.includes('gain');
+            const findCP = q.includes('cost price') || q.includes('find cp') || q.includes('find its cost price') || q.includes('find the cost price');
+            const findSP = q.includes('selling price') || q.includes('find sp') || q.includes('find its selling price');
+
+            const pctValMatch = q.match(/(\d+(?:\.\d+)?)\s*%/);
+            if (pctValMatch && (hasLoss || hasProfit)) {
+                const pct = parseFloat(pctValMatch[1]);
+                const numMatches = [...q.matchAll(/(?:₹|rs\.?|rupees|\$)?\s*(\d{2,10}(?:\.\d+)?)/gi)].map(m => parseFloat(m[1])).filter(n => n !== pct);
+
+                if (numMatches.length > 0) {
+                    const knownAmount = numMatches[0];
+
+                    if (findCP || q.includes('sold')) {
+                        // SP is knownAmount, calculate CP
+                        const sp = knownAmount;
+                        if (hasLoss) {
+                            const cp = (sp * 100) / (100 - pct);
+                            const roundedCP = Number.isInteger(cp) ? cp : cp.toFixed(2);
+                            return `🧩 Step-by-Step Aptitude Solution — Profit & Loss\n\n` +
+                                `1. Given Data: Selling Price (SP) = ₹${sp}, Loss Percentage = ${pct}%\n` +
+                                `2. Formula Used: Cost Price (CP) = (Selling Price × 100) / (100 - Loss %)\n` +
+                                `3. Step-by-Step Substitution: CP = (${sp} × 100) / (100 - ${pct}) = ${sp * 100} / ${100 - pct}\n` +
+                                `4. Simplification: CP = ₹${roundedCP}\n\n` +
+                                `FINAL ANSWER: ₹${roundedCP}`;
+                        } else if (hasProfit) {
+                            const cp = (sp * 100) / (100 + pct);
+                            const roundedCP = Number.isInteger(cp) ? cp : cp.toFixed(2);
+                            return `🧩 Step-by-Step Aptitude Solution — Profit & Loss\n\n` +
+                                `1. Given Data: Selling Price (SP) = ₹${sp}, Profit Percentage = ${pct}%\n` +
+                                `2. Formula Used: Cost Price (CP) = (Selling Price × 100) / (100 + Profit %)\n` +
+                                `3. Step-by-Step Substitution: CP = (${sp} × 100) / (100 + ${pct}) = ${sp * 100} / ${100 + pct}\n` +
+                                `4. Simplification: CP = ₹${roundedCP}\n\n` +
+                                `FINAL ANSWER: ₹${roundedCP}`;
+                        }
+                    } else if (findSP || q.includes('bought') || q.includes('cost price')) {
+                        // CP is knownAmount, calculate SP
+                        const cp = knownAmount;
+                        if (hasLoss) {
+                            const sp = cp * (1 - pct / 100);
+                            const roundedSP = Number.isInteger(sp) ? sp : sp.toFixed(2);
+                            return `🧩 Step-by-Step Aptitude Solution — Profit & Loss\n\n` +
+                                `1. Given Data: Cost Price (CP) = ₹${cp}, Loss Percentage = ${pct}%\n` +
+                                `2. Formula Used: Selling Price (SP) = Cost Price × (100 - Loss %) / 100\n` +
+                                `3. Step-by-Step Substitution: SP = ${cp} × (100 - ${pct}) / 100 = ${cp} × ${100 - pct} / 100\n` +
+                                `4. Simplification: SP = ₹${roundedSP}\n\n` +
+                                `FINAL ANSWER: ₹${roundedSP}`;
+                        } else if (hasProfit) {
+                            const sp = cp * (1 + pct / 100);
+                            const roundedSP = Number.isInteger(sp) ? sp : sp.toFixed(2);
+                            return `🧩 Step-by-Step Aptitude Solution — Profit & Loss\n\n` +
+                                `1. Given Data: Cost Price (CP) = ₹${cp}, Profit Percentage = ${pct}%\n` +
+                                `2. Formula Used: Selling Price (SP) = Cost Price × (100 + Profit %) / 100\n` +
+                                `3. Step-by-Step Substitution: SP = ${cp} × (100 + ${pct}) / 100 = ${cp} × ${100 + pct} / 100\n` +
+                                `4. Simplification: SP = ₹${roundedSP}\n\n` +
+                                `FINAL ANSWER: ₹${roundedSP}`;
+                        }
+                    }
+                }
+            }
+
             const plMatch = q.match(/(?:cost price|cp)\s*(?:is|=|:)?\s*(\d+(?:\.\d+)?)\s*(?:selling price|sp)\s*(?:is|=|:)?\s*(\d+(?:\.\d+)?)/i) ||
                             q.match(/(?:cp)\s*(\d+(?:\.\d+)?)\s*(?:sp)\s*(\d+(?:\.\d+)?)/i);
             if (plMatch) {
@@ -3527,20 +3593,20 @@
                 if (diff >= 0) {
                     const profitPct = (diff / cp) * 100;
                     return `🧩 Step-by-Step Aptitude Solution — Profit & Loss\n\n` +
-                        `📌 Question: Cost Price (CP) = ₹${cp}, Selling Price (SP) = ₹${sp}.\n\n` +
-                        `• Step 1: Profit Amount = SP - CP = ₹${sp} - ₹${cp} = ₹${diff}\n` +
-                        `• Step 2: Formula: Profit % = (Profit / CP) × 100\n` +
-                        `• Step 3: Calculation = (${diff} / ${cp}) × 100\n\n` +
-                        `✅ Final Answer: Profit Percentage = ${profitPct.toFixed(2)}%!`;
+                        `1. Given Data: Cost Price (CP) = ₹${cp}, Selling Price (SP) = ₹${sp}\n` +
+                        `2. Formula Used: Profit Amount = SP - CP, Profit % = (Profit / CP) × 100\n` +
+                        `3. Step-by-Step Substitution: Profit = ₹${sp} - ₹${cp} = ₹${diff}, Profit % = (${diff} / ${cp}) × 100\n` +
+                        `4. Simplification: Profit Percentage = ${profitPct.toFixed(2)}%\n\n` +
+                        `FINAL ANSWER: ${profitPct.toFixed(2)}% Profit`;
                 } else {
                     const lossAmount = Math.abs(diff);
                     const lossPct = (lossAmount / cp) * 100;
                     return `🧩 Step-by-Step Aptitude Solution — Profit & Loss\n\n` +
-                        `📌 Question: Cost Price (CP) = ₹${cp}, Selling Price (SP) = ₹${sp}.\n\n` +
-                        `• Step 1: Loss Amount = CP - SP = ₹${cp} - ₹${sp} = ₹${lossAmount}\n` +
-                        `• Step 2: Formula: Loss % = (Loss / CP) × 100\n` +
-                        `• Step 3: Calculation = (${lossAmount} / ${cp}) × 100\n\n` +
-                        `✅ Final Answer: Loss Percentage = ${lossPct.toFixed(2)}%!`;
+                        `1. Given Data: Cost Price (CP) = ₹${cp}, Selling Price (SP) = ₹${sp}\n` +
+                        `2. Formula Used: Loss Amount = CP - SP, Loss % = (Loss / CP) × 100\n` +
+                        `3. Step-by-Step Substitution: Loss = ₹${cp} - ₹${sp} = ₹${lossAmount}, Loss % = (${lossAmount} / ${cp}) × 100\n` +
+                        `4. Simplification: Loss Percentage = ${lossPct.toFixed(2)}%\n\n` +
+                        `FINAL ANSWER: ${lossPct.toFixed(2)}% Loss`;
                 }
             }
 
@@ -3555,12 +3621,11 @@
                 const val1 = r1 * onePart;
                 const val2 = r2 * onePart;
                 return `🧩 Step-by-Step Aptitude Solution — Ratio & Proportion\n\n` +
-                    `📌 Question: Ratio = ${r1} : ${r2}, Total Sum = ${sum}.\n\n` +
-                    `• Step 1: Total Ratio Parts = ${r1} + ${r2} = ${totalParts}\n` +
-                    `• Step 2: Value per ratio part = ${sum} / ${totalParts} = ${onePart}\n` +
-                    `• Step 3: First Quantity (A) = ${r1} × ${onePart} = ${val1}\n` +
-                    `• Step 4: Second Quantity (B) = ${r2} × ${onePart} = ${val2}\n\n` +
-                    `✅ Final Answer: A = ${val1}, B = ${val2}!`;
+                    `1. Given Data: Ratio = ${r1} : ${r2}, Total Sum = ${sum}\n` +
+                    `2. Formula Used: Total Parts = ${r1} + ${r2} = ${totalParts}, One Part = Sum / Total Parts\n` +
+                    `3. Step-by-Step Substitution: Value per part = ${sum} / ${totalParts} = ${onePart}\n` +
+                    `4. Simplification: Quantity A = ${r1} × ${onePart} = ${val1}, Quantity B = ${r2} × ${onePart} = ${val2}\n\n` +
+                    `FINAL ANSWER: A = ${val1}, B = ${val2}`;
             }
 
             // 5. CLOCK ANGLE: "angle between clock hands at 3:30" or "clock hands 3:30"
@@ -3575,12 +3640,11 @@
                     let angle = Math.abs(hourAngle - minAngle);
                     if (angle > 180) angle = 360 - angle;
                     return `🧩 Step-by-Step Aptitude Solution — Clock Angle\n\n` +
-                        `📌 Question: Angle between hour and minute hands at ${h}:${m < 10 ? '0' + m : m}.\n\n` +
-                        `• Step 1: Formula ➔ Angle = |(30 × H) - (11/2 × M)|\n` +
-                        `• Step 2: Hour hand position = 30 × ${h} + 0.5 × ${m} = ${hourAngle}°\n` +
-                        `• Step 3: Minute hand position = 6 × ${m} = ${minAngle}°\n` +
-                        `• Step 4: Absolute difference = |${hourAngle} - ${minAngle}| = ${angle}°\n\n` +
-                        `✅ Final Answer: Angle at ${h}:${m < 10 ? '0' + m : m} = ${angle}°!`;
+                        `1. Given Data: Time = ${h}:${m < 10 ? '0' + m : m}\n` +
+                        `2. Formula Used: Angle = |(30 × H) - (11/2 × M)|\n` +
+                        `3. Step-by-Step Substitution: Hour Angle = 30×${h} + 0.5×${m} = ${hourAngle}°, Minute Angle = 6×${m} = ${minAngle}°\n` +
+                        `4. Simplification: Difference = |${hourAngle} - ${minAngle}| = ${angle}°\n\n` +
+                        `FINAL ANSWER: ${angle}°`;
                 }
             }
 
@@ -3592,12 +3656,13 @@
                 const netRate = (1 / fill) - (1 / empty);
                 if (netRate > 0) {
                     const timeTaken = 1 / netRate;
+                    const roundedTime = Number.isInteger(timeTaken) ? timeTaken : timeTaken.toFixed(2);
                     return `🧩 Step-by-Step Aptitude Solution — Pipes & Cisterns\n\n` +
-                        `📌 Question: Pipe A fills in ${fill} hrs, Pipe B empties in ${empty} hrs.\n\n` +
-                        `• Step 1: Pipe A fill rate = +1/${fill} per hour\n` +
-                        `• Step 2: Pipe B drain rate = -1/${empty} per hour\n` +
-                        `• Step 3: Combined rate = (1/${fill}) - (1/${empty}) = (${empty}-${fill})/(${fill}×${empty}) = ${empty-fill}/${fill*empty}\n\n` +
-                        `✅ Final Answer: Tank completely filled in ${timeTaken.toFixed(2)} Hours!`;
+                        `1. Given Data: Pipe A fill time = ${fill} hrs, Pipe B drain time = ${empty} hrs\n` +
+                        `2. Formula Used: Net Rate per hour = (1/${fill}) - (1/${empty}) = (${empty}-${fill}) / (${fill}×${empty})\n` +
+                        `3. Step-by-Step Substitution: Net Rate = (${empty}-${fill}) / ${fill * empty} = ${empty - fill}/${fill * empty}\n` +
+                        `4. Simplification: Total Fill Time = ${fill * empty} / ${empty - fill} = ${roundedTime} Hours\n\n` +
+                        `FINAL ANSWER: ${roundedTime} Hours`;
                 }
             }
 
@@ -3615,10 +3680,11 @@
                     if (isAP) {
                         const nextTerm = arr[arr.length - 1] + diff1;
                         return `🧩 Step-by-Step Aptitude Solution — Number Series\n\n` +
-                            `📌 Question: Find next term in series [ ${arr.join(', ')}, ? ]\n\n` +
-                            `• Step 1: Calculate differences ➔ ${arr[1]}-${arr[0]}=${diff1}, ${arr[2]}-${arr[1]}=${diff1}\n` +
-                            `• Step 2: Pattern = Arithmetic Progression (Constant Difference d = +${diff1})\n\n` +
-                            `✅ Final Answer: Next number = ${arr[arr.length - 1]} + ${diff1} = ${nextTerm}!`;
+                            `1. Given Series: [ ${arr.join(', ')}, ? ]\n` +
+                            `2. Pattern Identified: Arithmetic Progression (Constant Difference d = +${diff1})\n` +
+                            `3. Step-by-Step Calculation: Next term = ${arr[arr.length - 1]} + ${diff1}\n` +
+                            `4. Simplification: ${nextTerm}\n\n` +
+                            `FINAL ANSWER: ${nextTerm}`;
                     }
 
                     // Check Geometric Progression (GP)
@@ -3631,10 +3697,11 @@
                         if (isGP && ratio !== 1) {
                             const nextTerm = arr[arr.length - 1] * ratio;
                             return `🧩 Step-by-Step Aptitude Solution — Number Series\n\n` +
-                                `📌 Question: Find next term in series [ ${arr.join(', ')}, ? ]\n\n` +
-                                `• Step 1: Calculate ratio ➔ ${arr[1]}/${arr[0]}=${ratio}, ${arr[2]}/${arr[1]}=${ratio}\n` +
-                                `• Step 2: Pattern = Geometric Progression (Constant Multiplier r = ×${ratio})\n\n` +
-                                `✅ Final Answer: Next number = ${arr[arr.length - 1]} × ${ratio} = ${nextTerm}!`;
+                                `1. Given Series: [ ${arr.join(', ')}, ? ]\n` +
+                                `2. Pattern Identified: Geometric Progression (Constant Multiplier r = ×${ratio})\n` +
+                                `3. Step-by-Step Calculation: Next term = ${arr[arr.length - 1]} × ${ratio}\n` +
+                                `4. Simplification: ${nextTerm}\n\n` +
+                                `FINAL ANSWER: ${nextTerm}`;
                         }
                     }
 
@@ -3648,11 +3715,11 @@
                         const nextDiff = diffs[diffs.length - 1] + diffsOfDiffs[0];
                         const nextTerm = arr[arr.length - 1] + nextDiff;
                         return `🧩 Step-by-Step Aptitude Solution — Number Series\n\n` +
-                            `📌 Question: Find next term in series [ ${arr.join(', ')}, ? ]\n\n` +
-                            `• Step 1: 1st Level Differences = [ ${diffs.join(', ')} ]\n` +
-                            `• Step 2: 2nd Level Difference = Constant (+${diffsOfDiffs[0]})\n` +
-                            `• Step 3: Next Difference = ${diffs[diffs.length - 1]} + ${diffsOfDiffs[0]} = ${nextDiff}\n\n` +
-                            `✅ Final Answer: Next number = ${arr[arr.length - 1]} + ${nextDiff} = ${nextTerm}!`;
+                            `1. Given Series: [ ${arr.join(', ')}, ? ]\n` +
+                            `2. 1st Level Differences: [ ${diffs.join(', ')} ]\n` +
+                            `3. Step-by-Step Calculation: 2nd Difference = +${diffsOfDiffs[0]}, Next Difference = ${diffs[diffs.length - 1]} + ${diffsOfDiffs[0]} = ${nextDiff}\n` +
+                            `4. Simplification: Next Term = ${arr[arr.length - 1]} + ${nextDiff} = ${nextTerm}\n\n` +
+                            `FINAL ANSWER: ${nextTerm}`;
                     }
                 }
             }
@@ -3699,10 +3766,10 @@
                                                     .replace(/^Live Google & Wiki Knowledge Base ➔ /i, '')
                                                     .replace(/^Live Real-Time Web Search Result ➔ /i, '');
                     return `🧩 Step-by-Step Aptitude & Reasoning Solution\n\n` +
-                           `🎯 Category Identified: ${topicLabel}\n` +
-                           `📌 Question Asked: "${clean}"\n\n` +
-                           `📐 Formula & Step-by-Step Solution Logic:\n${cleanAnswer}\n\n` +
-                           `✅ Verified via Google Knowledge Engine & Online Models.`;
+                           `1. Category Identified: ${topicLabel}\n` +
+                           `2. Question Asked: "${clean}"\n` +
+                           `3. Formula & Step-by-Step Solution Logic:\n${cleanAnswer}\n\n` +
+                           `FINAL ANSWER: Solution verified via Google Knowledge Engine.`;
                 }
             }
 
