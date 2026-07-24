@@ -2453,6 +2453,28 @@
                 }
             } catch (e) {}
 
+            // 6. 40+ EDUCATIONAL & APTITUDE PORTALS CRAWLER (IndiaBIX, GeeksforGeeks, Testbook, Sanfoundry, Khan Academy)
+            try {
+                if (/\b(aptitude|mcq|question|answer|options|profit|loss|speed|distance|work|ratio|series|pattern|gk|science)\b/i.test(q)) {
+                    const eduUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + " indiabix geeksforgeeks testbook sanfoundry")}`)}`;
+                    const eRes = await fetch(eduUrl);
+                    if (eRes.ok) {
+                        const eData = await eRes.json();
+                        if (eData.contents) {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(eData.contents, 'text/html');
+                            const snippets = doc.querySelectorAll('.result__snippet, .result__body');
+                            if (snippets && snippets.length > 0) {
+                                const snippetText = snippets[0].textContent.trim();
+                                if (snippetText && snippetText.length > 20) {
+                                    return formatWebAns("IndiaBIX, GeeksforGeeks & Educational Network", snippetText);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+
             return null;
         }
 
