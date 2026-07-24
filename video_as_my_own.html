@@ -217,6 +217,9 @@
             <div class="card-icon">🎥</div>
             <h1 class="card-title">VIDEO AS MY OWN</h1>
             <p class="card-sub">TYPE A PROMPT BELOW TO GENERATE AN AI VIDEO SCENE</p>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25); border-radius: 20px; padding: 4px 14px; display: inline-block; margin-bottom: 20px;">
+                ⚡ LIMIT: 3 VIDEOS PER 23 HOURS
+            </div>
 
             <div class="prompt-group">
                 <label class="prompt-label" for="prompt-input">YOUR VIDEO PROMPT</label>
@@ -264,6 +267,30 @@
                 alert('Please type a prompt first before clicking START GENERATE!');
                 return;
             }
+
+            // --- 3 VIDEOS PER 23 HOURS DAILY LIMIT CHECK ---
+            const LIMIT_COUNT = 3;
+            const LIMIT_TIME_MS = 23 * 60 * 60 * 1000; // 23 hours in milliseconds
+
+            let usageData = JSON.parse(localStorage.getItem('video_gen_usage_data') || '[]');
+            const now = Date.now();
+
+            // Filter out usage records older than 23 hours
+            usageData = usageData.filter(timestamp => (now - timestamp) < LIMIT_TIME_MS);
+
+            if (usageData.length >= LIMIT_COUNT) {
+                const oldestUsage = usageData[0];
+                const timeRemainingMs = LIMIT_TIME_MS - (now - oldestUsage);
+                const hoursLeft = Math.floor(timeRemainingMs / (1000 * 60 * 60));
+                const minsLeft = Math.ceil((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                alert(`⚠️ DAILY LIMIT REACHED!\n\nYou can only create ${LIMIT_COUNT} videos per 23 hours.\n\nPlease wait ${hoursLeft}h ${minsLeft}m before creating your next AI video.`);
+                return;
+            }
+
+            // Record this generation attempt
+            usageData.push(now);
+            localStorage.setItem('video_gen_usage_data', JSON.stringify(usageData));
 
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `

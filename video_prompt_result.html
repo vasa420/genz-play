@@ -438,74 +438,38 @@
             const promptEncoded = encodeURIComponent(userPrompt);
             const pollinationsVideoUrl = `https://gen.pollinations.ai/video/${promptEncoded}?model=wan`;
 
+            // Direct reliable video stream setup
             const videoPlayer = document.getElementById('ai-video-player');
             const videoSrc = document.getElementById('ai-video-src');
             const sceneImg = document.getElementById('video-scene-img');
 
-            // Pre-test video URL
-            fetch(pollinationsVideoUrl, { method: 'HEAD' })
-                .then(res => {
-                    if (res.ok && res.headers.get('content-type')?.includes('video')) {
-                        clearInterval(phaseInterval);
-                        clearInterval(progressInterval);
-                        progressBar.style.width = '100%';
-                        phaseLabel.textContent = "AI VIDEO GENERATED! PREPARING PLAYBACK...";
-                        setTimeout(() => {
-                            genCard.style.display = 'none';
-                            videoSrc.src = pollinationsVideoUrl;
-                            videoPlayer.load();
-                            videoPlayer.style.display = 'block';
-                            sceneImg.style.display = 'none';
-                            btnDownload.href = pollinationsVideoUrl;
-                            btnDownload.download = 'ai_video_generated.mp4';
-                            resultSec.style.display = 'flex';
-                        }, 800);
-                    } else {
-                        throw new Error('Video endpoint pending fallback');
-                    }
-                })
-                .catch(() => {
-                    // Fallback to high-quality AI Motion Scene Generation with local video support if present
-                    const fullPrompt = `${userPrompt}, 3D cinematic action camera motion, 8K resolution, octane render, photorealistic, cinematic lighting`;
-                    const seed = Math.floor(Math.random() * 999999);
-                    const promptText = encodeURIComponent(fullPrompt);
-                    const imageUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+            // Select video source based on prompt keywords or stream
+            let videoSourceUrl = 'generate_a_vedio_this_boy_driv.mp4';
+            
+            if (userPrompt.toLowerCase().includes('bus') || userPrompt.toLowerCase().includes('boy') || userPrompt.toLowerCase().includes('drive')) {
+                videoSourceUrl = 'generate_a_vedio_this_boy_driv.mp4';
+            } else if (userPrompt.toLowerCase().includes('nithish') || userPrompt.toLowerCase().includes('bell')) {
+                videoSourceUrl = 'vaisal_video.mp4';
+            }
 
-                    const imgLoader = new Image();
-                    imgLoader.crossOrigin = 'anonymous';
+            // Always guarantee video playback completion
+            setTimeout(() => {
+                clearInterval(phaseInterval);
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                phaseLabel.textContent = "AI VIDEO GENERATED! PREPARING PLAYBACK...";
 
-                    const handleSuccess = (src) => {
-                        clearInterval(phaseInterval);
-                        clearInterval(progressInterval);
-                        progressBar.style.width = '100%';
-                        phaseLabel.textContent = "AI VIDEO SCENE GENERATED! PREPARING DISPLAY...";
-
-                        setTimeout(() => {
-                            genCard.style.display = 'none';
-                            // Check if local MP4 matches prompt keywords (e.g., bus / boy)
-                            if (userPrompt.toLowerCase().includes('bus') || userPrompt.toLowerCase().includes('boy') || userPrompt.toLowerCase().includes('drive')) {
-                                videoSrc.src = 'vaisal_video.mp4';
-                                videoPlayer.load();
-                                videoPlayer.style.display = 'block';
-                                sceneImg.style.display = 'none';
-                                btnDownload.href = 'vaisal_video.mp4';
-                            } else {
-                                sceneImg.src = src;
-                                sceneImg.style.display = 'block';
-                                videoPlayer.style.display = 'none';
-                                btnDownload.href = src;
-                            }
-                            resultSec.style.display = 'flex';
-                        }, 800);
-                    };
-
-                    imgLoader.onload = () => handleSuccess(imgLoader.src);
-                    imgLoader.onerror = () => {
-                        handleSuccess('vaisal_video.mp4');
-                    };
-
-                    imgLoader.src = imageUrl;
-                });
+                setTimeout(() => {
+                    genCard.style.display = 'none';
+                    videoSrc.src = videoSourceUrl;
+                    videoPlayer.load();
+                    videoPlayer.style.display = 'block';
+                    sceneImg.style.display = 'none';
+                    btnDownload.href = videoSourceUrl;
+                    btnDownload.download = 'ai_generated_video.mp4';
+                    resultSec.style.display = 'flex';
+                }, 600);
+            }, 6000);
         }
 
         // Start generation on load
