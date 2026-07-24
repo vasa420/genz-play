@@ -818,6 +818,14 @@
                 return;
             }
 
+            // 6.5 VIDEO GAMES, DEVELOPERS & ESPORTS INTELLIGENCE
+            const gameResult = lookupGame(raw);
+            if (gameResult) {
+                aiReply(intentTag + gameResult);
+                speakCallResponse(gameResult);
+                return;
+            }
+
             // 7. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, etc.)
             const currentAffairsMsg = lookupCurrentAffairs(raw);
             if (currentAffairsMsg) {
@@ -1326,6 +1334,434 @@
                     `🔴 BEST BUDGET — Vivo T3x (₹12,999) ⭐ 4.2/5\n   6000mAh battery + Snapdragon + OIS camera\n\n` +
                     `💙 BEST CAMERA — Vivo X200 Pro (₹94,999) ⭐ 4.7/5\n   Zeiss 200MP periscope zoom — best in India!\n\n` +
                     `💻 BEST GAMING — Poco X6 Pro (₹26,999) ⭐ 4.4/5\n   144Hz AMOLED + Dimensity 8300 Ultra`;
+            }
+
+            return null;
+        }
+
+        // ==========================================
+        // POPULAR GAMES DATABASE (Developers, Specs, Info & Ratings)
+        // ==========================================
+        const GAMES_DB = {
+            "PUBG": {
+                name: "PUBG Mobile / Battlegrounds Mobile India (BGMI)",
+                developer: "Krafton / PUBG Corporation (Tencent Games)",
+                released: "March 19, 2018 (BGMI in July 2021)",
+                genre: "Battle Royale / Tactical Shooter",
+                platforms: "Android, iOS (PC version: PUBG: Battlegrounds)",
+                rating: "⭐ 4.3 / 5.0 (Google Play) | ⭐ 4.5 / 5.0 (App Store)",
+                engine: "Unreal Engine 4",
+                about: "100 players parachute onto a remote island and fight to be the last one standing ('Winner Winner Chicken Dinner'). Features classic Erangel, Miramar, Sanhok maps, squad TDM, and official esports championships (BGIS/PMGC).",
+                website: "https://www.battlegroundsmobileindia.com"
+            },
+            "BGMI": {
+                name: "Battlegrounds Mobile India (BGMI)",
+                developer: "Krafton Inc.",
+                released: "July 2, 2021",
+                genre: "Battle Royale / Multiplayer Shooter",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.3 / 5.0 (Google Play) | ⭐ 4.6 / 5.0 (App Store)",
+                engine: "Unreal Engine 4",
+                about: "India's official version of PUBG Mobile developed by South Korean company Krafton. Features custom Indian events, tournaments with multi-crore prize pools (BGIS), Erangel, Nusa, Livik maps, and 90 FPS ultra gameplay.",
+                website: "https://www.battlegroundsmobileindia.com"
+            },
+            "FREE FIRE": {
+                name: "Garena Free Fire / Free Fire MAX",
+                developer: "111dots Studio / Published by Garena",
+                released: "December 4, 2017",
+                genre: "Battle Royale / Action",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.2 / 5.0 (Google Play) | ⭐ 4.5 / 5.0 (App Store)",
+                engine: "Unity Engine",
+                about: "Fast-paced 10-minute battle royale game where 50 players land on a deserted island. Features unique character abilities (Chrono, Alok), Pet abilities, Craftland, and Clash Squad 4v4 mode. Extremely popular on budget smartphones.",
+                website: "https://ff.garena.com"
+            },
+            "GTA 5": {
+                name: "Grand Theft Auto V (GTA V / GTA Online)",
+                developer: "Rockstar North / Published by Rockstar Games",
+                released: "September 17, 2013",
+                genre: "Open World Action-Adventure",
+                platforms: "PC, PS5, PS4, PS3, Xbox Series X/S, Xbox One, Xbox 360",
+                rating: "⭐ 4.8 / 5.0 (Metacritic 97/100) — 190M+ Copies Sold!",
+                engine: "RAGE Engine",
+                about: "Follows three criminals — Michael De Santa, Trevor Philips, and Franklin Clinton — committing heists across fictional Los Santos (Los Angeles). Includes GTA Online with roleplay (GTA RP) servers and constant content updates.",
+                website: "https://www.rockstargames.com/gta-v"
+            },
+            "GTA 6": {
+                name: "Grand Theft Auto VI (GTA 6)",
+                developer: "Rockstar Games",
+                released: "Expected 2025 / 2026",
+                genre: "Open World Action-Adventure",
+                platforms: "PlayStation 5, Xbox Series X/S, PC",
+                rating: "🔥 Most Anticipated Game in History!",
+                engine: "Next-Gen RAGE Engine",
+                about: "Set in Vice City (fictional Miami, Florida) starring duo protagonists Lucia and Jason. The official Trailer 1 broke YouTube world records with 200M+ views! Features hyper-realistic physics, social media mechanics, and revolutionary AI.",
+                website: "https://www.rockstargames.com/VI"
+            },
+            "GTA": {
+                name: "Grand Theft Auto (GTA Series)",
+                developer: "Rockstar Games (founded by Sam & Dan Houser)",
+                released: "First game in 1997 | Latest: GTA V & upcoming GTA VI",
+                genre: "Open World Crime Action-Adventure",
+                platforms: "PC, Consoles, Mobile (Vice City, San Andreas)",
+                rating: "⭐ 4.9 / 5.0 — Legendary Gaming Franchise",
+                engine: "RAGE Engine",
+                about: "World's iconic open-world crime franchise. Famous titles: GTA III, GTA Vice City, GTA San Andreas, GTA IV, and GTA V. Total franchise sales exceed 420 Million copies worldwide!",
+                website: "https://www.rockstargames.com"
+            },
+            "MINECRAFT": {
+                name: "Minecraft",
+                developer: "Mojang Studios / Xbox Game Studios (Created by Markus 'Notch' Persson)",
+                released: "November 18, 2011",
+                genre: "Sandbox / Survival / Creative Building",
+                platforms: "PC (Java & Bedrock), Android, iOS, PS5, PS4, Xbox, Nintendo Switch",
+                rating: "⭐ 4.8 / 5.0 — #1 Best Selling Game of All Time (300M+ Copies!)",
+                engine: "Java / C++ (Bedrock)",
+                about: "Explore infinite blocky 3D worlds, gather resources, craft tools, build structures, and fight mobs like Creepers and the Ender Dragon. Offers Survival Mode, Creative Mode, Redstone automation, and multiplayer servers.",
+                website: "https://www.minecraft.net"
+            },
+            "CALL OF DUTY": {
+                name: "Call of Duty (COD / Warzone / COD Mobile)",
+                developer: "Infinity Ward, Treyarch, Sledgehammer / Published by Activision (Microsoft)",
+                released: "October 29, 2003 (COD Mobile 2019, Warzone 2020)",
+                genre: "First-Person Shooter (FPS) / Military Warfare",
+                platforms: "PC, PS5, Xbox Series X/S, Android, iOS",
+                rating: "⭐ 4.6 / 5.0 — 500M+ Copies Sold Franchise",
+                engine: "IW Engine",
+                about: "World's most famous military FPS franchise. Features cinematic campaigns (Modern Warfare, Black Ops), fast 6v6 multiplayer, Zombies mode, and free-to-play Warzone Battle Royale & COD Mobile.",
+                website: "https://www.callofduty.com"
+            },
+            "COD MOBILE": {
+                name: "Call of Duty: Mobile (CODM)",
+                developer: "TiMi Studio Group / Published by Activision",
+                released: "October 1, 2019",
+                genre: "FPS / Battle Royale",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.5 / 5.0 (Google Play) | ⭐ 4.7 / 5.0 (App Store)",
+                engine: "Unity Engine",
+                about: "Brings iconic COD multiplayer maps (Nuketown, Crash, Hijacked) and Battle Royale to mobile. 500M+ downloads with monthly seasonal updates, ranked matches, and weapons customization (Gunsmith).",
+                website: "https://www.callofduty.com/mobile"
+            },
+            "VALORANT": {
+                name: "Valorant",
+                developer: "Riot Games",
+                released: "June 2, 2020",
+                genre: "Tactical 5v5 Character-Based FPS",
+                platforms: "PC, PlayStation 5, Xbox Series X/S",
+                rating: "⭐ 4.7 / 5.0 — Premier Esports FPS",
+                engine: "Unreal Engine 4",
+                about: "5v5 tactical character shooter where precise gunplay meets unique Agent abilities (Jett, Reyna, Phoenix, Omen). Attackers plant the Spike, Defenders defuse it in 13-round win matches with VCT global esports leagues.",
+                website: "https://playvalorant.com"
+            },
+            "LEAGUE OF LEGENDS": {
+                name: "League of Legends (LoL)",
+                developer: "Riot Games",
+                released: "October 27, 2009",
+                genre: "Multiplayer Online Battle Arena (MOBA)",
+                platforms: "PC, macOS (Mobile version: Wild Rift)",
+                rating: "⭐ 4.7 / 5.0 — World's Biggest Esports Game",
+                engine: "Custom C++ Engine",
+                about: "Two teams of 5 Champions battle to destroy the enemy Nexus on Summoner's Rift. Features 160+ Champions and hosts the annual LoL World Championship ('Worlds') watched by tens of millions.",
+                website: "https://www.leagueoflegends.com"
+            },
+            "DOTA 2": {
+                name: "Dota 2",
+                developer: "Valve Corporation (Created by IceFrog)",
+                released: "July 9, 2013",
+                genre: "MOBA",
+                platforms: "PC (Windows, macOS, Linux)",
+                rating: "⭐ 4.8 / 5.0 — Deepest Tactical MOBA",
+                engine: "Source 2 Engine",
+                about: "5v5 competitive MOBA where teams destroy the enemy Ancient. 120+ Heroes all unlocked for free. Hosts 'The International' (TI) esports tournament with historic record prize pools ($40M+).",
+                website: "https://www.dota2.com"
+            },
+            "CS2": {
+                name: "Counter-Strike 2 (CS2 / formerly CS:GO)",
+                developer: "Valve Corporation",
+                released: "September 27, 2023 (CS:GO in 2012)",
+                genre: "Tactical 5v5 FPS",
+                platforms: "PC (Windows, Linux)",
+                rating: "⭐ 4.8 / 5.0 — Legendary Tactical Shooter",
+                engine: "Source 2 Engine",
+                about: "Upgraded successor to CS:GO on Source 2. Terrorists vs Counter-Terrorists in classic bomb defusal on Dust II, Mirage, Inferno. Features sub-tick precision architecture, responsive smoke grenades, and massive skin trading economy.",
+                website: "https://counter-strike.net"
+            },
+            "COUNTER STRIKE": {
+                name: "Counter-Strike 2 (CS2 / CS:GO)",
+                developer: "Valve Corporation (Original mod by Minh Le & Jess Cliffe in 1999)",
+                released: "1999 (CS 1.6), 2012 (CS:GO), 2023 (CS2)",
+                genre: "Tactical First-Person Shooter",
+                platforms: "PC",
+                rating: "⭐ 4.9 / 5.0 — Godfather of Tactical FPS",
+                engine: "Source 2 Engine",
+                about: "The quintessential tactical shooter series spanning CS 1.6, CS Source, CS:GO, and CS2. Legendary maps: Dust2, Mirage, Nuke, Inferno.",
+                website: "https://counter-strike.net"
+            },
+            "FORTNITE": {
+                name: "Fortnite",
+                developer: "Epic Games",
+                released: "July 25, 2017",
+                genre: "Battle Royale / Sandbox / Creative",
+                platforms: "PC, PS5, PS4, Xbox, Nintendo Switch, Android, Cloud Gaming",
+                rating: "⭐ 4.6 / 5.0 — 500M+ Registered Players",
+                engine: "Unreal Engine 5",
+                about: "100-player battle royale with unique instant wall/ramp building mechanics (plus Zero Build mode). Famous for live in-game concerts (Travis Scott, Ariana Grande) and pop culture crossovers (Marvel, Dragon Ball, Star Wars).",
+                website: "https://www.fortnite.com"
+            },
+            "GOD OF WAR": {
+                name: "God of War / God of War Ragnarök",
+                developer: "Santa Monica Studio / Published by Sony Interactive Entertainment",
+                released: "2018 (God of War) | 2022 (Ragnarök)",
+                genre: "Action-Adventure / Hack and Slash / Mythology",
+                platforms: "PlayStation 5, PlayStation 4, PC",
+                rating: "⭐ 4.9 / 5.0 (Game of the Year 2018, Metacritic 94/100)",
+                engine: "Custom Santa Monica Engine",
+                about: "Follows Spartan warrior Kratos and his son Atreus journeying through Norse mythology with the Leviathan Axe and Blades of Chaos. Acclaimed single-player cinematic narrative.",
+                website: "https://www.playstation.com/god-of-war-ragnarok"
+            },
+            "THE WITCHER 3": {
+                name: "The Witcher 3: Wild Hunt",
+                developer: "CD Projekt Red",
+                released: "May 19, 2015",
+                genre: "Action Open World RPG",
+                platforms: "PC, PS5, PS4, Xbox Series X/S, Xbox One, Nintendo Switch",
+                rating: "⭐ 4.9 / 5.0 — 250+ Game of the Year Awards! (50M+ Copies)",
+                engine: "REDengine 3",
+                about: "Play as Geralt of Rivia, a monster hunter for hire searching for his adopted daughter Ciri in a dark fantasy continent. Features rich storytelling, Gwent card game, and Hearts of Stone / Blood and Wine expansions.",
+                website: "https://thewitcher.com/witcher3"
+            },
+            "RED DEAD REDEMPTION 2": {
+                name: "Red Dead Redemption 2 (RDR2)",
+                developer: "Rockstar Games",
+                released: "October 26, 2018",
+                genre: "Open World Western Action-Adventure",
+                platforms: "PC, PlayStation 4, Xbox One",
+                rating: "⭐ 4.9 / 5.0 (Metacritic 97/100) — Masterpiece Storytelling",
+                engine: "RAGE Engine",
+                about: "Set in 1899 America at the end of the Wild West era. Tells the story of outlaw Arthur Morgan and the Van der Linde gang. Features unparalleled detail, realistic wildlife, hunting, and emotional narrative.",
+                website: "https://www.rockstargames.com/reddeadredemption2"
+            },
+            "RDR2": {
+                name: "Red Dead Redemption 2 (RDR2)",
+                developer: "Rockstar Games",
+                released: "October 26, 2018",
+                genre: "Open World Western RPG / Action",
+                platforms: "PC, PS4, Xbox One",
+                rating: "⭐ 4.9 / 5.0 — Widely considered one of the greatest games ever created",
+                engine: "RAGE Engine",
+                about: "Epic story of Arthur Morgan navigating the decline of outlaws. Known for stunning graphics, living interactive world, dynamic weather, and deep character development.",
+                website: "https://www.rockstargames.com/reddeadredemption2"
+            },
+            "CYBERPUNK 2077": {
+                name: "Cyberpunk 2077 (Phantom Liberty)",
+                developer: "CD Projekt Red",
+                released: "December 10, 2020 (Phantom Liberty DLC in 2023)",
+                genre: "Open World Sci-Fi Action RPG",
+                platforms: "PC, PlayStation 5, Xbox Series X/S",
+                rating: "⭐ 4.6 / 5.0 — Massive Comeback Masterpiece",
+                engine: "REDengine 4",
+                about: "Set in neon-lit Night City. Play as mercenary V with cybernetic implants accompanied by rockstar terrorist Johnny Silverhand (voiced/acted by Keanu Reeves).",
+                website: "https://www.cyberpunk.net"
+            },
+            "ELDEN RING": {
+                name: "Elden Ring (Shadow of the Erdtree)",
+                developer: "FromSoftware / Bandai Namco (Directed by Hidetaka Miyazaki & George R.R. Martin)",
+                released: "February 25, 2022",
+                genre: "Action Souls-like RPG",
+                platforms: "PC, PS5, PS4, Xbox Series X/S, Xbox One",
+                rating: "⭐ 4.9 / 5.0 — Game of the Year 2022 (25M+ Copies)",
+                engine: "Custom FromSoftware Engine",
+                about: "Explore the vast Lands Between as a Tarnished to restore the Elden Ring and become the Elden Lord. Features punishing boss fights (Malenia, Radahn), vast lore, and total freedom of exploration.",
+                website: "https://eldenring.bn-ent.net"
+            },
+            "CLASH OF CLANS": {
+                name: "Clash of Clans (COC)",
+                developer: "Supercell (Finland)",
+                released: "August 2, 2012",
+                genre: "Strategy / Base Building",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.5 / 5.0 — 500M+ Downloads",
+                engine: "Custom Supercell Engine",
+                about: "Build your village, raise a clan of Barbarians, Archers, Wizards & Dragons, build defenses (Town Hall 16), and fight in Clan Wars against millions of players globally.",
+                website: "https://clashofclans.com"
+            },
+            "CLASH ROYALE": {
+                name: "Clash Royale",
+                developer: "Supercell",
+                released: "March 2, 2016",
+                genre: "Real-time Card Strategy / Tower Defense",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.4 / 5.0",
+                engine: "Supercell Engine",
+                about: "Real-time head-to-head card battle game set in the Clash Universe. Collect cards, upgrade troops, and destroy enemy Princess & King Towers in 3-minute arena battles.",
+                website: "https://clashroyale.com"
+            },
+            "ROBLOX": {
+                name: "Roblox",
+                developer: "Roblox Corporation (Created by David Baszucki & Erik Cassel)",
+                released: "September 1, 2006",
+                genre: "Game Creation System / Virtual Metaverse",
+                platforms: "PC, Mobile (Android/iOS), Xbox, PlayStation 5, VR",
+                rating: "⭐ 4.5 / 5.0 — 70M+ Daily Active Users",
+                engine: "Luau Engine",
+                about: "Ultimate virtual universe allowing users to program and play millions of games created by other players using Lua code. Famous games: Blox Fruits, Adopt Me!, Brookhaven RP, Pet Simulator 99.",
+                website: "https://www.roblox.com"
+            },
+            "SUBWAY SURFERS": {
+                name: "Subway Surfers",
+                developer: "Kiloo & SYBO Games (Denmark)",
+                released: "May 24, 2012",
+                genre: "Endless Runner",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.6 / 5.0 — 4 Billion+ Downloads (#1 Most Downloaded Mobile Game!)",
+                engine: "Unity Engine",
+                about: "Help Jake, Tricky & Fresh escape from the grumpy Inspector and his dog along subway tracks. Collect coins, power-ups (Hoverboard, Jetpack, Super Sneakers), and travel to World Tour cities.",
+                website: "https://sybo.com/subwaysurfers"
+            },
+            "TEMPLE RUN": {
+                name: "Temple Run / Temple Run 2",
+                developer: "Imangi Studios (Natalia Luckyanova & Keith Shepherd)",
+                released: "August 4, 2011 (Temple Run 2 in 2013)",
+                genre: "Endless Runner",
+                platforms: "Android, iOS",
+                rating: "⭐ 4.4 / 5.0 — 1 Billion+ Downloads",
+                engine: "Unity Engine",
+                about: "Pioneered mobile 3D endless running. Steal the cursed idol from the temple and run for your life while turning, jumping, sliding, and dodging obstacles.",
+                website: "https://imangistudios.com"
+            },
+            "AMONG US": {
+                name: "Among Us",
+                developer: "Innersloth (Forest Willard, Marcus Bromander, Amy Liu)",
+                released: "June 15, 2018",
+                genre: "Social Deduction / Party Game",
+                platforms: "Android, iOS, PC, Nintendo Switch, PS4/PS5, Xbox",
+                rating: "⭐ 4.4 / 5.0 — Viral Cultural Phenomenon",
+                engine: "Unity Engine",
+                about: "4 to 15 players work together to complete tasks on a spaceship while 1-3 secret Impostors sabotage the ship and eliminate crewmates. Emergency meetings call for debates and votes to eject the Impostor!",
+                website: "https://www.innersloth.com/games/among-us"
+            },
+            "ASPHALT": {
+                name: "Asphalt 9: Legends / Asphalt Legends Unite",
+                developer: "Gameloft Barcelona / Gameloft",
+                released: "July 25, 2018",
+                genre: "Arcade Racing",
+                platforms: "Android, iOS, PC, Xbox, Nintendo Switch, PS5",
+                rating: "⭐ 4.6 / 5.0 — Best Mobile Arcade Racer",
+                engine: "Jet Graphics Engine",
+                about: "Drive real hypercars from Ferrari, Porsche, Lamborghini, and W Motors. Features TouchDrive auto-steering, 360-degree nitro spins, HDR visuals, and 70+ speed tracks worldwide.",
+                website: "https://asphaltlegendsunite.com"
+            },
+            "EA SPORTS FC": {
+                name: "EA Sports FC / FIFA (FC 24 / FC 25)",
+                developer: "EA Vancouver / EA Romania (Published by EA Sports)",
+                released: "1993 (rebranded EA Sports FC in 2023)",
+                genre: "Sports / Football Simulation",
+                platforms: "PC, PS5, PS4, Xbox Series X/S, Nintendo Switch, Mobile",
+                rating: "⭐ 4.5 / 5.0 — World's #1 Football Game",
+                engine: "Frostbite Engine / HyperMotionV",
+                about: "The world's leading football simulator featuring 19,000+ real licensed players, 700+ teams, 30+ leagues (Premier League, Champions League, La Liga), Ultimate Team, Career Mode, and EA Sports FC Mobile.",
+                website: "https://www.ea.com/games/ea-sports-fc"
+            },
+            "BLACK MYTH WUKONG": {
+                name: "Black Myth: Wukong",
+                developer: "Game Science (China)",
+                released: "August 20, 2024",
+                genre: "Action RPG / Mythology",
+                platforms: "PC (Steam/Epic), PlayStation 5",
+                rating: "⭐ 4.8 / 5.0 — 20M+ Copies Sold in First Month!",
+                engine: "Unreal Engine 5",
+                about: "Rooted in Chinese mythology and the 16th-century novel 'Journey to the West'. Play as the Destined One (Sun Wukong) mastering staff combat techniques, transformations, and fighting legendary mythical bosses.",
+                website: "https://heishenhua.com"
+            }
+        };
+
+        function lookupGame(text) {
+            if (!text) return null;
+            const q = text.toLowerCase();
+            const upper = text.toUpperCase();
+
+            const isGameQuery = /\b(game|games|gaming|developer|developed|publisher|studio|esports|playstation|xbox|nintendo|steam|unreal engine|graphics|gameplay|gamer)\b/i.test(text) ||
+                Object.keys(GAMES_DB).some(k => new RegExp(`\\b${k.replace(/[^A-Z0-9 ]/gi, '.')}\\b`, 'i').test(text));
+
+            if (!isGameQuery) return null;
+
+            // Specific game lookup
+            for (let key in GAMES_DB) {
+                const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
+                if (regex.test(upper) || regex.test(q)) {
+                    const g = GAMES_DB[key];
+                    return `🎮 ${g.name} — Real World Gaming Intelligence\n\n` +
+                           `🏢 Developer: ${g.developer}\n` +
+                           `📅 Released: ${g.released}\n` +
+                           `🏷️ Genre: ${g.genre}\n` +
+                           `💻 Platforms: ${g.platforms}\n` +
+                           `⚙️ Engine: ${g.engine}\n` +
+                           `${g.rating}\n\n` +
+                           `📖 About: ${g.about}\n\n` +
+                           `🌐 Official Website: ${g.website}`;
+                }
+            }
+
+            // Category queries
+            const isBestMobile = /\b(mobile games|phone games|android games|ios games|best mobile game)\b/i.test(text);
+            const isBestPC = /\b(pc games|computer games|steam games|best pc game)\b/i.test(text);
+            const isBestFPS = /\b(fps games|shooting games|shooter games)\b/i.test(text);
+            const isBestOpenWorld = /\b(open world games|story games|rpg games)\b/i.test(text);
+
+            if (isBestMobile) {
+                return `📱 Top Mobile Games (Worldwide & India):\n\n` +
+                       `1. 🏆 BGMI / PUBG Mobile — Krafton (Battle Royale, 100M+ players)\n` +
+                       `2. 🏆 Free Fire MAX — Garena (Fast 50-player Battle Royale)\n` +
+                       `3. 🏆 Call of Duty: Mobile — Activision / TiMi (FPS, Ranked Multiplayer)\n` +
+                       `4. 🏆 Subway Surfers — SYBO Games (4B+ Downloads, Endless Runner)\n` +
+                       `5. 🏆 Clash of Clans — Supercell (Village Base Building & Strategy)\n` +
+                       `6. 🏆 Roblox Mobile — Roblox Corp (User-generated multiplayer worlds)\n` +
+                       `7. 🏆 EA Sports FC Mobile — EA Sports (Football simulation)`;
+            }
+
+            if (isBestPC) {
+                return `💻 Top PC & Console Games (All-Time & 2024/2025):\n\n` +
+                       `1. 🏆 GTA V / GTA VI — Rockstar Games (Open World Action, #1 Hype)\n` +
+                       `2. 🏆 Black Myth: Wukong — Game Science (2024 Unreal Engine 5 Action RPG)\n` +
+                       `3. 🏆 Valorant — Riot Games (5v5 Tactical Shooter Esports)\n` +
+                       `4. 🏆 Red Dead Redemption 2 — Rockstar Games (Masterpiece Western Open World)\n` +
+                       `5. 🏆 Minecraft — Mojang / Microsoft (#1 Best-selling game of all time)\n` +
+                       `6. 🏆 Elden Ring — FromSoftware (Game of the Year Action RPG)\n` +
+                       `7. 🏆 Counter-Strike 2 (CS2) — Valve (Legendary Tactical FPS)`;
+            }
+
+            if (isBestFPS) {
+                return `🎯 Top First-Person Shooter (FPS) Games:\n\n` +
+                       `1. 🎯 Valorant (PC/PS5) — Riot Games (Tactical 5v5 Agent Shooter)\n` +
+                       `2. 🎯 Counter-Strike 2 / CS2 (PC) — Valve (Classic Bomb Defusal)\n` +
+                       `3. 🎯 Call of Duty: Warzone & CODM — Activision (Military Warfare)\n` +
+                       `4. 🎯 PUBG / BGMI (Mobile/PC) — Krafton (Battle Royale Shooter)\n` +
+                       `5. 🎯 Apex Legends (PC/Console) — Respawn / EA (Fast-paced Hero Shooter)`;
+            }
+
+            if (isBestOpenWorld) {
+                return `🌍 Top Open World & Story RPG Games:\n\n` +
+                       `1. 🌍 GTA V & GTA 6 — Rockstar Games (Los Santos & Vice City)\n` +
+                       `2. 🌍 Red Dead Redemption 2 — Rockstar Games (Arthur Morgan story)\n` +
+                       `3. 🌍 The Witcher 3: Wild Hunt — CD Projekt Red (Geralt of Rivia)\n` +
+                       `4. 🌍 Elden Ring — FromSoftware (Lands Between open world)\n` +
+                       `5. 🌍 Cyberpunk 2077 — CD Projekt Red (Night City sci-fi)\n` +
+                       `6. 🌍 God of War Ragnarök — Santa Monica Studio (Norse mythology)`;
+            }
+
+            if (q.includes('developer') || q.includes('studio') || q.includes('publishers')) {
+                return `🏢 Famous Video Game Developers & Studios:\n\n` +
+                       `• 🌟 Rockstar Games — GTA V, GTA 6, Red Dead Redemption 2\n` +
+                       `• 🌟 Krafton — BGMI, PUBG Mobile, PUBG Battlegrounds\n` +
+                       `• 🌟 Riot Games — Valorant, League of Legends, Wild Rift\n` +
+                       `• 🌟 Valve Corporation — Counter-Strike 2 (CS2), Dota 2, Steam, Half-Life\n` +
+                       `• 🌟 CD Projekt Red — The Witcher 3, Cyberpunk 2077\n` +
+                       `• 🌟 Mojang Studios (Microsoft) — Minecraft\n` +
+                       `• 🌟 Epic Games — Fortnite, Unreal Engine 5\n` +
+                       `• 🌟 Supercell — Clash of Clans, Clash Royale, Brawl Stars\n` +
+                       `• 🌟 FromSoftware — Elden Ring, Dark Souls, Sekiro\n` +
+                       `• 🌟 Game Science — Black Myth: Wukong`;
             }
 
             return null;
