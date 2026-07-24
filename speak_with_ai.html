@@ -3446,6 +3446,13 @@
             const clean = text.trim();
             const q = clean.toLowerCase();
 
+            const formatAns = (category, valStr) => {
+                const optAns = matchOptionLetter(clean, valStr);
+                return `🎯 Category Identified: ${category}\n` +
+                       `📌 Question: "${clean}"\n\n` +
+                       `FINAL ANSWER: ${optAns}`;
+            };
+
             // 1. TIME & WORK: "A in 10 days, B in 15 days"
             const twMatch = q.match(/(?:a|person 1|man 1)\s*(?:can do|takes|in)?\s*(\d+)\s*days?,?\s*(?:b|person 2|man 2)\s*(?:can do|takes|in)?\s*(\d+)\s*days?/i) ||
                             q.match(/(\d+)\s*days?\s*(?:and|&)\s*(\d+)\s*days?\s*(?:together|both)/i);
@@ -3455,9 +3462,7 @@
                 if (a > 0 && b > 0) {
                     const together = (a * b) / (a + b);
                     const rounded = Number.isInteger(together) ? together : together.toFixed(2);
-                    return `🎯 Category Identified: Time & Work / Man-Days\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${rounded} Days`;
+                    return formatAns('Time & Work / Man-Days', `${rounded} Days`);
                 }
             }
 
@@ -3470,9 +3475,7 @@
                 if (m2 > 0) {
                     const d2 = (m1 * d1) / m2;
                     const rounded = Number.isInteger(d2) ? d2 : d2.toFixed(2);
-                    return `🎯 Category Identified: Time & Work / Man-Days\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${rounded} Days`;
+                    return formatAns('Time & Work / Man-Days', `${rounded} Days`);
                 }
             }
 
@@ -3484,9 +3487,7 @@
                 const speedMs = speedKmph * (5 / 18);
                 const timeSec = lengthM / speedMs;
                 const roundedTime = Number.isInteger(timeSec) ? timeSec : timeSec.toFixed(2);
-                return `🎯 Category Identified: Speed, Distance & Motion\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: ${roundedTime} Seconds`;
+                return formatAns('Speed, Distance & Motion', `${roundedTime} Seconds`);
             }
 
             const sdtMatch = q.match(/(?:speed|rate)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?\s*(?:distance)\s*(\d+(?:\.\d+)?)\s*km/i) ||
@@ -3501,9 +3502,7 @@
                 if (speed > 0) {
                     const timeH = dist / speed;
                     const roundedTime = Number.isInteger(timeH) ? timeH : timeH.toFixed(2);
-                    return `🎯 Category Identified: Speed, Distance & Motion\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${roundedTime} Hours`;
+                    return formatAns('Speed, Distance & Motion', `${roundedTime} Hours`);
                 }
             }
 
@@ -3519,16 +3518,12 @@
                     if (diff >= 0) {
                         const profitPct = (diff / cp) * 100;
                         const roundedPct = Number.isInteger(profitPct) ? profitPct : profitPct.toFixed(2);
-                        return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                               `📌 Question: "${clean}"\n\n` +
-                               `FINAL ANSWER: ${roundedPct}% Profit`;
+                        return formatAns('Profit, Loss & Discount', `${roundedPct}% Profit`);
                     } else {
                         const lossAmount = Math.abs(diff);
                         const lossPct = (lossAmount / cp) * 100;
                         const roundedPct = Number.isInteger(lossPct) ? lossPct : lossPct.toFixed(2);
-                        return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                               `📌 Question: "${clean}"\n\n` +
-                               `FINAL ANSWER: ${roundedPct}% Loss`;
+                        return formatAns('Profit, Loss & Discount', `${roundedPct}% Loss`);
                     }
                 }
             }
@@ -3552,15 +3547,11 @@
                         if (hasLoss) {
                             const cp = (sp * 100) / (100 - pct);
                             const roundedCP = Number.isInteger(cp) ? cp : cp.toFixed(2);
-                            return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                                   `📌 Question: "${clean}"\n\n` +
-                                   `FINAL ANSWER: ₹${roundedCP}`;
+                            return formatAns('Profit, Loss & Discount', `₹${roundedCP}`);
                         } else if (hasProfit) {
                             const cp = (sp * 100) / (100 + pct);
                             const roundedCP = Number.isInteger(cp) ? cp : cp.toFixed(2);
-                            return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                                   `📌 Question: "${clean}"\n\n` +
-                                   `FINAL ANSWER: ₹${roundedCP}`;
+                            return formatAns('Profit, Loss & Discount', `₹${roundedCP}`);
                         }
                     } else if (findSP || q.includes('bought') || q.includes('cost price')) {
                         // CP is knownAmount, calculate SP
@@ -3568,15 +3559,11 @@
                         if (hasLoss) {
                             const sp = cp * (1 - pct / 100);
                             const roundedSP = Number.isInteger(sp) ? sp : sp.toFixed(2);
-                            return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                                   `📌 Question: "${clean}"\n\n` +
-                                   `FINAL ANSWER: ₹${roundedSP}`;
+                            return formatAns('Profit, Loss & Discount', `₹${roundedSP}`);
                         } else if (hasProfit) {
                             const sp = cp * (1 + pct / 100);
                             const roundedSP = Number.isInteger(sp) ? sp : sp.toFixed(2);
-                            return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                                   `📌 Question: "${clean}"\n\n` +
-                                   `FINAL ANSWER: ₹${roundedSP}`;
+                            return formatAns('Profit, Loss & Discount', `₹${roundedSP}`);
                         }
                     }
                 }
@@ -3590,15 +3577,11 @@
                 const diff = sp - cp;
                 if (diff >= 0) {
                     const profitPct = (diff / cp) * 100;
-                    return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${profitPct.toFixed(2)}% Profit`;
+                    return formatAns('Profit, Loss & Discount', `${profitPct.toFixed(2)}% Profit`);
                 } else {
                     const lossAmount = Math.abs(diff);
                     const lossPct = (lossAmount / cp) * 100;
-                    return `🎯 Category Identified: Profit, Loss & Discount\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${lossPct.toFixed(2)}% Loss`;
+                    return formatAns('Profit, Loss & Discount', `${lossPct.toFixed(2)}% Loss`);
                 }
             }
 
@@ -3612,9 +3595,7 @@
                 const onePart = sum / totalParts;
                 const val1 = r1 * onePart;
                 const val2 = r2 * onePart;
-                return `🎯 Category Identified: Ratio, Proportion & Ages\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: A = ${val1}, B = ${val2}`;
+                return formatAns('Ratio, Proportion & Ages', `A = ${val1}, B = ${val2}`);
             }
 
             // 5. CLOCK ANGLE: "angle between clock hands at 3:30" or "clock hands 3:30"
@@ -3628,9 +3609,7 @@
                     const minAngle = 6 * m;
                     let angle = Math.abs(hourAngle - minAngle);
                     if (angle > 180) angle = 360 - angle;
-                    return `🎯 Category Identified: Clock & Calendar Reasoning\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${angle}°`;
+                    return formatAns('Clock & Calendar Reasoning', `${angle}°`);
                 }
             }
 
@@ -3643,9 +3622,7 @@
                 if (netRate > 0) {
                     const timeTaken = 1 / netRate;
                     const roundedTime = Number.isInteger(timeTaken) ? timeTaken : timeTaken.toFixed(2);
-                    return `🎯 Category Identified: Pipes & Cisterns\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${roundedTime} Hours`;
+                    return formatAns('Pipes & Cisterns', `${roundedTime} Hours`);
                 }
             }
 
@@ -3658,9 +3635,7 @@
                 const t = parseFloat(siMatch[3]);
                 const si = (p * r * t) / 100;
                 const roundedSI = Number.isInteger(si) ? si : si.toFixed(2);
-                return `🎯 Category Identified: Simple & Compound Interest\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: ₹${roundedSI}`;
+                return formatAns('Simple & Compound Interest', `₹${roundedSI}`);
             }
 
             // 9. COMPOUND INTEREST (CI = P(1 + R/100)^T - P)
@@ -3672,9 +3647,7 @@
                 const amount = p * Math.pow((1 + r / 100), t);
                 const ci = amount - p;
                 const roundedCI = Number.isInteger(ci) ? ci : ci.toFixed(2);
-                return `🎯 Category Identified: Simple & Compound Interest\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: ₹${roundedCI}`;
+                return formatAns('Simple & Compound Interest', `₹${roundedCI}`);
             }
 
             // 10. PERCENTAGE OF A NUMBER
@@ -3684,9 +3657,7 @@
                 const base = parseFloat(pctNumMatch[2]);
                 const val = (pct / 100) * base;
                 const rounded = Number.isInteger(val) ? val : val.toFixed(2);
-                return `🎯 Category Identified: Percentages & Fractions\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: ${rounded}`;
+                return formatAns('Percentages & Fractions', `${rounded}`);
             }
 
             // 11. AVERAGE OF NUMBERS
@@ -3697,9 +3668,7 @@
                     const sum = nums.reduce((acc, curr) => acc + curr, 0);
                     const avg = sum / nums.length;
                     const roundedAvg = Number.isInteger(avg) ? avg : avg.toFixed(2);
-                    return `🎯 Category Identified: Averages & Data Analysis\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${roundedAvg}`;
+                    return formatAns('Averages & Data Analysis', `${roundedAvg}`);
             }
             }
 
@@ -3710,9 +3679,7 @@
                 const s = parseFloat(boatMatch[2]);
                 const ds = b + s;
                 const us = Math.max(0, b - s);
-                return `🎯 Category Identified: Speed, Distance & Motion\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: Downstream = ${ds} km/h, Upstream = ${us} km/h`;
+                return formatAns('Speed, Distance & Motion', `Downstream = ${ds} km/h, Upstream = ${us} km/h`);
             }
 
             // 13. COMBINATIONS (nCr) & PERMUTATIONS (nPr)
@@ -3723,9 +3690,7 @@
                 if (n >= r && r >= 0) {
                     const fact = num => num <= 1 ? 1 : num * fact(num - 1);
                     const nCr = fact(n) / (fact(r) * fact(n - r));
-                    return `🎯 Category Identified: Probability & Combinatorics\n` +
-                           `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${nCr}`;
+                    return formatAns('Probability & Combinatorics', `${nCr}`);
                 }
             }
 
@@ -3741,9 +3706,7 @@
                     }
                     if (isAP) {
                         const nextTerm = arr[arr.length - 1] + diff1;
-                        return `🎯 Category Identified: Number Series & Pattern Reasoning\n` +
-                               `📌 Question: "${clean}"\n\n` +
-                               `FINAL ANSWER: ${nextTerm}`;
+                        return formatAns('Number Series & Pattern Reasoning', `${nextTerm}`);
                     }
 
                     if (arr[0] !== 0) {
@@ -3795,6 +3758,31 @@
             return 'Quantitative Aptitude & Logical Reasoning';
         }
 
+        function matchOptionLetter(rawText, calculatedValStr) {
+            if (!rawText || !calculatedValStr) return calculatedValStr;
+
+            const cleanStr = String(calculatedValStr);
+            const numsInVal = cleanStr.match(/(\d+(?:\.\d+)?)/g);
+            if (!numsInVal || numsInVal.length === 0) return cleanStr;
+
+            const targetNum = parseFloat(numsInVal[0]);
+
+            // Regex for options: e.g. A) 15%, (A) 15%, A. 15%, 1) 15%, (1) 15%, A) 15
+            const optionRegex = /(?:[\(\[\{]?([a-d1-4])[\)\]\}]?[\.\:]?\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)\s*%?)/gi;
+            const matches = [...rawText.matchAll(optionRegex)];
+
+            for (let m of matches) {
+                const label = m[1].toUpperCase();
+                const optNum = parseFloat(m[2]);
+                if (Math.abs(optNum - targetNum) < 0.01) {
+                    const optLetter = /^[1-4]$/.test(label) ? String.fromCharCode(64 + parseInt(label)) : label;
+                    return `Option (${optLetter}) ${cleanStr}`;
+                }
+            }
+
+            return cleanStr;
+        }
+
         function extractFinalAnswerFromWebText(cleanAnswer) {
             if (!cleanAnswer || cleanAnswer.toLowerCase().includes('poverty') || cleanAnswer.toLowerCase().includes('state or condition in which')) {
                 return "15% Profit";
@@ -3833,9 +3821,10 @@
                                                     .replace(/^Live Google & Wiki Knowledge Base ➔ /i, '')
                                                     .replace(/^Live Real-Time Web Search Result ➔ /i, '');
                     const extractedValue = extractFinalAnswerFromWebText(cleanAnswer);
+                    const finalAnswerWithOption = matchOptionLetter(clean, extractedValue);
                     return `🎯 Category Identified: ${topicLabel}\n` +
                            `📌 Question: "${clean}"\n\n` +
-                           `FINAL ANSWER: ${extractedValue}`;
+                           `FINAL ANSWER: ${finalAnswerWithOption}`;
                 }
             }
 
