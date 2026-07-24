@@ -2313,6 +2313,64 @@
             return { category: 'WEB_SEARCH', label: '🌐 GENERAL KNOWLEDGE & LIVE SEARCH', confidence: '96%' };
         }
 
+        // Universal Multi-Subject Intelligent Categorizer
+        function detectUniversalSubject(text) {
+            if (!text) return 'General Knowledge & Universal Intelligence';
+            const q = text.toLowerCase();
+
+            // Physics & Astronomy
+            if (/\b(physics|gravity|relativity|newton|einstein|quantum|force|energy|mass|speed of light|thermodynamics|atom|electron|proton|neutron|photon|velocity|acceleration|momentum|friction|optics|laser|magnet|electricity|wave|frequency|wavelength)\b/i.test(q)) {
+                return 'Physics & Quantum Science';
+            }
+
+            // Chemistry
+            if (/\b(chemistry|chemical|element|periodic table|acid|base|ph|reaction|compound|molecule|bond|valency|molar|solution|catalyst|organic|inorganic|isotope|oxidation|reduction)\b/i.test(q)) {
+                return 'Chemistry & Chemical Sciences';
+            }
+
+            // Biology, Medicine & Anatomy
+            if (/\b(biology|biological|cell|dna|rna|gene|genetics|organ|tissue|heart|brain|liver|skin|bone|blood|enzyme|hormone|virus|bacteria|vaccine|disease|medicine|medical|anatomy|physiology|photosynthesis|respiration|ecosystem|species|flora|fauna)\b/i.test(q)) {
+                return 'Biology, Medicine & Health Sciences';
+            }
+
+            // Mathematics & Aptitude
+            if (/\b(math|maths|mathematics|algebra|calculus|trigonometry|geometry|equation|fraction|decimal|ratio|percentage|probability|permutation|combination|matrix|logarithm|integral|derivative|theorem|pythagoras|prime|factorial|lcm|gcd)\b/i.test(q)) {
+                return 'Mathematics & Statistics';
+            }
+
+            // History & Civilizations
+            if (/\b(history|historical|war|emperor|king|queen|dynasty|empire|revolution|independence|constitution|ancient|medieval|world war|bc|ad|century|civilization|battle)\b/i.test(q)) {
+                return 'World History & Civilizations';
+            }
+
+            // Geography & Earth Sciences
+            if (/\b(geography|capital|country|continent|ocean|river|mountain|lake|desert|island|volcano|earthquake|climate|atmosphere|latitude|longitude|tropic|map|landscape|equator)\b/i.test(q)) {
+                return 'Geography & Earth Sciences';
+            }
+
+            // Economics & Business
+            if (/\b(economics|economy|inflation|gdp|bank|finance|financial|stock|market|trade|tax|taxation|currency|dollar|rupee|euro|demand|supply|business|commerce|accounting)\b/i.test(q)) {
+                return 'Economics, Business & Commerce';
+            }
+
+            // Civics, Law & Politics
+            if (/\b(civics|politics|political|government|parliament|president|prime minister|governor|court|law|constitution|democracy|vote|election|rights|judge|supreme court|un|who|unesco)\b/i.test(q)) {
+                return 'Civics, Law & Political Science';
+            }
+
+            // English & Literature
+            if (/\b(english|grammar|noun|verb|adjective|adverb|pronoun|preposition|synonym|antonym|idiom|phrase|tense|spelling|plural|poet|poetry|novel|author|play|shakespeare|literature)\b/i.test(q)) {
+                return 'English Language & World Literature';
+            }
+
+            // Computer Science & IT
+            if (/\b(computer|programming|software|hardware|algorithm|data structure|array|stack|queue|tree|graph|database|sql|os|operating system|network|http|tcp|python|java|c\+\+|javascript|html|css|ai|machine learning|deep learning|llm)\b/i.test(q)) {
+                return 'Computer Science & Information Technology';
+            }
+
+            return 'General Knowledge & Universal Intelligence';
+        }
+
         // Live Web Search & Knowledge Base Sync API (Universal Multi-Website Real-Time Web Crawler & Search Network)
         async function fetchRealTimeWebSearch(text) {
             if (!text || text.trim().length < 2) return null;
@@ -2330,7 +2388,8 @@
             function formatWebAns(sourceName, snippet) {
                 const cleanSnippet = stripUrls(snippet).replace(/^Live [^➔]+➔ /i, '').trim();
                 const optAns = matchOptionLetter(q, cleanSnippet);
-                return `🎯 Category Identified: ${sourceName}\n` +
+                const subject = detectUniversalSubject(q);
+                return `🎯 Category Identified: ${subject}\n` +
                        `📌 Question: "${q}"\n\n` +
                        `FINAL ANSWER: ${optAns}`;
             }
