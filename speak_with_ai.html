@@ -3676,355 +3676,13 @@
                     'Perl':       `print "Hello from Perl!\n";`,
                     'Lua':        `print("Hello from Lua!")`,
                     'Assembly':   `section .data\n    msg db 'Hello World', 0xA\nsection .text\n    global _start\n_start:\n    mov eax, 4\n    mov ebx, 1\n    mov ecx, msg\n    mov edx, 11\n    int 0x80`,
-                    'Haskell':    `main :: IO ()\nmain = putStrLn "Hello from Haskell!"`,
-                    'Elixir':     `IO.puts "Hello from Elixir!"`,
-                    'Julia':      `println("Hello from Julia!")`,
-                    'Zig':        `const std = @import("std");\npub fn main() void { std.debug.print("Hello from Zig!\\n", .{}); }`,
-                    'R':          `cat("Hello from R!\n")`
+                    'Elixir':     `IO.puts "Hello from Elixir!"`
                 };
-                snippet = defaults[lang] || `# ${lang} Code\nprint("${lang} Real-Time Execution!")  # Run this in any ${lang} environment`;
             }
-
-            // Language-specific summaries
-            const langSummaries = {
-                'C': 'Compiles with GCC. Run: gcc code.c -o prog && ./prog',
-                'C++': 'Compiles with G++. Run: g++ code.cpp -o prog && ./prog',
-                'Java': 'Compile & Run: javac Main.java && java Main',
-                'Python': 'Run with: python3 code.py',
-                'JavaScript': 'Runs in browser console or Node.js',
-                'TypeScript': 'Compile with: tsc code.ts && node code.js',
-                'HTML/CSS': 'Open in any browser — works instantly!',
-                'SQL': 'Execute in MySQL, PostgreSQL, or SQLite',
-                'Go': 'Run with: go run main.go',
-                'Rust': 'Run with: cargo run',
-                'C#': 'Run with: dotnet run',
-                'PHP': 'Run with: php code.php or host on Apache/Nginx',
-                'Swift': 'Run with: swift code.swift',
-                'Kotlin': 'Run with: kotlinc code.kt -include-runtime -d code.jar && java -jar code.jar',
-                'Dart': 'Run with: dart run code.dart',
-                'Bash': 'Run with: bash code.sh',
-                'PowerShell': 'Run with: powershell -File code.ps1'
-            };
-            spokenSummary = `Here is your ${lang} code for ${topic}! ${langSummaries[lang] || 'Ready to execute!'}`;
-
-            const htmlCard = `
-                <div>${spokenSummary}</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--gold); margin-top: 8px; text-transform: uppercase;">
-                    💻 LANGUAGE: ${lang} | TASK: ${topic}
-                </div>
-                <div class="code-block-box">${escapeHtml(snippet)}</div>
-            `;
-
-            return { spokenText: spokenSummary, htmlCard: htmlCard };
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        }
 
         // ==========================================
-        // NUMERICAL APTITUDE & QUANTITATIVE REASONING ENGINE
+        // NUMERICAL APTITUDE & QUANTITATIVE REASONING ENGINE (100% DIRECT LIVE WEB SEARCH CONNECTED)
         // ==========================================
-        function solveAptitudeQuerySync(text) {
-            if (!text) return null;
-            const clean = text.trim();
-            const q = clean.toLowerCase();
-
-            const formatAns = (category, valStr) => {
-                const optAns = matchOptionLetter(clean, valStr);
-                return `🎯 Category Identified: ${category}\n` +
-                       `📌 Question: "${clean}"\n\n` +
-                       `FINAL ANSWER: ${optAns}`;
-            };
-
-            // 1. TIME & WORK: "A in 10 days, B in 15 days"
-            const twMatch = q.match(/(?:a|person 1|man 1)\s*(?:can do|takes|in)?\s*(\d+)\s*days?,?\s*(?:b|person 2|man 2)\s*(?:can do|takes|in)?\s*(\d+)\s*days?/i) ||
-                            q.match(/(\d+)\s*days?\s*(?:and|&)\s*(\d+)\s*days?\s*(?:together|both)/i);
-            if (twMatch && (q.includes('together') || q.includes('both') || q.includes('work') || q.includes('days'))) {
-                const a = parseFloat(twMatch[1]);
-                const b = parseFloat(twMatch[2]);
-                if (a > 0 && b > 0) {
-                    const together = (a * b) / (a + b);
-                    const rounded = Number.isInteger(together) ? together : together.toFixed(2);
-                    return formatAns('Time & Work / Man-Days', `${rounded} Days`);
-                }
-            }
-
-            // 1b. MEN & DAYS (Inverse Variation): "12 men take 6 days, 4 men take how many days"
-            const mdMatch = q.match(/(\d+)\s*men\s*(?:take|do|in)?\s*(\d+)\s*days?,?\s*(\d+)\s*men/i);
-            if (mdMatch) {
-                const m1 = parseFloat(mdMatch[1]);
-                const d1 = parseFloat(mdMatch[2]);
-                const m2 = parseFloat(mdMatch[3]);
-                if (m2 > 0) {
-                    const d2 = (m1 * d1) / m2;
-                    const rounded = Number.isInteger(d2) ? d2 : d2.toFixed(2);
-                    return formatAns('Time & Work / Man-Days', `${rounded} Days`);
-                }
-            }
-
-            // 2. SPEED, DISTANCE & TRAINS: "train 150m speed 60 km/h cross pole"
-            const trainMatch = q.match(/(?:train|car|vehicle)?\s*(?:length|is)?\s*(\d+)\s*m(?:eters?)?\s*(?:moving|running|speed)?\s*(?:at)?\s*(\d+(?:\.\d+)?)\s*km\/h/i);
-            if (trainMatch) {
-                const lengthM = parseFloat(trainMatch[1]);
-                const speedKmph = parseFloat(trainMatch[2]);
-                const speedMs = speedKmph * (5 / 18);
-                const timeSec = lengthM / speedMs;
-                const roundedTime = Number.isInteger(timeSec) ? timeSec : timeSec.toFixed(2);
-                return formatAns('Speed, Distance & Motion', `${roundedTime} Seconds`);
-            }
-
-            const sdtMatch = q.match(/(?:speed|rate)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?\s*(?:distance)\s*(\d+(?:\.\d+)?)\s*km/i) ||
-                             q.match(/(?:distance)\s*(\d+(?:\.\d+)?)\s*km\s*(?:speed)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?/i);
-            if (sdtMatch) {
-                let speed, dist;
-                if (q.indexOf('distance') > q.indexOf('speed') && q.indexOf('speed') !== -1) {
-                    speed = parseFloat(sdtMatch[1]); dist = parseFloat(sdtMatch[2]);
-                } else {
-                    dist = parseFloat(sdtMatch[1]); speed = parseFloat(sdtMatch[2]);
-                }
-                if (speed > 0) {
-                    const timeH = dist / speed;
-                    const roundedTime = Number.isInteger(timeH) ? timeH : timeH.toFixed(2);
-                    return formatAns('Speed, Distance & Motion', `${roundedTime} Hours`);
-                }
-            }
-
-            // 3. PROFIT & LOSS UNIVERSAL SOLVER (Handles: "buys for 800 and sells for 920", "bought for 1000 sold for 1200", "cost price 500 selling price 650")
-            const buyMatch = q.match(/(?:buys?|bought|purchased?|cost price|cost|cp)\s*(?:an?|the)?\s*(?:article|item|object|thing|car|bike|mobile|phone)?\s*(?:for|at|is|=|:)?\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)/i);
-            const sellMatch = q.match(/(?:sells?|sold|sale|selling price|sp)\s*(?:it|an?|the)?\s*(?:article|item|object|thing|car|bike|mobile|phone)?\s*(?:for|at|is|=|:)?\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)/i);
-
-            if (buyMatch && sellMatch) {
-                const cp = parseFloat(buyMatch[1]);
-                const sp = parseFloat(sellMatch[1]);
-                if (cp > 0 && sp > 0) {
-                    const diff = sp - cp;
-                    if (diff >= 0) {
-                        const profitPct = (diff / cp) * 100;
-                        const roundedPct = Number.isInteger(profitPct) ? profitPct : profitPct.toFixed(2);
-                        return formatAns('Profit, Loss & Discount', `${roundedPct}% Profit`);
-                    } else {
-                        const lossAmount = Math.abs(diff);
-                        const lossPct = (lossAmount / cp) * 100;
-                        const roundedPct = Number.isInteger(lossPct) ? lossPct : lossPct.toFixed(2);
-                        return formatAns('Profit, Loss & Discount', `${roundedPct}% Loss`);
-                    }
-                }
-            }
-
-            const hasLoss = q.includes('loss');
-            const hasProfit = q.includes('profit') || q.includes('gain');
-            const findCP = q.includes('cost price') || q.includes('find cp') || q.includes('find its cost price') || q.includes('find the cost price');
-            const findSP = q.includes('selling price') || q.includes('find sp') || q.includes('find its selling price');
-
-            const pctValMatch = q.match(/(\d+(?:\.\d+)?)\s*%/);
-            if (pctValMatch && (hasLoss || hasProfit)) {
-                const pct = parseFloat(pctValMatch[1]);
-                const numMatches = [...q.matchAll(/(?:₹|rs\.?|rupees|\$)?\s*(\d{2,10}(?:\.\d+)?)/gi)].map(m => parseFloat(m[1])).filter(n => n !== pct);
-
-                if (numMatches.length > 0) {
-                    const knownAmount = numMatches[0];
-
-                    if (findCP || q.includes('sold')) {
-                        // SP is knownAmount, calculate CP
-                        const sp = knownAmount;
-                        if (hasLoss) {
-                            const cp = (sp * 100) / (100 - pct);
-                            const roundedCP = Number.isInteger(cp) ? cp : cp.toFixed(2);
-                            return formatAns('Profit, Loss & Discount', `₹${roundedCP}`);
-                        } else if (hasProfit) {
-                            const cp = (sp * 100) / (100 + pct);
-                            const roundedCP = Number.isInteger(cp) ? cp : cp.toFixed(2);
-                            return formatAns('Profit, Loss & Discount', `₹${roundedCP}`);
-                        }
-                    } else if (findSP || q.includes('bought') || q.includes('cost price')) {
-                        // CP is knownAmount, calculate SP
-                        const cp = knownAmount;
-                        if (hasLoss) {
-                            const sp = cp * (1 - pct / 100);
-                            const roundedSP = Number.isInteger(sp) ? sp : sp.toFixed(2);
-                            return formatAns('Profit, Loss & Discount', `₹${roundedSP}`);
-                        } else if (hasProfit) {
-                            const sp = cp * (1 + pct / 100);
-                            const roundedSP = Number.isInteger(sp) ? sp : sp.toFixed(2);
-                            return formatAns('Profit, Loss & Discount', `₹${roundedSP}`);
-                        }
-                    }
-                }
-            }
-
-            const plMatch = q.match(/(?:cost price|cp)\s*(?:is|=|:)?\s*(\d+(?:\.\d+)?)\s*(?:selling price|sp)\s*(?:is|=|:)?\s*(\d+(?:\.\d+)?)/i) ||
-                            q.match(/(?:cp)\s*(\d+(?:\.\d+)?)\s*(?:sp)\s*(\d+(?:\.\d+)?)/i);
-            if (plMatch) {
-                const cp = parseFloat(plMatch[1]);
-                const sp = parseFloat(plMatch[2]);
-                const diff = sp - cp;
-                if (diff >= 0) {
-                    const profitPct = (diff / cp) * 100;
-                    return formatAns('Profit, Loss & Discount', `${profitPct.toFixed(2)}% Profit`);
-                } else {
-                    const lossAmount = Math.abs(diff);
-                    const lossPct = (lossAmount / cp) * 100;
-                    return formatAns('Profit, Loss & Discount', `${lossPct.toFixed(2)}% Loss`);
-                }
-            }
-
-            // 4. RATIO & AGES: "ratio of ages A and B is 3:5 sum is 40"
-            const ratioAgeMatch = q.match(/ratio\s*(?:of|is)?\s*(\d+)\s*(?::|to)\s*(\d+)\s*(?:and|with)?\s*sum\s*(?:is)?\s*(\d+)/i);
-            if (ratioAgeMatch) {
-                const r1 = parseFloat(ratioAgeMatch[1]);
-                const r2 = parseFloat(ratioAgeMatch[2]);
-                const sum = parseFloat(ratioAgeMatch[3]);
-                const totalParts = r1 + r2;
-                const onePart = sum / totalParts;
-                const val1 = r1 * onePart;
-                const val2 = r2 * onePart;
-                return formatAns('Ratio, Proportion & Ages', `A = ${val1}, B = ${val2}`);
-            }
-
-            // 5. CLOCK ANGLE: "angle between clock hands at 3:30" or "clock hands 3:30"
-            const clockMatch = q.match(/(?:clock|angle)\s*(?:at|hands|between)?\s*(\d{1,2})\s*:\s*(\d{2})/i) ||
-                               q.match(/(\d{1,2})\s*:\s*(\d{2})\s*(?:clock|angle)/i);
-            if (clockMatch) {
-                const h = parseInt(clockMatch[1]);
-                const m = parseInt(clockMatch[2]);
-                if (h >= 1 && h <= 12 && m >= 0 && m <= 59) {
-                    const hourAngle = 0.5 * (60 * (h % 12) + m);
-                    const minAngle = 6 * m;
-                    let angle = Math.abs(hourAngle - minAngle);
-                    if (angle > 180) angle = 360 - angle;
-                    return formatAns('Clock & Calendar Reasoning', `${angle}°`);
-                }
-            }
-
-            // 6. PIPES & CISTERNS: "pipe A fills in 10 hours pipe B empties in 15 hours"
-            const pipeMatch = q.match(/pipe\s*a\s*(?:fills)?\s*in\s*(\d+)\s*h(?:ou)?rs?\s*pipe\s*b\s*(?:empties|drains)\s*in\s*(\d+)\s*h(?:ou)?rs?/i);
-            if (pipeMatch) {
-                const fill = parseFloat(pipeMatch[1]);
-                const empty = parseFloat(pipeMatch[2]);
-                const netRate = (1 / fill) - (1 / empty);
-                if (netRate > 0) {
-                    const timeTaken = 1 / netRate;
-                    const roundedTime = Number.isInteger(timeTaken) ? timeTaken : timeTaken.toFixed(2);
-                    return formatAns('Pipes & Cisterns', `${roundedTime} Hours`);
-                }
-            }
-
-            // 8. SIMPLE INTEREST (SI = P*R*T/100)
-            const siMatch = q.match(/(?:simple interest|si)\s*(?:for|on)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:at)?\s*(\d+(?:\.\d+)?)\s*%\s*(?:for)?\s*(\d+(?:\.\d+)?)\s*years?/i) ||
-                            q.match(/(?:principal|p)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:rate|r)?\s*(\d+(?:\.\d+)?)\s*%\s*(?:time|t)?\s*(\d+(?:\.\d+)?)\s*years?\s*(?:simple interest|si)/i);
-            if (siMatch && (q.includes('interest') || q.includes('si') || q.includes('simple'))) {
-                const p = parseFloat(siMatch[1]);
-                const r = parseFloat(siMatch[2]);
-                const t = parseFloat(siMatch[3]);
-                const si = (p * r * t) / 100;
-                const roundedSI = Number.isInteger(si) ? si : si.toFixed(2);
-                return formatAns('Simple & Compound Interest', `₹${roundedSI}`);
-            }
-
-            // 9. COMPOUND INTEREST (CI = P(1 + R/100)^T - P)
-            const ciMatch = q.match(/(?:compound interest|ci)\s*(?:for|on)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:at)?\s*(\d+(?:\.\d+)?)\s*%\s*(?:for)?\s*(\d+(?:\.\d+)?)\s*years?/i);
-            if (ciMatch) {
-                const p = parseFloat(ciMatch[1]);
-                const r = parseFloat(ciMatch[2]);
-                const t = parseFloat(ciMatch[3]);
-                const amount = p * Math.pow((1 + r / 100), t);
-                const ci = amount - p;
-                const roundedCI = Number.isInteger(ci) ? ci : ci.toFixed(2);
-                return formatAns('Simple & Compound Interest', `₹${roundedCI}`);
-            }
-
-            // 10. PERCENTAGE OF A NUMBER
-            const pctNumMatch = q.match(/(\d+(?:\.\d+)?)\s*%\s*(?:of)\s*(\d+(?:\.\d+)?)/i);
-            if (pctNumMatch && !q.includes('loss') && !q.includes('profit') && !q.includes('interest')) {
-                const pct = parseFloat(pctNumMatch[1]);
-                const base = parseFloat(pctNumMatch[2]);
-                const val = (pct / 100) * base;
-                const rounded = Number.isInteger(val) ? val : val.toFixed(2);
-                return formatAns('Percentages & Fractions', `${rounded}`);
-            }
-
-            // 11. AVERAGE OF NUMBERS
-            const avgMatch = q.match(/(?:average|mean)\s*(?:of)?\s*([0-9]+(?:\s*,\s*[0-9]+){1,})/i);
-            if (avgMatch) {
-                const nums = avgMatch[1].split(/[\s,]+/).map(Number);
-                if (nums.length >= 2) {
-                    const sum = nums.reduce((acc, curr) => acc + curr, 0);
-                    const avg = sum / nums.length;
-                    const roundedAvg = Number.isInteger(avg) ? avg : avg.toFixed(2);
-                    return formatAns('Averages & Data Analysis', `${roundedAvg}`);
-            }
-            }
-
-            // 12. BOAT & STREAM (Upstream & Downstream)
-            const boatMatch = q.match(/(?:boat|speed of boat)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?\s*(?:stream|speed of stream)\s*(\d+(?:\.\d+)?)/i);
-            if (boatMatch) {
-                const b = parseFloat(boatMatch[1]);
-                const s = parseFloat(boatMatch[2]);
-                const ds = b + s;
-                const us = Math.max(0, b - s);
-                return formatAns('Speed, Distance & Motion', `Downstream = ${ds} km/h, Upstream = ${us} km/h`);
-            }
-
-            // 13. COMBINATIONS (nCr) & PERMUTATIONS (nPr)
-            const ncrMatch = q.match(/(\d+)\s*c\s*(\d+)/i);
-            if (ncrMatch) {
-                const n = parseInt(ncrMatch[1]);
-                const r = parseInt(ncrMatch[2]);
-                if (n >= r && r >= 0) {
-                    const fact = num => num <= 1 ? 1 : num * fact(num - 1);
-                    const nCr = fact(n) / (fact(r) * fact(n - r));
-                    return formatAns('Probability & Combinatorics', `${nCr}`);
-                }
-            }
-
-            // 7. NUMBER SERIES PATTERN SOLVER
-            const seriesMatch = q.match(/(?:series|sequence|pattern|next number in)?\s*([0-9]+(?:\s*,\s*[0-9]+){3,})/i);
-            if (seriesMatch && (q.includes('series') || q.includes('next') || q.includes('pattern') || q.includes('sequence'))) {
-                const arr = seriesMatch[1].split(/[\s,]+/).map(Number);
-                if (arr.length >= 4) {
-                    const diff1 = arr[1] - arr[0];
-                    let isAP = true;
-                    for (let i = 1; i < arr.length - 1; i++) {
-                        if (arr[i+1] - arr[i] !== diff1) { isAP = false; break; }
-                    }
-                    if (isAP) {
-                        const nextTerm = arr[arr.length - 1] + diff1;
-                        return formatAns('Number Series & Pattern Reasoning', `${nextTerm}`);
-                    }
-
-                    if (arr[0] !== 0) {
-                        const ratio = arr[1] / arr[0];
-                        let isGP = true;
-                        for (let i = 1; i < arr.length - 1; i++) {
-                            if (arr[i] === 0 || (arr[i+1] / arr[i]) !== ratio) { isGP = false; break; }
-                        }
-                        if (isGP && ratio !== 1) {
-                            const nextTerm = arr[arr.length - 1] * ratio;
-                            return `🎯 Category Identified: Number Series & Pattern Reasoning\n` +
-                                   `📌 Question: "${clean}"\n\n` +
-                                   `FINAL ANSWER: ${nextTerm}`;
-                        }
-                    }
-
-                    const diffs = [];
-                    for (let i = 0; i < arr.length - 1; i++) diffs.push(arr[i+1] - arr[i]);
-                    const diffsOfDiffs = [];
-                    for (let i = 0; i < diffs.length - 1; i++) diffsOfDiffs.push(diffs[i+1] - diffs[i]);
-                    let isSecondDiffConstant = diffsOfDiffs.length >= 2 && diffsOfDiffs.every(v => v === diffsOfDiffs[0]);
-                    if (isSecondDiffConstant) {
-                        const nextDiff = diffs[diffs.length - 1] + diffsOfDiffs[0];
-                        const nextTerm = arr[arr.length - 1] + nextDiff;
-                        return `🎯 Category Identified: Number Series & Pattern Reasoning\n` +
-                               `📌 Question: "${clean}"\n\n` +
-                               `FINAL ANSWER: ${nextTerm}`;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         function detectAptitudeTopicLabel(clean) {
             const q = clean.toLowerCase();
             if (q.includes('work') || q.includes('days') || q.includes('men') || q.includes('women')) return 'Time & Work / Man-Days';
@@ -4069,7 +3727,6 @@
             const looseOptRegex = /\b([a-d])\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)\s*%?/gi;
             const looseMatches = [...rawText.matchAll(looseOptRegex)];
 
-            // Ensure at least 2 distinct option letters to prevent false positives from question text (e.g., "a work in 10 days")
             if (looseMatches.length >= 2) {
                 for (let m of looseMatches) {
                     const label = m[1].toUpperCase();
@@ -4099,13 +3756,33 @@
             return "Calculated via Real-Time Web Engine";
         }
 
-        // Async Aptitude Solver with Real-Time Google & Online Model Search Sync (DIRECT FINAL ANSWER ONLY)
+        // Direct Web-Connected Real-Time Aptitude & Reasoning Engine (NO Hardcoded Offline Formulas)
         async function solveAptitudeQuery(text) {
             if (!text) return null;
-            const syncRes = solveAptitudeQuerySync(text);
-            if (syncRes) return syncRes;
-
             const clean = text.trim();
+            const topicLabel = detectAptitudeTopicLabel(clean);
+
+            const isAptitudeQuestion = (
+                /\b(aptitude|numerical|quantitative|reasoning|math|maths|solve|calculate|how many|how much|how long|how fast|ratio|percentage|percent|fraction|decimal|probability|permutation|combination|speed|distance|velocity|time|work|men|women|days|hours|minutes|seconds|train|bus|boat|stream|upstream|downstream|cost price|selling price|cp|sp|profit|loss|discount|interest|si|ci|simple interest|compound interest|age|ages|father|son|mother|pipe|cistern|tank|leak|mixture|alligation|average|mean|median|mode|series|sequence|pattern|odd one out|missing number|coding decoding|blood relation|direction|seating arrangement|syllogism|clock|calendar|angle|cube|dice|cards|deck|marbles|balls|perimeter|area|volume|radius|diameter|triangle|circle|square|rectangle|cylinder|sphere|cone|hypotenuse|pythagoras|equation|algebra|trigonometry|calculus|matrix|physics)\b/i.test(clean) ||
+                /(\d+\s*[\+\-\*\/\%\=]\s*\d+)/.test(clean) ||
+                (clean.includes('?') && /\d/.test(clean))
+            ) && !/\b(who is|capital of|full form|abbreviation|what is array|what is stack|what is queue|what is cse|what is ece|what is os|what is dbms|what is sql|what is oops|what is rest api|what is python|what is java|what is html|what is css|what is the capital|what is the full form|what is the abbreviation|who is the)\b/i.test(clean);
+
+            if (isAptitudeQuestion) {
+                // Direct Web Search & Online Model Fetch
+                const webSolution = await fetchRealTimeWebSearch(`aptitude solution ${clean}`) || await fetchRealTimeWebSearch(clean);
+                if (webSolution) {
+                    const cleanAnswer = webSolution.replace(/^Live [^➔]+➔ /i, '').replace(/^FINAL ANSWER:\s*/i, '').trim();
+                    const extractedValue = extractFinalAnswerFromWebText(cleanAnswer);
+                    const finalAnswerWithOption = matchOptionLetter(clean, extractedValue);
+                    return `🎯 Category Identified: ${topicLabel}\n` +
+                           `📌 Question: "${clean}"\n\n` +
+                           `FINAL ANSWER: ${finalAnswerWithOption}`;
+                }
+            }
+
+            return null;
+        }n = text.trim();
             const topicLabel = detectAptitudeTopicLabel(clean);
 
             const isAptitudeQuestion = (
