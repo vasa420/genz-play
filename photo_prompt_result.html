@@ -420,60 +420,58 @@
             progressBar.style.width = '0%';
             document.getElementById('like-count').textContent = likeCount;
 
-            // Generate AI Image via Pollinations
-            const fullPrompt = `${userPrompt}, 8k resolution, ultra detailed photorealistic digital art, cinematic lighting, masterpiece`;
+            // Clean prompt parsing to observe user input properly
+            const cleanUserPrompt = userPrompt.trim();
+            const fullPrompt = `${cleanUserPrompt}, 8k resolution, ultra detailed photorealistic digital art, octane render, cinematic lighting, masterpiece`;
             const seed = Math.floor(Math.random() * 999999);
             const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
 
-            const imgLoader = new Image();
-            imgLoader.crossOrigin = 'anonymous';
-            imgLoader.src = promptUrl;
+            // Set image source immediately to begin background fetch
+            sceneImg.src = promptUrl;
+            btnDownload.href = promptUrl;
+            btnDownload.download = 'ai_photo_generated.jpg';
 
-            // Countdown timer loop over 1-2 mins
+            elapsedTime = 0;
+            totalDurationSeconds = 6; // 6-second fast observation & generation
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            // Progress timer loop
             timerInterval = setInterval(() => {
                 elapsedTime++;
                 const progressPct = Math.min(98, Math.floor((elapsedTime / totalDurationSeconds) * 100));
                 progressBar.style.width = progressPct + '%';
 
-                // Phase selection based on progress
                 let phaseIdx = Math.min(3, Math.floor((progressPct / 100) * PHASES.length));
                 phaseLabel.textContent = PHASES[phaseIdx];
 
                 const remain = Math.max(0, totalDurationSeconds - elapsedTime);
-                const mins = Math.floor(remain / 60);
-                const secs = remain % 60;
-                const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                timeText.textContent = `ESTIMATED TIME: ~${formattedTime} REMAINING (GENERATING 8K AI PHOTO)...`;
+                timeText.textContent = `OBSERVING PROMPT: ~${remain}s REMAINING (GENERATING 8K AI PHOTO)...`;
 
                 if (elapsedTime >= totalDurationSeconds) {
-                    finishGeneration(promptUrl, imgLoader);
+                    finishGeneration(promptUrl);
                 }
             }, 1000);
         }
 
         function speedUpGeneration() {
-            totalDurationSeconds = Math.max(elapsedTime + 2, 3);
+            totalDurationSeconds = Math.max(elapsedTime + 1, 2);
         }
 
-        function finishGeneration(promptUrl, imgLoader) {
+        function finishGeneration(promptUrl) {
             clearInterval(timerInterval);
             const progressBar = document.getElementById('gen-progress-fill');
             const phaseLabel = document.getElementById('gen-status-phase');
             const genCard = document.getElementById('gen-card');
             const resultSec = document.getElementById('result-section');
             const sceneImg = document.getElementById('photo-scene-img');
-            const btnDownload = document.getElementById('btn-download');
 
             progressBar.style.width = '100%';
             phaseLabel.textContent = "AI PHOTO GENERATION COMPLETE!";
 
             setTimeout(() => {
                 genCard.style.display = 'none';
-
-                // Fallbacks if network fails
-                sceneImg.src = imgLoader.complete && imgLoader.naturalWidth > 0 ? promptUrl : 'stalker_hero_selfie_1776590484686.png';
-                btnDownload.href = sceneImg.src;
-
+                sceneImg.src = promptUrl;
                 resultSec.style.display = 'flex';
             }, 600);
         }
