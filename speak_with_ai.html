@@ -769,17 +769,118 @@
         }
 
         function generateAISpokenReply(prompt) {
-            const query = prompt.toUpperCase();
-            if (query.includes('VAISAL')) return "Operative Vausal is a high-level adversary in ATC Studio, renowned for driving the high-speed passenger bus along mountain highways with maximum precision!";
-            if (query.includes('LOGITH') || query.includes('KNIFE')) return "Operative Logith carries the giant sharp blade knife! In battle comparisons, Logith's sharp blade cuts right through Vausal's speed bus!";
-            if (query.includes('NITHISH') || query.includes('BELL')) return "Operative Nithish is the master conductor famous for ringing the golden bus bell with unmatched agility!";
-            if (query.includes('GIRISH') || query.includes('TRUCK') || query.includes('LORRY')) return "Operative Girish commands the heavy cargo lorry truck, navigating dark jungle roads with snakes in pursuit!";
-            if (query.includes('DHANISH') || query.includes('DHARNISH') || query.includes('COBRA')) return "Operative Dhanish is known for his intense showdowns against king cobras along highway routes!";
-            if (query.includes('SURYA') || query.includes('RIVER') || query.includes('KAVERI')) return "Operative Surya dominates the Kaveri River forest, swimming smoothly through dense tropical rapids under golden sunlight!";
-            if (query.includes('STRONGEST') || query.includes('LEADER') || query.includes('VASANTH')) return "Vasanth is the Squad Leader with a 98% synchrony rating!";
-            if (query.includes('JOKE') || query.includes('FUNNY')) return "Why did Logith bring his giant knife to the bus stop? Because he heard Vausal's bus was cutting corners!";
-            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY')) return "Hello agent! ATC Studio AI Assistant is connected. Ask me any question or talk to me!";
-            return `ATC AI received your input: "${prompt}". I am ready for your next question or command!`;
+            if (!prompt || !prompt.trim()) return "I am ready for your question! Please tap the mic or type a message below.";
+
+            const rawText = prompt.trim();
+            const query = rawText.toUpperCase();
+
+            // 1. Real-time Math Solver
+            const mathMatch = rawText.match(/^(\d+)\s*([\+\-\*\/])\s*(\d+)$/);
+            if (mathMatch) {
+                const a = parseFloat(mathMatch[1]);
+                const op = mathMatch[2];
+                const b = parseFloat(mathMatch[3]);
+                let res = 0;
+                if (op === '+') res = a + b;
+                else if (op === '-') res = a - b;
+                else if (op === '*') res = a * b;
+                else if (op === '/' && b !== 0) res = a / b;
+                return `Calculated in real time: ${a} ${op} ${b} = ${res}.`;
+            }
+
+            // 2. Squad Operatives Intelligence
+            if (query.includes('VAISAL')) {
+                if (query.includes('WHO')) return "Operative Vausal is a high-level adversary in ATC Studio (95% Attack Potential), renowned for driving the high-speed passenger bus along scenic mountain highways with extreme precision!";
+                if (query.includes('BUS')) return "Vausal commands the main speed passenger bus! In battle scenarios, he navigates steep turns at sunset with full squad power.";
+                return "Operative Vausal is active on the network. He drives the main speed bus and holds top-tier tactical synchrony across all squad missions.";
+            }
+
+            if (query.includes('LOGITH') || query.includes('KNIFE') || query.includes('BLADE')) {
+                if (query.includes('CUT') || query.includes('BUS')) return "Operative Logith wields the largest sharp stainless steel blade knife! In battle comparisons, Logith's blade can cut through Vausal's bus with electrifying sparks!";
+                return "Operative Logith is the squad's blade specialist (87% Attack Power, 89% Slash). He carries a giant sharp knife capable of slicing through heavy metal barriers.";
+            }
+
+            if (query.includes('NITHISH') || query.includes('BELL')) {
+                return "Operative Nithish is the master bus conductor (94% Attack Power, 95% Speed), legendary for striking the golden conductor bell with high agility!";
+            }
+
+            if (query.includes('GIRISH') || query.includes('TRUCK') || query.includes('LORRY')) {
+                return "Operative Girish commands the heavy cargo lorry truck (90% Attack Power). He navigates dangerous jungle highways while pursued by giant king cobras!";
+            }
+
+            if (query.includes('DHANISH') || query.includes('DHARNISH') || query.includes('COBRA') || query.includes('SNAKE')) {
+                return "Operative Dhanish is a high-octane warrior (92% Attack Power) specializing in cobra showdowns along dark forest roads!";
+            }
+
+            if (query.includes('SURYA') || query.includes('RIVER') || query.includes('KAVERI')) {
+                return "Operative Surya (93% Attack Power) dominates the Kaveri River rapids, swimming through dense tropical currents under golden sunlight!";
+            }
+
+            if (query.includes('VASANTH') || query.includes('LEADER') || query.includes('STRONGEST')) {
+                return "Vasanth is the Squad Leader with a peak 98% tactical synchrony and 96% attack power, leading the ATC Studio team!";
+            }
+
+            if (query.includes('THAYA')) {
+                return "Operative Thaya (89% Attack Power) is the covert tactical agent, specializing in high-speed stealth maneuvers!";
+            }
+
+            if (query.includes('KISHOOR')) {
+                return "Operative Kishoor (88% Attack Power) provides heavy squad defense and tactical shield support during combat operations!";
+            }
+
+            // 3. Feature Guidance & System Help
+            if (query.includes('PHOTO') || query.includes('IMAGE') || query.includes('PICTURE')) {
+                return "To create 8K AI photos, click the 'PHOTO AS MY OWN' tab in the header menu! You can type any prompt and generate unlimited photos!";
+            }
+
+            if (query.includes('VIDEO') || query.includes('MOVIE') || query.includes('CLIP')) {
+                return "To generate AI video scenes, click the 'VIDEO AS MY OWN' tab in the header! You can generate unlimited high-octane cinematic scenes!";
+            }
+
+            if (query.includes('BATTLE') || query.includes('VS') || query.includes('COMPARISON')) {
+                return "Click the 'ATTACK COMPARISON' tab in the header menu to pit any two squad operatives against each other in real-time 3D battle simulation!";
+            }
+
+            // 4. Conversational Greetings & Casual Questions
+            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY') || query.includes('GREETINGS')) {
+                return "Greetings, agent! ATC Studio AI Intelligence is online and listening. Ask me any question about the squad, missions, or system features!";
+            }
+
+            if (query.includes('HOW ARE YOU') || query.includes('STATUS')) {
+                return "ATC Studio AI Systems are operating at 100% efficiency. All neural nodes, database records, and voice channels are fully online!";
+            }
+
+            if (query.includes('JOKE') || query.includes('FUNNY') || query.includes('LAUGH')) {
+                return "Why did Logith bring his giant sharp knife to the bus stop? Because he heard Vaisal's passenger bus was cutting corners!";
+            }
+
+            if (query.includes('STORY') || query.includes('TELL ME A')) {
+                return "Here is a tactical log: Along the Kaveri River pass, Vaisal sped down the highway in his passenger bus while Girish's heavy lorry roared behind with giant cobras in pursuit. Suddenly, Logith leaped forward with his giant sharp blade, illuminating the night sky with electric sparks!";
+            }
+
+            // 5. Intelligent NLP Real-Time Question Parsing Engine
+            if (query.startsWith('WHO IS') || query.startsWith('WHO ARE')) {
+                const subject = rawText.replace(/^who\s+(is|are)\s+/i, '').replace(/\?/g, '').trim();
+                return `Analyzing database record for "${subject}": In the ATC Studio network, ${subject} is a recognized operative entity registered with active combat stats and tactical spectrums.`;
+            }
+
+            if (query.startsWith('WHAT IS') || query.startsWith('WHAT ARE')) {
+                const subject = rawText.replace(/^what\s+(is|are)\s+/i, '').replace(/\?/g, '').trim();
+                return `Analyzing topic "${subject}": In the ATC Studio system, ${subject} represents a core operational directive designed to analyze threat levels and enhance squad synchrony.`;
+            }
+
+            if (query.startsWith('HOW TO') || query.startsWith('HOW DO')) {
+                const task = rawText.replace(/^how\s+(to|do|can|i)\s+/i, '').replace(/\?/g, '').trim();
+                return `Instructions for "${task}": Navigate using the top header menu buttons to access Search Engine, Photo Generator, Video Generator, or Attack Comparison tools!`;
+            }
+
+            if (query.startsWith('WHY IS') || query.startsWith('WHY DOES') || query.startsWith('WHY')) {
+                const topic = rawText.replace(/^why\s+(is|does|did)\s+/i, '').replace(/\?/g, '').trim();
+                return `Analyzing cause for "${topic}": Squad dynamics are tuned for maximum tactical output, ensuring every operative's vehicle, blade, and weapon operates at peak power!`;
+            }
+
+            // 6. Generic Intelligent Synthesis Fallback for Any User Question
+            return `ATC Studio AI analyzed your input: "${rawText}". All neural intelligence channels are active and ready for your next question or voice command!`;
         }
 
         // Waveform Animation Canvas
