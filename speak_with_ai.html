@@ -784,6 +784,14 @@
             const intent = analyzeQuestionCarefully(raw);
             const intentTag = `<div style="font-size:10px; color:var(--primary); font-weight:bold; letter-spacing:1px; margin-bottom:6px; font-family:'JetBrains Mono', monospace;">🎯 INTENT ANALYZED: ${intent.label} | ACCURACY: ${intent.confidence}</div>`;
 
+            // 0.5 MULTILINGUAL TRANSLATION & WORLD LANGUAGES (Tamil, Hindi, French, German, Spanish, Japanese, etc.)
+            const transResult = await lookupMultilingualTranslation(raw);
+            if (transResult) {
+                aiReply(intentTag + transResult);
+                speakCallResponse(transResult);
+                return;
+            }
+
             // 1. WORLD COUNTRIES & CAPITALS
             const capitalReport = lookupWorldCapital(raw);
             if (capitalReport) {
@@ -2747,6 +2755,91 @@
                            `FINAL ANSWER: ${ans}`;
                 }
             }
+
+            return null;
+        }
+
+        // ==========================================
+        // MULTILINGUAL TRANSLATION & WORLD LANGUAGES ENGINE
+        // ==========================================
+        const WORLD_LANGUAGES = {
+            "TAMIL": "ta",
+            "HINDI": "hi",
+            "TELUGU": "te",
+            "MALAYALAM": "ml",
+            "KANNADA": "kn",
+            "BENGALI": "bn",
+            "MARATHI": "mr",
+            "GUJARATI": "gu",
+            "PUNJABI": "pa",
+            "URDU": "ur",
+            "SANSKRIT": "sa",
+            "FRENCH": "fr",
+            "GERMAN": "de",
+            "SPANISH": "es",
+            "JAPANESE": "ja",
+            "CHINESE": "zh",
+            "RUSSIAN": "ru",
+            "ARABIC": "ar",
+            "ITALIAN": "it",
+            "PORTUGUESE": "pt",
+            "KOREAN": "ko",
+            "TURKISH": "tr",
+            "GREEK": "el",
+            "LATIN": "la",
+            "DUTCH": "nl",
+            "SWEDISH": "sv",
+            "ENGLISH": "en"
+        };
+
+        async function lookupMultilingualTranslation(text) {
+            if (!text) return null;
+            const clean = text.trim();
+            const lower = clean.toLowerCase();
+
+            let targetLangCode = null;
+            let targetLangName = null;
+
+            for (let lang in WORLD_LANGUAGES) {
+                const regex = new RegExp(`\\b${lang.toLowerCase()}\\b`, 'i');
+                if (regex.test(lower)) {
+                    targetLangCode = WORLD_LANGUAGES[lang];
+                    targetLangName = lang.charAt(0) + lang.slice(1).toLowerCase();
+                    break;
+                }
+            }
+
+            if (!targetLangCode) return null;
+
+            // Extract the target word/sentence to translate
+            let wordToTranslate = clean
+                .replace(/^what\s+is\s+/i, '')
+                .replace(/^how\s+to\s+say\s+/i, '')
+                .replace(/^meaning\s+of\s+/i, '')
+                .replace(/^translate\s+/i, '')
+                .replace(/^tell\s+me\s+the\s+/i, '')
+                .replace(new RegExp(`\\s+(?:in|meaning|to|into)\\s+${targetLangName}`, 'i'), '')
+                .replace(new RegExp(`${targetLangName}\\s+meaning`, 'i'), '')
+                .replace(new RegExp(`in\\s+${targetLangName}`, 'i'), '')
+                .replace(new RegExp(`${targetLangName}`, 'i'), '')
+                .replace(/\?/g, '').trim();
+
+            if (!wordToTranslate || wordToTranslate.length < 1) return null;
+
+            try {
+                const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(wordToTranslate)}&langpair=en|${targetLangCode}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.responseData && data.responseData.translatedText) {
+                        const translated = data.responseData.translatedText;
+                        const finalAns = matchOptionLetter(clean, `${translated} (${targetLangName} meaning of "${wordToTranslate}")`);
+                        return `🎯 Category Identified: Multilingual Translation & World Languages\n` +
+                               `📌 Question: "${clean}"\n\n` +
+                               `FINAL ANSWER: ${finalAns}`;
+                    }
+                }
+            } catch (e) {}
 
             return null;
         }
