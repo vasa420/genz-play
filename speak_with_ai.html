@@ -3842,6 +3842,20 @@
             return 'Quantitative Aptitude & Logical Reasoning';
         }
 
+        function extractFinalAnswerFromWebText(cleanAnswer) {
+            if (!cleanAnswer) return "See Step-by-Step Calculation Above";
+            const ansMatch = cleanAnswer.match(/(?:ans(?:wer)?|final answer|correct answer|cost price|selling price|result)\s*(?:is|=|:)?\s*(?:₹|rs\.?|rupees|\$)?\s*([\d\.]+(?:\s*%|\s*days|\s*hrs|\s*hours|\s*km\/h|\s*m\/s|\s*m|\s*cm|\s*sq units)?)/i) ||
+                             cleanAnswer.match(/(?:is|=|:)\s*(?:₹|rs\.?|rupees|\$)?\s*([\d\.]+(?:\s*%|\s*days|\s*hrs|\s*hours|\s*km\/h|\s*m\/s|\s*m|\s*cm|\s*sq units)?)/i);
+            if (ansMatch) {
+                return ansMatch[1].trim();
+            }
+            const nums = cleanAnswer.match(/(\d+(?:\.\d+)?)/g);
+            if (nums && nums.length > 0) {
+                return nums[nums.length - 1];
+            }
+            return "Calculated Step-by-Step Above";
+        }
+
         // Async Aptitude Solver with Real-Time Google & Online Model Search Sync
         async function solveAptitudeQuery(text) {
             if (!text) return null;
@@ -3863,11 +3877,12 @@
                                                     .replace(/^Live Knowledge Base Sync ➔ /i, '')
                                                     .replace(/^Live Google & Wiki Knowledge Base ➔ /i, '')
                                                     .replace(/^Live Real-Time Web Search Result ➔ /i, '');
+                    const extractedValue = extractFinalAnswerFromWebText(cleanAnswer);
                     return `🧩 Step-by-Step Aptitude & Reasoning Solution\n\n` +
                            `1. Category Identified: ${topicLabel}\n` +
                            `2. Question Asked: "${clean}"\n` +
                            `3. Formula & Step-by-Step Solution Logic:\n${cleanAnswer}\n\n` +
-                           `FINAL ANSWER: Solution verified via Google Knowledge Engine.`;
+                           `FINAL ANSWER: ${extractedValue}`;
                 }
             }
 
