@@ -905,18 +905,37 @@
                 .replace(/\btimes\b|\bmultiplied by\b|\bmultiply\b/g, '*')
                 .replace(/\bdivided by\b|\bover\b/g, '/');
 
-            // --- CONCEPT 1: Prime Numbers & Prime Factorization ---
+            // --- CONCEPT 1: Prime Numbers (Range A to B, Up to N, Factorization, Check) ---
             if (clean.includes('prime')) {
+                // Prime numbers between Range A and B (e.g. "prime numbers between 1 to 100", "primes from 20 to 50")
+                const rangeMatch = clean.match(/prime\s*numbers?\s*(?:between|from)?\s*(\d+)\s*(?:to|and|-)\s*(\d+)/i);
+                if (rangeMatch) {
+                    let start = parseInt(rangeMatch[1]);
+                    let end = parseInt(rangeMatch[2]);
+                    if (start > end) { const tmp = start; start = end; end = tmp; }
+                    const maxLimit = Math.min(end, 2000);
+                    const minLimit = Math.max(2, start);
+                    const primes = [];
+                    for (let i = minLimit; i <= maxLimit; i++) {
+                        let ok = true;
+                        for (let j = 2; j * j <= i; j++) { if (i % j === 0) { ok = false; break; } }
+                        if (ok) primes.push(i);
+                    }
+                    const sumPrimes = primes.reduce((a, b) => a + b, 0);
+                    return `Calculated in real time: Prime numbers between ${start} and ${end} (${primes.length} total, Sum: ${sumPrimes}) ➔ [ ${primes.join(', ')} ]`;
+                }
+
                 const listMatch = clean.match(/prime\s*numbers?\s*(?:up\s*to|below|less\s*than|till)\s*(\d+)/i);
                 if (listMatch) {
-                    const limit = Math.min(parseInt(listMatch[1]), 1000);
+                    const limit = Math.min(parseInt(listMatch[1]), 2000);
                     const primes = [];
                     for (let i = 2; i <= limit; i++) {
                         let ok = true;
                         for (let j = 2; j * j <= i; j++) { if (i % j === 0) { ok = false; break; } }
                         if (ok) primes.push(i);
                     }
-                    return `Calculated in real time: Prime numbers up to ${limit} (${primes.length} total) ➔ [ ${primes.join(', ')} ]`;
+                    const sumPrimes = primes.reduce((a, b) => a + b, 0);
+                    return `Calculated in real time: Prime numbers up to ${limit} (${primes.length} total, Sum: ${sumPrimes}) ➔ [ ${primes.join(', ')} ]`;
                 }
 
                 const factMatch = clean.match(/(?:prime\s*factors?|factorize)\s*(?:of)?\s*(\d+)/i);
@@ -943,6 +962,55 @@
                     if (isP) return `Calculated in real time: ${num} IS a Prime number! (It has no divisors other than 1 and ${num}).`;
                     else return `Calculated in real time: ${num} is NOT a prime number (Divisible by ${div}).`;
                 }
+            }
+
+            // --- CONCEPT 2: Fibonacci Sequence ---
+            if (clean.includes('fibonacci')) {
+                const fibMatch = clean.match(/fibonacci\s*(?:sequence|series)?\s*(?:up\s*to|till|n)?\s*(\d+)/i);
+                if (fibMatch) {
+                    const limit = Math.min(parseInt(fibMatch[1]), 1000);
+                    const fib = [0, 1];
+                    while (true) {
+                        const next = fib[fib.length - 1] + fib[fib.length - 2];
+                        if (next > limit) break;
+                        fib.push(next);
+                    }
+                    return `Calculated in real time: Fibonacci sequence up to ${limit} (${fib.length} terms) ➔ [ ${fib.join(', ')} ]`;
+                }
+            }
+
+            // --- CONCEPT 3: Pythagorean Theorem (Hypotenuse) ---
+            const pythMatch = clean.match(/(?:hypotenuse|pythagoras)\s*(?:a)?\s*(\d+(?:\.\d+)?)\s*(?:b|and)?\s*(\d+(?:\.\d+)?)/i);
+            if (pythMatch) {
+                const a = parseFloat(pythMatch[1]), b = parseFloat(pythMatch[2]);
+                const c = Math.sqrt(a * a + b * b);
+                return `Calculated in real time: Hypotenuse c = √(${a}² + ${b}²) = ${c.toFixed(4)}`;
+            }
+
+            // --- CONCEPT 4: Simple & Compound Interest ---
+            const interestMatch = clean.match(/(?:interest|si|ci)\s*(\d+(?:\.\d+)?)\s*(\d+(?:\.\d+)?)\s*(\d+(?:\.\d+)?)/i);
+            if (interestMatch) {
+                const p = parseFloat(interestMatch[1]);
+                const r = parseFloat(interestMatch[2]);
+                const t = parseFloat(interestMatch[3]);
+                const si = (p * r * t) / 100;
+                const ci = p * Math.pow(1 + r / 100, t) - p;
+                return `Calculated in real time for P=${p}, R=${r}%, T=${t} yrs ➔ Simple Interest = ${si.toFixed(2)}, Compound Interest = ${ci.toFixed(2)}`;
+            }
+
+            // --- CONCEPT 5: 3D Volume (Sphere, Cube, Cylinder) ---
+            const sphereVol = clean.match(/volume\s*of\s*sphere\s*(?:radius|r)?\s*(\d+(?:\.\d+)?)/i);
+            if (sphereVol) {
+                const r = parseFloat(sphereVol[1]);
+                const vol = (4 / 3) * Math.PI * Math.pow(r, 3);
+                return `Calculated in real time for Sphere (r=${r}): Volume = (4/3)πr³ = ${vol.toFixed(4)}`;
+            }
+
+            const cylVol = clean.match(/volume\s*of\s*cylinder\s*(?:radius|r)?\s*(\d+(?:\.\d+)?)\s*(?:height|h)?\s*(\d+(?:\.\d+)?)/i);
+            if (cylVol) {
+                const r = parseFloat(cylVol[1]), h = parseFloat(cylVol[2]);
+                const vol = Math.PI * r * r * h;
+                return `Calculated in real time for Cylinder (r=${r}, h=${h}): Volume = πr²h = ${vol.toFixed(4)}`;
             }
 
             // --- CONCEPT 2: Even or Odd Check ---
