@@ -817,6 +817,14 @@
                 return;
             }
 
+            // 0.02 MULTI-LANGUAGE CODE GENERATOR (C, C++, Java, Python, JavaScript, HTML/CSS, SQL, Go, Rust, C#, PHP, Swift)
+            const codeResult = generateRealTimeCode(raw);
+            if (codeResult) {
+                aiReply(intentTag + codeResult.htmlCard);
+                speakCallResponse(codeResult.spokenText);
+                return;
+            }
+
             // 0.05 90+ LIVE WEBSITES & KNOWLEDGE NETWORK LINKS (LeetCode, HackerRank, CodeChef, Codeforces, Kaggle, NPTEL, MIT, Harvard, etc.)
             const linkResult = lookup50PlusWebsitesAndLinks(raw);
             if (linkResult) {
@@ -3613,9 +3621,10 @@
 
             if (!isCodeReq) return null;
 
-            let lang = 'C'; // default
+            let lang = 'Python'; // fallback default
             if (q.includes('c++') || q.includes('cpp')) lang = 'C++';
             else if (q.includes('java') && !q.includes('script') && !q.includes('javascript')) lang = 'Java';
+            else if (/\b(c)\b/i.test(q) || q.includes('in c') || q.includes('c code') || q.includes('c program') || q.includes('c language') || q.includes('using c')) lang = 'C';
             else if (q.includes('python') || q.includes('py')) lang = 'Python';
             else if (q.includes('javascript') || q.includes(' js ') || q.endsWith(' js') || q.includes('node')) lang = 'JavaScript';
             else if (q.includes('typescript') || q.includes('ts')) lang = 'TypeScript';
