@@ -177,16 +177,14 @@
         }
 
         .btn-launch {
-            display: block; width: 100%; padding: 12px;
+            width: 100%; padding: 12px;
             background: linear-gradient(135deg, #FF6400, #FF9D00);
             border: none; border-radius: 10px;
             color: #000; font-family: 'JetBrains Mono', monospace;
             font-size: 11px; font-weight: 900; letter-spacing: 2px;
             cursor: pointer; transition: all 0.3s ease;
             box-shadow: 0 0 15px var(--primary-glow);
-            text-transform: uppercase; text-decoration: none;
-            text-align: center; user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            text-transform: uppercase;
         }
 
         .btn-launch:hover {
@@ -467,33 +465,33 @@
 
             <div class="options-grid">
                 <!-- Option 1: Audio Call -->
-                <div class="option-card" onclick="openMode('audio', event)" style="cursor: pointer;">
+                <div class="option-card" onclick="openMode('audio')">
                     <div class="option-badge">VOICE CALL</div>
                     <div class="option-icon">📞</div>
                     <div class="option-num">OPTION 1</div>
                     <div class="option-title">AUDIO CALL</div>
                     <div class="option-desc">Real-time hands-free audio voice calling. Speak aloud & hear live AI voice responses with waveform visualizer.</div>
-                    <a href="javascript:void(0)" class="btn-launch" onclick="openMode('audio', event); return false;">START AUDIO CALL 📞</a>
+                    <button class="btn-launch">START AUDIO CALL 📞</button>
                 </div>
 
                 <!-- Option 2: Video Call -->
-                <div class="option-card" onclick="openMode('video', event)" style="cursor: pointer;">
+                <div class="option-card" onclick="openMode('video')">
                     <div class="option-badge">AVATAR STREAM</div>
                     <div class="option-icon">📹</div>
                     <div class="option-num">OPTION 2</div>
                     <div class="option-title">VIDEO CALL</div>
                     <div class="option-desc">Interactive 3D Video Call experience with AI Avatar video feed, live camera stream & voice response.</div>
-                    <a href="javascript:void(0)" class="btn-launch" onclick="openMode('video', event); return false;">START VIDEO CALL 📹</a>
+                    <button class="btn-launch">START VIDEO CALL 📹</button>
                 </div>
 
                 <!-- Option 3: Chat With Me -->
-                <div class="option-card" onclick="openMode('chat', event)" style="cursor: pointer;">
+                <div class="option-card" onclick="openMode('chat')">
                     <div class="option-badge">TEXT TERMINAL</div>
                     <div class="option-icon">💬</div>
                     <div class="option-num">OPTION 3</div>
                     <div class="option-title">CHAT WITH ME</div>
                     <div class="option-desc">Sci-Fi text messaging terminal. Ask squad questions, get instant intelligence & operative analysis responses.</div>
-                    <a href="javascript:void(0)" class="btn-launch" onclick="openMode('chat', event); return false;">START TEXT CHAT 💬</a>
+                    <button class="btn-launch">START TEXT CHAT 💬</button>
                 </div>
             </div>
         </div>
@@ -611,39 +609,25 @@
             currentMode = 'hub';
         }
 
-        function openMode(mode, evt) {
-            if (evt) {
-                try { evt.stopPropagation(); } catch(e){}
-            }
-
-            const hub = document.getElementById('hub-section');
-            const modeAudio = document.getElementById('mode-audio');
-            const modeVideo = document.getElementById('mode-video');
-            const modeChat = document.getElementById('mode-chat');
-
-            if (hub) hub.style.display = 'none';
-            if (modeAudio) modeAudio.style.display = 'none';
-            if (modeVideo) modeVideo.style.display = 'none';
-            if (modeChat) modeChat.style.display = 'none';
+        function openMode(mode) {
+            document.getElementById('hub-section').style.display = 'none';
+            document.getElementById('mode-audio').style.display = 'none';
+            document.getElementById('mode-video').style.display = 'none';
+            document.getElementById('mode-chat').style.display = 'none';
 
             currentMode = mode;
-            if (mode === 'audio' && modeAudio) {
-                modeAudio.style.display = 'flex';
+            if (mode === 'audio') {
+                document.getElementById('mode-audio').style.display = 'flex';
                 startCallTimer('audio-timer');
                 startVoiceRecognition();
-            } else if (mode === 'video' && modeVideo) {
-                modeVideo.style.display = 'flex';
+            } else if (mode === 'video') {
+                document.getElementById('mode-video').style.display = 'flex';
                 startCallTimer(null);
                 startWebcam();
                 startVoiceRecognition();
-            } else if (mode === 'chat' && modeChat) {
-                modeChat.style.display = 'flex';
-                setTimeout(() => {
-                    const inp = document.getElementById('chat-input');
-                    if (inp) inp.focus();
-                }, 150);
+            } else if (mode === 'chat') {
+                document.getElementById('mode-chat').style.display = 'flex';
             }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function startCallTimer(timerId) {
@@ -753,19 +737,15 @@
                     isSpeaking = false;
                     if (currentMode === 'audio') document.getElementById('audio-status').textContent = 'AI ASSISTANT CONNECTED · LISTENING...';
                 };
-            async function processCallQuery(userText) {
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function processCallQuery(userText) {
+            const aiReplyText = generateAISpokenReply(userText);
+
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', userText, 'user');
-            }
-
-            // Show temporary status in call status or thinking state
-            if (currentMode === 'audio') {
-                document.getElementById('audio-status').textContent = 'AI CONNECTED TO REAL-WORLD NETWORK · QUERYING INTEL...';
-            }
-
-            const aiReplyText = await generateRealWorldAIAnswer(userText);
-
-            if (currentMode === 'chat') {
                 appendChatMessage('🤖 ATC AI ASSISTANT', aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
@@ -788,8 +768,7 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // Real-World Application Knowledge & API Intelligence Engine
-        async function generateRealWorldAIAnswer(prompt) {
+        function generateAISpokenReply(prompt) {
             if (!prompt || !prompt.trim()) return "I am ready for your question! Please tap the mic or type a message below.";
 
             const rawText = prompt.trim();
@@ -809,86 +788,99 @@
                 return `Calculated in real time: ${a} ${op} ${b} = ${res}.`;
             }
 
-            // 2. ATC Squad Operatives & Game Lore (Highest priority for local terms)
+            // 2. Squad Operatives Intelligence
             if (query.includes('VAISAL')) {
-                return "Operative Vausal is a high-level adversary in ATC Studio (95% Attack Potential), renowned for driving the high-speed passenger bus along scenic mountain highways with extreme precision!";
+                if (query.includes('WHO')) return "Operative Vausal is a high-level adversary in ATC Studio (95% Attack Potential), renowned for driving the high-speed passenger bus along scenic mountain highways with extreme precision!";
+                if (query.includes('BUS')) return "Vausal commands the main speed passenger bus! In battle scenarios, he navigates steep turns at sunset with full squad power.";
+                return "Operative Vausal is active on the network. He drives the main speed bus and holds top-tier tactical synchrony across all squad missions.";
             }
+
             if (query.includes('LOGITH') || query.includes('KNIFE') || query.includes('BLADE')) {
-                return "Operative Logith is the squad's blade specialist (87% Attack Power, 89% Slash). He carries a giant sharp knife capable of slicing through Vaisal's speed bus!";
+                if (query.includes('CUT') || query.includes('BUS')) return "Operative Logith wields the largest sharp stainless steel blade knife! In battle comparisons, Logith's blade can cut through Vausal's bus with electrifying sparks!";
+                return "Operative Logith is the squad's blade specialist (87% Attack Power, 89% Slash). He carries a giant sharp knife capable of slicing through heavy metal barriers.";
             }
+
             if (query.includes('NITHISH') || query.includes('BELL')) {
-                return "Operative Nithish is the master bus conductor (94% Attack Power, 95% Speed), famous for striking the golden conductor bell!";
+                return "Operative Nithish is the master bus conductor (94% Attack Power, 95% Speed), legendary for striking the golden conductor bell with high agility!";
             }
+
             if (query.includes('GIRISH') || query.includes('TRUCK') || query.includes('LORRY')) {
-                return "Operative Girish commands the heavy cargo lorry truck (90% Attack Power), driving through jungle roads while pursued by king cobras!";
+                return "Operative Girish commands the heavy cargo lorry truck (90% Attack Power). He navigates dangerous jungle highways while pursued by giant king cobras!";
             }
+
             if (query.includes('DHANISH') || query.includes('DHARNISH') || query.includes('COBRA') || query.includes('SNAKE')) {
                 return "Operative Dhanish is a high-octane warrior (92% Attack Power) specializing in cobra showdowns along dark forest roads!";
             }
+
             if (query.includes('SURYA') || query.includes('RIVER') || query.includes('KAVERI')) {
                 return "Operative Surya (93% Attack Power) dominates the Kaveri River rapids, swimming through dense tropical currents under golden sunlight!";
             }
-            if (query.includes('VASANTH') || query.includes('LEADER')) {
+
+            if (query.includes('VASANTH') || query.includes('LEADER') || query.includes('STRONGEST')) {
                 return "Vasanth is the Squad Leader with a peak 98% tactical synchrony and 96% attack power, leading the ATC Studio team!";
             }
 
-            // 3. REAL-WORLD NETWORK API KNOWLEDGE LOOKUP (Wikipedia & Instant Knowledge APIs)
-            try {
-                // Extract main topic keywords for real-world search
-                let topic = rawText
-                    .replace(/^(who|what|where|when|why|how|tell me about|explain|search for)\s+(is|are|was|were|the|a|an)?\s*/i, '')
-                    .replace(/\?/g, '')
-                    .trim();
-
-                if (!topic) topic = rawText;
-
-                // Query Wikipedia REST API for accurate real-world summary
-                const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
-                const response = await fetch(wikiUrl);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.extract && data.type === 'standard') {
-                        return `Real-World Network Data [${data.title}]: ${data.extract}`;
-                    }
-                }
-
-                // Query DuckDuckGo Instant Knowledge API as fallback
-                const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(topic)}&format=json&no_html=1&skip_disambig=1`;
-                const ddgResp = await fetch(ddgUrl);
-                if (ddgResp.ok) {
-                    const ddgData = await ddgResp.json();
-                    if (ddgData.AbstractText) {
-                        return `Real-World Intelligence [${topic}]: ${ddgData.AbstractText}`;
-                    }
-                }
-            } catch (err) {
-                console.log('Real-world network API lookup offline or CORS restricted:', err);
+            if (query.includes('THAYA')) {
+                return "Operative Thaya (89% Attack Power) is the covert tactical agent, specializing in high-speed stealth maneuvers!";
             }
 
-            // 4. Intelligent Built-in Real-World Subject Synthesizer
-            if (query.includes('JOKE') || query.includes('FUNNY')) {
+            if (query.includes('KISHOOR')) {
+                return "Operative Kishoor (88% Attack Power) provides heavy squad defense and tactical shield support during combat operations!";
+            }
+
+            // 3. Feature Guidance & System Help
+            if (query.includes('PHOTO') || query.includes('IMAGE') || query.includes('PICTURE')) {
+                return "To create 8K AI photos, click the 'PHOTO AS MY OWN' tab in the header menu! You can type any prompt and generate unlimited photos!";
+            }
+
+            if (query.includes('VIDEO') || query.includes('MOVIE') || query.includes('CLIP')) {
+                return "To generate AI video scenes, click the 'VIDEO AS MY OWN' tab in the header! You can generate unlimited high-octane cinematic scenes!";
+            }
+
+            if (query.includes('BATTLE') || query.includes('VS') || query.includes('COMPARISON')) {
+                return "Click the 'ATTACK COMPARISON' tab in the header menu to pit any two squad operatives against each other in real-time 3D battle simulation!";
+            }
+
+            // 4. Conversational Greetings & Casual Questions
+            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY') || query.includes('GREETINGS')) {
+                return "Greetings, agent! ATC Studio AI Intelligence is online and listening. Ask me any question about the squad, missions, or system features!";
+            }
+
+            if (query.includes('HOW ARE YOU') || query.includes('STATUS')) {
+                return "ATC Studio AI Systems are operating at 100% efficiency. All neural nodes, database records, and voice channels are fully online!";
+            }
+
+            if (query.includes('JOKE') || query.includes('FUNNY') || query.includes('LAUGH')) {
                 return "Why did Logith bring his giant sharp knife to the bus stop? Because he heard Vaisal's passenger bus was cutting corners!";
             }
-            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY')) {
-                return "Hello agent! Connected to real-world network and ATC Studio intelligence. Ask me any real-world question!";
+
+            if (query.includes('STORY') || query.includes('TELL ME A')) {
+                return "Here is a tactical log: Along the Kaveri River pass, Vaisal sped down the highway in his passenger bus while Girish's heavy lorry roared behind with giant cobras in pursuit. Suddenly, Logith leaped forward with his giant sharp blade, illuminating the night sky with electric sparks!";
             }
 
-            if (query.startsWith('WHO IS') || query.startsWith('WHO WAS')) {
-                const subject = rawText.replace(/^who\s+(is|was|were|are)\s+/i, '').replace(/\?/g, '').trim();
-                return `Real-World Analysis for "${subject}": ${subject} is a prominent real-world figure recognized globally across history, science, or culture.`;
+            // 5. Intelligent NLP Real-Time Question Parsing Engine
+            if (query.startsWith('WHO IS') || query.startsWith('WHO ARE')) {
+                const subject = rawText.replace(/^who\s+(is|are)\s+/i, '').replace(/\?/g, '').trim();
+                return `Analyzing database record for "${subject}": In the ATC Studio network, ${subject} is a recognized operative entity registered with active combat stats and tactical spectrums.`;
             }
 
             if (query.startsWith('WHAT IS') || query.startsWith('WHAT ARE')) {
-                const subject = rawText.replace(/^what\s+(is|are|was|were)\s+/i, '').replace(/\?/g, '').trim();
-                return `Real-World Definition for "${subject}": ${subject} is a fundamental concept in real-world science, technology, or general knowledge.`;
+                const subject = rawText.replace(/^what\s+(is|are)\s+/i, '').replace(/\?/g, '').trim();
+                return `Analyzing topic "${subject}": In the ATC Studio system, ${subject} represents a core operational directive designed to analyze threat levels and enhance squad synchrony.`;
             }
 
-            if (query.startsWith('WHERE IS') || query.startsWith('WHERE ARE')) {
-                const location = rawText.replace(/^where\s+(is|are|was|were)\s+/i, '').replace(/\?/g, '').trim();
-                return `Real-World Location Data for "${location}": ${location} is a geographical location situated on Planet Earth with active coordinates and regional significance.`;
+            if (query.startsWith('HOW TO') || query.startsWith('HOW DO')) {
+                const task = rawText.replace(/^how\s+(to|do|can|i)\s+/i, '').replace(/\?/g, '').trim();
+                return `Instructions for "${task}": Navigate using the top header menu buttons to access Search Engine, Photo Generator, Video Generator, or Attack Comparison tools!`;
             }
 
-            return `Real-World AI analyzed your question: "${rawText}". I have verified your query across global data channels!`;
+            if (query.startsWith('WHY IS') || query.startsWith('WHY DOES') || query.startsWith('WHY')) {
+                const topic = rawText.replace(/^why\s+(is|does|did)\s+/i, '').replace(/\?/g, '').trim();
+                return `Analyzing cause for "${topic}": Squad dynamics are tuned for maximum tactical output, ensuring every operative's vehicle, blade, and weapon operates at peak power!`;
+            }
+
+            // 6. Generic Intelligent Synthesis Fallback for Any User Question
+            return `ATC Studio AI analyzed your input: "${rawText}". All neural intelligence channels are active and ready for your next question or voice command!`;
         }
 
         // Waveform Animation Canvas
