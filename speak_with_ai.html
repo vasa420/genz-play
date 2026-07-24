@@ -768,24 +768,93 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        // Real-Time Advanced Math Engine (Arithmetic, Percentages, Square Roots, Powers, Factorials, Trig)
+        function solveMathQuery(text) {
+            if (!text) return null;
+            let clean = text.trim().toLowerCase();
+
+            // 1. Percentage queries: "50% of 200", "what is 20 percent of 500"
+            const pctMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:%|percent)\s*(?:of)?\s*(\d+(?:\.\d+)?)/i);
+            if (pctMatch) {
+                const pct = parseFloat(pctMatch[1]);
+                const total = parseFloat(pctMatch[2]);
+                const res = (pct / 100) * total;
+                return `Calculated in real time: ${pct}% of ${total} = ${res}`;
+            }
+
+            // 2. Square Root queries: "square root of 144", "sqrt 144", "sqrt(144)"
+            const sqrtMatch = clean.match(/(?:square\s*root\s*of|sqrt)\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/i);
+            if (sqrtMatch) {
+                const val = parseFloat(sqrtMatch[1]);
+                const res = Math.sqrt(val);
+                return `Calculated in real time: Square root of ${val} = ${res}`;
+            }
+
+            // 3. Power queries: "2 ^ 10", "2 power 10", "2 to the power of 10"
+            const powMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:\^|power\s*of|to\s*the\s*power\s*of|pow)\s*(\d+(?:\.\d+)?)/i);
+            if (powMatch) {
+                const base = parseFloat(powMatch[1]);
+                const exp = parseFloat(powMatch[2]);
+                const res = Math.pow(base, exp);
+                return `Calculated in real time: ${base} ^ ${exp} = ${res}`;
+            }
+
+            // 4. Factorial queries: "5 factorial" or "5!"
+            const factMatch = clean.match(/(\d+)\s*(?:factorial|!)/i);
+            if (factMatch) {
+                const n = parseInt(factMatch[1]);
+                if (n >= 0 && n <= 170) {
+                    let f = 1;
+                    for (let i = 2; i <= n; i++) f *= i;
+                    return `Calculated in real time: Factorial of ${n} (${n}!) = ${f}`;
+                }
+            }
+
+            // 5. Trig / Math functions: sin(90), cos(0), tan(45), log(100), ln(e)
+            const trigMatch = clean.match(/(sin|cos|tan|log|ln)\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/i);
+            if (trigMatch) {
+                const fn = trigMatch[1].toLowerCase();
+                const val = parseFloat(trigMatch[2]);
+                let res = 0;
+                if (fn === 'sin') res = Math.sin(val * (Math.PI / 180));
+                else if (fn === 'cos') res = Math.cos(val * (Math.PI / 180));
+                else if (fn === 'tan') res = Math.tan(val * (Math.PI / 180));
+                else if (fn === 'log') res = Math.log10(val);
+                else if (fn === 'ln') res = Math.log(val);
+                return `Calculated in real time: ${fn}(${val}) = ${Number(res.toFixed(6))}`;
+            }
+
+            // 6. General Math Expressions (+, -, *, /, ^, %, parentheses)
+            let expr = clean
+                .replace(/what\s+is|calculate|evaluate|equal\s+to|\?/gi, '')
+                .replace(/x/gi, '*')
+                .replace(/\^/g, '**')
+                .replace(/÷/g, '/')
+                .trim();
+
+            if (/^[0-9\.\s\+\-\*\/\%\(\)\*\*]+$/.test(expr) && /[0-9]/.test(expr)) {
+                try {
+                    const res = Function(`"use strict"; return (${expr})`)();
+                    if (typeof res === 'number' && !isNaN(res) && isFinite(res)) {
+                        const readableExpr = expr.replace(/\*\*/g, '^');
+                        return `Calculated in real time: ${readableExpr} = ${res}`;
+                    }
+                } catch(e){}
+            }
+
+            return null;
+        }
+
         function generateAISpokenReply(prompt) {
             if (!prompt || !prompt.trim()) return "I am ready for your question! Please tap the mic or type a message below.";
 
             const rawText = prompt.trim();
             const query = rawText.toUpperCase();
 
-            // 1. Real-time Math Solver
-            const mathMatch = rawText.match(/^(\d+)\s*([\+\-\*\/])\s*(\d+)$/);
-            if (mathMatch) {
-                const a = parseFloat(mathMatch[1]);
-                const op = mathMatch[2];
-                const b = parseFloat(mathMatch[3]);
-                let res = 0;
-                if (op === '+') res = a + b;
-                else if (op === '-') res = a - b;
-                else if (op === '*') res = a * b;
-                else if (op === '/' && b !== 0) res = a / b;
-                return `Calculated in real time: ${a} ${op} ${b} = ${res}.`;
+            // 1. Advanced Real-Time Math Solver Engine
+            const mathResult = solveMathQuery(rawText);
+            if (mathResult) {
+                return mathResult;
             }
 
             // 2. Squad Operatives Intelligence
