@@ -418,6 +418,21 @@
         }
 
         .btn-send:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--primary); }
+
+        .btn-gen-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 20px;
+            background: rgba(255, 100, 0, 0.15);
+            border: 1px solid var(--primary);
+            color: #fff; font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 1px; font-weight: 700;
+            text-decoration: none; cursor: pointer; transition: all 0.25s ease;
+        }
+
+        .btn-gen-link:hover {
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 15px var(--primary-glow); transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -727,12 +742,31 @@
         }
 
         function processCallQuery(userText) {
-            const aiReply = generateAIResponse(userText);
+            const aiReplyText = generateAISpokenReply(userText);
+            const generatedPrompt = `${userText}, 8k resolution, cinematic lighting, photorealistic 3D render, masterpiece`;
+            const seed = Math.floor(Math.random() * 999999);
+            const encodedPrompt = encodeURIComponent(generatedPrompt);
+            const previewImgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=320&seed=${seed}&nologo=true`;
+
+            const richHtml = `
+                <div>${aiReplyText}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25); border-radius: 8px; padding: 8px 12px; margin: 10px 0 6px;">
+                    ✨ GENERATED AI PROMPT: "${generatedPrompt}"
+                </div>
+                <div style="width:100%; max-height:180px; border-radius:10px; overflow:hidden; margin:8px 0; border:1px solid rgba(255,100,0,0.3); background:#000;">
+                    <img src="${previewImgUrl}" alt="AI Scene Preview" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'">
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                    <a class="btn-gen-link" href="photo_prompt_result.html?prompt=${encodedPrompt}">📸 GENERATE THIS AI PHOTO</a>
+                    <a class="btn-gen-link" href="video_prompt_result.html?prompt=${encodedPrompt}">🎥 GENERATE THIS AI VIDEO</a>
+                </div>
+            `;
+
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', userText, 'user');
-                appendChatMessage('🤖 ATC AI ASSISTANT', aiReply, 'ai');
+                appendChatMessage('🤖 ATC AI ASSISTANT', richHtml, 'ai');
             }
-            speakCallResponse(aiReply);
+            speakCallResponse(aiReplyText);
         }
 
         function sendChatMessage() {
@@ -743,24 +777,24 @@
             processCallQuery(text);
         }
 
-        function appendChatMessage(sender, text, type) {
+        function appendChatMessage(sender, textOrHtml, type) {
             const box = document.getElementById('terminal-box');
             const msg = document.createElement('div');
             msg.className = `chat-msg ${type}`;
-            msg.innerHTML = `<span class="msg-sender">${sender}</span><div class="msg-body">${text}</div>`;
+            msg.innerHTML = `<span class="msg-sender">${sender}</span><div class="msg-body">${textOrHtml}</div>`;
             box.appendChild(msg);
             box.scrollTop = box.scrollHeight;
         }
 
-        function generateAIResponse(prompt) {
+        function generateAISpokenReply(prompt) {
             const query = prompt.toUpperCase();
-            if (query.includes('VAISAL')) return "Vausal is driving the speed bus along mountain highways!";
-            if (query.includes('LOGITH') || query.includes('KNIFE')) return "Logith carries the giant sharp knife capable of cutting through the highway bus!";
-            if (query.includes('NITHISH') || query.includes('BELL')) return "Nithish is the master conductor ringing the golden bus bell!";
-            if (query.includes('GIRISH') || query.includes('TRUCK')) return "Girish commands the heavy cargo lorry truck!";
-            if (query.includes('DHANISH') || query.includes('COBRA')) return "Dhanish fights massive king cobras along jungle roads!";
-            if (query.includes('HELLO') || query.includes('HI')) return "Hello agent! ATC Studio AI is connected. How can I assist your mission?";
-            return `ATC AI received your input: "${prompt}". All squad operative records are active.`;
+            if (query.includes('VAISAL')) return "I read your input! Vausal is driving the speed bus along mountain highways. I generated an AI prompt for this scene below!";
+            if (query.includes('LOGITH') || query.includes('KNIFE')) return "I read your input! Logith carries the giant sharp knife cutting through Vausal's bus. I generated an AI prompt for this scene below!";
+            if (query.includes('NITHISH') || query.includes('BELL')) return "I read your input! Nithish is ringing the golden conductor bell. I generated an AI prompt for this scene below!";
+            if (query.includes('GIRISH') || query.includes('TRUCK')) return "I read your input! Girish commands the heavy cargo lorry truck. I generated an AI prompt for this scene below!";
+            if (query.includes('DHANISH') || query.includes('COBRA')) return "I read your input! Dhanish is fighting king cobras along the highway. I generated an AI prompt for this scene below!";
+            if (query.includes('HELLO') || query.includes('HI')) return "Hello agent! I am reading your input in real time. Describe any scene and I will build an AI prompt for you!";
+            return `I have analyzed your input: "${prompt}". I crafted a dynamic 8K AI prompt and image preview for you below!`;
         }
 
         // Waveform Animation Canvas
