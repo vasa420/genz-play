@@ -2385,6 +2385,26 @@
                 }
             } catch (e) {}
 
+            // 2.5 SECONDARY HIGH-SPEED PROXY CRAWLER (Backup Web Network)
+            try {
+                const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
+                const pRes = await fetch(proxyUrl);
+                if (pRes.ok) {
+                    const htmlText = await pRes.text();
+                    if (htmlText) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const snippets = doc.querySelectorAll('.result__snippet, .result__body');
+                        if (snippets && snippets.length > 0) {
+                            const snippetText = snippets[0].textContent.trim();
+                            if (snippetText && snippetText.length > 20) {
+                                return formatWebAns("Live Multi-Website Search Engine", snippetText);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+
             // 3. STACKOVERFLOW / TECH API (For programming, code, algorithms)
             try {
                 if (/\b(code|function|error|syntax|java|python|javascript|c\+\+|html|sql|css|bug|algorithm|api|repo|git)\b/i.test(q)) {
@@ -2428,39 +2448,6 @@
                         const pubDate = items[0].getElementsByTagName("pubDate")[0]?.textContent;
                         if (title) {
                             return formatWebAns("Google News & Live Media Network", `${title} (Published: ${pubDate || 'Recently'})`);
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // 6. WIKIDATA KNOWLEDGE GRAPH ENTITY API (Fact-Checked Global Entities)
-            try {
-                const wikiDataUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(cleanQ)}&language=en&format=json&origin=*`;
-                const wdRes = await fetch(wikiDataUrl);
-                if (wdRes.ok) {
-                    const wdData = await wdRes.json();
-                    if (wdData.search && wdData.search.length > 0) {
-                        const topEntity = wdData.search[0];
-                        if (topEntity.description && topEntity.description.length > 10) {
-                            return formatWebAns("Google & WikiData Global Knowledge Graph", `${topEntity.label} ➔ ${topEntity.description}`);
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // 7. CORSPROXY LIVE WEB SEARCH FALLBACK (Secondary Proxy)
-            try {
-                const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
-                const cpRes = await fetch(corsProxyUrl);
-                if (cpRes.ok) {
-                    const htmlText = await cpRes.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlText, 'text/html');
-                    const snippets = doc.querySelectorAll('.result__snippet, .result__body');
-                    if (snippets && snippets.length > 0) {
-                        const snippetText = snippets[0].textContent.trim();
-                        if (snippetText && snippetText.length > 20) {
-                            return formatWebAns("Google & Live Web Crawler Proxy", snippetText);
                         }
                     }
                 }
