@@ -814,7 +814,18 @@
                 return;
             }
 
-            // 6. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, etc.)
+            // 6. MOBILE PHONES & BEST PHONE RECOMMENDATIONS
+            const mobileResult = lookupMobile(raw);
+            if (mobileResult) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + mobileResult, 'ai');
+                }
+                speakCallResponse(mobileResult);
+                return;
+            }
+
+            // 7. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM M.K. Stalin, PM Modi, etc.)
             const currentAffairsMsg = lookupCurrentAffairs(raw);
             if (currentAffairsMsg) {
                 if (currentMode === 'chat') {
@@ -904,6 +915,450 @@
                 appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
+        }
+
+        // ==========================================
+        // MOBILE PHONES DATABASE (Specs, Price, Ratings)
+        // ==========================================
+        const MOBILES_DB = {
+            // ---- APPLE iPHONE ----
+            "IPHONE 16 PRO MAX": {
+                brand: "Apple", launched: "September 2024",
+                display: "6.9-inch Super Retina XDR OLED, 120Hz ProMotion",
+                processor: "Apple A18 Pro (3nm)", ram: "8 GB RAM", storage: "256GB / 512GB / 1TB",
+                camera: "48MP Main + 48MP Ultra-Wide + 12MP 5x Optical Zoom Telephoto",
+                battery: "4685 mAh, USB-C charging", os: "iOS 18",
+                price: "Starting ₹1,44,900 in India | $1,199 USD",
+                rating: "⭐ 4.8/5 — Expert Score | ⭐ 9.4/10 GSMARENA",
+                best_for: "Best iPhone ever made — Videographers, professionals, Apple ecosystem users",
+                pros: "Titanium build, ProRes 4K video, best display, longest software support",
+                cons: "Very expensive, heavy, no charger in box"
+            },
+            "IPHONE 16 PRO": {
+                brand: "Apple", launched: "September 2024",
+                display: "6.3-inch Super Retina XDR OLED, 120Hz ProMotion",
+                processor: "Apple A18 Pro (3nm)", ram: "8 GB RAM", storage: "128GB / 256GB / 512GB / 1TB",
+                camera: "48MP Main + 48MP Ultra-Wide + 12MP 5x Telephoto",
+                battery: "3582 mAh, USB-C", os: "iOS 18",
+                price: "Starting ₹1,19,900 in India | $999 USD",
+                rating: "⭐ 4.8/5 — Expert Score",
+                best_for: "Compact premium flagship, Apple ecosystem",
+                pros: "Titanium, A18 Pro chip, excellent camera, compact size",
+                cons: "Expensive, smaller battery than Pro Max"
+            },
+            "IPHONE 16": {
+                brand: "Apple", launched: "September 2024",
+                display: "6.1-inch Super Retina XDR OLED, 60Hz",
+                processor: "Apple A18 (3nm)", ram: "8 GB RAM", storage: "128GB / 256GB / 512GB",
+                camera: "48MP Main + 12MP Ultra-Wide",
+                battery: "3561 mAh, USB-C", os: "iOS 18",
+                price: "Starting ₹79,900 in India | $799 USD",
+                rating: "⭐ 4.5/5 — Expert Score",
+                best_for: "Everyday Apple users, mid-range flagship",
+                pros: "A18 chip, Apple Intelligence AI, USB-C, great camera",
+                cons: "Still 60Hz, no ProMotion"
+            },
+            "IPHONE 15": {
+                brand: "Apple", launched: "September 2023",
+                display: "6.1-inch Super Retina XDR OLED, 60Hz",
+                processor: "Apple A16 Bionic", ram: "6 GB", storage: "128GB / 256GB / 512GB",
+                camera: "48MP Main + 12MP Ultra-Wide",
+                battery: "3877 mAh, USB-C", os: "iOS 17 (upgradable to iOS 18)",
+                price: "Starting ₹69,900 in India",
+                rating: "⭐ 4.4/5",
+                best_for: "Budget Apple flagship seekers",
+                pros: "USB-C upgrade, great camera, strong performance",
+                cons: "60Hz, old chip vs 16 series"
+            },
+
+            // ---- SAMSUNG GALAXY ----
+            "SAMSUNG GALAXY S25 ULTRA": {
+                brand: "Samsung", launched: "January 2025",
+                display: "6.9-inch Dynamic AMOLED 2X, 120Hz",
+                processor: "Snapdragon 8 Elite (3nm)", ram: "12 GB RAM", storage: "256GB / 512GB / 1TB",
+                camera: "200MP Main + 50MP Periscope Zoom (10x) + 10MP 3x Zoom + 12MP Ultra-Wide",
+                battery: "5000 mAh, 45W fast charge", os: "Android 15 / One UI 7",
+                price: "Starting ₹1,29,999 in India | $1,299 USD",
+                rating: "⭐ 4.8/5 — Expert Score",
+                best_for: "Android photography king, Galaxy AI power users, S Pen lovers",
+                pros: "200MP camera zoom, Galaxy AI, S Pen built-in, brightest AMOLED",
+                cons: "Very expensive, no charger in box"
+            },
+            "SAMSUNG GALAXY S25": {
+                brand: "Samsung", launched: "January 2025",
+                display: "6.2-inch Dynamic AMOLED 2X, 120Hz",
+                processor: "Snapdragon 8 Elite", ram: "12 GB RAM", storage: "128GB / 256GB",
+                camera: "50MP Main + 12MP Ultra-Wide + 10MP 3x Zoom",
+                battery: "4000 mAh, 25W charge", os: "Android 15",
+                price: "Starting ₹80,999 in India | $799 USD",
+                rating: "⭐ 4.6/5",
+                best_for: "Premium Android users wanting compact flagship",
+                pros: "Galaxy AI, slim design, Snapdragon 8 Elite",
+                cons: "No S Pen, 25W charging"
+            },
+            "SAMSUNG GALAXY A55": {
+                brand: "Samsung", launched: "March 2024",
+                display: "6.6-inch Super AMOLED, 120Hz",
+                processor: "Samsung Exynos 1480", ram: "8 GB / 12 GB", storage: "128GB / 256GB",
+                camera: "50MP Main + 12MP Ultra-Wide + 5MP Macro",
+                battery: "5000 mAh, 25W fast charge", os: "Android 14 / One UI 6.1",
+                price: "Starting ₹34,999 in India",
+                rating: "⭐ 4.3/5",
+                best_for: "Mid-range best build quality, 4 years OS updates",
+                pros: "IP67 waterproof, AMOLED, 4 OS updates promised, excellent camera",
+                cons: "Average Exynos performance vs competition"
+            },
+            "SAMSUNG GALAXY M55": {
+                brand: "Samsung", launched: "May 2024",
+                display: "6.7-inch Super AMOLED, 120Hz",
+                processor: "Snapdragon 7 Gen 1", ram: "8 GB", storage: "128GB / 256GB",
+                camera: "50MP OIS + 8MP Ultra-Wide + 2MP Macro",
+                battery: "5000 mAh, 45W fast charge", os: "Android 14",
+                price: "Starting ₹26,999 in India",
+                rating: "⭐ 4.2/5",
+                best_for: "Budget Samsung AMOLED phone",
+                pros: "45W fast charge, Super AMOLED, Snapdragon",
+                cons: "Plastic back, average cameras"
+            },
+
+            // ---- ONEPLUS ----
+            "ONEPLUS 13": {
+                brand: "OnePlus", launched: "January 2025",
+                display: "6.82-inch LTPO AMOLED, 1-120Hz, 4500 nits peak",
+                processor: "Snapdragon 8 Elite (3nm)", ram: "12 GB / 16 GB", storage: "256GB / 512GB",
+                camera: "50MP OIS + 50MP Ultra-Wide + 50MP 3x Periscope (Hasselblad tuning)",
+                battery: "6000 mAh, 100W SUPERVOOC fast charge", os: "Android 15 / OxygenOS 15",
+                price: "Starting ₹69,999 in India | $899 USD",
+                rating: "⭐ 4.7/5 — Expert Score",
+                best_for: "BEST VALUE flagship — ultra-fast charging, Hasselblad cameras, enormous battery",
+                pros: "100W charging (fully charges in 36 min!), 6000mAh, Hasselblad tuned cameras, Snapdragon 8 Elite",
+                cons: "No wireless charging in India variant, OxygenOS not as clean as stock Android"
+            },
+            "ONEPLUS 12": {
+                brand: "OnePlus", launched: "January 2024",
+                display: "6.82-inch LTPO AMOLED, 1-120Hz",
+                processor: "Snapdragon 8 Gen 3", ram: "12 GB / 16 GB", storage: "256GB / 512GB",
+                camera: "50MP OIS + 48MP Ultra-Wide + 64MP 3x Periscope",
+                battery: "5400 mAh, 100W SUPERVOOC", os: "OxygenOS 14",
+                price: "Starting ₹64,999 in India",
+                rating: "⭐ 4.6/5",
+                best_for: "Flagship performance at mid-flagship price",
+                pros: "100W fast charge, smooth display, Hasselblad camera",
+                cons: "No IP68 waterproofing officially"
+            },
+            "ONEPLUS NORD CE 4": {
+                brand: "OnePlus", launched: "April 2024",
+                display: "6.67-inch AMOLED, 120Hz",
+                processor: "Snapdragon 7s Gen 2", ram: "8 GB", storage: "128GB / 256GB",
+                camera: "50MP OIS + 8MP Ultra-Wide",
+                battery: "5500 mAh, 100W SUPERVOOC", os: "OxygenOS 14",
+                price: "Starting ₹24,999 in India",
+                rating: "⭐ 4.3/5",
+                best_for: "Budget mid-range with insane 100W charging",
+                pros: "100W charging, AMOLED, good performance",
+                cons: "Average cameras, plastic build"
+            },
+
+            // ---- REDMI / XIAOMI ----
+            "REDMI NOTE 14 PRO": {
+                brand: "Xiaomi / Redmi", launched: "November 2024",
+                display: "6.67-inch AMOLED, 120Hz, 3000 nits",
+                processor: "MediaTek Dimensity 7300 Ultra", ram: "8 GB / 12 GB", storage: "128GB / 256GB",
+                camera: "200MP OIS + 8MP Ultra-Wide + 2MP Macro",
+                battery: "5500 mAh, 45W fast charge", os: "Android 14 / HyperOS",
+                price: "Starting ₹25,999 in India",
+                rating: "⭐ 4.3/5",
+                best_for: "200MP camera phone under ₹30K — camera enthusiasts on budget",
+                pros: "200MP camera, IP68 waterproof, AMOLED, premium build",
+                cons: "MediaTek chip, MIUI-based HyperOS ads"
+            },
+            "REDMI NOTE 13 PRO+": {
+                brand: "Xiaomi / Redmi", launched: "September 2023",
+                display: "6.67-inch AMOLED, 120Hz, 2600 nits",
+                processor: "MediaTek Dimensity 7200 Ultra", ram: "8 GB / 12 GB", storage: "256GB",
+                camera: "200MP OIS + 8MP Ultra-Wide + 2MP Macro",
+                battery: "4820 mAh, 120W HyperCharge", os: "Android 13 / MIUI 14",
+                price: "Starting ₹29,999 in India",
+                rating: "⭐ 4.4/5",
+                best_for: "Fastest charging in budget — 120W charges in 19 minutes!",
+                pros: "120W insane charging speed, 200MP camera, IP68, premium glass",
+                cons: "Average SoC performance"
+            },
+            "REDMI 13C": {
+                brand: "Xiaomi / Redmi", launched: "January 2024",
+                display: "6.74-inch IPS LCD, 90Hz",
+                processor: "MediaTek Helio G85", ram: "4 GB / 6 GB / 8 GB", storage: "128GB",
+                camera: "50MP AI Triple camera",
+                battery: "5000 mAh, 18W charge", os: "Android 13 / MIUI 14",
+                price: "Starting ₹8,999 in India",
+                rating: "⭐ 4.0/5",
+                best_for: "Absolute budget entry-level phone",
+                pros: "Very affordable, large battery, decent camera",
+                cons: "Plastic build, 90Hz LCD, basic performance"
+            },
+            "POCO X6 PRO": {
+                brand: "Poco (Xiaomi)", launched: "January 2024",
+                display: "6.67-inch AMOLED, 144Hz",
+                processor: "MediaTek Dimensity 8300 Ultra", ram: "8 GB / 12 GB", storage: "256GB",
+                camera: "64MP OIS + 8MP Ultra-Wide + 2MP Macro",
+                battery: "5000 mAh, 67W fast charge", os: "Android 14 / HyperOS",
+                price: "Starting ₹26,999 in India",
+                rating: "⭐ 4.4/5",
+                best_for: "BEST gaming phone under ₹30K — 144Hz display, massive performance",
+                pros: "144Hz AMOLED, Dimensity 8300 Ultra (flagship-level SoC), excellent gaming",
+                cons: "Camera average vs rivals, HyperOS ads"
+            },
+
+            // ---- REALME ----
+            "REALME GT 6T": {
+                brand: "Realme", launched: "May 2024",
+                display: "6.78-inch AMOLED, 120Hz, 6000 nits peak brightness",
+                processor: "Snapdragon 7s Gen 3", ram: "8 GB / 12 GB", storage: "128GB / 256GB",
+                camera: "50MP OIS + 8MP Ultra-Wide + 2MP Macro",
+                battery: "5500 mAh, 120W SUPERVOOC", os: "Android 14 / Realme UI 5.0",
+                price: "Starting ₹26,999 in India",
+                rating: "⭐ 4.4/5",
+                best_for: "Best brightness display under ₹30K + 120W charging",
+                pros: "6000 nits — world's brightest display in budget, 120W charge",
+                cons: "Snapdragon 7s Gen 3 is mid-tier SoC"
+            },
+            "REALME 13 PRO+": {
+                brand: "Realme", launched: "August 2024",
+                display: "6.7-inch AMOLED, 120Hz",
+                processor: "Snapdragon 7s Gen 3", ram: "8 GB / 12 GB", storage: "256GB",
+                camera: "50MP Sony LYT-701 OIS + 50MP Periscope Zoom + 8MP Ultra-Wide",
+                battery: "5200 mAh, 80W fast charge", os: "Android 14",
+                price: "Starting ₹34,999 in India",
+                rating: "⭐ 4.3/5",
+                best_for: "Periscope zoom camera under ₹40K",
+                pros: "Sony sensor, periscope zoom, premium design",
+                cons: "Snapdragon 7s Gen 3 performance"
+            },
+
+            // ---- VIVO ----
+            "VIVO X200 PRO": {
+                brand: "Vivo", launched: "November 2024",
+                display: "6.78-inch LTPO AMOLED, 1-120Hz",
+                processor: "MediaTek Dimensity 9400", ram: "16 GB", storage: "256GB / 512GB / 1TB",
+                camera: "50MP Zeiss Biogon + 200MP 4.3x Periscope OIS + 50MP Ultra-Wide",
+                battery: "6000 mAh, 90W fast charge + 30W wireless", os: "Android 15 / FuntouchOS 15",
+                price: "Starting ₹94,999 in India",
+                rating: "⭐ 4.7/5",
+                best_for: "Best camera smartphone in India — Zeiss optics + 200MP periscope zoom",
+                pros: "Zeiss optics, 200MP periscope, 6000mAh battery, fastest Dimensity 9400",
+                cons: "FuntouchOS not preferred by many, very expensive"
+            },
+            "VIVO T3X": {
+                brand: "Vivo", launched: "April 2024",
+                display: "6.72-inch IPS LCD, 120Hz",
+                processor: "Snapdragon 6 Gen 1", ram: "8 GB", storage: "128GB / 256GB",
+                camera: "50MP OIS + 2MP Depth",
+                battery: "6000 mAh, 44W fast charge", os: "Android 14 / FuntouchOS",
+                price: "Starting ₹12,999 in India",
+                rating: "⭐ 4.2/5",
+                best_for: "6000mAh battery phone under ₹15K — long battery life king!",
+                pros: "Huge 6000mAh, OIS camera, Snapdragon, affordable",
+                cons: "LCD display, basic design"
+            },
+
+            // ---- OPPO ----
+            "OPPO FIND X8 PRO": {
+                brand: "Oppo", launched: "December 2024",
+                display: "6.78-inch LTPO AMOLED, 1-120Hz",
+                processor: "MediaTek Dimensity 9400", ram: "12 GB / 16 GB", storage: "256GB / 512GB",
+                camera: "50MP Sony LYT-808 OIS + 50MP Periscope 6x + 50MP Ultra-Wide + 50MP Selfie",
+                battery: "5910 mAh, 80W charge + 50W wireless", os: "Android 15 / ColorOS 15",
+                price: "Starting ₹99,999 in India",
+                rating: "⭐ 4.7/5",
+                best_for: "All-around flagship with best-in-class cameras and premium design",
+                pros: "Hasselblad camera system, 4 cameras all 50MP, MariSilicon X chip",
+                cons: "Premium price, ColorOS"
+            },
+
+            // ---- GOOGLE PIXEL ----
+            "GOOGLE PIXEL 9 PRO": {
+                brand: "Google", launched: "August 2024",
+                display: "6.3-inch LTPO OLED, 1-120Hz",
+                processor: "Google Tensor G4 (4nm)", ram: "16 GB", storage: "128GB / 256GB / 512GB / 1TB",
+                camera: "50MP OIS + 48MP Ultra-Wide + 48MP 5x Telephoto (Zeiss)",
+                battery: "4700 mAh, 27W fast charge", os: "Android 15 (Pure stock) — 7 years OS updates!!",
+                price: "Starting ₹1,09,999 in India | $999 USD",
+                rating: "⭐ 4.7/5",
+                best_for: "Best Android camera + pure Android + Google AI experience",
+                pros: "Gemini AI built-in, Best Night Photography, 7 years updates, pure Android",
+                cons: "Tensor G4 heating, expensive, 27W slow charging"
+            },
+
+            // ---- NOTHING ----
+            "NOTHING PHONE 3A": {
+                brand: "Nothing", launched: "March 2025",
+                display: "6.77-inch AMOLED, 120Hz",
+                processor: "Snapdragon 7s Gen 3", ram: "8 GB / 12 GB", storage: "128GB / 256GB",
+                camera: "50MP OIS + 50MP Telephoto (2x) + 8MP Ultra-Wide",
+                battery: "5000 mAh, 50W fast charge", os: "Nothing OS 3.0 (Android 15)",
+                price: "Starting ₹27,999 in India",
+                rating: "⭐ 4.5/5",
+                best_for: "BEST mid-range 2025 — unique design, clean software, triple cameras",
+                pros: "Glyph LED interface, telephoto camera rare at price, super clean OS, unique design",
+                cons: "Snapdragon 7s Gen 3 not best for gaming"
+            }
+        };
+
+        // Budget-based best phone recommendations
+        const BUDGET_RECOMMENDATIONS = {
+            "UNDER 10000": [
+                { name: "Redmi 13C", price: "₹8,999", rating: "⭐ 4.0", reason: "Best battery + camera at entry-level" },
+                { name: "Realme C67", price: "₹10,000", rating: "⭐ 4.1", reason: "AMOLED display — rare at this price!" },
+                { name: "Samsung Galaxy A06", price: "₹9,499", rating: "⭐ 3.9", reason: "Samsung brand trust + long updates" }
+            ],
+            "UNDER 15000": [
+                { name: "Vivo T3x", price: "₹12,999", rating: "⭐ 4.2", reason: "6000mAh battery king + OIS camera + Snapdragon" },
+                { name: "Redmi Note 12", price: "₹13,999", rating: "⭐ 4.2", reason: "AMOLED + Snapdragon 685 reliable mid-ranger" },
+                { name: "Samsung Galaxy M14", price: "₹13,499", rating: "⭐ 4.1", reason: "Samsung quality + 5000mAh + 5G" }
+            ],
+            "UNDER 20000": [
+                { name: "Poco X6", price: "₹18,999", rating: "⭐ 4.3", reason: "144Hz AMOLED + Dimensity 8300 — gaming beast!" },
+                { name: "OnePlus Nord CE 4 Lite", price: "₹17,999", rating: "⭐ 4.2", reason: "100W charging + clean OxygenOS" },
+                { name: "Realme GT 6T 5G", price: "₹18,999", rating: "⭐ 4.3", reason: "6000 nits brightest display" }
+            ],
+            "UNDER 30000": [
+                { name: "Nothing Phone 3a", price: "₹27,999", rating: "⭐ 4.5", reason: "BEST mid-range 2025 — unique design + triple cameras" },
+                { name: "OnePlus Nord CE 4", price: "₹24,999", rating: "⭐ 4.3", reason: "100W ultra-fast charging" },
+                { name: "Redmi Note 14 Pro", price: "₹25,999", rating: "⭐ 4.3", reason: "200MP camera + IP68 waterproof" }
+            ],
+            "UNDER 50000": [
+                { name: "OnePlus 13", price: "₹69,999", rating: "⭐ 4.7", reason: "Best value flagship — 100W charging + Hasselblad camera" },
+                { name: "Samsung Galaxy A55", price: "₹34,999", rating: "⭐ 4.3", reason: "IP67 + AMOLED + 4-year updates" },
+                { name: "Google Pixel 8a", price: "₹52,999", rating: "⭐ 4.5", reason: "Best Google AI camera + pure Android" }
+            ],
+            "UNDER 100000": [
+                { name: "OnePlus 13", price: "₹69,999", rating: "⭐ 4.7", reason: "Best value flagship — 6000mAh + 100W + Snapdragon 8 Elite" },
+                { name: "Google Pixel 9 Pro", price: "₹1,09,999", rating: "⭐ 4.7", reason: "Best Android camera + 7 years updates" },
+                { name: "Vivo X200 Pro", price: "₹94,999", rating: "⭐ 4.7", reason: "Best zoom camera phone in India" }
+            ],
+            "BEST CAMERA": [
+                { name: "iPhone 16 Pro Max", price: "₹1,44,900+", rating: "⭐ 4.8", reason: "ProRes video, 5x zoom, titanium build" },
+                { name: "Samsung Galaxy S25 Ultra", price: "₹1,29,999+", rating: "⭐ 4.8", reason: "200MP camera + 10x periscope zoom" },
+                { name: "Vivo X200 Pro", price: "₹94,999", rating: "⭐ 4.7", reason: "Zeiss 200MP periscope zoom" }
+            ],
+            "BEST GAMING": [
+                { name: "Poco X6 Pro", price: "₹26,999", rating: "⭐ 4.4", reason: "144Hz AMOLED + Dimensity 8300 Ultra — gaming king!" },
+                { name: "OnePlus 13", price: "₹69,999", rating: "⭐ 4.7", reason: "Snapdragon 8 Elite + massive 6000mAh" },
+                { name: "Samsung Galaxy S25 Ultra", price: "₹1,29,999+", rating: "⭐ 4.8", reason: "Snapdragon 8 Elite — ultimate gaming flagship" }
+            ],
+            "BEST BATTERY": [
+                { name: "Vivo T3x", price: "₹12,999", rating: "⭐ 4.2", reason: "6000mAh — lasts 2 days easily!" },
+                { name: "OnePlus Nord CE 4", price: "₹24,999", rating: "⭐ 4.3", reason: "5500mAh + 100W ultrafast charge" },
+                { name: "OnePlus 13", price: "₹69,999", rating: "⭐ 4.7", reason: "6000mAh flagship battery" }
+            ]
+        };
+
+        function lookupMobile(text) {
+            if (!text) return null;
+            const q = text.toLowerCase();
+            const upper = text.toUpperCase();
+
+            // Is this a mobile-related query?
+            const isMobileQuery = /\b(mobile|phone|smartphone|iphone|samsung|oneplus|redmi|realme|poco|vivo|oppo|pixel|nothing|best phone|which phone|buy phone|good phone|top phone|model|5g phone|android|ios|handset|device)\b/i.test(text);
+            if (!isMobileQuery) return null;
+
+            // Best phone recommendations by use-case
+            const isBestCamera = /\b(best camera|camera phone|photography|zoom|click photos)\b/i.test(text);
+            const isBestGaming = /\b(best gaming|gaming phone|play games|pubg|bgmi|fps phone)\b/i.test(text);
+            const isBestBattery = /\b(best battery|long battery|battery life|last long)\b/i.test(text);
+            const isBestPhone = /\b(best phone|top phone|which phone|recommend|suggest|buy)\b/i.test(text);
+
+            // Budget detection
+            const under10k = /\b(under 10000|below 10000|10k|10,000|budget phone|cheapest)\b/i.test(text);
+            const under15k = /\b(under 15000|below 15000|15k|15,000)\b/i.test(text);
+            const under20k = /\b(under 20000|below 20000|20k|20,000)\b/i.test(text);
+            const under30k = /\b(under 30000|below 30000|30k|30,000)\b/i.test(text);
+            const under50k = /\b(under 50000|below 50000|50k|50,000)\b/i.test(text);
+            const under100k = /\b(under 100000|below 100000|1 lakh|one lakh|100k)\b/i.test(text);
+
+            // Specific phone model lookup
+            for (let key in MOBILES_DB) {
+                const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
+                if (regex.test(upper)) {
+                    const p = MOBILES_DB[key];
+                    return `📱 ${key} — Full Specifications\n\n` +
+                        `🏢 Brand: ${p.brand}\n` +
+                        `📅 Launched: ${p.launched}\n` +
+                        `🖥️ Display: ${p.display}\n` +
+                        `⚡ Processor: ${p.processor}\n` +
+                        `💾 RAM & Storage: ${p.ram} | ${p.storage}\n` +
+                        `📷 Camera: ${p.camera}\n` +
+                        `🔋 Battery: ${p.battery}\n` +
+                        `📱 OS: ${p.os}\n` +
+                        `💰 Price: ${p.price}\n` +
+                        `${p.rating}\n\n` +
+                        `✅ Best For: ${p.best_for}\n` +
+                        `👍 Pros: ${p.pros}\n` +
+                        `👎 Cons: ${p.cons}`;
+                }
+            }
+
+            // Budget recommendations
+            let budgetKey = null;
+            if (under10k) budgetKey = 'UNDER 10000';
+            else if (under15k) budgetKey = 'UNDER 15000';
+            else if (under20k) budgetKey = 'UNDER 20000';
+            else if (under30k) budgetKey = 'UNDER 30000';
+            else if (under50k) budgetKey = 'UNDER 50000';
+            else if (under100k) budgetKey = 'UNDER 100000';
+
+            if (isBestCamera) budgetKey = 'BEST CAMERA';
+            if (isBestGaming) budgetKey = 'BEST GAMING';
+            if (isBestBattery) budgetKey = 'BEST BATTERY';
+
+            if (budgetKey && BUDGET_RECOMMENDATIONS[budgetKey]) {
+                const recs = BUDGET_RECOMMENDATIONS[budgetKey];
+                const label = budgetKey.startsWith('UNDER') ? `Budget: ₹${budgetKey.replace('UNDER ','')}` : budgetKey.replace('BEST ', 'Best ');
+                return `📱 Best Mobile Recommendations — ${label}\n\n` +
+                    recs.map((r, i) => `${i+1}. 🏆 ${r.name}\n   💰 Price: ${r.price} | ${r.rating}\n   💡 Why? ${r.reason}`).join('\n\n');
+            }
+
+            // Brand-specific query
+            const brandMap = {
+                'iphone': ['IPHONE 16 PRO MAX','IPHONE 16 PRO','IPHONE 16','IPHONE 15'],
+                'apple': ['IPHONE 16 PRO MAX','IPHONE 16 PRO','IPHONE 16','IPHONE 15'],
+                'samsung': ['SAMSUNG GALAXY S25 ULTRA','SAMSUNG GALAXY S25','SAMSUNG GALAXY A55','SAMSUNG GALAXY M55'],
+                'oneplus': ['ONEPLUS 13','ONEPLUS 12','ONEPLUS NORD CE 4'],
+                'redmi': ['REDMI NOTE 14 PRO','REDMI NOTE 13 PRO+','REDMI 13C'],
+                'poco': ['POCO X6 PRO'],
+                'realme': ['REALME GT 6T','REALME 13 PRO+'],
+                'vivo': ['VIVO X200 PRO','VIVO T3X'],
+                'oppo': ['OPPO FIND X8 PRO'],
+                'google': ['GOOGLE PIXEL 9 PRO'],
+                'pixel': ['GOOGLE PIXEL 9 PRO'],
+                'nothing': ['NOTHING PHONE 3A']
+            };
+
+            for (let brand in brandMap) {
+                if (q.includes(brand)) {
+                    const models = brandMap[brand];
+                    return `📱 ${brand.toUpperCase()} Phones — Available Models:\n\n` +
+                        models.map((m, i) => {
+                            const p = MOBILES_DB[m];
+                            return `${i+1}. 📱 ${m}\n   ⚡ ${p.processor} | 💰 ${p.price}\n   ${p.rating}\n   ✅ ${p.best_for}`;
+                        }).join('\n\n');
+                }
+            }
+
+            // Generic best phone query
+            if (isBestPhone) {
+                return `🏆 Best Smartphones of 2025 — All Budgets:\n\n` +
+                    `🔵 BEST OVERALL — iPhone 16 Pro Max (₹1,44,900+) ⭐ 4.8/5\n   A18 Pro chip, titanium, 48MP triple camera\n\n` +
+                    `🟢 BEST ANDROID — Samsung Galaxy S25 Ultra (₹1,29,999+) ⭐ 4.8/5\n   200MP camera, S Pen, Snapdragon 8 Elite\n\n` +
+                    `🟡 BEST VALUE — OnePlus 13 (₹69,999) ⭐ 4.7/5\n   100W charge, 6000mAh, Hasselblad cameras\n\n` +
+                    `🟠 BEST MID-RANGE — Nothing Phone 3a (₹27,999) ⭐ 4.5/5\n   Clean OS, triple cameras, unique design\n\n` +
+                    `🔴 BEST BUDGET — Vivo T3x (₹12,999) ⭐ 4.2/5\n   6000mAh battery + Snapdragon + OIS camera\n\n` +
+                    `💙 BEST CAMERA — Vivo X200 Pro (₹94,999) ⭐ 4.7/5\n   Zeiss 200MP periscope zoom — best in India!\n\n` +
+                    `💻 BEST GAMING — Poco X6 Pro (₹26,999) ⭐ 4.4/5\n   144Hz AMOLED + Dimensity 8300 Ultra`;
+            }
+
+            return null;
         }
 
         // ==========================================
