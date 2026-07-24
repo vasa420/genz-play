@@ -2433,6 +2433,39 @@
                 }
             } catch (e) {}
 
+            // 6. WIKIDATA KNOWLEDGE GRAPH ENTITY API (Fact-Checked Global Entities)
+            try {
+                const wikiDataUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(cleanQ)}&language=en&format=json&origin=*`;
+                const wdRes = await fetch(wikiDataUrl);
+                if (wdRes.ok) {
+                    const wdData = await wdRes.json();
+                    if (wdData.search && wdData.search.length > 0) {
+                        const topEntity = wdData.search[0];
+                        if (topEntity.description && topEntity.description.length > 10) {
+                            return formatWebAns("Google & WikiData Global Knowledge Graph", `${topEntity.label} ➔ ${topEntity.description}`);
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            // 7. CORSPROXY LIVE WEB SEARCH FALLBACK (Secondary Proxy)
+            try {
+                const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
+                const cpRes = await fetch(corsProxyUrl);
+                if (cpRes.ok) {
+                    const htmlText = await cpRes.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlText, 'text/html');
+                    const snippets = doc.querySelectorAll('.result__snippet, .result__body');
+                    if (snippets && snippets.length > 0) {
+                        const snippetText = snippets[0].textContent.trim();
+                        if (snippetText && snippetText.length > 20) {
+                            return formatWebAns("Google & Live Web Crawler Proxy", snippetText);
+                        }
+                    }
+                }
+            } catch (e) {}
+
             return null;
         }
 
