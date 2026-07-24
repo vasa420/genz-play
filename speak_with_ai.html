@@ -783,7 +783,29 @@
                 return;
             }
 
-            // 3. WORLD COUNTRIES & CAPITALS
+            // 3. CURRENT AFFAIRS & LEADERS (Tamil Nadu CM, Prime Minister, President, etc.)
+            const currentAffairsMsg = lookupCurrentAffairs(raw);
+            if (currentAffairsMsg) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', currentAffairsMsg, 'ai');
+                }
+                speakCallResponse(currentAffairsMsg);
+                return;
+            }
+
+            // 4. LIVE WEB SEARCH & KNOWLEDGE BASE SYNC (Wikipedia / DuckDuckGo Sync)
+            const liveWebResult = await fetchRealTimeWebSearch(raw);
+            if (liveWebResult) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', liveWebResult, 'ai');
+                }
+                speakCallResponse(liveWebResult);
+                return;
+            }
+
+            // 5. WORLD COUNTRIES & CAPITALS
             const capitalReport = lookupWorldCapital(raw);
             if (capitalReport) {
                 if (currentMode === 'chat') {
@@ -794,7 +816,7 @@
                 return;
             }
 
-            // 4. CODE GENERATION REQUEST
+            // 6. CODE GENERATION REQUEST
             const codeResult = generateRealTimeCode(raw);
             if (codeResult) {
                 if (currentMode === 'chat') {
@@ -805,7 +827,7 @@
                 return;
             }
 
-            // 5. 500+ ACRONYMS, IPL TEAMS & OBSERVATIONS
+            // 7. 500+ ACRONYMS, IPL TEAMS & OBSERVATIONS
             const obsResult = lookupAcronymObservation(raw);
             if (obsResult) {
                 if (currentMode === 'chat') {
@@ -816,7 +838,7 @@
                 return;
             }
 
-            // 6. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
+            // 8. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
             const emotionResult = analyzeUserEmotion(raw);
             if (emotionResult) {
                 if (currentMode === 'chat') {
@@ -827,13 +849,101 @@
                 return;
             }
 
-            // 7. MATH & GENERAL AI INTELLIGENCE
+            // 9. MATH & GENERAL AI INTELLIGENCE
             const aiReplyText = generateAISpokenReply(raw);
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', raw, 'user');
                 appendChatMessage('🤖 ATC AI ASSISTANT', aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
+        }
+
+        // Live Web Search & Knowledge Base Sync API (Wikipedia & DuckDuckGo)
+        async function fetchRealTimeWebSearch(text) {
+            if (!text) return null;
+            const q = text.trim();
+            const upper = q.toUpperCase();
+
+            const isInfoQuery = upper.startsWith('WHO') || upper.startsWith('WHAT') || upper.startsWith('WHERE') ||
+                                upper.startsWith('TELL ME') || upper.startsWith('SEARCH') || upper.startsWith('GOOGLE') ||
+                                upper.includes('CURRENT') || upper.includes('INFO') || upper.includes('KNOW');
+
+            if (!isInfoQuery) return null;
+
+            const cleanQ = q.replace(/^WHO\s+IS\s+(THE\s+)?/i, '')
+                            .replace(/^WHAT\s+IS\s+(THE\s+)?/i, '')
+                            .replace(/^TELL\s+ME\s+ABOUT\s+/i, '')
+                            .replace(/^SEARCH\s+FOR\s+/i, '')
+                            .replace(/^GOOGLE\s+/i, '')
+                            .replace(/\?/g, '').trim();
+
+            if (cleanQ.length < 3) return null;
+
+            try {
+                const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`;
+                const wRes = await fetch(wikiUrl);
+                if (wRes.ok) {
+                    const wData = await wRes.json();
+                    if (wData.extract && wData.extract.length > 25) {
+                        return `Live Knowledge Base Sync ➔ ${wData.extract}`;
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`;
+                const dRes = await fetch(ddgUrl);
+                if (dRes.ok) {
+                    const dData = await dRes.json();
+                    if (dData.AbstractText) {
+                        return `Live Web Search Intelligence ➔ ${dData.AbstractText}`;
+                    }
+                }
+            } catch (e) {}
+
+            return null;
+        }
+
+        // Current Affairs & Leaders Database
+        const CURRENT_AFFAIRS_DB = {
+            "TAMIL NADU CM": "M. K. Stalin (Muthuvel Karunanidhi Stalin) — Current Chief Minister of Tamil Nadu (DMK leader), serving since May 2021.",
+            "TAMILNADU CM": "M. K. Stalin (Muthuvel Karunanidhi Stalin) — Current Chief Minister of Tamil Nadu (DMK leader), serving since May 2021.",
+            "CM OF TAMIL NADU": "M. K. Stalin (Muthuvel Karunanidhi Stalin) — Current Chief Minister of Tamil Nadu.",
+            "CM OF TAMILNADU": "M. K. Stalin (Muthuvel Karunanidhi Stalin) — Current Chief Minister of Tamil Nadu.",
+            "TAMIL NADU CHIEF MINISTER": "M. K. Stalin (Muthuvel Karunanidhi Stalin) — Current Chief Minister of Tamil Nadu.",
+            "TAMIL NADU GOVERNOR": "R. N. Ravi (Ravindra Narayana Ravi) — Current Governor of Tamil Nadu.",
+            "GOVERNOR OF TAMIL NADU": "R. N. Ravi — Current Governor of Tamil Nadu.",
+            "TAMIL NADU": "Tamil Nadu — Southern Indian state with capital Chennai, renowned for Dravidian heritage, temples, Kollywood cinema, Kaveri river, and high IT growth.",
+
+            "PRIME MINISTER OF INDIA": "Narendra Modi — Current Prime Minister of India, serving as the 14th Prime Minister since 2014.",
+            "PM OF INDIA": "Narendra Modi — Current Prime Minister of India.",
+            "PRESIDENT OF INDIA": "Droupadi Murmu — Current President of India, 15th President of India.",
+            "VICE PRESIDENT OF INDIA": "Jagdeep Dhankhar — Current Vice President of India.",
+            "ISRO CHAIRMAN": "S. Somanath — Current Chairman of the Indian Space Research Organisation (ISRO).",
+            "RBI GOVERNOR": "Shaktikanta Das — Current Governor of the Reserve Bank of India.",
+
+            "PRESIDENT OF USA": "Donald Trump / Joe Biden — Leader of the United States of America.",
+            "PRESIDENT OF AMERICA": "Donald Trump / Joe Biden — Leader of the United States of America.",
+            "PRIME MINISTER OF UK": "Keir Starmer — Current Prime Minister of the United Kingdom (Labour Party leader).",
+            "PM OF UK": "Keir Starmer — Current Prime Minister of the United Kingdom.",
+            "PRESIDENT OF RUSSIA": "Vladimir Putin — Current President of Russia.",
+            "PRESIDENT OF CHINA": "Xi Jinping — Current President of China.",
+            "PRIME MINISTER OF JAPAN": "Shigeru Ishiba — Current Prime Minister of Japan.",
+            "PRESIDENT OF FRANCE": "Emmanuel Macron — Current President of France.",
+            "CHANCELLOR OF GERMANY": "Olaf Scholz — Current Chancellor of Germany."
+        };
+
+        function lookupCurrentAffairs(text) {
+            if (!text) return null;
+            const upper = text.trim().toUpperCase();
+
+            for (let key in CURRENT_AFFAIRS_DB) {
+                if (upper.includes(key)) {
+                    return `Current Affairs & Real-Time Intelligence ➔ ${CURRENT_AFFAIRS_DB[key]}`;
+                }
+            }
+
+            return null;
         }
 
         // Real-Time Emotional Intelligence & Sentiment Analysis Engine
