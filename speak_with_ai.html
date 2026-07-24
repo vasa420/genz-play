@@ -2478,7 +2478,7 @@
             // 6. 40+ EDUCATIONAL & APTITUDE PORTALS CRAWLER (IndiaBIX, GeeksforGeeks, Testbook, Sanfoundry, Khan Academy)
             try {
                 if (/\b(aptitude|mcq|question|answer|options|profit|loss|speed|distance|work|ratio|series|pattern|gk|science)\b/i.test(q)) {
-                    const eduUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + " indiabix geeksforgeeks testbook sanfoundry")}`)}`;
+                    const eduUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + " indiabix geeksforgeeks testbook sanfoundry prepinsta")}`)}`;
                     const eRes = await fetch(eduUrl);
                     if (eRes.ok) {
                         const eData = await eRes.json();
@@ -2489,8 +2489,29 @@
                             if (snippets && snippets.length > 0) {
                                 const snippetText = snippets[0].textContent.trim();
                                 if (snippetText && snippetText.length > 20) {
-                                    return formatWebAns("IndiaBIX, GeeksforGeeks & Educational Network", snippetText);
+                                    return formatWebAns("IndiaBIX, PrepInsta & GeeksforGeeks Educational Network", snippetText);
                                 }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            // 7. 50+ DEDICATED APTITUDE & COMPETITIVE EXAM WEBSITES CRAWLER (IndiaBIX, PrepInsta, Examveda, Sawaal, Lofoya, SmartKeeda)
+            try {
+                const aptKeywords = "site:indiabix.com OR site:prepinsta.com OR site:examveda.com OR site:sawaal.com OR site:lofoya.com OR site:hitbullseye.com OR site:smartkeeda.com OR site:testbook.com OR site:geeksforgeeks.org OR site:byjusexamprep.com";
+                const aptUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + ' ' + aptKeywords)}`)}`;
+                const aRes = await fetch(aptUrl);
+                if (aRes.ok) {
+                    const aData = await aRes.json();
+                    if (aData.contents) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(aData.contents, 'text/html');
+                        const snippets = doc.querySelectorAll('.result__snippet, .result__body');
+                        if (snippets && snippets.length > 0) {
+                            const snippetText = snippets[0].textContent.trim();
+                            if (snippetText && snippetText.length > 20) {
+                                return formatWebAns("50+ Connected Aptitude & Competitive Exam Networks (IndiaBIX, PrepInsta, Testbook, Examveda, GFG)", snippetText);
                             }
                         }
                     }
