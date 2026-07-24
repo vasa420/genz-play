@@ -768,15 +768,21 @@
             const raw = userText.trim();
             const upper = raw.toUpperCase();
 
-            // Helper: remove thinking bubble and show AI reply (Strictly NO URLs/Links)
+            // Helper: Format URLs as clickable HTML links
+            function formatClickableLinks(text) {
+                if (!text) return "";
+                return text.replace(/(https?:\/\/[^\s\)\<\>]+)/gi, '<a href="$1" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:underline;">$1</a>');
+            }
+
+            // Helper: remove thinking bubble and show AI reply
             function aiReply(htmlMsg) {
                 if (thinkingId) {
                     const el = document.getElementById(thinkingId);
                     if (el) el.remove();
                 }
-                const cleanMsg = stripUrls(htmlMsg);
+                const formattedMsg = formatClickableLinks(htmlMsg);
                 if (currentMode === 'chat') {
-                    appendChatMessage('🤖 ATC AI ASSISTANT', cleanMsg, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', formattedMsg, 'ai');
                 }
             }
 
@@ -789,6 +795,14 @@
             if (moodResult) {
                 aiReply(intentTag + moodResult);
                 speakCallResponse(moodResult);
+                return;
+            }
+
+            // 0.05 LIVE CODING PLATFORMS & WEBSITE PRACTICE LINKS (LeetCode, HackerRank, GeeksforGeeks, W3Schools, etc.)
+            const linkResult = lookupCodingPlatformLinks(raw);
+            if (linkResult) {
+                aiReply(intentTag + linkResult);
+                speakCallResponse(linkResult);
                 return;
             }
 
@@ -2328,7 +2342,7 @@
             if (cleanQ.length < 2) return null;
 
             function formatWebAns(sourceName, snippet) {
-                const cleanSnippet = stripUrls(snippet).replace(/^Live [^➔]+➔ /i, '').trim();
+                const cleanSnippet = snippet.replace(/^Live [^➔]+➔ /i, '').trim();
                 const optAns = matchOptionLetter(q, cleanSnippet);
                 return `🎯 Category Identified: ${sourceName}\n` +
                        `📌 Question: "${q}"\n\n` +
@@ -2974,6 +2988,67 @@
             } catch (e) {}
 
             return null;
+        }
+
+        // ==========================================
+        // LIVE CODING PLATFORMS & WEBSITE LINKS ENGINE
+        // ==========================================
+        function lookupCodingPlatformLinks(text) {
+            if (!text) return null;
+            const q = text.trim();
+            const lower = q.toLowerCase();
+
+            const isPlatformQuery = /\b(leetcode|hacker\s*rank|hackerrank|geeksforgeeks|gfg|w3schools|stackoverflow|stack\s*overflow|indiabix|codechef|codeforces|github|practice website|coding website|coding links|problem link)\b/i.test(lower);
+
+            if (!isPlatformQuery) return null;
+
+            let links = [];
+
+            if (lower.includes('leetcode')) {
+                links.push(`🏆 LeetCode Official Platform: https://leetcode.com/problemset/all/`);
+                if (lower.includes('two sum')) links.push(`📌 LeetCode Two Sum: https://leetcode.com/problems/two-sum/`);
+                if (lower.includes('reverse linked list')) links.push(`📌 LeetCode Reverse Linked List: https://leetcode.com/problems/reverse-linked-list/`);
+                if (lower.includes('palindrome')) links.push(`📌 LeetCode Palindrome Number: https://leetcode.com/problems/palindrome-number/`);
+            }
+
+            if (lower.includes('hackerrank') || lower.includes('hacker rank')) {
+                links.push(`🎯 HackerRank Problem Solving: https://www.hackerrank.com/domains/algorithms`);
+                links.push(`🎯 HackerRank Data Structures: https://www.hackerrank.com/domains/data-structures`);
+            }
+
+            if (lower.includes('geeksforgeeks') || lower.includes('gfg')) {
+                links.push(`📚 GeeksforGeeks DSA Portal: https://www.geeksforgeeks.org/data-structures/`);
+                links.push(`📚 GeeksforGeeks Algorithms: https://www.geeksforgeeks.org/fundamentals-of-algorithms/`);
+            }
+
+            if (lower.includes('w3schools')) {
+                links.push(`💡 W3Schools Web Tutorials: https://www.w3schools.com/`);
+                links.push(`💡 W3Schools Python: https://www.w3schools.com/python/`);
+                links.push(`💡 W3Schools Java: https://www.w3schools.com/java/`);
+            }
+
+            if (lower.includes('stackoverflow') || lower.includes('stack overflow')) {
+                links.push(`💬 StackOverflow Developer Q&A: https://stackoverflow.com/questions`);
+            }
+
+            if (lower.includes('indiabix')) {
+                links.push(`🧮 IndiaBIX Quantitative Aptitude: https://www.indiabix.com/aptitude/questions-and-answers/`);
+            }
+
+            if (lower.includes('github')) {
+                links.push(`🐙 GitHub Open Source Repositories: https://github.com/`);
+            }
+
+            if (links.length === 0) {
+                links.push(`🏆 LeetCode: https://leetcode.com/problemset/all/`);
+                links.push(`🎯 HackerRank: https://www.hackerrank.com/domains/algorithms`);
+                links.push(`📚 GeeksforGeeks: https://www.geeksforgeeks.org/`);
+            }
+
+            return `🎯 Category Identified: Live Coding Platforms & Practice Links\n` +
+                   `📌 Question: "${q}"\n\n` +
+                   `FINAL ANSWER: Here are the direct practice links matching your request:\n\n` +
+                   links.join('\n\n');
         }
 
         // 1000+ Acronyms & Department Observations Database (Government, Education, Engineering, Medical, Banking, Tech, Squad)
