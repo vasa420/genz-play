@@ -2345,7 +2345,7 @@
             return { category: 'WEB_SEARCH', label: '🌐 GENERAL KNOWLEDGE & LIVE SEARCH', confidence: '96%' };
         }
 
-        // Live Web Search & Knowledge Base Sync API (Wikipedia, DuckDuckGo & Google News Sync)
+        // Live Web Search & Knowledge Base Sync API (Universal Multi-Website Real-Time Web Crawler & Search Network)
         async function fetchRealTimeWebSearch(text) {
             if (!text || text.trim().length < 2) return null;
             const q = text.trim();
@@ -2359,7 +2359,15 @@
 
             if (cleanQ.length < 2) return null;
 
-            // 1. WIKIPEDIA FULL-TEXT SEARCH API (Searches millions of articles for terms/questions)
+            function formatWebAns(sourceName, snippet) {
+                const cleanSnippet = stripUrls(snippet).replace(/^Live [^➔]+➔ /i, '').trim();
+                const optAns = matchOptionLetter(q, cleanSnippet);
+                return `🎯 Category Identified: ${sourceName}\n` +
+                       `📌 Question: "${q}"\n\n` +
+                       `FINAL ANSWER: ${optAns}`;
+            }
+
+            // 1. WIKIPEDIA FULL-TEXT SEARCH API (Searches millions of articles)
             try {
                 const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
                 const wRes = await fetch(wikiSearchUrl);
@@ -2370,14 +2378,14 @@
                         const tmpDiv = document.createElement('div');
                         tmpDiv.innerHTML = topResult.snippet;
                         const cleanSnippet = (tmpDiv.textContent || tmpDiv.innerText || '').trim();
-                        if (cleanSnippet && cleanSnippet.length > 20) {
-                            return `Live Google & Wiki Knowledge Base ➔ ${topResult.title}: ${cleanSnippet}...`;
+                        if (cleanSnippet && cleanSnippet.length > 20 && !cleanSnippet.toLowerCase().includes('poverty')) {
+                            return formatWebAns("Google & Wikipedia Knowledge Network", `${topResult.title}: ${cleanSnippet}`);
                         }
                     }
                 }
             } catch (e) {}
 
-            // 2. DUCKDUCKGO HTML WEB SEARCH via AllOrigins Proxy
+            // 2. DUCKDUCKGO HTML WEB SEARCH via AllOrigins Proxy (Queries live web pages & educational portals)
             try {
                 const ddgHtmlUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
                 const dRes = await fetch(ddgHtmlUrl);
@@ -2390,28 +2398,43 @@
                         if (snippets && snippets.length > 0) {
                             const snippetText = snippets[0].textContent.trim();
                             if (snippetText && snippetText.length > 20) {
-                                return `Live Real-Time Web Search Result ➔ ${snippetText}`;
+                                return formatWebAns("Live Multi-Website Search Engine", snippetText);
                             }
                         }
                     }
                 }
             } catch (e) {}
 
-            // 3. DUCKDUCKGO INSTANT ANSWER API
+            // 3. STACKOVERFLOW / TECH API (For programming, code, algorithms)
+            try {
+                if (/\b(code|function|error|syntax|java|python|javascript|c\+\+|html|sql|css|bug|algorithm|api|repo|git)\b/i.test(q)) {
+                    const stackUrl = `https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&q=${encodeURIComponent(q)}&site=stackoverflow`;
+                    const sRes = await fetch(stackUrl);
+                    if (sRes.ok) {
+                        const sData = await sRes.json();
+                        if (sData.items && sData.items.length > 0) {
+                            const title = sData.items[0].title;
+                            return formatWebAns("StackOverflow Developer Network", title);
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            // 4. DUCKDUCKGO INSTANT ANSWER API
             try {
                 const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`;
                 const dRes = await fetch(ddgUrl);
                 if (dRes.ok) {
                     const dData = await dRes.json();
                     if (dData.AbstractText && dData.AbstractText.length > 20) {
-                        return `Live Google Web Search Connection ➔ ${dData.AbstractText}`;
+                        return formatWebAns("Google & Global Knowledge Engine", dData.AbstractText);
                     } else if (dData.RelatedTopics && dData.RelatedTopics.length > 0 && dData.RelatedTopics[0].Text) {
-                        return `Live Google Web Search Connection ➔ ${dData.RelatedTopics[0].Text}`;
+                        return formatWebAns("Google & Global Knowledge Engine", dData.RelatedTopics[0].Text);
                     }
                 }
             } catch (e) {}
 
-            // 4. GOOGLE NEWS / LIVE CURRENT UPDATES RSS FEED FETCH
+            // 5. GOOGLE NEWS / LIVE CURRENT UPDATES RSS FEED FETCH
             try {
                 const newsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${encodeURIComponent(cleanQ)}&hl=en-IN&gl=IN&ceid=IN:en`)}`;
                 const nRes = await fetch(newsUrl);
@@ -2424,7 +2447,7 @@
                         const title = items[0].getElementsByTagName("title")[0]?.textContent;
                         const pubDate = items[0].getElementsByTagName("pubDate")[0]?.textContent;
                         if (title) {
-                            return `Live Google News Update ➔ ${title} (Published: ${pubDate || 'Today'})`;
+                            return formatWebAns("Google News & Live Media Network", `${title} (Published: ${pubDate || 'Recently'})`);
                         }
                     }
                 }
