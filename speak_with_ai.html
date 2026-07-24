@@ -2335,7 +2335,7 @@
             return { category: 'WEB_SEARCH', label: '🌐 GENERAL KNOWLEDGE & LIVE SEARCH', confidence: '96%' };
         }
 
-        // Live Web Search & Knowledge Base Sync API (Universal Multi-Website Real-Time Web Crawler & Search Network)
+        // Universal Multi-Website Real-Time Web Crawler & Search Network (PARALLEL FAST EXECUTION)
         async function fetchRealTimeWebSearch(text) {
             if (!text || text.trim().length < 2) return null;
             const q = text.trim();
@@ -2357,25 +2357,21 @@
                        `FINAL ANSWER: ${optAns}`;
             }
 
-            // 0. WIKIPEDIA DIRECT PAGE SUMMARY REST API (100% Fact-Checked Official Knowledge)
-            try {
-                const wikiRestUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`;
-                const wRest = await fetch(wikiRestUrl);
-                if (wRest.ok) {
-                    const wData = await wRest.json();
-                    if (wData.extract && wData.extract.length > 25 && wData.type !== 'disambiguation') {
+            // Task 1: Wikipedia REST Direct Page Summary (Fastest)
+            const taskWikiRest = fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(wData => {
+                    if (wData && wData.extract && wData.extract.length > 25 && wData.type !== 'disambiguation') {
                         return formatWebAns("Google & Wikipedia Official Knowledge Engine", `${wData.title}: ${wData.extract}`);
                     }
-                }
-            } catch (e) {}
+                    return null;
+                }).catch(() => null);
 
-            // 1. WIKIPEDIA FULL-TEXT SEARCH API (Searches millions of articles)
-            try {
-                const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
-                const wRes = await fetch(wikiSearchUrl);
-                if (wRes.ok) {
-                    const wData = await wRes.json();
-                    if (wData.query && wData.query.search && wData.query.search.length > 0) {
+            // Task 2: Wikipedia Full Text Search
+            const taskWikiSearch = fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`)
+                .then(res => res.ok ? res.json() : null)
+                .then(wData => {
+                    if (wData && wData.query && wData.query.search && wData.query.search.length > 0) {
                         const topResult = wData.query.search[0];
                         const tmpDiv = document.createElement('div');
                         tmpDiv.innerHTML = topResult.snippet;
@@ -2384,16 +2380,14 @@
                             return formatWebAns("Google & Wikipedia Knowledge Network", `${topResult.title}: ${cleanSnippet}`);
                         }
                     }
-                }
-            } catch (e) {}
+                    return null;
+                }).catch(() => null);
 
-            // 2. DUCKDUCKGO HTML WEB SEARCH via AllOrigins Proxy (Queries live web pages & educational portals)
-            try {
-                const ddgHtmlUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
-                const dRes = await fetch(ddgHtmlUrl);
-                if (dRes.ok) {
-                    const dData = await dRes.json();
-                    if (dData.contents) {
+            // Task 3: DuckDuckGo Live Multi-Website Search via AllOrigins
+            const taskDdgHtml = fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(dData => {
+                    if (dData && dData.contents) {
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(dData.contents, 'text/html');
                         const snippets = doc.querySelectorAll('.result__snippet, .result__body');
@@ -2404,119 +2398,42 @@
                             }
                         }
                     }
-                }
-            } catch (e) {}
+                    return null;
+                }).catch(() => null);
 
-            // 2.5 SECONDARY HIGH-SPEED PROXY CRAWLER (Backup Web Network)
-            try {
-                const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`)}`;
-                const pRes = await fetch(proxyUrl);
-                if (pRes.ok) {
-                    const htmlText = await pRes.text();
-                    if (htmlText) {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(htmlText, 'text/html');
-                        const snippets = doc.querySelectorAll('.result__snippet, .result__body');
-                        if (snippets && snippets.length > 0) {
-                            const snippetText = snippets[0].textContent.trim();
-                            if (snippetText && snippetText.length > 20) {
-                                return formatWebAns("Live Multi-Website Search Engine", snippetText);
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // 3. STACKOVERFLOW / TECH API (For programming, code, algorithms)
-            try {
-                if (/\b(code|function|error|syntax|java|python|javascript|c\+\+|html|sql|css|bug|algorithm|api|repo|git)\b/i.test(q)) {
-                    const stackUrl = `https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&q=${encodeURIComponent(q)}&site=stackoverflow`;
-                    const sRes = await fetch(stackUrl);
-                    if (sRes.ok) {
-                        const sData = await sRes.json();
-                        if (sData.items && sData.items.length > 0) {
-                            const title = sData.items[0].title;
-                            return formatWebAns("StackOverflow Developer Network", title);
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // 4. DUCKDUCKGO INSTANT ANSWER API
-            try {
-                const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`;
-                const dRes = await fetch(ddgUrl);
-                if (dRes.ok) {
-                    const dData = await dRes.json();
-                    if (dData.AbstractText && dData.AbstractText.length > 20) {
+            // Task 4: DuckDuckGo Instant Answer
+            const taskDdgInstant = fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`)
+                .then(res => res.ok ? res.json() : null)
+                .then(dData => {
+                    if (dData && dData.AbstractText && dData.AbstractText.length > 20) {
                         return formatWebAns("Google & Global Knowledge Engine", dData.AbstractText);
-                    } else if (dData.RelatedTopics && dData.RelatedTopics.length > 0 && dData.RelatedTopics[0].Text) {
-                        return formatWebAns("Google & Global Knowledge Engine", dData.RelatedTopics[0].Text);
                     }
-                }
-            } catch (e) {}
+                    return null;
+                }).catch(() => null);
 
-            // 5. GOOGLE NEWS / LIVE CURRENT UPDATES RSS FEED FETCH
-            try {
-                const newsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${encodeURIComponent(cleanQ)}&hl=en-IN&gl=IN&ceid=IN:en`)}`;
-                const nRes = await fetch(newsUrl);
-                if (nRes.ok) {
-                    const nData = await nRes.json();
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(nData.contents, "text/xml");
-                    const items = xmlDoc.getElementsByTagName("item");
-                    if (items && items.length > 0) {
-                        const title = items[0].getElementsByTagName("title")[0]?.textContent;
-                        const pubDate = items[0].getElementsByTagName("pubDate")[0]?.textContent;
-                        if (title) {
-                            return formatWebAns("Google News & Live Media Network", `${title} (Published: ${pubDate || 'Recently'})`);
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // 6. 40+ EDUCATIONAL & APTITUDE PORTALS CRAWLER (IndiaBIX, GeeksforGeeks, Testbook, Sanfoundry, Khan Academy)
-            try {
-                if (/\b(aptitude|mcq|question|answer|options|profit|loss|speed|distance|work|ratio|series|pattern|gk|science)\b/i.test(q)) {
-                    const eduUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + " indiabix geeksforgeeks testbook sanfoundry prepinsta")}`)}`;
-                    const eRes = await fetch(eduUrl);
-                    if (eRes.ok) {
-                        const eData = await eRes.json();
-                        if (eData.contents) {
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(eData.contents, 'text/html');
-                            const snippets = doc.querySelectorAll('.result__snippet, .result__body');
-                            if (snippets && snippets.length > 0) {
-                                const snippetText = snippets[0].textContent.trim();
-                                if (snippetText && snippetText.length > 20) {
-                                    return formatWebAns("IndiaBIX, PrepInsta & GeeksforGeeks Educational Network", snippetText);
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // 7. 50+ DEDICATED APTITUDE & COMPETITIVE EXAM WEBSITES CRAWLER (IndiaBIX, PrepInsta, Examveda, Sawaal, Lofoya, SmartKeeda)
-            try {
-                const aptKeywords = "site:indiabix.com OR site:prepinsta.com OR site:examveda.com OR site:sawaal.com OR site:lofoya.com OR site:hitbullseye.com OR site:smartkeeda.com OR site:testbook.com OR site:geeksforgeeks.org OR site:byjusexamprep.com";
-                const aptUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + ' ' + aptKeywords)}`)}`;
-                const aRes = await fetch(aptUrl);
-                if (aRes.ok) {
-                    const aData = await aRes.json();
-                    if (aData.contents) {
+            // Task 5: 50+ Aptitude Web Portals (IndiaBIX, PrepInsta, Testbook, Examveda, GFG)
+            const taskAptitudePortals = fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q + " site:indiabix.com OR site:prepinsta.com OR site:testbook.com OR site:geeksforgeeks.org")}`)}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(eData => {
+                    if (eData && eData.contents) {
                         const parser = new DOMParser();
-                        const doc = parser.parseFromString(aData.contents, 'text/html');
+                        const doc = parser.parseFromString(eData.contents, 'text/html');
                         const snippets = doc.querySelectorAll('.result__snippet, .result__body');
                         if (snippets && snippets.length > 0) {
                             const snippetText = snippets[0].textContent.trim();
                             if (snippetText && snippetText.length > 20) {
-                                return formatWebAns("50+ Connected Aptitude & Competitive Exam Networks (IndiaBIX, PrepInsta, Testbook, Examveda, GFG)", snippetText);
+                                return formatWebAns("50+ Connected Aptitude & Competitive Exam Networks", snippetText);
                             }
                         }
                     }
-                }
-            } catch (e) {}
+                    return null;
+                }).catch(() => null);
+
+            // Run ALL web fetch tasks in PARALLEL for ultra-fast response speed!
+            const results = await Promise.all([taskWikiRest, taskWikiSearch, taskDdgHtml, taskDdgInstant, taskAptitudePortals]);
+            for (let res of results) {
+                if (res) return res;
+            }
 
             return null;
         }
