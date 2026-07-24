@@ -892,7 +892,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Real-Time Advanced Math Engine (Arithmetic, Decimals, Percentages, Square Roots, Powers, Factorials, Trig)
+        // Universal Real-Time Math Concepts Engine (Primes, GCD/LCM, Geometry, Combinatorics, Statistics, Decimals)
         function solveMathQuery(text) {
             if (!text) return null;
             let clean = text.trim().toLowerCase();
@@ -905,7 +905,143 @@
                 .replace(/\btimes\b|\bmultiplied by\b|\bmultiply\b/g, '*')
                 .replace(/\bdivided by\b|\bover\b/g, '/');
 
-            // 1. Percentage queries: "12.5% of 250.5", "what is 20.5 percent of 500.25"
+            // --- CONCEPT 1: Prime Numbers & Prime Factorization ---
+            if (clean.includes('prime')) {
+                const listMatch = clean.match(/prime\s*numbers?\s*(?:up\s*to|below|less\s*than|till)\s*(\d+)/i);
+                if (listMatch) {
+                    const limit = Math.min(parseInt(listMatch[1]), 1000);
+                    const primes = [];
+                    for (let i = 2; i <= limit; i++) {
+                        let ok = true;
+                        for (let j = 2; j * j <= i; j++) { if (i % j === 0) { ok = false; break; } }
+                        if (ok) primes.push(i);
+                    }
+                    return `Calculated in real time: Prime numbers up to ${limit} (${primes.length} total) ➔ [ ${primes.join(', ')} ]`;
+                }
+
+                const factMatch = clean.match(/(?:prime\s*factors?|factorize)\s*(?:of)?\s*(\d+)/i);
+                if (factMatch) {
+                    let n = parseInt(factMatch[1]);
+                    const original = n;
+                    const factors = [];
+                    for (let d = 2; d * d <= n; d++) {
+                        while (n % d === 0) { factors.push(d); n /= d; }
+                    }
+                    if (n > 1) factors.push(n);
+                    return `Calculated in real time: Prime factorization of ${original} ➔ ${original} = ${factors.join(' × ')}`;
+                }
+
+                const checkMatch = clean.match(/(?:is|check)\s*(\d+)\s*(?:a)?\s*prime/i) || clean.match(/prime\s*(?:number)?\s*(\d+)/i);
+                if (checkMatch) {
+                    const num = parseInt(checkMatch[1]);
+                    if (num < 2) return `Calculated in real time: ${num} is NOT a prime number.`;
+                    let isP = true;
+                    let div = 0;
+                    for (let i = 2; i * i <= num; i++) {
+                        if (num % i === 0) { isP = false; div = i; break; }
+                    }
+                    if (isP) return `Calculated in real time: ${num} IS a Prime number! (It has no divisors other than 1 and ${num}).`;
+                    else return `Calculated in real time: ${num} is NOT a prime number (Divisible by ${div}).`;
+                }
+            }
+
+            // --- CONCEPT 2: Even or Odd Check ---
+            const evenOddMatch = clean.match(/(?:is|check)\s*(\d+)\s*(?:an)?\s*(even|odd)/i);
+            if (evenOddMatch) {
+                const num = parseInt(evenOddMatch[1]);
+                const type = num % 2 === 0 ? 'EVEN' : 'ODD';
+                return `Calculated in real time: ${num} is an ${type} number.`;
+            }
+
+            // --- CONCEPT 3: GCD / HCF & LCM ---
+            const gcdMatch = clean.match(/(?:gcd|hcf)\s*(?:of)?\s*(\d+)\s*(?:and|,)?\s*(\d+)/i);
+            if (gcdMatch) {
+                let a = parseInt(gcdMatch[1]), b = parseInt(gcdMatch[2]);
+                const origA = a, origB = b;
+                while (b) { let temp = b; b = a % b; a = temp; }
+                const gcdVal = a;
+                const lcmVal = (origA * origB) / gcdVal;
+                return `Calculated in real time: GCD/HCF of (${origA}, ${origB}) = ${gcdVal} | LCM = ${lcmVal}`;
+            }
+
+            const lcmMatch = clean.match(/lcm\s*(?:of)?\s*(\d+)\s*(?:and|,)?\s*(\d+)/i);
+            if (lcmMatch) {
+                let a = parseInt(lcmMatch[1]), b = parseInt(lcmMatch[2]);
+                const origA = a, origB = b;
+                let x = a, y = b;
+                while (y) { let temp = y; y = x % y; x = temp; }
+                const lcmVal = (origA * origB) / x;
+                return `Calculated in real time: LCM of (${origA}, ${origB}) = ${lcmVal} | GCD = ${x}`;
+            }
+
+            // --- CONCEPT 4: Statistical Average / Mean ---
+            const avgMatch = clean.match(/(?:average|mean)\s*(?:of)?\s*([0-9\s,\.]+)/i);
+            if (avgMatch) {
+                const nums = avgMatch[1].trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+                if (nums.length > 0) {
+                    const sum = nums.reduce((acc, curr) => acc + curr, 0);
+                    const avg = sum / nums.length;
+                    const rAvg = Number.isInteger(avg) ? avg : Number(avg.toFixed(6));
+                    return `Calculated in real time: Average/Mean of [ ${nums.join(', ')} ] = ${rAvg} (Sum: ${sum}, Count: ${nums.length})`;
+                }
+            }
+
+            // --- CONCEPT 5: Geometry Calculations ---
+            const circleMatch = clean.match(/(?:area|perimeter|circumference)\s*of\s*circle\s*(?:with)?\s*(?:radius|r)?\s*(\d+(?:\.\d+)?)/i);
+            if (circleMatch) {
+                const r = parseFloat(circleMatch[1]);
+                const area = Math.PI * r * r;
+                const peri = 2 * Math.PI * r;
+                return `Calculated in real time for Circle (radius r = ${r}): Area = ${area.toFixed(4)}, Circumference = ${peri.toFixed(4)}`;
+            }
+
+            const rectMatch = clean.match(/area\s*of\s*rectangle\s*(\d+(?:\.\d+)?)\s*(?:by|x|times|\*|,)\s*(\d+(?:\.\d+)?)/i);
+            if (rectMatch) {
+                const w = parseFloat(rectMatch[1]), h = parseFloat(rectMatch[2]);
+                return `Calculated in real time for Rectangle (${w} × ${h}): Area = ${w * h}, Perimeter = ${2 * (w + h)}`;
+            }
+
+            const triMatch = clean.match(/area\s*of\s*triangle\s*(?:base)?\s*(\d+(?:\.\d+)?)\s*(?:height)?\s*(\d+(?:\.\d+)?)/i);
+            if (triMatch) {
+                const b = parseFloat(triMatch[1]), h = parseFloat(triMatch[2]);
+                return `Calculated in real time for Triangle (base ${b}, height ${h}): Area = ${0.5 * b * h}`;
+            }
+
+            // --- CONCEPT 6: Combinatorics (nCr and nPr) ---
+            const ncrMatch = clean.match(/(\d+)\s*c\s*(\d+)/i) || clean.match(/combination\s*(?:of)?\s*(\d+)\s*(?:and|,)?\s*(\d+)/i);
+            if (ncrMatch) {
+                const n = parseInt(ncrMatch[1]), r = parseInt(ncrMatch[2]);
+                if (r <= n && n <= 60) {
+                    let factN = 1, factR = 1, factNR = 1;
+                    for (let i = 2; i <= n; i++) factN *= i;
+                    for (let i = 2; i <= r; i++) factR *= i;
+                    for (let i = 2; i <= (n - r); i++) factNR *= i;
+                    const nCr = factN / (factR * factNR);
+                    return `Calculated in real time: ${n}C${r} (Combinations) = ${nCr}`;
+                }
+            }
+
+            const nprMatch = clean.match(/(\d+)\s*p\s*(\d+)/i) || clean.match(/permutation\s*(?:of)?\s*(\d+)\s*(?:and|,)?\s*(\d+)/i);
+            if (nprMatch) {
+                const n = parseInt(nprMatch[1]), r = parseInt(nprMatch[2]);
+                if (r <= n && n <= 60) {
+                    let factN = 1, factNR = 1;
+                    for (let i = 2; i <= n; i++) factN *= i;
+                    for (let i = 2; i <= (n - r); i++) factNR *= i;
+                    const nPr = factN / factNR;
+                    return `Calculated in real time: ${n}P${r} (Permutations) = ${nPr}`;
+                }
+            }
+
+            // --- CONCEPT 7: Natural Numbers Sum ---
+            const sumNMatch = clean.match(/sum\s*of\s*(?:first)?\s*(\d+)\s*(?:natural)?\s*numbers/i) || clean.match(/sum\s*(?:from)?\s*1\s*to\s*(\d+)/i);
+            if (sumNMatch) {
+                const n = parseInt(sumNMatch[1]);
+                const sum = (n * (n + 1)) / 2;
+                return `Calculated in real time: Sum of first ${n} natural numbers (1 to ${n}) = n(n+1)/2 = ${sum}`;
+            }
+
+            // --- CONCEPT 8: Standard Math (Percentage, Sqrt, Pow, Factorial, Trig, Expressions) ---
             const pctMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:%|percent)\s*(?:of)?\s*(\d+(?:\.\d+)?)/i);
             if (pctMatch) {
                 const pct = parseFloat(pctMatch[1]);
@@ -915,7 +1051,6 @@
                 return `Calculated in real time: ${pct}% of ${total} = ${roundedRes}`;
             }
 
-            // 2. Square Root queries: "square root of 12.25", "sqrt 12.25", "sqrt(12.25)"
             const sqrtMatch = clean.match(/(?:square\s*root\s*of|sqrt)\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/i);
             if (sqrtMatch) {
                 const val = parseFloat(sqrtMatch[1]);
@@ -924,7 +1059,6 @@
                 return `Calculated in real time: Square root of ${val} = ${roundedRes}`;
             }
 
-            // 3. Power queries: "2.5 ^ 3", "2.5 power 3", "2.5 to the power of 3"
             const powMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:\^|power\s*of|to\s*the\s*power\s*of|pow)\s*(\d+(?:\.\d+)?)/i);
             if (powMatch) {
                 const base = parseFloat(powMatch[1]);
@@ -934,7 +1068,6 @@
                 return `Calculated in real time: ${base} ^ ${exp} = ${roundedRes}`;
             }
 
-            // 4. Factorial queries: "5 factorial" or "5!"
             const factMatch = clean.match(/(\d+)\s*(?:factorial|!)/i);
             if (factMatch) {
                 const n = parseInt(factMatch[1]);
@@ -945,7 +1078,6 @@
                 }
             }
 
-            // 5. Trig / Math functions: sin(90), cos(0), tan(45), log(100), ln(e)
             const trigMatch = clean.match(/(sin|cos|tan|log|ln)\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?/i);
             if (trigMatch) {
                 const fn = trigMatch[1].toLowerCase();
@@ -960,7 +1092,7 @@
                 return `Calculated in real time: ${fn}(${val}) = ${roundedRes}`;
             }
 
-            // 6. General Math Expressions (+, -, *, /, ^, %, parentheses) with Decimals!
+            // General Math Expressions (+, -, *, /, ^, %, parentheses) with Decimals!
             let expr = clean
                 .replace(/what\s+is|calculate|evaluate|equal\s+to|\?/gi, '')
                 .replace(/x/gi, '*')
