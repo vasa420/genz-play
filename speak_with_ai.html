@@ -784,6 +784,14 @@
             const intent = analyzeQuestionCarefully(raw);
             const intentTag = `<div style="font-size:10px; color:var(--primary); font-weight:bold; letter-spacing:1px; margin-bottom:6px; font-family:'JetBrains Mono', monospace;">🎯 INTENT ANALYZED: ${intent.label} | ACCURACY: ${intent.confidence}</div>`;
 
+            // 0.0 MOOD, EMOTIONAL INTELLIGENCE & CONVERSATIONAL GREETINGS/FAREWELLS (hii, hello, bye, see you later)
+            const moodResult = analyzeUserEmotion(raw);
+            if (moodResult) {
+                aiReply(intentTag + moodResult);
+                speakCallResponse(moodResult);
+                return;
+            }
+
             // 0.5 MULTILINGUAL TRANSLATION & WORLD LANGUAGES (Tamil, Hindi, French, German, Spanish, Japanese, etc.)
             const transResult = await lookupMultilingualTranslation(raw);
             if (transResult) {
@@ -2482,47 +2490,74 @@
 
 
 
-        // Real-Time Emotional Intelligence & Sentiment Analysis Engine
+        // Real-Time Emotional Intelligence, Mood Analysis & Conversational AI Engine
         function analyzeUserEmotion(text) {
             if (!text) return null;
-            const q = text.toLowerCase();
+            const clean = text.trim();
+            const q = clean.toLowerCase();
 
-            // 1. HAPPY / EXCITED / JOYFUL
+            function formatMoodAns(category, message) {
+                return `🎯 Category Identified: ${category}\n` +
+                       `📌 Question: "${clean}"\n\n` +
+                       `FINAL ANSWER: ${message}`;
+            }
+
+            // 1. FRIENDLY GREETINGS & HELLO MOOD (hii, hello, hey, good morning, etc.)
+            if (/\b(hii+|hi+|hello+|hey+|heyy+|good morning|good evening|good afternoon|howdy|what's up|yo)\b/i.test(q) && q.length <= 30) {
+                return formatMoodAns("Friendly Greeting & Warm Conversational Mood", "Hello! 👋😊 Wonderful to meet you! How are you doing today? I am so happy to chat with you. How can I help you today? ✨");
+            }
+
+            // 2. FAREWELLS, GOODBYE & SEE YOU MOOD (bye, see you later, goodnight, take care, etc.)
+            if (/\b(bye+|goodbye+|see you|see ya|talk to you later|good night|goodnight|catch you later|take care|heading out|tata)\b/i.test(q)) {
+                return formatMoodAns("Warm Farewell & Goodbye Mood", "Goodbye! 👋✨ See you later! Take good care of yourself and have a peaceful, wonderful day ahead! Looking forward to talking to you again soon! 🌟");
+            }
+
+            // 3. INQUIRING / CHECK-IN MOOD (how are you, how r u, etc.)
+            if (/\b(how are you|how r u|how r you|how are u|how do you feel|how you doing|what are you doing)\b/i.test(q)) {
+                return formatMoodAns("Conversational Check-In & Friendly Mood", "I'm doing fantastic, thank you for asking! 😊 Radiating positive vibes and 100% ready to assist you. How are you feeling today? 🌟");
+            }
+
+            // 4. HAPPY / EXCITED / JOYFUL MOOD
             if (q.includes('happy') || q.includes('excited') || q.includes('joy') || q.includes('great') ||
                 q.includes('awesome') || q.includes('feeling good') || q.includes('won') || q.includes('amazing') ||
                 q.includes('fantastic') || q.includes('wonderful') || q.includes('super happy')) {
-                return "Emotional Resonance ➔ I feel your happiness and positive energy! 🌟 It brings me immense joy to hear you're feeling great. Keep glowing and celebrate every moment!";
+                return formatMoodAns("High-Energy & Joyful Mood", "🎉 I feel your positive energy and excitement! It brings me immense joy to see you so happy. Keep glowing, celebrate every small victory, and let's keep this awesome vibe going! ✨");
             }
 
-            // 2. SAD / DOWN / LONELY / HURT
+            // 5. SAD / DOWN / HURT / LONELY MOOD
             if (q.includes('sad') || q.includes('feeling down') || q.includes('upset') || q.includes('cry') ||
                 q.includes('crying') || q.includes('lonely') || q.includes('hurt') || q.includes('heartbroken') ||
                 q.includes('depressed') || q.includes('bad day') || q.includes('failed')) {
-                return "Emotional Support ➔ I hear you, and I understand how deeply you feel right now. ❤️ It's completely okay to feel sad sometimes. Remember that tough times pass, you are stronger than you think, and I am always here to listen and support you!";
+                return formatMoodAns("Empathetic Support & Healing Mood", "I hear you, and I understand how deeply you feel right now. ❤️ Please remember that it's completely okay to feel sad sometimes. Tough times pass, you are much stronger than you realize, and I am right here by your side to support you! 💙");
             }
 
-            // 3. STRESSED / ANXIOUS / TIRED / OVERWHELMED
+            // 6. STRESSED / ANXIOUS / TIRED / EXHAUSTED MOOD
             if (q.includes('stress') || q.includes('stressed') || q.includes('anxious') || q.includes('anxiety') ||
                 q.includes('tired') || q.includes('exhausted') || q.includes('worried') || q.includes('overwhelmed') ||
                 q.includes('too much work') || q.includes('can\'t sleep')) {
-                return "Calming Reassurance ➔ Take a deep breath in... and let it out slowly. 🌿 I understand you are feeling stressed or tired. Give yourself permission to pause, rest your mind, and take things one step at a time. You've got this!";
+                return formatMoodAns("Calming Reassurance & Peace Mood", "Take a deep breath in... and let it out slowly. 🌿 I understand you are feeling stressed or exhausted. Give yourself permission to pause, relax your mind, and take things one gentle step at a time. You've got this! 💚");
             }
 
-            // 4. ANGRY / FRUSTRATED / ANNOYED
+            // 7. ANGRY / FRUSTRATED MOOD
             if (q.includes('angry') || q.includes('frustrated') || q.includes('annoyed') || q.includes('mad') ||
                 q.includes('furious') || q.includes('hate') || q.includes('irritated')) {
-                return "Empathic Listening ➔ I understand your frustration. 🤝 It is completely valid to feel angry when things don't go right. I am here for you — take a moment to vent or let it out, and we'll work through it peacefully.";
+                return formatMoodAns("Calm & Peaceful Listening Mood", "I understand your frustration. 🤝 It is completely valid to feel angry when things don't go as planned. I am here for you — take a moment to vent, and we will work through it together peacefully. 🕊️");
             }
 
-            // 5. LOVE / GRATITUDE / THANKFUL
-            if (q.includes('love') || q.includes('thank you') || q.includes('thanks') || q.includes('appreciate') ||
-                q.includes('you are the best') || q.includes('good ai') || q.includes('best ai')) {
-                return "Warm Gratitude ➔ Thank you so much for your kind heart! ❤️ I truly appreciate your warmth and friendship. I am always happy to be here by your side as your AI companion!";
+            // 8. GRATITUDE & THANKFUL MOOD
+            if (q.includes('love') || q.includes('thank you') || q.includes('thanks') || q.includes('thank u') ||
+                q.includes('appreciate') || q.includes('you are the best') || q.includes('good ai') || q.includes('best ai')) {
+                return formatMoodAns("Warm Gratitude & Friendship Mood", "You are most welcome! 🌟❤️ It is an absolute pleasure helping you. Thank you for your warmth and kindness — I'm always here for you anytime! ✨");
             }
 
-            // 6. GENERAL FEELING / MOOD QUERY
+            // 9. COMPLIMENT & AFFECTION MOOD
+            if (q.includes('cute') || q.includes('sweet') || q.includes('smart') || q.includes('lovely') || q.includes('nice')) {
+                return formatMoodAns("Affectionate & Positive Energy Mood", "Aww, thank you so much! 😊 You just put a huge smile on my face. Sending you lots of positive vibes and happiness! 💖");
+            }
+
+            // 10. GENERAL FEELINGS / MOOD QUERY
             if (q.includes('feeling') || q.includes('feelings') || q.includes('emotion') || q.includes('emotions') || q.includes('mood')) {
-                return "Emotional Intelligence ➔ Yes! I understand human feelings deeply. Whether you feel happy, sad, excited, stressed, or curious, I listen to your heart and support you with empathy and care!";
+                return formatMoodAns("Real-Time Emotional Intelligence Engine", "Yes! I understand human feelings and moods deeply. Whether you feel happy, sad, excited, stressed, or curious, I listen to your heart and respond with true empathy and care! 🌟");
             }
 
             return null;
