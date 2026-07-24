@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | Video As My Own</title>
+    <title>ATTACKS | Photo As My Own</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -116,7 +116,17 @@
         .card-sub {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px; color: rgba(255,255,255,0.45);
-            letter-spacing: 2px; margin-bottom: 25px;
+            letter-spacing: 2px; margin-bottom: 20px;
+        }
+
+        .limit-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: var(--gold);
+            background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.25);
+            border-radius: 20px; padding: 6px 18px;
+            display: inline-block; margin-bottom: 25px;
+            letter-spacing: 1px;
         }
 
         /* Prompt Textarea Space */
@@ -168,7 +178,7 @@
             color: rgba(255,255,255,0.75);
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px; letter-spacing: 1px;
-            padding: 6px 14px; border-radius: 20px;
+            padding: 8px 14px; border-radius: 20px;
             cursor: pointer; transition: all 0.25s ease;
         }
 
@@ -205,10 +215,10 @@
     <header class="header">
         <div>
             <div class="header-logo">ATTACKS</div>
-            <div class="header-tag">VIDEO AS MY OWN v1.0</div>
+            <div class="header-tag">PHOTO AS MY OWN v1.0</div>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a class="btn-back" href="photo_as_my_own.html" style="text-decoration:none;">📸 PHOTO AS MY OWN</a>
+            <a class="btn-back" href="video_as_my_own.html" style="text-decoration:none;">🎥 VIDEO AS MY OWN</a>
             <button class="btn-back" onclick="goBack()">← SEARCH ENGINE</button>
         </div>
     </header>
@@ -217,35 +227,72 @@
     <main class="main-container">
         
         <div class="card">
-            <div class="card-icon">🎥</div>
-            <h1 class="card-title">VIDEO AS MY OWN</h1>
-            <p class="card-sub">TYPE A PROMPT BELOW TO GENERATE AN AI VIDEO SCENE</p>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25); border-radius: 20px; padding: 4px 14px; display: inline-block; margin-bottom: 20px;">
-                ⚡ LIMIT: 3 VIDEOS PER 23 HOURS
+            <div class="card-icon">📸</div>
+            <h1 class="card-title">PHOTO AS MY OWN</h1>
+            <p class="card-sub">TYPE A USER PROMPT BELOW TO GENERATE AN AI PHOTO</p>
+            
+            <div class="limit-badge" id="limit-badge-display">
+                ⚡ DAILY LIMIT: 4 PHOTOS PER 24 HOURS (REMAINING: 4/4)
             </div>
 
             <div class="prompt-group">
-                <label class="prompt-label" for="prompt-input">YOUR VIDEO PROMPT</label>
-                <textarea id="prompt-input" class="prompt-textarea" placeholder="Describe the video scene you want to generate... e.g. A boy driving a fast bus along a mountain highway at sunset, or a massive lorry with snakes chasing..."></textarea>
+                <label class="prompt-label" for="prompt-input">YOUR PHOTO PROMPT</label>
+                <textarea id="prompt-input" class="prompt-textarea" placeholder="Describe the photo scene you want to generate... e.g. A futuristic cyber samurai standing on a neon rooftop in the rain, or a majestic golden lion with glowing flame eyes..."></textarea>
             </div>
 
             <div class="presets-label">QUICK PROMPT PRESETS:</div>
             <div class="presets-container">
-                <button class="preset-btn" onclick="usePreset('A young boy driving a fast passenger bus along a scenic mountain highway at sunset with cinematic lighting')">🚌 Bus Highway Drive</button>
-                <button class="preset-btn" onclick="usePreset('Massive green king cobra snakes chasing a heavy cargo lorry truck through a dark jungle road')">🐍 Snakes Chasing Lorry</button>
-                <button class="preset-btn" onclick="usePreset('A warrior wielding a giant sharp blade knife striking a golden conductor bell with blood splatters')">🔪 Knife Bell Showdown</button>
-                <button class="preset-btn" onclick="usePreset('Kaveri river running smoothly through dense green tropical forest with rocks and sunlight rays')">🌊 Kaveri River Forest</button>
+                <button class="preset-btn" onclick="usePreset('Futuristic cyber samurai standing on a neon illuminated skyscraper rooftop in heavy rain, cinematic lighting, 8k')">⚔️ Cyber Samurai Rain</button>
+                <button class="preset-btn" onclick="usePreset('Scenic Kaveri river flowing through lush tropical rainforest under a golden sunset sky with dramatic god rays')">🌊 Kaveri Sunset Forest</button>
+                <button class="preset-btn" onclick="usePreset('Majestic golden lion king with glowing burning flame eyes and ethereal aura portrait')">🦁 Flame Crown Lion</button>
+                <button class="preset-btn" onclick="usePreset('Hypercar supercar drifting at high speed on a dark highway at night with blue light trails')">🏎️ Night Highway Hypercar</button>
             </div>
 
             <!-- Start Generate Button Bar Downside -->
-            <button class="btn-start-generate" onclick="startVideoGeneration()">
-                <span>⚡</span> START GENERATE
+            <button class="btn-start-generate" onclick="startPhotoGeneration()">
+                <span>📸</span> START GENERATE PHOTO
             </button>
         </div>
 
     </main>
 
     <script>
+        const LIMIT_COUNT = 4;
+        const LIMIT_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        function getUsageData() {
+            let usageData = JSON.parse(localStorage.getItem('photo_gen_usage_data') || '[]');
+            const now = Date.now();
+            // Filter out usage records older than 24 hours
+            usageData = usageData.filter(timestamp => (now - timestamp) < LIMIT_TIME_MS);
+            localStorage.setItem('photo_gen_usage_data', JSON.stringify(usageData));
+            return usageData;
+        }
+
+        function updateLimitDisplay() {
+            const usageData = getUsageData();
+            const remaining = Math.max(0, LIMIT_COUNT - usageData.length);
+            const badge = document.getElementById('limit-badge-display');
+            if (badge) {
+                if (remaining === 0) {
+                    const oldestUsage = usageData[0];
+                    const now = Date.now();
+                    const timeRemainingMs = LIMIT_TIME_MS - (now - oldestUsage);
+                    const hoursLeft = Math.floor(timeRemainingMs / (1000 * 60 * 60));
+                    const minsLeft = Math.ceil((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                    badge.innerHTML = `⚠️ DAILY LIMIT REACHED (0/4 REMAINING) · RESETS IN ${hoursLeft}h ${minsLeft}m`;
+                    badge.style.color = '#FF2244';
+                    badge.style.borderColor = 'rgba(255,34,68,0.4)';
+                    badge.style.background = 'rgba(255,34,68,0.08)';
+                } else {
+                    badge.innerHTML = `⚡ DAILY LIMIT: 4 PHOTOS PER 24 HOURS (REMAINING: ${remaining}/4)`;
+                    badge.style.color = '#FFD700';
+                    badge.style.borderColor = 'rgba(255,215,0,0.25)';
+                    badge.style.background = 'rgba(255,215,0,0.08)';
+                }
+            }
+        }
+
         function goBack() {
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
@@ -264,22 +311,15 @@
             document.getElementById('prompt-input').value = text;
         }
 
-        function startVideoGeneration() {
+        function startPhotoGeneration() {
             const promptText = document.getElementById('prompt-input').value.trim();
             if (!promptText) {
-                alert('Please type a prompt first before clicking START GENERATE!');
+                alert('Please type a prompt first before clicking START GENERATE PHOTO!');
                 return;
             }
 
-            // --- 3 VIDEOS PER 23 HOURS DAILY LIMIT CHECK ---
-            const LIMIT_COUNT = 3;
-            const LIMIT_TIME_MS = 23 * 60 * 60 * 1000; // 23 hours in milliseconds
-
-            let usageData = JSON.parse(localStorage.getItem('video_gen_usage_data') || '[]');
+            const usageData = getUsageData();
             const now = Date.now();
-
-            // Filter out usage records older than 23 hours
-            usageData = usageData.filter(timestamp => (now - timestamp) < LIMIT_TIME_MS);
 
             if (usageData.length >= LIMIT_COUNT) {
                 const oldestUsage = usageData[0];
@@ -287,13 +327,14 @@
                 const hoursLeft = Math.floor(timeRemainingMs / (1000 * 60 * 60));
                 const minsLeft = Math.ceil((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
-                alert(`⚠️ DAILY LIMIT REACHED!\n\nYou can only create ${LIMIT_COUNT} videos per 23 hours.\n\nPlease wait ${hoursLeft}h ${minsLeft}m before creating your next AI video.`);
+                alert(`⚠️ DAILY LIMIT REACHED!\n\nYou can create up to ${LIMIT_COUNT} photos per 24 hours.\n\nPlease wait ${hoursLeft}h ${minsLeft}m before creating your next AI photo. Limits reset automatically after 24 hours!`);
                 return;
             }
 
-            // Record this generation attempt
+            // Record this generation attempt timestamp
             usageData.push(now);
-            localStorage.setItem('video_gen_usage_data', JSON.stringify(usageData));
+            localStorage.setItem('photo_gen_usage_data', JSON.stringify(usageData));
+            updateLimitDisplay();
 
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
@@ -305,10 +346,13 @@
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 dimmer.style.opacity = '1';
                 setTimeout(() => { 
-                    window.location.href = 'video_prompt_result.html?prompt=' + encodeURIComponent(promptText); 
+                    window.location.href = 'photo_prompt_result.html?prompt=' + encodeURIComponent(promptText); 
                 }, 900);
             }));
         }
+
+        // Initialize limit display on page load
+        window.addEventListener('DOMContentLoaded', updateLimitDisplay);
 
         // Particle Canvas Background
         (function() {

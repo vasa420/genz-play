@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | AI Photo Generation Result</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.45);
+            --green: #00FF88;
+            --red: #FF2244;
+            --gold: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --bg: #04040c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Scanlines overlay */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.7;
+        }
+
+        /* Background particles canvas */
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            width: 100%; padding: 20px 30px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 100, 0, 0.15);
+            background: rgba(4,4,12,0.92);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px; font-weight: 900; letter-spacing: 5px;
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid rgba(255,100,0,0.35);
+            color: var(--primary);
+            padding: 8px 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 2px;
+            border-radius: 6px; cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 100%; max-width: 860px;
+            padding: 40px 20px 80px;
+            position: relative; z-index: 5;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Title Header */
+        .page-header {
+            text-align: center; margin-bottom: 30px;
+        }
+
+        .page-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 4px; color: var(--gold);
+            text-transform: uppercase; margin-bottom: 8px;
+            display: inline-block;
+            padding: 4px 14px; background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.25); border-radius: 20px;
+        }
+
+        .page-title {
+            font-size: clamp(22px, 4.5vw, 38px);
+            font-weight: 900; letter-spacing: 3px;
+            background: linear-gradient(135deg, #FF6400, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .page-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; color: rgba(255,255,255,0.45);
+            letter-spacing: 2px; margin-top: 6px;
+            max-width: 650px; overflow-wrap: break-word;
+        }
+
+        /* Loading / Generating State Card */
+        .gen-card {
+            width: 100%; background: rgba(10, 10, 24, 0.75);
+            border: 1.5px solid rgba(255, 100, 0, 0.3);
+            border-radius: 16px; padding: 45px 30px;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; backdrop-filter: blur(14px);
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+            position: relative; overflow: hidden;
+        }
+
+        .radar-spinner {
+            width: 80px; height: 80px;
+            border: 3px solid rgba(255, 100, 0, 0.15);
+            border-top-color: var(--primary);
+            border-right-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+            box-shadow: 0 0 25px var(--primary-glow);
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .gen-status-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px; font-weight: 700; letter-spacing: 4px;
+            color: var(--primary); text-shadow: 0 0 10px var(--primary-glow);
+            margin-bottom: 10px; text-transform: uppercase;
+        }
+
+        .gen-status-phase {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.6);
+            margin-bottom: 25px; min-height: 20px;
+        }
+
+        .gen-progress-track {
+            width: 100%; max-width: 500px; height: 8px;
+            background: rgba(255,255,255,0.06); border-radius: 10px;
+            overflow: hidden; border: 1px solid rgba(255,100,0,0.2);
+            margin-bottom: 12px;
+        }
+
+        .gen-progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #FF6400, #FFD700);
+            border-radius: 10px;
+            box-shadow: 0 0 12px var(--primary-glow);
+            transition: width 0.4s ease;
+        }
+
+        .gen-time-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.45);
+        }
+
+        .btn-speedup {
+            margin-top: 18px; padding: 6px 16px;
+            background: rgba(255,100,0,0.08); border: 1px solid rgba(255,100,0,0.25);
+            color: rgba(255,255,255,0.6); font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; letter-spacing: 1px; border-radius: 20px;
+            cursor: pointer; transition: 0.25s;
+        }
+
+        .btn-speedup:hover {
+            border-color: var(--primary); color: var(--primary);
+            background: rgba(255,100,0,0.15);
+        }
+
+        /* Result Section */
+        .result-section {
+            width: 100%; display: none;
+            flex-direction: column; align-items: center; gap: 30px;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Photo Display Frame */
+        .image-frame {
+            position: relative;
+            width: 100%; max-width: 760px;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 100, 0, 0.4);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 20px var(--primary-glow);
+            overflow: hidden; background: #000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .image-frame img {
+            width: 100%; height: auto; max-height: 540px;
+            object-fit: cover; display: block;
+        }
+
+        /* Scanner beam */
+        .scanner-beam {
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            box-shadow: 0 0 15px var(--primary);
+            animation: scan 4s ease-in-out infinite; z-index: 10;
+        }
+
+        @keyframes scan {
+            0%, 100% { top: 0%; opacity: 0; }
+            50% { top: 98%; opacity: 0.8; }
+        }
+
+        .caption-badge {
+            background: rgba(4, 4, 12, 0.85);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            border-radius: 30px; padding: 12px 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; letter-spacing: 2px; color: var(--gold);
+            backdrop-filter: blur(10px); text-align: center;
+            max-width: 760px;
+        }
+
+        /* Buttons Container */
+        .action-btns {
+            display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .btn-action {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 14px 28px; border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; font-weight: 700; letter-spacing: 2px;
+            cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+        }
+
+        .btn-like {
+            background: rgba(255, 34, 68, 0.12);
+            border: 1.5px solid rgba(255, 34, 68, 0.4);
+            color: #FF2244;
+        }
+
+        .btn-like:hover, .btn-like.liked {
+            background: #FF2244; color: #fff;
+            box-shadow: 0 0 20px rgba(255, 34, 68, 0.5);
+        }
+
+        .btn-download {
+            background: var(--primary); color: #000; border: none;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--primary);
+        }
+
+        .btn-regen {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 215, 0, 0.4);
+            color: var(--gold);
+        }
+
+        .btn-regen:hover {
+            background: rgba(255, 215, 0, 0.15);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="particle-bg"></canvas>
+
+    <header class="header">
+        <div class="header-logo">ATTACKS // PHOTO GENERATOR</div>
+        <button class="btn-back" onclick="goBack()">✕ PROMPT INPUT</button>
+    </header>
+
+    <main class="main-container">
+
+        <div class="page-header">
+            <span class="page-tag">📸 AI PHOTO GENERATION</span>
+            <h1 class="page-title">GENERATED AI PHOTO</h1>
+            <p class="page-sub" id="user-prompt-display">OBSERVED PROMPT: Loading prompt...</p>
+        </div>
+
+        <!-- Loading Card (Takes 1-2 minutes) -->
+        <div class="gen-card" id="gen-card">
+            <div class="radar-spinner"></div>
+            <div class="gen-status-title" id="gen-status-title">GENERATING AI PHOTO (1-2 MINS)</div>
+            <div class="gen-status-phase" id="gen-status-phase">PHASE 1/4: ANALYZING USER PROMPT MATRIX & TENSOR PARSING...</div>
+            
+            <div class="gen-progress-track">
+                <div class="gen-progress-fill" id="gen-progress-fill"></div>
+            </div>
+
+            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: ~01:30 REMAINING (GENERATING 8K AI PHOTO)...</div>
+
+            <button class="btn-speedup" onclick="speedUpGeneration()">⚡ FAST FORWARD GENERATION</button>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="result-section">
+            
+            <div class="image-frame">
+                <div class="scanner-beam"></div>
+                <img id="photo-scene-img" src="" alt="AI Generated Photo Scene">
+            </div>
+
+            <div class="caption-badge" id="caption-text">
+                📸 GENERATED AI PHOTO SCENE
+            </div>
+
+            <div class="action-btns">
+                <button class="btn-action btn-like" id="btn-like" onclick="toggleLike()">
+                    <span id="like-icon">❤️</span> <span id="like-text">LIKE PHOTO</span> (<span id="like-count">0</span>)
+                </button>
+                <a class="btn-action btn-download" id="btn-download" href="#" download="ai_photo_generated.jpg" target="_blank">
+                    <span>⬇</span> DOWNLOAD PHOTO
+                </a>
+                <button class="btn-action btn-regen" onclick="createNewPhoto()">
+                    <span>📸</span> CREATE NEW PHOTO
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        function goBack() {
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.8s ease;
+            `;
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = 'photo_as_my_own.html'; }, 900);
+            }));
+        }
+
+        function createNewPhoto() {
+            goBack();
+        }
+
+        // Read query string
+        const urlParams = new URLSearchParams(window.location.search);
+        let userPrompt = urlParams.get('prompt') || 'Futuristic cyber warrior standing on a neon rooftop in the rain';
+
+        document.getElementById('user-prompt-display').textContent = `OBSERVED PROMPT: "${userPrompt}"`;
+        document.getElementById('caption-text').textContent = `📸 PROMPT: "${userPrompt}"`;
+
+        // Like Button Logic
+        let isLiked = false;
+        let likeCount = Math.floor(Math.random() * 42) + 12;
+
+        function toggleLike() {
+            const btn = document.getElementById('btn-like');
+            const icon = document.getElementById('like-icon');
+            const text = document.getElementById('like-text');
+            const countEl = document.getElementById('like-count');
+
+            if (!isLiked) {
+                isLiked = true;
+                likeCount++;
+                btn.classList.add('liked');
+                text.textContent = 'LIKED';
+            } else {
+                isLiked = false;
+                likeCount--;
+                btn.classList.remove('liked');
+                text.textContent = 'LIKE PHOTO';
+            }
+            countEl.textContent = likeCount;
+        }
+
+        // 1-2 Minute Loading Phases & Timer
+        const PHASES = [
+            "PHASE 1/4: ANALYZING USER PROMPT MATRIX & TENSOR PARSING...",
+            "PHASE 2/4: ALLOCATING GPU NODES & SAMPLING LATENT DIFFUSION STEPS...",
+            "PHASE 3/4: SYNTHESIZING HIGH-RESOLUTION TEXTURES & LIGHTING RAYS...",
+            "PHASE 4/4: APPLYING 8K CINEMATIC POST-PROCESSING & COLOR GRADIENT..."
+        ];
+
+        let phaseInterval = null;
+        let timerInterval = null;
+        let totalDurationSeconds = 75; // ~1.25 minutes default full generation time
+        let elapsedTime = 0;
+
+        function startGeneration() {
+            const genCard = document.getElementById('gen-card');
+            const resultSec = document.getElementById('result-section');
+            const progressBar = document.getElementById('gen-progress-fill');
+            const phaseLabel = document.getElementById('gen-status-phase');
+            const timeText = document.getElementById('gen-time-text');
+            const sceneImg = document.getElementById('photo-scene-img');
+            const btnDownload = document.getElementById('btn-download');
+
+            genCard.style.display = 'flex';
+            resultSec.style.display = 'none';
+            progressBar.style.width = '0%';
+            document.getElementById('like-count').textContent = likeCount;
+
+            // Generate AI Image via Pollinations
+            const fullPrompt = `${userPrompt}, 8k resolution, ultra detailed photorealistic digital art, cinematic lighting, masterpiece`;
+            const seed = Math.floor(Math.random() * 999999);
+            const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+
+            const imgLoader = new Image();
+            imgLoader.crossOrigin = 'anonymous';
+            imgLoader.src = promptUrl;
+
+            // Countdown timer loop over 1-2 mins
+            timerInterval = setInterval(() => {
+                elapsedTime++;
+                const progressPct = Math.min(98, Math.floor((elapsedTime / totalDurationSeconds) * 100));
+                progressBar.style.width = progressPct + '%';
+
+                // Phase selection based on progress
+                let phaseIdx = Math.min(3, Math.floor((progressPct / 100) * PHASES.length));
+                phaseLabel.textContent = PHASES[phaseIdx];
+
+                const remain = Math.max(0, totalDurationSeconds - elapsedTime);
+                const mins = Math.floor(remain / 60);
+                const secs = remain % 60;
+                const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                timeText.textContent = `ESTIMATED TIME: ~${formattedTime} REMAINING (GENERATING 8K AI PHOTO)...`;
+
+                if (elapsedTime >= totalDurationSeconds) {
+                    finishGeneration(promptUrl, imgLoader);
+                }
+            }, 1000);
+        }
+
+        function speedUpGeneration() {
+            totalDurationSeconds = Math.max(elapsedTime + 2, 3);
+        }
+
+        function finishGeneration(promptUrl, imgLoader) {
+            clearInterval(timerInterval);
+            const progressBar = document.getElementById('gen-progress-fill');
+            const phaseLabel = document.getElementById('gen-status-phase');
+            const genCard = document.getElementById('gen-card');
+            const resultSec = document.getElementById('result-section');
+            const sceneImg = document.getElementById('photo-scene-img');
+            const btnDownload = document.getElementById('btn-download');
+
+            progressBar.style.width = '100%';
+            phaseLabel.textContent = "AI PHOTO GENERATION COMPLETE!";
+
+            setTimeout(() => {
+                genCard.style.display = 'none';
+
+                // Fallbacks if network fails
+                sceneImg.src = imgLoader.complete && imgLoader.naturalWidth > 0 ? promptUrl : 'stalker_hero_selfie_1776590484686.png';
+                btnDownload.href = sceneImg.src;
+
+                resultSec.style.display = 'flex';
+            }, 600);
+        }
+
+        // Particle Canvas Background
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.4 + 0.4,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    alpha: Math.random() * 0.35 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // Start generation process on load
+        window.addEventListener('load', () => {
+            startGeneration();
+        });
+    </script>
+</body>
+</html>
