@@ -2468,13 +2468,17 @@
 
         function lookupCurrentAffairs(text) {
             if (!text) return null;
-            const upper = text.trim().toUpperCase();
+            const clean = text.trim();
+            const upper = clean.toUpperCase();
 
             for (let key in CURRENT_AFFAIRS_DB) {
                 const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
                 const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
                 if (regex.test(upper)) {
-                    return `Current Affairs & Real-Time Intelligence ➔ ${CURRENT_AFFAIRS_DB[key]}`;
+                    const ans = matchOptionLetter(clean, CURRENT_AFFAIRS_DB[key]);
+                    return `🎯 Category Identified: World Leaders & Current Affairs\n` +
+                           `📌 Question: "${clean}"\n\n` +
+                           `FINAL ANSWER: ${ans}`;
                 }
             }
 
@@ -2617,19 +2621,26 @@
 
         function lookupWorldCapital(text) {
             if (!text) return null;
-            let clean = text.trim().toUpperCase()
+            let clean = text.trim();
+            let upperCountry = clean.toUpperCase()
                 .replace(/^WHAT\s+IS\s+THE\s+CAPITAL\s+OF\s+/, '')
                 .replace(/^WHAT\s+IS\s+CAPITAL\s+OF\s+/, '')
                 .replace(/^CAPITAL\s+OF\s+/, '')
                 .replace(/\?/g, '').trim();
 
-            if (WORLD_CAPITALS[clean]) {
-                return `World Capital Observation ➔ Capital of ${clean} is ${WORLD_CAPITALS[clean]}`;
+            if (WORLD_CAPITALS[upperCountry]) {
+                const ans = matchOptionLetter(clean, WORLD_CAPITALS[upperCountry]);
+                return `🎯 Category Identified: World Geography & Capitals\n` +
+                       `📌 Question: "${clean}"\n\n` +
+                       `FINAL ANSWER: ${ans}`;
             }
 
             for (let country in WORLD_CAPITALS) {
-                if (clean.includes(country)) {
-                    return `World Capital Observation ➔ Capital of ${country} is ${WORLD_CAPITALS[country]}`;
+                if (upperCountry.includes(country)) {
+                    const ans = matchOptionLetter(clean, WORLD_CAPITALS[country]);
+                    return `🎯 Category Identified: World Geography & Capitals\n` +
+                           `📌 Question: "${clean}"\n\n` +
+                           `FINAL ANSWER: ${ans}`;
                 }
             }
 
@@ -2707,15 +2718,22 @@
 
         function lookupCSAndWorldGKQuery(text) {
             if (!text) return null;
-            const clean = text.trim().toUpperCase();
+            const clean = text.trim();
+            const upperStr = clean.toUpperCase();
 
-            if (CS_AND_GK_DB[clean]) {
-                return `🎓 Computer Science & World Knowledge Engine ➔ ${CS_AND_GK_DB[clean]}`;
+            if (CS_AND_GK_DB[upperStr]) {
+                const ans = matchOptionLetter(clean, CS_AND_GK_DB[upperStr]);
+                return `🎯 Category Identified: Computer Science & General Knowledge\n` +
+                       `📌 Question: "${clean}"\n\n` +
+                       `FINAL ANSWER: ${ans}`;
             }
 
             for (let key in CS_AND_GK_DB) {
-                if (clean.includes(key)) {
-                    return `🎓 Computer Science & World Knowledge Engine ➔ ${CS_AND_GK_DB[key]}`;
+                if (upperStr.includes(key)) {
+                    const ans = matchOptionLetter(clean, CS_AND_GK_DB[key]);
+                    return `🎯 Category Identified: Computer Science & General Knowledge\n` +
+                           `📌 Question: "${clean}"\n\n` +
+                           `FINAL ANSWER: ${ans}`;
                 }
             }
 
