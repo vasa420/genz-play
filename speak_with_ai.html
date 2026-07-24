@@ -850,8 +850,8 @@
                 return;
             }
 
-            // 9. 500+ ACRONYMS & IPL OBSERVATIONS (CSK, RCB, MI, ISRO, HTML)
-            const obsResult = lookupAcronymObservation(raw);
+            // 9. 500+ ACRONYMS & IPL OBSERVATIONS (GG, AFK, CSK, RCB, MI, ISRO, HTML, API, etc.)
+            const obsResult = await lookupAcronymObservation(raw);
             if (obsResult) {
                 aiReply(intentTag + obsResult);
                 speakCallResponse(obsResult);
@@ -2615,8 +2615,63 @@
             return null;
         }
 
-        // 500+ Acronyms & Observations Database (IPL Franchises, Tech, Science, Organizations, Squad)
+        // 500+ Acronyms & Observations Database (IPL Franchises, Gaming Slang, Tech, Science, Organizations)
         const ACRONYM_DB = {
+            // --- GAMING & INTERNET SLANG ---
+            "GG": "Good Game — Used in online gaming (PUBG, BGMI, Valorant, CS2, Chess) to express sportsmanship at the end of a match.",
+            "GGWP": "Good Game Well Played — Popular gaming phrase after a match.",
+            "AFK": "Away From Keyboard — Used in gaming and chat when a player is away.",
+            "BRB": "Be Right Back — Internet chat shorthand.",
+            "GLHF": "Good Luck Have Fun — Gamer greeting before starting a competitive match.",
+            "OP": "Over Powered (in gaming) / Original Poster (on internet forums).",
+            "MVP": "Most Valuable Player — Awarded to the top performer in a match.",
+            "EZ": "Easy — Gaming slang after winning a round effortlessly.",
+            "BTW": "By The Way — Internet chat shorthand.",
+            "IMO": "In My Opinion.",
+            "IMHO": "In My Humble Opinion.",
+            "FOMO": "Fear Of Missing Out.",
+            "YOLO": "You Only Live Once.",
+            "ASAP": "As Soon As Possible.",
+            "TLDR": "Too Long; Didn't Read — Concise summary of a long article.",
+            "FYI": "For Your Information.",
+            "DIY": "Do It Yourself.",
+            "ETA": "Estimated Time of Arrival.",
+            "OTP": "One Time Password.",
+            "ATM": "Automated Teller Machine.",
+            "PIN": "Personal Identification Number.",
+            "SIM": "Subscriber Identity Module.",
+            "GPS": "Global Positioning System.",
+            "WIFI": "Wireless Fidelity.",
+            "USB": "Universal Serial Bus.",
+            "HDMI": "High-Definition Multimedia Interface.",
+            "LED": "Light Emitting Diode.",
+            "LCD": "Liquid Crystal Display.",
+            "OLED": "Organic Light Emitting Diode.",
+            "CPU": "Central Processing Unit.",
+            "GPU": "Graphics Processing Unit.",
+            "RAM": "Random Access Memory.",
+            "ROM": "Read Only Memory.",
+            "SSD": "Solid State Drive.",
+            "HDD": "Hard Disk Drive.",
+            "IP": "Internet Protocol / Intellectual Property.",
+            "URL": "Uniform Resource Locator.",
+            "HTTP": "Hypertext Transfer Protocol.",
+            "HTTPS": "Hypertext Transfer Protocol Secure.",
+            "API": "Application Programming Interface.",
+            "SDK": "Software Development Kit.",
+            "UI": "User Interface.",
+            "UX": "User Experience.",
+            "AI": "Artificial Intelligence.",
+            "ML": "Machine Learning.",
+            "DL": "Deep Learning.",
+            "NLP": "Natural Language Processing.",
+            "LLM": "Large Language Model.",
+            "VPN": "Virtual Private Network.",
+            "LAN": "Local Area Network.",
+            "WAN": "Wide Area Network.",
+            "DNS": "Domain Name System.",
+            "ISP": "Internet Service Provider.",
+
             // --- CRICKET & IPL TEAMS & SPORTS ---
             "CSK": "Chennai Super Kings — 5-time IPL Champions franchise led by MS Dhoni & Ruturaj Gaikwad! Famous for their yellow jersey and massive fan base.",
             "RCB": "Royal Challengers Bengaluru — Popular IPL franchise featuring Virat Kohli, famous for high-octane batting and passionate fans!",
@@ -2783,12 +2838,12 @@
             "DELHI": "New Delhi — Capital of India. Seat of the Indian government — Parliament, President's House (Rashtrapati Bhavan), Supreme Court."
         };
 
-        function lookupAcronymObservation(text) {
+        async function lookupAcronymObservation(text) {
             if (!text) return null;
             const raw = text.trim();
             const upper = raw.toUpperCase().replace(/[?.,!]/g, '').trim();
 
-            // 1. Direct exact acronym match (e.g. user just types "CSK", "ISRO", "HTML", "API")
+            // 1. Direct exact acronym match (e.g. user just types "GG", "AFK", "CSK", "ISRO", "HTML", "API")
             if (ACRONYM_DB[upper]) {
                 return `Observation & Full Form for ${upper} ➔ ${ACRONYM_DB[upper]}`;
             }
@@ -2796,12 +2851,12 @@
             // Check if user is explicitly asking for an abbreviation / full form / meaning
             const isAbbrevIntent = /\b(full form|fullform|abbreviation|stands for|meaning of|short form|expand|what does .* stand for)\b/i.test(raw);
 
-            // ONLY respond if user explicitly asked for abbreviation/full form; otherwise return null
+            // ONLY respond if user explicitly asked for abbreviation/full form or typed an exact acronym; otherwise return null
             if (!isAbbrevIntent) {
                 return null;
             }
 
-            // 2. Explicit abbreviation query (e.g. "what is full form of CSK", "CSK stands for what")
+            // 2. Explicit abbreviation query (e.g. "what is full form of GG", "GG stands for what")
             let cleanedTarget = upper
                 .replace(/^WHAT\s+IS\s+THE\s+FULL\s+FORM\s+OF\s+/, '')
                 .replace(/^WHAT\s+IS\s+FULL\s+FORM\s+OF\s+/, '')
@@ -2831,6 +2886,16 @@
                         return `Observation & Full Form for ${key} ➔ ${ACRONYM_DB[key]}`;
                     }
                 }
+            }
+
+            // 3. Google Real-Time Web Search Sync Fallback for any unknown word / abbreviation!
+            const googleSearchRes = await fetchRealTimeWebSearch(`full form of ${cleanedTarget}`);
+            if (googleSearchRes) {
+                const cleanText = googleSearchRes.replace(/^Live Google Web Search Connection ➔ /i, '')
+                                                  .replace(/^Live Knowledge Base Sync ➔ /i, '')
+                                                  .replace(/^Live Google & Wiki Knowledge Base ➔ /i, '')
+                                                  .replace(/^Live Real-Time Web Search Result ➔ /i, '');
+                return `Observation & Full Form for ${cleanedTarget} (Google Real-Time Sync) ➔ ${cleanText}`;
             }
 
             return null;
