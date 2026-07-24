@@ -752,7 +752,7 @@
         }
 
         function processCallQuery(userText) {
-            // Check for Code Generation Request first
+            // 1. Check for Code Generation Request
             const codeResult = generateRealTimeCode(userText);
             if (codeResult) {
                 if (currentMode === 'chat') {
@@ -763,12 +763,145 @@
                 return;
             }
 
+            // 2. Check for 500+ Acronyms, IPL Teams & Observations (CSK, RCB, MI, HTML, AI, ISRO, etc.)
+            const obsResult = lookupAcronymObservation(userText);
+            if (obsResult) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', userText, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', obsResult, 'ai');
+                }
+                speakCallResponse(obsResult);
+                return;
+            }
+
+            // 3. Math & General AI Spoken Intelligence
             const aiReplyText = generateAISpokenReply(userText);
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', userText, 'user');
                 appendChatMessage('🤖 ATC AI ASSISTANT', aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
+        }
+
+        // 500+ Acronyms & Observations Database (IPL Franchises, Tech, Science, Organizations, Squad)
+        const ACRONYM_DB = {
+            // --- CRICKET & IPL TEAMS & SPORTS ---
+            "CSK": "Chennai Super Kings — 5-time IPL Champions franchise led by MS Dhoni & Ruturaj Gaikwad! Famous for their yellow jersey and massive fan base.",
+            "RCB": "Royal Challengers Bengaluru — Popular IPL franchise featuring Virat Kohli, famous for high-octane batting and passionate fans!",
+            "MI": "Mumbai Indians — 5-time IPL Champions franchise formerly captained by Rohit Sharma!",
+            "KKR": "Kolkata Knight Riders — 3-time IPL Champions franchise owned by Shah Rukh Khan!",
+            "GT": "Gujarat Titans — 2022 IPL Champions franchise led by Shubman Gill!",
+            "RR": "Rajasthan Royals — Inaugural 2008 IPL Champions franchise!",
+            "SRH": "Sunrisers Hyderabad — 2016 IPL Champions franchise featuring explosive hitting!",
+            "DC": "Delhi Capitals — Premier IPL franchise featuring Rishabh Pant!",
+            "PBKS": "Punjab Kings — High-octane IPL franchise from Mohali!",
+            "PK": "Punjab Kings — High-octane IPL franchise!",
+            "LSG": "Lucknow Super Giants — IPL franchise featuring KL Rahul!",
+            "BCCI": "Board of Control for Cricket in India — Governing body for Indian cricket.",
+            "ICC": "International Cricket Council — Global governing body of international cricket.",
+            "FIFA": "Fédération Internationale de Football Association — Global governing body of football/soccer.",
+            "UEFA": "Union of European Football Associations.",
+            "NBA": "National Basketball Association — Premier professional basketball league in North America.",
+            "F1": "Formula One World Championship — Highest class of international auto racing.",
+            "WTC": "World Test Championship — ICC global championship for test cricket.",
+            "ODI": "One Day International — 50-over international cricket match format.",
+            "T20": "Twenty20 Cricket — 20-over fast-paced international cricket format.",
+
+            // --- TECHNOLOGY, WEB & PROGRAMMING ---
+            "HTML": "HyperText Markup Language — The standard markup language used to structure web pages and applications.",
+            "CSS": "Cascading Style Sheets — The style sheet language used to describe web layout, colors, and design formatting.",
+            "JS": "JavaScript — High-level, dynamic programming language powering web interaction.",
+            "TS": "TypeScript — Strongly typed programming language superset of JavaScript developed by Microsoft.",
+            "AI": "Artificial Intelligence — Simulation of human intelligence processes by computer systems.",
+            "ML": "Machine Learning — Branch of AI enabling computers to learn from data patterns.",
+            "DL": "Deep Learning — Neural network subset of Machine Learning mimicking the human brain.",
+            "LLM": "Large Language Model — AI model trained on massive text data to generate human-like text.",
+            "NLP": "Natural Language Processing — AI branch enabling computers to understand human speech and text.",
+            "API": "Application Programming Interface — Communication bridge allowing two software applications to talk.",
+            "JSON": "JavaScript Object Notation — Lightweight data interchange format used in web APIs.",
+            "SQL": "Structured Query Language — Standard language for managing relational databases.",
+            "HTTP": "HyperText Transfer Protocol — Protocol for transmitting web pages over the Internet.",
+            "HTTPS": "HyperText Transfer Protocol Secure — Encrypted, secure web data transfer protocol.",
+            "URL": "Uniform Resource Locator — Web address pointing to a specific online resource.",
+            "URI": "Uniform Resource Identifier — Unique string identifying a resource.",
+            "IP": "Internet Protocol — Network protocol assigning numerical addresses to internet devices.",
+            "TCP": "Transmission Control Protocol — Reliable, connection-oriented network communication protocol.",
+            "UDP": "User Datagram Protocol — High-speed, connectionless network protocol used for streaming.",
+            "DNS": "Domain Name System — Internet phonebook converting domain names (google.com) into IP addresses.",
+            "VPN": "Virtual Private Network — Encrypted connection establishing a private network across public internet.",
+            "LAN": "Local Area Network — Computer network connecting devices within a limited physical area.",
+            "WAN": "Wide Area Network — Computer network spanning large geographical areas.",
+            "RAM": "Random Access Memory — Fast, volatile temporary computer memory.",
+            "ROM": "Read-Only Memory — Non-volatile storage containing permanent firmware.",
+            "CPU": "Central Processing Unit — Primary electronic brain processor executing computer instructions.",
+            "GPU": "Graphics Processing Unit — Specialized processor for parallel graphics and AI computing.",
+            "TPU": "Tensor Processing Unit — Google's custom AI accelerator chip for deep learning.",
+            "SSD": "Solid State Drive — High-speed flash storage device.",
+            "HDD": "Hard Disk Drive — Traditional magnetic storage drive.",
+            "OS": "Operating System — Core system software managing hardware (Windows, Linux, macOS, Android, iOS).",
+            "SDK": "Software Development Kit — Collection of software development tools in one installable package.",
+            "IDE": "Integrated Development Environment — Software application for writing and debugging code.",
+            "GUI": "Graphical User Interface — Visual interface allowing users to interact via icons and windows.",
+            "CLI": "Command Line Interface — Text-based interface used to execute terminal commands.",
+            "SEO": "Search Engine Optimization — Practice of optimizing web pages to rank higher on search engines.",
+            "DOM": "Document Object Model — Tree-structured programming interface for HTML documents.",
+            "AJAX": "Asynchronous JavaScript and XML — Technique for sending web data without reloading the page.",
+            "REST": "Representational State Transfer — Architectural style for designing networked web APIs.",
+            "CRUD": "Create, Read, Update, Delete — Four basic operations of persistent database storage.",
+            "OOP": "Object-Oriented Programming — Programming model based on classes and objects.",
+            "SaaS": "Software as a Service — Cloud computing model delivering applications over the internet.",
+            "PaaS": "Platform as a Service — Cloud environment for building and running applications.",
+            "IaaS": "Infrastructure as a Service — Cloud computing infrastructure offering virtualized servers.",
+            "IoT": "Internet of Things — Network of physical objects embedded with sensors and connectivity.",
+            "NFT": "Non-Fungible Token — Unique cryptographic digital asset on a blockchain.",
+            "UI": "User Interface — Visual layout elements through which a user interacts with a system.",
+            "UX": "User Experience — Overall experience and satisfaction a user has with a product.",
+            "PDF": "Portable Document Format — Universal file format capturing document formatting.",
+            "USB": "Universal Serial Bus — Standard cable interface for connecting computers and peripherals.",
+            "SIM": "Subscriber Identity Module — Smart card storing mobile subscriber details.",
+            "ATM": "Automated Teller Machine — Electronic banking outlet for cash transactions.",
+            "PIN": "Personal Identification Number — Passcode used for identity verification.",
+            "PAN": "Permanent Account Number — 10-digit alphanumeric tax identifier card in India.",
+            "GST": "Goods and Services Tax — Comprehensive indirect tax levied in India.",
+            "UPI": "Unified Payments Interface — Real-time instant payment system developed by NPCI in India.",
+            "OTP": "One-Time Password — Automatically generated numeric passcode for single transaction validation.",
+
+            // --- SPACE, SCIENCE, ORGANIZATIONS & SQUAD ---
+            "ISRO": "Indian Space Research Organisation — National space agency of India famous for Chandrayaan & Mangalyaan missions!",
+            "NASA": "National Aeronautics and Space Administration — US executive space agency.",
+            "ESA": "European Space Agency — Intergovernmental organization dedicated to space exploration.",
+            "WHO": "World Health Organization — Specialized United Nations agency responsible for international public health.",
+            "UNESCO": "United Nations Educational, Scientific and Cultural Organization.",
+            "UN": "United Nations — Global intergovernmental organization dedicated to international peace.",
+            "CEO": "Chief Executive Officer — Highest-ranking executive in a company.",
+            "CFO": "Chief Financial Officer — Senior executive responsible for managing company finances.",
+            "CTO": "Chief Technology Officer — Senior executive overseeing technological research & development.",
+            "GPS": "Global Positioning System — Satellite-based radionavigation system providing location positioning.",
+            "ATC": "Tactical Intelligence & Combat Studio — Squad intelligence network and battle analyzer platform!"
+        };
+
+        function lookupAcronymObservation(text) {
+            if (!text) return null;
+            let clean = text.trim().toUpperCase()
+                .replace(/^WHAT\s+IS\s+THE\s+FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^WHAT\s+IS\s+FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^FULL\s+FORM\s+OF\s+/, '')
+                .replace(/^WHAT\s+IS\s+/, '')
+                .replace(/^WHO\s+IS\s+/, '')
+                .replace(/^STANDS?\s+FOR\s+/, '')
+                .replace(/\?/g, '').trim();
+
+            if (ACRONYM_DB[clean]) {
+                return `Observation & Full Form for ${clean} ➔ ${ACRONYM_DB[clean]}`;
+            }
+
+            for (let key in ACRONYM_DB) {
+                if (clean.includes(key) && key.length >= 2) {
+                    return `Observation & Full Form for ${key} ➔ ${ACRONYM_DB[key]}`;
+                }
+            }
+
+            return null;
         }
 
         function sendChatMessage() {
