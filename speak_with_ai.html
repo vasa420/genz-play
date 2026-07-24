@@ -3855,22 +3855,38 @@
         function matchOptionLetter(rawText, calculatedValStr) {
             if (!rawText || !calculatedValStr) return calculatedValStr;
 
-            const cleanStr = String(calculatedValStr);
+            const cleanStr = String(calculatedValStr).trim();
             const numsInVal = cleanStr.match(/(\d+(?:\.\d+)?)/g);
             if (!numsInVal || numsInVal.length === 0) return cleanStr;
 
             const targetNum = parseFloat(numsInVal[0]);
 
-            // Regex for options: e.g. A) 15%, (A) 15%, A. 15%, 1) 15%, (1) 15%, A) 15
-            const optionRegex = /(?:[\(\[\{]?([a-d1-4])[\)\]\}]?[\.\:]?\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)\s*%?)/gi;
-            const matches = [...rawText.matchAll(optionRegex)];
+            // Strict Option pattern matchers (Matches: "A) 15%", "(A) 15%", "A. 15%", "Option A: 15%", "[A] 15%", "1) 15%")
+            const strictOptRegex = /(?:option\s+|[\(\[\{])?([A-D1-4])[\)\]\}]?[\.\:\-]\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)\s*%?/gi;
+            const matches = [...rawText.matchAll(strictOptRegex)];
 
             for (let m of matches) {
                 const label = m[1].toUpperCase();
                 const optNum = parseFloat(m[2]);
-                if (Math.abs(optNum - targetNum) < 0.01) {
+
+                if (!isNaN(optNum) && Math.abs(optNum - targetNum) < 0.01) {
                     const optLetter = /^[1-4]$/.test(label) ? String.fromCharCode(64 + parseInt(label)) : label;
                     return `Option (${optLetter}) ${cleanStr}`;
+                }
+            }
+
+            // Fallback: Loose matcher for options formatted like "A 10% B 15% C 20% D 25%"
+            const looseOptRegex = /\b([a-d])\s*(?:₹|rs\.?|rupees|\$)?\s*(\d+(?:\.\d+)?)\s*%?/gi;
+            const looseMatches = [...rawText.matchAll(looseOptRegex)];
+
+            // Ensure at least 2 distinct option letters to prevent false positives from question text (e.g., "a work in 10 days")
+            if (looseMatches.length >= 2) {
+                for (let m of looseMatches) {
+                    const label = m[1].toUpperCase();
+                    const optNum = parseFloat(m[2]);
+                    if (!isNaN(optNum) && Math.abs(optNum - targetNum) < 0.01) {
+                        return `Option (${label}) ${cleanStr}`;
+                    }
                 }
             }
 
