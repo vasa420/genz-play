@@ -1180,13 +1180,21 @@
                 return `Calculated in real time: ${base} ^ ${exp} = ${roundedRes}`;
             }
 
-            const factMatch = clean.match(/(\d+)\s*(?:factorial|!)/i);
+            // Factorial Queries: "factorial of 3", "factorial 3", "3 factorial", "3!", "what is factorial of 5"
+            const factMatch = clean.match(/(?:factorial\s*(?:of)?\s*)(\d+)/i) ||
+                              clean.match(/(\d+)\s*(?:factorial|!)/i) ||
+                              clean.match(/factorial\s*(\d+)/i);
             if (factMatch) {
                 const n = parseInt(factMatch[1]);
                 if (n >= 0 && n <= 170) {
                     let f = 1;
-                    for (let i = 2; i <= n; i++) f *= i;
-                    return `Calculated in real time: Factorial of ${n} (${n}!) = ${f}`;
+                    let steps = [];
+                    for (let i = n; i >= 1; i--) {
+                        f *= i;
+                        if (n <= 10) steps.push(i);
+                    }
+                    const stepStr = (n <= 10 && steps.length > 0) ? ` (Calculation: ${steps.join(' × ')} = ${f})` : '';
+                    return `Calculated in real time: Factorial of ${n} (${n}!) = ${f}${stepStr}`;
                 }
             }
 
