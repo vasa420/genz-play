@@ -798,6 +798,25 @@
                 return;
             }
 
+            // 0.01 REAL-TIME LIVE DATE, TIME & CALENDAR ENGINE
+            const isClockQuery = /\b(time|date|today|clock|day|month|year|timezone)\b/i.test(raw) &&
+                                 /\b(today|now|current|live|what|tell|get|is|it)\b/i.test(raw) &&
+                                 !upper.includes('TIME TABLE') && !upper.includes('TIME COMPLEXITY') && !upper.includes('TIME AND WORK');
+
+            if (isClockQuery) {
+                const now = new Date();
+                const timeFmt = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+                const dateFmt = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                const clockMsg = `🎯 Category Identified: Real-Time Live Clock & Calendar Engine\n` +
+                                 `📌 Question: "${raw.trim()}"\n\n` +
+                                 `FINAL ANSWER: Today is ${dateFmt} | Live Current Time: ${timeFmt} | Timezone: ${tz}`;
+                aiReply(intentTag + clockMsg);
+                speakCallResponse(clockMsg);
+                return;
+            }
+
             // 0.05 90+ LIVE WEBSITES & KNOWLEDGE NETWORK LINKS (LeetCode, HackerRank, CodeChef, Codeforces, Kaggle, NPTEL, MIT, Harvard, etc.)
             const linkResult = lookup50PlusWebsitesAndLinks(raw);
             if (linkResult) {
@@ -862,18 +881,7 @@
                 return;
             }
 
-            // 10. REAL-TIME TIME & DATE CLOCK (Strict Intent Check)
-            const isClockQuery = /\b(time is it|current time|time now|what time|what date|today's date|current date|what day|timezone)\b/i.test(raw);
-            if (isClockQuery && !upper.includes('TIME TABLE') && !upper.includes('TIME COMPLEXITY')) {
-                const now = new Date();
-                const timeFmt = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-                const dateFmt = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const clockMsg = `Calculated in real time ➔ Current Time: ${timeFmt} | Date: ${dateFmt} | Timezone: ${tz}`;
-                aiReply(intentTag + clockMsg);
-                speakCallResponse(clockMsg);
-                return;
-            }
+
 
             // 11. LIVE TODAY'S WEATHER ANALYZER (Strict Intent Check)
             const isWeatherQuery = /\b(weather|temperature|climate|rain|forecast)\b/i.test(raw);
