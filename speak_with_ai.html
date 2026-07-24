@@ -743,28 +743,10 @@
 
         function processCallQuery(userText) {
             const aiReplyText = generateAISpokenReply(userText);
-            const generatedPrompt = `${userText}, 8k resolution, cinematic lighting, photorealistic 3D render, masterpiece`;
-            const seed = Math.floor(Math.random() * 999999);
-            const encodedPrompt = encodeURIComponent(generatedPrompt);
-            const previewImgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=320&seed=${seed}&nologo=true`;
-
-            const richHtml = `
-                <div>${aiReplyText}</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25); border-radius: 8px; padding: 8px 12px; margin: 10px 0 6px;">
-                    ✨ GENERATED AI PROMPT: "${generatedPrompt}"
-                </div>
-                <div style="width:100%; max-height:180px; border-radius:10px; overflow:hidden; margin:8px 0; border:1px solid rgba(255,100,0,0.3); background:#000;">
-                    <img src="${previewImgUrl}" alt="AI Scene Preview" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'">
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-                    <a class="btn-gen-link" href="photo_prompt_result.html?prompt=${encodedPrompt}">📸 GENERATE THIS AI PHOTO</a>
-                    <a class="btn-gen-link" href="video_prompt_result.html?prompt=${encodedPrompt}">🎥 GENERATE THIS AI VIDEO</a>
-                </div>
-            `;
 
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', userText, 'user');
-                appendChatMessage('🤖 ATC AI ASSISTANT', richHtml, 'ai');
+                appendChatMessage('🤖 ATC AI ASSISTANT', aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
         }
@@ -788,13 +770,16 @@
 
         function generateAISpokenReply(prompt) {
             const query = prompt.toUpperCase();
-            if (query.includes('VAISAL')) return "I read your input! Vausal is driving the speed bus along mountain highways. I generated an AI prompt for this scene below!";
-            if (query.includes('LOGITH') || query.includes('KNIFE')) return "I read your input! Logith carries the giant sharp knife cutting through Vausal's bus. I generated an AI prompt for this scene below!";
-            if (query.includes('NITHISH') || query.includes('BELL')) return "I read your input! Nithish is ringing the golden conductor bell. I generated an AI prompt for this scene below!";
-            if (query.includes('GIRISH') || query.includes('TRUCK')) return "I read your input! Girish commands the heavy cargo lorry truck. I generated an AI prompt for this scene below!";
-            if (query.includes('DHANISH') || query.includes('COBRA')) return "I read your input! Dhanish is fighting king cobras along the highway. I generated an AI prompt for this scene below!";
-            if (query.includes('HELLO') || query.includes('HI')) return "Hello agent! I am reading your input in real time. Describe any scene and I will build an AI prompt for you!";
-            return `I have analyzed your input: "${prompt}". I crafted a dynamic 8K AI prompt and image preview for you below!`;
+            if (query.includes('VAISAL')) return "Operative Vausal is a high-level adversary in ATC Studio, renowned for driving the high-speed passenger bus along mountain highways with maximum precision!";
+            if (query.includes('LOGITH') || query.includes('KNIFE')) return "Operative Logith carries the giant sharp blade knife! In battle comparisons, Logith's sharp blade cuts right through Vausal's speed bus!";
+            if (query.includes('NITHISH') || query.includes('BELL')) return "Operative Nithish is the master conductor famous for ringing the golden bus bell with unmatched agility!";
+            if (query.includes('GIRISH') || query.includes('TRUCK') || query.includes('LORRY')) return "Operative Girish commands the heavy cargo lorry truck, navigating dark jungle roads with snakes in pursuit!";
+            if (query.includes('DHANISH') || query.includes('DHARNISH') || query.includes('COBRA')) return "Operative Dhanish is known for his intense showdowns against king cobras along highway routes!";
+            if (query.includes('SURYA') || query.includes('RIVER') || query.includes('KAVERI')) return "Operative Surya dominates the Kaveri River forest, swimming smoothly through dense tropical rapids under golden sunlight!";
+            if (query.includes('STRONGEST') || query.includes('LEADER') || query.includes('VASANTH')) return "Vasanth is the Squad Leader with a 98% synchrony rating!";
+            if (query.includes('JOKE') || query.includes('FUNNY')) return "Why did Logith bring his giant knife to the bus stop? Because he heard Vausal's bus was cutting corners!";
+            if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY')) return "Hello agent! ATC Studio AI Assistant is connected. Ask me any question or talk to me!";
+            return `ATC AI received your input: "${prompt}". I am ready for your next question or command!`;
         }
 
         // Waveform Animation Canvas
