@@ -3666,6 +3666,104 @@
                 }
             }
 
+            // 8. SIMPLE INTEREST (SI = P*R*T/100)
+            const siMatch = q.match(/(?:simple interest|si)\s*(?:for|on)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:at)?\s*(\d+(?:\.\d+)?)\s*%\s*(?:for)?\s*(\d+(?:\.\d+)?)\s*years?/i) ||
+                            q.match(/(?:principal|p)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:rate|r)?\s*(\d+(?:\.\d+)?)\s*%\s*(?:time|t)?\s*(\d+(?:\.\d+)?)\s*years?\s*(?:simple interest|si)/i);
+            if (siMatch && (q.includes('interest') || q.includes('si') || q.includes('simple'))) {
+                const p = parseFloat(siMatch[1]);
+                const r = parseFloat(siMatch[2]);
+                const t = parseFloat(siMatch[3]);
+                const si = (p * r * t) / 100;
+                const roundedSI = Number.isInteger(si) ? si : si.toFixed(2);
+                return `🧩 Step-by-Step Aptitude Solution — Simple Interest\n\n` +
+                    `1. Given Data: Principal (P) = ₹${p}, Rate (R) = ${r}%, Time (T) = ${t} years\n` +
+                    `2. Formula Used: Simple Interest (SI) = (P × R × T) / 100\n` +
+                    `3. Step-by-Step Substitution: SI = (${p} × ${r} × ${t}) / 100 = ${p * r * t} / 100\n` +
+                    `4. Simplification: SI = ₹${roundedSI}\n\n` +
+                    `FINAL ANSWER: ₹${roundedSI}`;
+            }
+
+            // 9. COMPOUND INTEREST (CI = P(1 + R/100)^T - P)
+            const ciMatch = q.match(/(?:compound interest|ci)\s*(?:for|on)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:at)?\s*(\d+(?:\.\d+)?)\s*%\s*(?:for)?\s*(\d+(?:\.\d+)?)\s*years?/i);
+            if (ciMatch) {
+                const p = parseFloat(ciMatch[1]);
+                const r = parseFloat(ciMatch[2]);
+                const t = parseFloat(ciMatch[3]);
+                const amount = p * Math.pow((1 + r / 100), t);
+                const ci = amount - p;
+                const roundedCI = Number.isInteger(ci) ? ci : ci.toFixed(2);
+                return `🧩 Step-by-Step Aptitude Solution — Compound Interest\n\n` +
+                    `1. Given Data: Principal (P) = ₹${p}, Rate (R) = ${r}%, Time (T) = ${t} years\n` +
+                    `2. Formula Used: Amount (A) = P × (1 + R/100)ᵀ, Compound Interest (CI) = A - P\n` +
+                    `3. Step-by-Step Substitution: A = ₹${p} × (1 + ${r}/100)⁽${t}⁾ = ₹${amount.toFixed(2)}\n` +
+                    `4. Simplification: CI = ₹${amount.toFixed(2)} - ₹${p} = ₹${roundedCI}\n\n` +
+                    `FINAL ANSWER: ₹${roundedCI}`;
+            }
+
+            // 10. PERCENTAGE OF A NUMBER
+            const pctNumMatch = q.match(/(\d+(?:\.\d+)?)\s*%\s*(?:of)\s*(\d+(?:\.\d+)?)/i);
+            if (pctNumMatch && !q.includes('loss') && !q.includes('profit') && !q.includes('interest')) {
+                const pct = parseFloat(pctNumMatch[1]);
+                const base = parseFloat(pctNumMatch[2]);
+                const val = (pct / 100) * base;
+                const rounded = Number.isInteger(val) ? val : val.toFixed(2);
+                return `🧩 Step-by-Step Aptitude Solution — Percentage\n\n` +
+                    `1. Given Data: Percentage = ${pct}%, Base Value = ${base}\n` +
+                    `2. Formula Used: Value = (Percentage / 100) × Base Value\n` +
+                    `3. Step-by-Step Substitution: Value = (${pct} / 100) × ${base} = ${pct / 100} × ${base}\n` +
+                    `4. Simplification: ${rounded}\n\n` +
+                    `FINAL ANSWER: ${rounded}`;
+            }
+
+            // 11. AVERAGE OF NUMBERS
+            const avgMatch = q.match(/(?:average|mean)\s*(?:of)?\s*([0-9]+(?:\s*,\s*[0-9]+){1,})/i);
+            if (avgMatch) {
+                const nums = avgMatch[1].split(/[\s,]+/).map(Number);
+                if (nums.length >= 2) {
+                    const sum = nums.reduce((acc, curr) => acc + curr, 0);
+                    const avg = sum / nums.length;
+                    const roundedAvg = Number.isInteger(avg) ? avg : avg.toFixed(2);
+                    return `🧩 Step-by-Step Aptitude Solution — Averages\n\n` +
+                        `1. Given Data: Numbers = [ ${nums.join(', ')} ], Count = ${nums.length}\n` +
+                        `2. Formula Used: Average = (Sum of all numbers) / Total Count\n` +
+                        `3. Step-by-Step Substitution: Sum = ${nums.join(' + ')} = ${sum}, Count = ${nums.length}\n` +
+                        `4. Simplification: Average = ${sum} / ${nums.length} = ${roundedAvg}\n\n` +
+                        `FINAL ANSWER: ${roundedAvg}`;
+            }
+            }
+
+            // 12. BOAT & STREAM (Upstream & Downstream)
+            const boatMatch = q.match(/(?:boat|speed of boat)\s*(\d+(?:\.\d+)?)\s*(?:km\/h|kmh)?\s*(?:stream|speed of stream)\s*(\d+(?:\.\d+)?)/i);
+            if (boatMatch) {
+                const b = parseFloat(boatMatch[1]);
+                const s = parseFloat(boatMatch[2]);
+                const ds = b + s;
+                const us = Math.max(0, b - s);
+                return `🧩 Step-by-Step Aptitude Solution — Boat & Stream\n\n` +
+                    `1. Given Data: Speed of Boat in Still Water (b) = ${b} km/h, Speed of Stream (s) = ${s} km/h\n` +
+                    `2. Formula Used: Downstream Speed (d) = b + s, Upstream Speed (u) = b - s\n` +
+                    `3. Step-by-Step Substitution: Downstream = ${b} + ${s} = ${ds} km/h, Upstream = ${b} - ${s} = ${us} km/h\n` +
+                    `4. Simplification: Downstream = ${ds} km/h, Upstream = ${us} km/h\n\n` +
+                    `FINAL ANSWER: Downstream = ${ds} km/h, Upstream = ${us} km/h`;
+            }
+
+            // 13. COMBINATIONS (nCr) & PERMUTATIONS (nPr)
+            const ncrMatch = q.match(/(\d+)\s*c\s*(\d+)/i);
+            if (ncrMatch) {
+                const n = parseInt(ncrMatch[1]);
+                const r = parseInt(ncrMatch[2]);
+                if (n >= r && r >= 0) {
+                    const fact = num => num <= 1 ? 1 : num * fact(num - 1);
+                    const nCr = fact(n) / (fact(r) * fact(n - r));
+                    return `🧩 Step-by-Step Aptitude Solution — Combinations (${n}C${r})\n\n` +
+                        `1. Given Data: n = ${n}, r = ${r}\n` +
+                        `2. Formula Used: ⁿCᵣ = n! / (r! × (n - r)!)\n` +
+                        `3. Step-by-Step Substitution: ${n}C${r} = ${fact(n)} / (${fact(r)} × ${fact(n - r)})\n` +
+                        `4. Simplification: ${nCr}\n\n` +
+                        `FINAL ANSWER: ${nCr}`;
+                }
+            }
+
             // 7. NUMBER SERIES PATTERN SOLVER: "series 2, 4, 8, 16" or "series 2, 5, 10, 17, 26"
             const seriesMatch = q.match(/(?:series|sequence|pattern|next number in)?\s*([0-9]+(?:\s*,\s*[0-9]+){3,})/i);
             if (seriesMatch && (q.includes('series') || q.includes('next') || q.includes('pattern') || q.includes('sequence'))) {
