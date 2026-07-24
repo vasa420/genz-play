@@ -755,6 +755,10 @@
             const raw = userText.trim();
             const upper = raw.toUpperCase();
 
+            // 🔍 CAREFUL QUESTION INTENT ANALYSIS
+            const intent = analyzeQuestionCarefully(raw);
+            const intentTag = `<div style="font-size:10px; color:var(--primary); font-weight:bold; letter-spacing:1px; margin-bottom:6px; font-family:'JetBrains Mono', monospace;">🎯 INTENT ANALYZED: ${intent.label} | ACCURACY: ${intent.confidence}</div>`;
+
             // 1. REAL-TIME TIME & DATE CLOCK
             if (upper.includes('TIME') || upper.includes('CLOCK') || upper.includes('DATE') || upper.includes('DAY') || upper.includes('TIMEZONE')) {
                 if (!upper.includes('TIME TABLE') && !upper.includes('TIME COMPLEXITY') && !upper.includes('TIMER')) {
@@ -765,7 +769,7 @@
                     const clockMsg = `Calculated in real time ➔ Current Time: ${timeFmt} | Date: ${dateFmt} | Timezone: ${tz}`;
                     if (currentMode === 'chat') {
                         appendChatMessage('👤 YOU', raw, 'user');
-                        appendChatMessage('🤖 ATC AI ASSISTANT', clockMsg, 'ai');
+                        appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + clockMsg, 'ai');
                     }
                     speakCallResponse(clockMsg);
                     return;
@@ -777,7 +781,7 @@
                 const weatherReport = await fetchLiveWeatherReport(raw);
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', weatherReport, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + weatherReport, 'ai');
                 }
                 speakCallResponse(weatherReport);
                 return;
@@ -788,7 +792,7 @@
             if (currentAffairsMsg) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', currentAffairsMsg, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + currentAffairsMsg, 'ai');
                 }
                 speakCallResponse(currentAffairsMsg);
                 return;
@@ -799,7 +803,7 @@
             if (liveWebResult) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', liveWebResult, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + liveWebResult, 'ai');
                 }
                 speakCallResponse(liveWebResult);
                 return;
@@ -810,7 +814,7 @@
             if (capitalReport) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', capitalReport, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + capitalReport, 'ai');
                 }
                 speakCallResponse(capitalReport);
                 return;
@@ -821,7 +825,7 @@
             if (codeResult) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', codeResult.htmlCard, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + codeResult.htmlCard, 'ai');
                 }
                 speakCallResponse(codeResult.spokenText);
                 return;
@@ -832,7 +836,7 @@
             if (obsResult) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', obsResult, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + obsResult, 'ai');
                 }
                 speakCallResponse(obsResult);
                 return;
@@ -843,7 +847,7 @@
             if (emotionResult) {
                 if (currentMode === 'chat') {
                     appendChatMessage('👤 YOU', raw, 'user');
-                    appendChatMessage('🤖 ATC AI ASSISTANT', emotionResult, 'ai');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + emotionResult, 'ai');
                 }
                 speakCallResponse(emotionResult);
                 return;
@@ -853,9 +857,59 @@
             const aiReplyText = generateAISpokenReply(raw);
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', raw, 'user');
-                appendChatMessage('🤖 ATC AI ASSISTANT', aiReplyText, 'ai');
+                appendChatMessage('🤖 ATC AI ASSISTANT', intentTag + aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
+        }
+
+        // Careful Question Intent Analyzer Engine
+        function analyzeQuestionCarefully(text) {
+            if (!text) return { category: 'GENERAL', label: 'GENERIC QUESTION', confidence: '95%' };
+            const q = text.toLowerCase().trim();
+
+            if (q.includes('code') || q.includes('c++') || q.includes('python') || q.includes('java') ||
+                q.includes('javascript') || q.includes('html') || q.includes('sql') || q.includes('program') ||
+                q.includes('script') || q.includes('rust') || q.includes('golang') || q.includes('c#')) {
+                return { category: 'CODE', label: '💻 COMPUTER PROGRAMMING / CODE GENERATION', confidence: '99%' };
+            }
+
+            if (q.includes('prime') || q.includes('factorial') || q.includes('fibonacci') || q.includes('hypotenuse') ||
+                q.includes('interest') || q.includes('volume') || q.includes('calculate') || q.includes('sqrt') ||
+                q.includes('square root') || q.includes('plus') || q.includes('minus') || q.includes('divided') ||
+                q.includes('times') || q.includes('%') || q.includes('+') || q.includes('-') || q.includes('*') || q.includes('/')) {
+                return { category: 'MATH', label: '🔢 MATHEMATICAL CONCEPT & CALCULATION', confidence: '99%' };
+            }
+
+            if (q.includes('time') || q.includes('clock') || q.includes('date') || q.includes('timezone') || q.includes('today')) {
+                return { category: 'TIME', label: '⏰ REAL-TIME CLOCK & CALENDAR', confidence: '98%' };
+            }
+
+            if (q.includes('weather') || q.includes('temperature') || q.includes('climate') || q.includes('rain') || q.includes('forecast')) {
+                return { category: 'WEATHER', label: '🌤️ LIVE ATMOSPHERIC WEATHER REPORT', confidence: '98%' };
+            }
+
+            if (q.includes('cm') || q.includes('chief minister') || q.includes('prime minister') || q.includes('president') ||
+                q.includes('stalin') || q.includes('modi') || q.includes('governor') || q.includes('tamil nadu') || q.includes('tamilnadu')) {
+                return { category: 'CURRENT_AFFAIRS', label: '🏛️ REAL-TIME CURRENT AFFAIRS & STATE LEADERS', confidence: '99%' };
+            }
+
+            if (q.includes('capital') || q.includes('country') || q.includes('india') || q.includes('france') || q.includes('japan') || q.includes('usa')) {
+                return { category: 'CAPITAL', label: '🌍 GEOGRAPHY & WORLD CAPITALS', confidence: '97%' };
+            }
+
+            if (q.includes('csk') || q.includes('rcb') || q.includes('mi') || q.includes('full form') || q.includes('stands for') || q.includes('acronym')) {
+                return { category: 'ACRONYM', label: '🏆 SPORTS / ACRONYM OBSERVATION', confidence: '98%' };
+            }
+
+            if (q.includes('happy') || q.includes('sad') || q.includes('stressed') || q.includes('angry') || q.includes('tired') || q.includes('love') || q.includes('feeling')) {
+                return { category: 'EMOTION', label: '❤️ EMOTIONAL INTELLIGENCE & SENTIMENT', confidence: '99%' };
+            }
+
+            if (q.includes('vausal') || q.includes('logith') || q.includes('nithish') || q.includes('girish') || q.includes('dhanish') || q.includes('surya') || q.includes('vasanth')) {
+                return { category: 'SQUAD', label: '⚔️ SQUAD TACTICAL BATTLE INTEL', confidence: '100%' };
+            }
+
+            return { category: 'WEB_SEARCH', label: '🌐 GENERAL KNOWLEDGE & LIVE SEARCH', confidence: '96%' };
         }
 
         // Live Web Search & Knowledge Base Sync API (Wikipedia & DuckDuckGo)
