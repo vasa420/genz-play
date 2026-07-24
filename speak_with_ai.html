@@ -864,6 +864,14 @@
                 return;
             }
 
+            // 8.5 COMPUTER SCIENCE & WORLD GENERAL KNOWLEDGE (CS & GK ENGINE)
+            const csGkResult = lookupCSAndWorldGKQuery(raw);
+            if (csGkResult) {
+                aiReply(intentTag + csGkResult);
+                speakCallResponse(csGkResult);
+                return;
+            }
+
             // 9. 500+ ACRONYMS & IPL OBSERVATIONS (GG, AFK, CSK, RCB, MI, ISRO, HTML, API, etc.)
             const obsResult = await lookupAcronymObservation(raw);
             if (obsResult) {
@@ -2622,6 +2630,92 @@
             for (let country in WORLD_CAPITALS) {
                 if (clean.includes(country)) {
                     return `World Capital Observation ➔ Capital of ${country} is ${WORLD_CAPITALS[country]}`;
+                }
+            }
+
+            return null;
+        }
+
+        // ==========================================
+        // COMPUTER SCIENCE & WORLD GENERAL KNOWLEDGE (GK) ENGINE
+        // ==========================================
+        const CS_AND_GK_DB = {
+            // --- DATA STRUCTURES & ALGORITHMS (DSA) ---
+            "ARRAY": "Array ➔ Linear data structure storing elements of same data type in contiguous memory locations. Random access time complexity: O(1). Insertion/Deletion: O(N).",
+            "LINKED LIST": "Linked List ➔ Linear data structure where nodes are connected via pointers in non-contiguous memory. Types: Singly, Doubly, Circular. Insertion/Deletion at head: O(1). Search: O(N).",
+            "STACK": "Stack ➔ LIFO (Last In First Out) linear data structure. Operations: push(), pop(), peek(). Time complexity O(1). Used in function call stacks, undo mechanisms, and expression evaluation.",
+            "QUEUE": "Queue ➔ FIFO (First In First Out) linear data structure. Operations: enqueue(), dequeue(). Used in BFS graph traversal, CPU task scheduling, and message buffers.",
+            "BINARY TREE": "Binary Tree ➔ Hierarchical tree data structure where each node has at most two children (Left & Right). Depth-First Traversals: Inorder (L-Root-R), Preorder (Root-L-R), Postorder (L-R-Root).",
+            "BINARY SEARCH TREE": "Binary Search Tree (BST) ➔ Binary tree where left child < root < right child. Average search/insert/delete time: O(log N). Worst case (unbalanced): O(N). AVL/Red-Black trees maintain balance.",
+            "BST": "Binary Search Tree (BST) ➔ Binary tree where left child < root < right child. Average search time complexity: O(log N).",
+            "GRAPH": "Graph ➔ Non-linear data structure of vertices (nodes) and edges. Representations: Adjacency List, Adjacency Matrix. Traversals: BFS (using Queue, O(V+E)), DFS (using Stack/Recursion, O(V+E)).",
+            "HEAP": "Heap ➔ Complete binary tree-based data structure. Min-Heap (root is minimum) & Max-Heap (root is maximum). Used in Priority Queues and Heapsort. Insertion/Deletion: O(log N).",
+            "HASH TABLE": "Hash Table ➔ Data structure mapping keys to values using a Hash Function. Average search, insert, and delete time complexity: O(1). Collision handling: Chaining and Open Addressing.",
+            "HASHMAP": "HashMap ➔ Key-Value pair data structure using hashing. Provides O(1) average time complexity for lookup, insertion, and deletion.",
+            "TIME COMPLEXITY": "Time Complexity ➔ Mathematical measure of algorithm execution time relative to input size N. Notations: Big-O O(N) (worst case), Big-Omega Ω(N) (best case), Big-Theta Θ(N) (average case).",
+            "SPACE COMPLEXITY": "Space Complexity ➔ Total memory space required by an algorithm to run as a function of input size N, including auxiliary memory.",
+            "BINARY SEARCH": "Binary Search ➔ Divide-and-conquer algorithm on sorted arrays. Compares target with middle element and halves search space. Time Complexity: O(log N). Space Complexity: O(1) iterative.",
+            "QUICKSORT": "QuickSort ➔ Efficient divide-and-conquer sorting algorithm using a Pivot element. Average Time Complexity: O(N log N). Worst Case: O(N^2). Space Complexity: O(log N).",
+            "MERGESORT": "MergeSort ➔ Stable divide-and-conquer sorting algorithm. Divides array into halves, sorts recursively, and merges. Time Complexity: O(N log N) in all cases. Space Complexity: O(N).",
+            "BUBBLE SORT": "Bubble Sort ➔ Simple comparison sorting algorithm that repeatedly swaps adjacent out-of-order elements. Time Complexity: O(N^2). Space Complexity: O(1).",
+            "DYNAMIC PROGRAMMING": "Dynamic Programming (DP) ➔ Optimization technique solving complex problems by breaking them into overlapping subproblems and storing subproblem solutions. Methods: Top-Down (Memoization) and Bottom-Up (Tabulation). Examples: Knapsack, LCS, Fibonacci.",
+            "DP": "Dynamic Programming (DP) ➔ Optimization technique storing solutions to overlapping subproblems to avoid redundant calculations. Time complexity reduced from exponential O(2^N) to polynomial O(N).",
+            "DIJKSTRA": "Dijkstra's Algorithm ➔ Single-source shortest path algorithm for weighted graphs with non-negative edge weights. Time Complexity with Min-Heap: O((V + E) log V).",
+
+            // --- CS CORE DOMAINS: OS, DBMS, NETWORKS, OOPS ---
+            "OPERATING SYSTEM": "Operating System (OS) ➔ System software managing computer hardware, CPU scheduling, memory management, processes, files, and I/O devices. Examples: Windows, Linux, macOS, Android.",
+            "OS": "Operating System (OS) ➔ Core software managing hardware, memory, processes, and user interface.",
+            "DEADLOCK": "Deadlock ➔ Condition in OS where two or more processes are blocked forever, waiting for resources held by each other. 4 Coffman Conditions: Mutual Exclusion, Hold & Wait, No Preemption, Circular Wait. Prevention: Banker's Algorithm.",
+            "VIRTUAL MEMORY": "Virtual Memory ➔ Memory management technique creating an illusion of large main memory by swapping pages between physical RAM and Disk storage (Page Faults, LRU Page Replacement).",
+            "DBMS": "Database Management System (DBMS) ➔ Software for creating, managing, and querying databases. Relational (SQL: MySQL, PostgreSQL) vs NoSQL (MongoDB, Redis). Key properties: ACID (Atomicity, Consistency, Isolation, Durability).",
+            "SQL": "SQL (Structured Query Language) ➔ Standard language for relational databases. DDL (CREATE, ALTER), DML (SELECT, INSERT, UPDATE, DELETE), DCL (GRANT, REVOKE), TCL (COMMIT, ROLLBACK).",
+            "ACID PROPERTIES": "ACID Properties in DBMS ➔ Atomicity (all or nothing), Consistency (valid state), Isolation (concurrent transactions don't interfere), Durability (committed data persists permanently).",
+            "COMPUTER NETWORKS": "Computer Networks ➔ Interconnected computing devices sharing data and resources. Key Models: OSI 7-Layer Model (Physical, Data Link, Network, Transport, Session, Presentation, Application) & TCP/IP 4-Layer Model.",
+            "OSI MODEL": "OSI 7-Layer Model ➔ 1. Physical, 2. Data Link, 3. Network (IP), 4. Transport (TCP/UDP), 5. Session, 6. Presentation, 7. Application (HTTP, DNS, FTP).",
+            "TCP/IP": "TCP/IP Protocol ➔ Transmission Control Protocol (reliable, connection-oriented) and Internet Protocol (addressing & routing packets).",
+            "OOPS": "Object-Oriented Programming (OOP) ➔ Paradigm based on Objects and Classes. 4 Pillars: Encapsulation (data hiding), Abstraction (hiding implementation), Inheritance (code reuse), Polymorphism (method overriding & overloading).",
+            "OBJECT ORIENTED PROGRAMMING": "OOP ➔ Paradigm based on Objects and Classes. 4 Pillars: Encapsulation, Abstraction, Inheritance, and Polymorphism.",
+            "REST API": "REST API (Representational State Transfer) ➔ Architectural style for Web APIs over HTTP. Uses HTTP verbs: GET (read), POST (create), PUT (update), DELETE (delete). Stateless & JSON payload based.",
+
+            // --- CLASSIC CS CODING PROBLEMS & ANSWERS ---
+            "TWO SUM": "Two Sum Problem ➔ Given array of integers and target sum, return indices of two numbers adding to target. Optimal Solution: Use Hash Map storing (target - num, index). Time Complexity: O(N), Space: O(N).",
+            "FIBONACCI": "Fibonacci Series ➔ F(0)=0, F(1)=1, F(n) = F(n-1) + F(n-2). Sequence: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34... Iterative/DP Time: O(N), Space: O(1). Formula: F(n) = (φⁿ - ψⁿ)/√5.",
+            "PALINDROME": "Palindrome ➔ Word, phrase, or number that reads the same forwards and backwards (e.g. 'racecar', 121, 1331). Algorithm: Compare characters using two pointers from opposite ends in O(N) time.",
+            "REVERSE LINKED LIST": "Reverse Linked List ➔ Iterative approach uses 3 pointers (prev = null, curr = head, next). Loop: next = curr.next; curr.next = prev; prev = curr; curr = next; Return prev. Time: O(N), Space: O(1).",
+            "PRIME NUMBER": "Prime Number ➔ Integer greater than 1 with no positive divisors other than 1 and itself (2, 3, 5, 7, 11, 13, 17...). Optimized check: Loop i from 2 up to √N in O(√N) time.",
+            "FACTORIAL": "Factorial (N!) ➔ Product of all positive integers <= N. N! = N × (N-1)...× 1. 0! = 1. Formula: 5! = 120. Iterative/Recursive Time: O(N).",
+            "ARMSTRONG NUMBER": "Armstrong Number ➔ Number equal to sum of its digits raised to power of total number of digits. Example: 153 = 1³ + 5³ + 3³ = 1 + 125 + 27 = 153. Example 371, 407.",
+            "GCD": "GCD (Greatest Common Divisor) ➔ Largest positive integer dividing two numbers. Euclidean Algorithm: GCD(a, b) = GCD(b, a % b) until b=0. Time Complexity: O(log(min(a, b))).",
+
+            // --- WORLD GENERAL KNOWLEDGE (GK) & SCIENCE ---
+            "7 WONDERS OF THE WORLD": "7 Wonders of the World ➔ 1. Great Wall of China, 2. Taj Mahal (India), 3. Petra (Jordan), 4. Colosseum (Rome, Italy), 5. Christ the Redeemer (Brazil), 6. Machu Picchu (Peru), 7. Chichen Itza (Mexico).",
+            "SEVEN WONDERS OF THE WORLD": "Seven Wonders of the World ➔ Taj Mahal (India), Great Wall of China, Petra (Jordan), Colosseum (Italy), Christ the Redeemer (Brazil), Machu Picchu (Peru), Chichen Itza (Mexico).",
+            "INDIAN CONSTITUTION": "Indian Constitution ➔ Adopted Nov 26, 1949, came into effect Jan 26, 1950 (Republic Day). Chief Architect / Father: Dr. B.R. Ambedkar. Longest written constitution in the world.",
+            "INDIAN STATES": "Indian States & Capitals ➔ India has 28 States and 8 Union Territories. Capital: New Delhi. Largest State by Area: Rajasthan. Most Populous State: Uttar Pradesh.",
+            "LONGEST RIVER IN INDIA": "Longest River in India ➔ Ganga (2,525 km). Longest Peninsular River: Godavari (1,465 km).",
+            "WORLD OCEANS": "World Oceans ➔ 5 Oceans: 1. Pacific Ocean (largest & deepest), 2. Atlantic Ocean, 3. Indian Ocean, 4. Southern Ocean, 5. Arctic Ocean (smallest).",
+            "WORLD CONTINENTS": "World Continents ➔ 7 Continents: 1. Asia (largest by area & population), 2. Africa, 3. North America, 4. South America, 5. Antarctica, 6. Europe, 7. Australia (smallest).",
+            "MOUNT EVEREST": "Mount Everest ➔ Earth's highest mountain above sea level (8,848.86 m / 29,031.7 ft), located in the Mahalangur Himal sub-range of Himalayas on the Nepal-China border.",
+            "SOLAR SYSTEM": "Solar System ➔ 8 Planets orbiting the Sun: Mercury, Venus (hottest planet), Earth, Mars (Red Planet), Jupiter (largest planet), Saturn (famous rings), Uranus, Neptune.",
+            "SPEED OF LIGHT": "Speed of Light ➔ 3 × 10⁸ m/s (299,792,458 meters per second) in a vacuum. Constant denoted by 'c'.",
+            "FATHER OF COMPUTERS": "Father of Computers ➔ Charles Babbage (invented Mechanical Computer & Analytical Engine). Father of Modern Computer Science & AI: Alan Turing.",
+            "FATHER OF COMPUTER SCIENCE": "Father of Modern Computer Science ➔ Alan Turing (Turing Machine & Turing Test).",
+            "DNA": "DNA (Deoxyribonucleic Acid) ➔ Molecule carrying genetic code for all living organisms. Double Helix structure discovered by James Watson and Francis Crick in 1953.",
+            "ISRO": "ISRO (Indian Space Research Organisation) ➔ Founded Aug 15, 1969 by Dr. Vikram Sarabhai. HQ: Bengaluru. Historical achievements: Chandrayaan-3 (Moon South Pole landing 2023), Mangalyaan (Mars Orbiter).",
+            "NASA": "NASA (National Aeronautics and Space Administration) ➔ US Space Agency founded in 1958. Famous for Apollo Moon missions, Hubble Space Telescope, and James Webb Telescope."
+        };
+
+        function lookupCSAndWorldGKQuery(text) {
+            if (!text) return null;
+            const clean = text.trim().toUpperCase();
+
+            if (CS_AND_GK_DB[clean]) {
+                return `🎓 Computer Science & World Knowledge Engine ➔ ${CS_AND_GK_DB[clean]}`;
+            }
+
+            for (let key in CS_AND_GK_DB) {
+                if (clean.includes(key)) {
+                    return `🎓 Computer Science & World Knowledge Engine ➔ ${CS_AND_GK_DB[key]}`;
                 }
             }
 
