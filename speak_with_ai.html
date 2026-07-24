@@ -2396,7 +2396,8 @@
 
             // 0. WIKIPEDIA DIRECT PAGE SUMMARY REST API (100% Fact-Checked Official Knowledge)
             try {
-                const wikiRestUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`;
+                const baseQuery = cleanQ.replace(/(?:option\s+|[\(\[\{])?[a-d1-4][\)\]\}]?[.\:\-].*$/i, '').replace(/\?/g, '').trim();
+                const wikiRestUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(baseQuery || cleanQ)}`;
                 const wRest = await fetch(wikiRestUrl);
                 if (wRest.ok) {
                     const wData = await wRest.json();
