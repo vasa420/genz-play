@@ -996,27 +996,35 @@
             return { category: 'WEB_SEARCH', label: '🌐 GENERAL KNOWLEDGE & LIVE SEARCH', confidence: '96%' };
         }
 
-        // Live Web Search & Knowledge Base Sync API (Wikipedia & DuckDuckGo)
+        // Live Web Search & Knowledge Base Sync API (Wikipedia, DuckDuckGo & Google News Sync)
         async function fetchRealTimeWebSearch(text) {
-            if (!text) return null;
+            if (!text || text.trim().length < 2) return null;
             const q = text.trim();
-            const upper = q.toUpperCase();
-
-            const isInfoQuery = upper.startsWith('WHO') || upper.startsWith('WHAT') || upper.startsWith('WHERE') ||
-                                upper.startsWith('TELL ME') || upper.startsWith('SEARCH') || upper.startsWith('GOOGLE') ||
-                                upper.includes('CURRENT') || upper.includes('INFO') || upper.includes('KNOW');
-
-            if (!isInfoQuery) return null;
-
             const cleanQ = q.replace(/^WHO\s+IS\s+(THE\s+)?/i, '')
                             .replace(/^WHAT\s+IS\s+(THE\s+)?/i, '')
+                            .replace(/^WHERE\s+IS\s+(THE\s+)?/i, '')
                             .replace(/^TELL\s+ME\s+ABOUT\s+/i, '')
-                            .replace(/^SEARCH\s+FOR\s+/i, '')
+                            .replace(/^SEARCH\s+(FOR\s+)?/i, '')
                             .replace(/^GOOGLE\s+/i, '')
                             .replace(/\?/g, '').trim();
 
-            if (cleanQ.length < 3) return null;
+            if (cleanQ.length < 2) return null;
 
+            // 1. DUCKDUCKGO LIVE SEARCH / GOOGLE INSTANT ANSWER API
+            try {
+                const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`;
+                const dRes = await fetch(ddgUrl);
+                if (dRes.ok) {
+                    const dData = await dRes.json();
+                    if (dData.AbstractText && dData.AbstractText.length > 20) {
+                        return `Live Google Web Search Connection ➔ ${dData.AbstractText}`;
+                    } else if (dData.RelatedTopics && dData.RelatedTopics.length > 0 && dData.RelatedTopics[0].Text) {
+                        return `Live Google Web Search Connection ➔ ${dData.RelatedTopics[0].Text}`;
+                    }
+                }
+            } catch (e) {}
+
+            // 2. WIKIPEDIA REAL-TIME KNOWLEDGE BASE API
             try {
                 const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQ)}`;
                 const wRes = await fetch(wikiUrl);
@@ -1028,13 +1036,21 @@
                 }
             } catch (e) {}
 
+            // 3. GOOGLE NEWS / LIVE CURRENT UPDATES RSS FEED FETCH
             try {
-                const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQ)}&format=json&no_html=1&skip_disambig=1`;
-                const dRes = await fetch(ddgUrl);
-                if (dRes.ok) {
-                    const dData = await dRes.json();
-                    if (dData.AbstractText) {
-                        return `Live Web Search Intelligence ➔ ${dData.AbstractText}`;
+                const newsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${encodeURIComponent(cleanQ)}&hl=en-IN&gl=IN&ceid=IN:en`)}`;
+                const nRes = await fetch(newsUrl);
+                if (nRes.ok) {
+                    const nData = await nRes.json();
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(nData.contents, "text/xml");
+                    const items = xmlDoc.getElementsByTagName("item");
+                    if (items && items.length > 0) {
+                        const title = items[0].getElementsByTagName("title")[0]?.textContent;
+                        const pubDate = items[0].getElementsByTagName("pubDate")[0]?.textContent;
+                        if (title) {
+                            return `Live Google News Update ➔ ${title} (Published: ${pubDate || 'Today'})`;
+                        }
                     }
                 }
             } catch (e) {}
