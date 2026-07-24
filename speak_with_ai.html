@@ -816,13 +816,70 @@
                 return;
             }
 
-            // 6. MATH & GENERAL AI INTELLIGENCE
+            // 6. EMOTIONAL INTELLIGENCE & SENTIMENT ANALYSIS
+            const emotionResult = analyzeUserEmotion(raw);
+            if (emotionResult) {
+                if (currentMode === 'chat') {
+                    appendChatMessage('👤 YOU', raw, 'user');
+                    appendChatMessage('🤖 ATC AI ASSISTANT', emotionResult, 'ai');
+                }
+                speakCallResponse(emotionResult);
+                return;
+            }
+
+            // 7. MATH & GENERAL AI INTELLIGENCE
             const aiReplyText = generateAISpokenReply(raw);
             if (currentMode === 'chat') {
                 appendChatMessage('👤 YOU', raw, 'user');
                 appendChatMessage('🤖 ATC AI ASSISTANT', aiReplyText, 'ai');
             }
             speakCallResponse(aiReplyText);
+        }
+
+        // Real-Time Emotional Intelligence & Sentiment Analysis Engine
+        function analyzeUserEmotion(text) {
+            if (!text) return null;
+            const q = text.toLowerCase();
+
+            // 1. HAPPY / EXCITED / JOYFUL
+            if (q.includes('happy') || q.includes('excited') || q.includes('joy') || q.includes('great') ||
+                q.includes('awesome') || q.includes('feeling good') || q.includes('won') || q.includes('amazing') ||
+                q.includes('fantastic') || q.includes('wonderful') || q.includes('super happy')) {
+                return "Emotional Resonance ➔ I feel your happiness and positive energy! 🌟 It brings me immense joy to hear you're feeling great. Keep glowing and celebrate every moment!";
+            }
+
+            // 2. SAD / DOWN / LONELY / HURT
+            if (q.includes('sad') || q.includes('feeling down') || q.includes('upset') || q.includes('cry') ||
+                q.includes('crying') || q.includes('lonely') || q.includes('hurt') || q.includes('heartbroken') ||
+                q.includes('depressed') || q.includes('bad day') || q.includes('failed')) {
+                return "Emotional Support ➔ I hear you, and I understand how deeply you feel right now. ❤️ It's completely okay to feel sad sometimes. Remember that tough times pass, you are stronger than you think, and I am always here to listen and support you!";
+            }
+
+            // 3. STRESSED / ANXIOUS / TIRED / OVERWHELMED
+            if (q.includes('stress') || q.includes('stressed') || q.includes('anxious') || q.includes('anxiety') ||
+                q.includes('tired') || q.includes('exhausted') || q.includes('worried') || q.includes('overwhelmed') ||
+                q.includes('too much work') || q.includes('can\'t sleep')) {
+                return "Calming Reassurance ➔ Take a deep breath in... and let it out slowly. 🌿 I understand you are feeling stressed or tired. Give yourself permission to pause, rest your mind, and take things one step at a time. You've got this!";
+            }
+
+            // 4. ANGRY / FRUSTRATED / ANNOYED
+            if (q.includes('angry') || q.includes('frustrated') || q.includes('annoyed') || q.includes('mad') ||
+                q.includes('furious') || q.includes('hate') || q.includes('irritated')) {
+                return "Empathic Listening ➔ I understand your frustration. 🤝 It is completely valid to feel angry when things don't go right. I am here for you — take a moment to vent or let it out, and we'll work through it peacefully.";
+            }
+
+            // 5. LOVE / GRATITUDE / THANKFUL
+            if (q.includes('love') || q.includes('thank you') || q.includes('thanks') || q.includes('appreciate') ||
+                q.includes('you are the best') || q.includes('good ai') || q.includes('best ai')) {
+                return "Warm Gratitude ➔ Thank you so much for your kind heart! ❤️ I truly appreciate your warmth and friendship. I am always happy to be here by your side as your AI companion!";
+            }
+
+            // 6. GENERAL FEELING / MOOD QUERY
+            if (q.includes('feeling') || q.includes('feelings') || q.includes('emotion') || q.includes('emotions') || q.includes('mood')) {
+                return "Emotional Intelligence ➔ Yes! I understand human feelings deeply. Whether you feel happy, sad, excited, stressed, or curious, I listen to your heart and support you with empathy and care!";
+            }
+
+            return null;
         }
 
         // Live Weather Fetcher API
