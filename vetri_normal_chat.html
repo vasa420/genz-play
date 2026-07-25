@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Math Engine, 15 Portals & 4 Search APIs</title>
+    <title>VETRI AI STUDIO | Direct Knowledge & Search Synthesis</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING MATH ENGINE, 15 WEBSITES & 4 KNOWLEDGE APIs...
+            INITIALIZING DIRECT ANSWER SYNTHESIS & LIVE WEB INDEX...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · MATH ENGINE & 15 EDUCATIONAL WEBSITES
+            <span>⚡</span> VETRI AI STUDIO · DIRECT ANSWER SYNTHESIS ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -465,7 +465,7 @@
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
                 } else if (currentMode === 'normal') {
-                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & analyzing prompt for "${escapeHtml(text)}"...</div>`;
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Searching & extracting direct answer for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
                     box.scrollTop = box.scrollHeight;
 
@@ -477,7 +477,7 @@
                 } else if (currentMode === 'code') {
                     thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
-                    box.scrollHeight;
+                    box.scrollTop = box.scrollHeight;
 
                     await new Promise(r => setTimeout(r, 500));
                     const codeResp = generateCodeResponse(text);
@@ -501,7 +501,7 @@
                 console.error("Chat Processing Error:", err);
                 const el = document.getElementById(thinkingId);
                 if (el) el.remove();
-                appendChatMessage('🤖 VETRI AI', `🤖 <strong>Vetri AI Answer:</strong><br><br>I processed your prompt "${escapeHtml(text)}"! Explore search links below.`, 'ai', true);
+                appendChatMessage('🤖 VETRI AI', `🤖 <strong>Vetri AI Answer:</strong><br><br>I processed your prompt "${escapeHtml(text)}"!`, 'ai', true);
             } finally {
                 isProcessing = false;
             }
@@ -592,6 +592,39 @@
                 }
             } catch (e) {
                 return null;
+            }
+            return null;
+        }
+
+        // Solar System & General Knowledge Direct Knowledge Engine
+        function getSolarSystemAndGKDetails(query, upper) {
+            if (upper.includes('LARGEST PLANET') || (upper.includes('JUPITER') && upper.includes('PLANET'))) {
+                return {
+                    category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
+                    summary: `🪐 <strong>The largest planet in our solar system is Jupiter:</strong><br><br>
+                    <strong>Jupiter</strong> is a massive gas giant that is more than twice as massive as all other planets in the Solar System combined. It is the fifth planet from the Sun, famous for its iconic <strong>Great Red Spot</strong> (a giant storm larger than Earth) and having over 95 moons (including Ganymede, the largest moon in the Solar System).`
+                };
+            }
+            if (upper.includes('SMALLEST PLANET') || (upper.includes('MERCURY') && upper.includes('PLANET'))) {
+                return {
+                    category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
+                    summary: `🪐 <strong>The smallest planet in our solar system is Mercury:</strong><br><br>
+                    <strong>Mercury</strong> is the closest planet to the Sun and the smallest planet in the Solar System. It is only slightly larger than Earth's Moon and has no atmosphere or moons.`
+                };
+            }
+            if (upper.includes('HOTTEST PLANET') || (upper.includes('VENUS') && upper.includes('PLANET'))) {
+                return {
+                    category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
+                    summary: `🪐 <strong>The hottest planet in our solar system is Venus:</strong><br><br>
+                    <strong>Venus</strong> is the second planet from the Sun and the hottest planet in the Solar System with surface temperatures exceeding 465°C (870°F). This is due to an intense runaway greenhouse effect caused by its dense carbon dioxide atmosphere.`
+                };
+            }
+            if (upper.includes('RED PLANET') || (upper.includes('MARS') && upper.includes('PLANET'))) {
+                return {
+                    category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
+                    summary: `🪐 <strong>Mars is known as the Red Planet:</strong><br><br>
+                    <strong>Mars</strong> is the fourth planet from the Sun. It appears reddish due to iron oxide (rust) covering its dusty surface. It features Olympus Mons (the largest volcano in the Solar System) and two moons (Phobos and Deimos).`
+                };
             }
             return null;
         }
@@ -746,10 +779,7 @@
 
         // Real-Time Web Knowledge Fetcher & Synthesis Engine
         async function fetchLiveWebSummaryAsync(topic) {
-            const cleanTopic = topic
-                .replace(/PLEASE|ANALYZE|THE|WEBSITE|AND|TELL|CORRECT|ANSWER|WRONG|OUTPUT|WHAT|IS|EXPLAIN|ABOUT/gi, ' ')
-                .trim();
-            const query = cleanTopic || topic;
+            const query = topic.trim();
 
             // 1. DuckDuckGo Instant Answer API
             try {
@@ -886,7 +916,14 @@
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 3. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
+            // 3. Solar System & General Knowledge Direct Knowledge Engine
+            const solarIntel = getSolarSystemAndGKDetails(userText, upper);
+            if (solarIntel) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
+                return solarIntel.summary;
+            }
+
+            // 4. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
             const symbolIntel = getSymbolIntelDetails(userText);
             if (symbolIntel.found) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
@@ -897,7 +934,7 @@
                 • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
             }
 
-            // 4. 22-Module Master Computer Science & Software Engineering Engine
+            // 5. 22-Module Master Computer Science & Software Engineering Engine
             const csIntel = getProgrammingIntelDetails(userText, upper);
             if (csIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -919,7 +956,8 @@
                 upper.includes('SAMSUNG') || upper.includes('ONEPLUS') || upper.includes('TVK') ||
                 upper.includes('FLAMES') || upper.includes('CONCEPT') || upper.includes('DATA STRUCTURE') ||
                 upper.includes('DEVOPS') || upper.includes('DOCKER') || upper.includes('KUBERNETES') ||
-                upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('CYBER')
+                upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('CYBER') ||
+                upper.includes('PLANET') || upper.includes('SOLAR SYSTEM')
             );
 
             let searchTopic = userText;
@@ -1060,7 +1098,7 @@
                 const liveData = await fetchLiveWebSummaryAsync(searchTopic);
                 if (liveData) {
                     categoryTag = `🌐 LIVE WEB KNOWLEDGE (${liveData.source})`;
-                    customSummary = `📌 <strong>Live Knowledge Summary (${escapeHtml(liveData.title)}):</strong><br><br>${escapeHtml(liveData.summary)}`;
+                    customSummary = `💡 <strong>Direct Answer from Live Knowledge Search (${escapeHtml(liveData.title)}):</strong><br><br>${escapeHtml(liveData.summary)}`;
                 }
             }
 
