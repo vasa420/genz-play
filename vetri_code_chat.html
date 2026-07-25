@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VETRI AI STUDIO | Code Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00FFFF;
+            --primary-glow: rgba(0, 255, 255, 0.45);
+            --secondary: #8A2BE2;
+            --green: #00FF88;
+            --green-glow: rgba(0, 255, 136, 0.35);
+            --gold: #FFD700;
+            --bg: #03030b;
+            --card-bg: rgba(10, 10, 24, 0.85);
+            --border: rgba(0, 255, 255, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body, html {
+            width: 100%; height: 100%;
+            background: var(--bg); color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.6;
+        }
+
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        .top-navbar {
+            width: 100%; padding: 18px 35px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; background: rgba(5, 5, 18, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+        }
+
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 900;
+            letter-spacing: 4px; text-transform: uppercase;
+            background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .btn-back {
+            background: rgba(0, 255, 255, 0.08); border: 1px solid rgba(0, 255, 255, 0.3);
+            color: var(--primary); padding: 10px 20px; font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px; border-radius: 8px;
+            cursor: pointer; transition: 0.3s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .chat-container {
+            position: relative; z-index: 10;
+            flex: 1; width: 100%; max-width: 100%; margin: 0;
+            display: flex; flex-direction: column; padding: 15px 25px 20px;
+            box-sizing: border-box; height: calc(100vh - 65px);
+        }
+
+        .chat-card {
+            flex: 1; width: 100%; display: flex; flex-direction: column;
+            background: var(--card-bg); border: 1.5px solid var(--border);
+            border-radius: 20px; padding: 20px; backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 35px rgba(0, 255, 255, 0.15);
+            overflow: hidden;
+        }
+
+        .mode-tabs {
+            display: flex; gap: 12px; margin-bottom: 15px; width: 100%; justify-content: center;
+        }
+
+        .mode-tab-btn {
+            flex: 1; padding: 12px 18px;
+            background: rgba(0, 255, 255, 0.06);
+            border: 1.5px solid rgba(0, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 900; letter-spacing: 2px;
+            border-radius: 12px; cursor: pointer; text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-transform: uppercase; text-align: center; backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .mode-tab-btn:hover {
+            color: #fff; border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow); transform: translateY(-2px);
+        }
+
+        .mode-tab-btn.active {
+            background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            color: #fff; border-color: var(--primary);
+            box-shadow: 0 0 25px var(--primary-glow);
+        }
+
+        /* Language Presets Bar */
+        .lang-presets {
+            display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+
+        .lang-chip {
+            background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--green); font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px;
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+
+        .lang-chip:hover {
+            background: var(--green); color: #000; box-shadow: 0 0 15px var(--green-glow);
+        }
+
+        .terminal-box {
+            flex: 1; background: rgba(4, 4, 12, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 16px; padding: 20px;
+            overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+            scroll-behavior: smooth; margin-bottom: 18px;
+        }
+
+        .terminal-box::-webkit-scrollbar { width: 6px; }
+        .terminal-box::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 4px; }
+
+        .chat-msg {
+            display: flex; flex-direction: column; gap: 4px;
+            max-width: 96%; width: 96%; animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .chat-msg.user { align-self: flex-end; align-items: flex-end; }
+        .chat-msg.ai { align-self: flex-start; align-items: flex-start; }
+
+        .msg-sender {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+        }
+
+        .msg-body {
+            padding: 12px 18px; border-radius: 14px;
+            font-family: 'Outfit', sans-serif; font-size: 14px; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-word; width: 100%;
+        }
+
+        .chat-msg.user .msg-body {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(138, 43, 226, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.4); color: #fff;
+            border-bottom-right-radius: 2px; width: auto;
+        }
+
+        .chat-msg.ai .msg-body {
+            background: rgba(10, 24, 40, 0.85);
+            border: 1px solid rgba(0, 255, 136, 0.35); color: var(--green);
+            border-bottom-left-radius: 2px; text-shadow: 0 0 5px rgba(0,255,136,0.2);
+        }
+
+        .code-block-box {
+            background: rgba(4, 4, 12, 0.95);
+            border: 1.5px solid rgba(0, 255, 136, 0.4);
+            border-radius: 10px; padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+            color: var(--green); overflow-x: auto; white-space: pre;
+            margin: 10px 0 4px; box-shadow: inset 0 0 20px rgba(0,255,136,0.1);
+        }
+
+        .chat-input-wrapper { display: flex; gap: 12px; align-items: center; }
+
+        .chat-input {
+            flex: 1; padding: 16px 22px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(0, 255, 255, 0.35);
+            border-radius: 14px; color: #fff;
+            font-family: 'Outfit', sans-serif; font-size: 15px;
+            outline: none; transition: 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-mic {
+            width: 52px; height: 52px; border-radius: 14px;
+            background: rgba(0, 255, 255, 0.1); border: 1.5px solid rgba(0, 255, 255, 0.35);
+            color: var(--primary); font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+
+        .btn-mic:hover {
+            background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-mic.listening {
+            background: #FF2244; border-color: #FF2244; color: #fff;
+            animation: pulseMic 1s infinite;
+        }
+
+        @keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+        .btn-send {
+            padding: 16px 28px; background: linear-gradient(135deg, #00FF88, #00FFFF);
+            color: #000; border: none; border-radius: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
+            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 20px var(--green-glow);
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px); box-shadow: 0 0 30px var(--green);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="particle-bg"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+        <div class="nav-logo">
+            <span>⚡</span> VETRI AI STUDIO · CODE CHAT
+        </div>
+        <a class="btn-back" href="arcade_hub.html">← BACK TO ARCADE HUB</a>
+    </nav>
+
+    <!-- Main Chat Workspace -->
+    <div class="chat-container">
+        <div class="chat-card">
+
+            <!-- 3 Dedicated Mode Selection Pages Navigation -->
+            <div class="mode-tabs">
+                <a class="mode-tab-btn" href="vetri_normal_chat.html">💬 NORMAL CHAT</a>
+                <a class="mode-tab-btn active" href="vetri_code_chat.html">💻 CODE CHAT</a>
+                <a class="mode-tab-btn" href="vetri_image_gen.html">🎨 IMAGE GENERATION</a>
+            </div>
+
+            <!-- Quick Language Chips -->
+            <div class="lang-presets">
+                <div class="lang-chip" onclick="quickCode('C++ Binary Search Algorithm')">💻 C++ BINARY SEARCH</div>
+                <div class="lang-chip" onclick="quickCode('Java Quicksort Algorithm')">☕ JAVA QUICKSORT</div>
+                <div class="lang-chip" onclick="quickCode('Python Fibonacci Generator')">🐍 PYTHON FIBONACCI</div>
+                <div class="lang-chip" onclick="quickCode('C Language File IO Example')">⚡ C FILE I/O</div>
+                <div class="lang-chip" onclick="quickCode('HTML CSS Glassmorphism Card')">🌐 HTML/CSS CARD</div>
+            </div>
+
+            <!-- Terminal Output Window -->
+            <div class="terminal-box" id="terminal-box">
+                <div class="chat-msg ai">
+                    <span class="msg-sender">🤖 VETRI CODE ASSISTANT</span>
+                    <div class="msg-body">Welcome to VETRI STUDIOS Code Generator! Type any programming requirement in C, C++, Java, Python, or HTML/JS to get clean, formatted code blocks.</div>
+                </div>
+            </div>
+
+            <!-- Chat Input Controls -->
+            <div class="chat-input-wrapper">
+                <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
+                <input type="text" id="chat-input" class="chat-input" placeholder="Describe your code requirement... (e.g. C++ Binary Search, Java Quicksort, Python Script)" onkeydown="if(event.key==='Enter')sendCodeMessage()">
+                <button class="btn-send" onclick="sendCodeMessage()">💻 GENERATE CODE</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function quickCode(promptText) {
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value = promptText;
+                sendCodeMessage();
+            }
+        }
+
+        let isProcessing = false;
+
+        async function sendCodeMessage() {
+            if (isProcessing) return;
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            appendChatMessage('YOU', text, 'user');
+            isProcessing = true;
+
+            const thinkingId = 'thinking-' + Date.now();
+            const box = document.getElementById('terminal-box');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'chat-msg ai';
+            thinkingDiv.id = thinkingId;
+            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE ASSISTANT</span><div class="msg-body" style="color:var(--gold);">🟡 Synthesizing code logic... please wait</div>`;
+            box.appendChild(thinkingDiv);
+            box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
+
+                const codeResp = generateCodeResponse(text);
+                appendChatMessage('🤖 VETRI CODE ASSISTANT', codeResp, 'ai');
+                speakText('Code generated successfully.');
+                isProcessing = false;
+            }, 600);
+        }
+
+        function appendChatMessage(sender, text, type) {
+            const box = document.getElementById('terminal-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-msg ${type}`;
+            
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
+            senderSpan.textContent = sender;
+            
+            const bodyDiv = document.createElement('div');
+            bodyDiv.className = 'msg-body';
+            
+            if (text.includes('```')) {
+                bodyDiv.innerHTML = formatCodeBlocks(text);
+            } else {
+                bodyDiv.textContent = text;
+            }
+
+            msgDiv.appendChild(senderSpan);
+            msgDiv.appendChild(bodyDiv);
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function formatCodeBlocks(text) {
+            const parts = text.split(/```/);
+            let html = '';
+            for (let i = 0; i < parts.length; i++) {
+                if (i % 2 === 1) {
+                    html += `<div class="code-block-box">${escapeHtml(parts[i].trim())}</div>`;
+                } else {
+                    html += escapeHtml(parts[i]);
+                }
+            }
+            return html;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function generateCodeResponse(rawQuery) {
+            const query = rawQuery.toUpperCase();
+
+            if (query.includes('C++') || query.includes('CPP')) {
+                if (query.includes('BINARY SEARCH')) {
+                    return `💻 C++ Binary Search Algorithm:\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint binarySearch(int arr[], int l, int r, int x) {\n    while (l <= r) {\n        int m = l + (r - l) / 2;\n        if (arr[m] == x) return m;\n        if (arr[m] < x) l = m + 1;\n        else r = m - 1;\n    }\n    return -1;\n}\n\nint main() {\n    int arr[] = {2, 3, 4, 10, 40};\n    int n = sizeof(arr) / sizeof(arr[0]);\n    int result = binarySearch(arr, 0, n - 1, 10);\n    (result == -1) ? cout << "Not found" : cout << "Found at index " << result;\n    return 0;\n}\n\`\`\``;
+                }
+                return `💻 C++ Code Solution for "${rawQuery}":\n\`\`\`cpp\n#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    // Logic implementation for ${rawQuery}\n    cout << "Vetri AI C++ Engine completed request!" << endl;\n    return 0;\n}\n\`\`\``;
+            }
+
+            if (query.includes('JAVA')) {
+                if (query.includes('QUICKSORT')) {
+                    return `☕ Java Quicksort Algorithm:\n\`\`\`java\npublic class QuickSort {\n    static int partition(int arr[], int low, int high) {\n        int pivot = arr[high], i = (low-1);\n        for (int j=low; j<high; j++) {\n            if (arr[j] <= pivot) {\n                i++;\n                int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;\n            }\n        }\n        int temp = arr[i+1]; arr[i+1] = arr[high]; arr[high] = temp;\n        return i+1;\n    }\n    static void sort(int arr[], int low, int high) {\n        if (low < high) {\n            int pi = partition(arr, low, high);\n            sort(arr, low, pi-1);\n            sort(arr, pi+1, high);\n        }\n    }\n}\n\`\`\``;
+                }
+                return `☕ Java Solution for "${rawQuery}":\n\`\`\`java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Vetri AI Java Generator: ${rawQuery}");\n    }\n}\n\`\`\``;
+            }
+
+            if (query.includes('PYTHON') || query.includes('PY')) {
+                if (query.includes('FIBONACCI')) {
+                    return `🐍 Python Fibonacci Sequence:\n\`\`\`python\ndef fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        print(a, end=" ")\n        a, b = b, a + b\n\nfibonacci(10)\n\`\`\``;
+                }
+                return `🐍 Python Solution for "${rawQuery}":\n\`\`\`python\ndef main():\n    # Implementation for ${rawQuery}\n    print("Vetri AI Python Code output for ${rawQuery}")\n\nif __name__ == "__main__":\n    main()\n\`\`\``;
+            }
+
+            if (query.includes('HTML') || query.includes('CSS') || query.includes('CARD')) {
+                return `🌐 HTML/CSS Glassmorphism Card:\n\`\`\`html\n<div class="glass-card">\n    <h2>VETRI AI CARD</h2>\n    <p>Glassmorphic UI component designed for Vetri Studios.</p>\n</div>\n\n<style>\n.glass-card {\n    background: rgba(255, 255, 255, 0.05);\n    backdrop-filter: blur(12px);\n    border: 1px solid rgba(0, 255, 255, 0.3);\n    border-radius: 16px;\n    padding: 24px;\n    color: #fff;\n}\n</style>\n\`\`\``;
+            }
+
+            return `💻 C Program Solution for "${rawQuery}":\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    printf("Vetri Code Assistant Output: ${rawQuery}\\n");\n    return 0;\n}\n\`\`\``;
+        }
+
+        let speechRecognizer = null;
+        let isListening = false;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        function toggleVoiceInput() {
+            if (!SpeechRecognition) {
+                alert('Voice speech recognition is not supported in this browser.');
+                return;
+            }
+            const btn = document.getElementById('mic-btn');
+            if (isListening) {
+                if (speechRecognizer) speechRecognizer.stop();
+                isListening = false;
+                btn.classList.remove('listening');
+            } else {
+                speechRecognizer = new SpeechRecognition();
+                speechRecognizer.continuous = false;
+                speechRecognizer.interimResults = false;
+                speechRecognizer.lang = 'en-US';
+
+                speechRecognizer.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    document.getElementById('chat-input').value = text;
+                    sendCodeMessage();
+                    isListening = false;
+                    btn.classList.remove('listening');
+                };
+
+                speechRecognizer.onerror = () => {
+                    isListening = false;
+                    btn.classList.remove('listening');
+                };
+
+                speechRecognizer.start();
+                isListening = true;
+                btn.classList.add('listening');
+            }
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.4 + 0.4,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.35 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0, 255, 255, ${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+</body>
+</html>

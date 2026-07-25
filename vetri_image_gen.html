@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VETRI AI STUDIO | 8K AI Image Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00FFFF;
+            --primary-glow: rgba(0, 255, 255, 0.45);
+            --secondary: #8A2BE2;
+            --secondary-glow: rgba(138, 43, 226, 0.45);
+            --green: #00FF88;
+            --gold: #FFD700;
+            --bg: #03030b;
+            --card-bg: rgba(10, 10, 24, 0.85);
+            --border: rgba(0, 255, 255, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body, html {
+            width: 100%; height: 100%;
+            background: var(--bg); color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.6;
+        }
+
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        .top-navbar {
+            width: 100%; padding: 18px 35px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; background: rgba(5, 5, 18, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+        }
+
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 900;
+            letter-spacing: 4px; text-transform: uppercase;
+            background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .btn-back {
+            background: rgba(0, 255, 255, 0.08); border: 1px solid rgba(0, 255, 255, 0.3);
+            color: var(--primary); padding: 10px 20px; font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px; border-radius: 8px;
+            cursor: pointer; transition: 0.3s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .chat-container {
+            position: relative; z-index: 10;
+            flex: 1; width: 100%; max-width: 100%; margin: 0;
+            display: flex; flex-direction: column; padding: 15px 25px 20px;
+            box-sizing: border-box; height: calc(100vh - 65px);
+        }
+
+        .chat-card {
+            flex: 1; width: 100%; display: flex; flex-direction: column;
+            background: var(--card-bg); border: 1.5px solid var(--border);
+            border-radius: 20px; padding: 20px; backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 35px rgba(0, 255, 255, 0.15);
+            overflow: hidden;
+        }
+
+        .mode-tabs {
+            display: flex; gap: 12px; margin-bottom: 15px; width: 100%; justify-content: center;
+        }
+
+        .mode-tab-btn {
+            flex: 1; padding: 12px 18px;
+            background: rgba(0, 255, 255, 0.06);
+            border: 1.5px solid rgba(0, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 900; letter-spacing: 2px;
+            border-radius: 12px; cursor: pointer; text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-transform: uppercase; text-align: center; backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .mode-tab-btn:hover {
+            color: #fff; border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow); transform: translateY(-2px);
+        }
+
+        .mode-tab-btn.active {
+            background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            color: #fff; border-color: var(--primary);
+            box-shadow: 0 0 25px var(--primary-glow);
+        }
+
+        /* Image Prompt Presets Bar */
+        .image-presets {
+            display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+
+        .preset-chip {
+            background: rgba(138, 43, 226, 0.12); border: 1px solid rgba(138, 43, 226, 0.4);
+            color: #d19fe8; font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px;
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+
+        .preset-chip:hover {
+            background: var(--secondary); color: #fff; box-shadow: 0 0 15px var(--secondary-glow);
+        }
+
+        .terminal-box {
+            flex: 1; background: rgba(4, 4, 12, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 16px; padding: 20px;
+            overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+            scroll-behavior: smooth; margin-bottom: 18px;
+        }
+
+        .terminal-box::-webkit-scrollbar { width: 6px; }
+        .terminal-box::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 4px; }
+
+        .chat-msg {
+            display: flex; flex-direction: column; gap: 4px;
+            max-width: 96%; width: 96%; animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .chat-msg.user { align-self: flex-end; align-items: flex-end; }
+        .chat-msg.ai { align-self: flex-start; align-items: flex-start; }
+
+        .msg-sender {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+        }
+
+        .msg-body {
+            padding: 12px 18px; border-radius: 14px;
+            font-family: 'Outfit', sans-serif; font-size: 14px; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-word; width: 100%;
+        }
+
+        .chat-msg.user .msg-body {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(138, 43, 226, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.4); color: #fff;
+            border-bottom-right-radius: 2px; width: auto;
+        }
+
+        .chat-input-wrapper { display: flex; gap: 12px; align-items: center; }
+
+        .chat-input {
+            flex: 1; padding: 16px 22px;
+            background: rgba(4, 4, 12, 0.9);
+            border: 1.5px solid rgba(0, 255, 255, 0.35);
+            border-radius: 14px; color: #fff;
+            font-family: 'Outfit', sans-serif; font-size: 15px;
+            outline: none; transition: 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-mic {
+            width: 52px; height: 52px; border-radius: 14px;
+            background: rgba(0, 255, 255, 0.1); border: 1.5px solid rgba(0, 255, 255, 0.35);
+            color: var(--primary); font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+
+        .btn-mic:hover {
+            background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-mic.listening {
+            background: #FF2244; border-color: #FF2244; color: #fff;
+            animation: pulseMic 1s infinite;
+        }
+
+        @keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+        .btn-send {
+            padding: 16px 28px; background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            color: #fff; border: none; border-radius: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
+            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px); box-shadow: 0 0 30px var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="particle-bg"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+        <div class="nav-logo">
+            <span>⚡</span> VETRI AI STUDIO · 8K IMAGE GENERATOR
+        </div>
+        <a class="btn-back" href="arcade_hub.html">← BACK TO ARCADE HUB</a>
+    </nav>
+
+    <!-- Main Chat Workspace -->
+    <div class="chat-container">
+        <div class="chat-card">
+
+            <!-- 3 Dedicated Mode Selection Pages Navigation -->
+            <div class="mode-tabs">
+                <a class="mode-tab-btn" href="vetri_normal_chat.html">💬 NORMAL CHAT</a>
+                <a class="mode-tab-btn" href="vetri_code_chat.html">💻 CODE CHAT</a>
+                <a class="mode-tab-btn active" href="vetri_image_gen.html">🎨 IMAGE GENERATION</a>
+            </div>
+
+            <!-- Quick Prompt Presets -->
+            <div class="image-presets">
+                <div class="preset-chip" onclick="quickImage('Futuristic Cyberpunk City at Sunset in 8K')">🌌 CYBERPUNK CITY</div>
+                <div class="preset-chip" onclick="quickImage('Futuristic Cyber Sports Car with Neon Glow')">🏎️ NEON SPORTS CAR</div>
+                <div class="preset-chip" onclick="quickImage('Majestic Cyber Lion with Neon Armor')">🦁 NEON CYBER LION</div>
+                <div class="preset-chip" onclick="quickImage('Ancient Japanese Temple surrounded by Cherry Blossoms')">🏯 ANCIENT TEMPLE</div>
+                <div class="preset-chip" onclick="quickImage('Deep Cosmic Galaxy Nebula Portal with Glowing Stars')">🌌 COSMIC PORTAL</div>
+            </div>
+
+            <!-- Terminal Output Window -->
+            <div class="terminal-box" id="terminal-box">
+                <div class="chat-msg ai">
+                    <span class="msg-sender">🤖 VETRI AI ARTIST</span>
+                    <div class="msg-body" style="background: rgba(10, 10, 24, 0.95); border: 1.5px solid var(--primary); padding: 18px; border-radius: 18px; width: 100%;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--primary); margin-bottom: 12px;">🎨 VETRI 8K AI IMAGE GENERATION ENGINE ONLINE</div>
+                        <div>Welcome to VETRI AI Image Studio! Type any scene description or click a preset prompt above to generate a high-definition 8K widescreen photo.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Controls -->
+            <div class="chat-input-wrapper">
+                <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
+                <input type="text" id="chat-input" class="chat-input" placeholder="Describe the 8K AI photo to generate... (e.g. Futuristic Cyberpunk City at sunset)" onkeydown="if(event.key==='Enter')sendImageMessage()">
+                <button class="btn-send" onclick="sendImageMessage()">🎨 GENERATE PHOTO</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function quickImage(promptText) {
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value = promptText;
+                sendImageMessage();
+            }
+        }
+
+        let isProcessing = false;
+
+        async function sendImageMessage() {
+            if (isProcessing) return;
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            appendChatMessage('YOU', text, 'user');
+            isProcessing = true;
+
+            const thinkingId = 'thinking-' + Date.now();
+            const box = document.getElementById('terminal-box');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'chat-msg ai';
+            thinkingDiv.id = thinkingId;
+            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI ARTIST</span><div class="msg-body" style="color:var(--gold); background:rgba(10,10,24,0.9); border:1px solid var(--gold); padding:16px; border-radius:16px; width:100%;">🎨 Rendering 8K Neural Art for "${escapeHtml(text)}"... please wait</div>`;
+            box.appendChild(thinkingDiv);
+            box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
+
+                const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=1280&height=720&nologo=true`;
+                appendImageMessage('🤖 VETRI AI ARTIST', text, imgUrl);
+                speakText('8K AI Image generated successfully.');
+                isProcessing = false;
+            }, 1200);
+        }
+
+        function appendChatMessage(sender, text, type) {
+            const box = document.getElementById('terminal-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-msg ${type}`;
+            
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
+            senderSpan.textContent = sender;
+            
+            const bodyDiv = document.createElement('div');
+            bodyDiv.className = 'msg-body';
+            bodyDiv.textContent = text;
+
+            msgDiv.appendChild(senderSpan);
+            msgDiv.appendChild(bodyDiv);
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function appendImageMessage(sender, promptText, imageUrl) {
+            const box = document.getElementById('terminal-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg ai';
+
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
+            senderSpan.textContent = sender;
+
+            const bodyDiv = document.createElement('div');
+            bodyDiv.className = 'msg-body';
+            bodyDiv.style.cssText = 'background: rgba(10, 10, 24, 0.95); border: 1.5px solid var(--primary); padding: 18px; border-radius: 18px; width: 100%;';
+            bodyDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--primary);">🎨 8K WIDESCREEN AI PHOTO: "${escapeHtml(promptText)}"</div>
+                    <a href="${imageUrl}" target="_blank" download="vetri_ai_art.jpg" style="background:rgba(0,255,255,0.15); border:1px solid var(--primary); color:var(--primary); padding:4px 12px; font-family:'JetBrains Mono', monospace; font-size:10px; border-radius:6px; text-decoration:none; font-weight:700;">📥 DOWNLOAD 8K</a>
+                </div>
+                <img src="${imageUrl}" style="width: 100%; max-height: 550px; object-fit: cover; border-radius: 14px; box-shadow: 0 10px 35px rgba(0,0,0,0.9); border: 1.5px solid rgba(0,255,255,0.4);" alt="AI Image" onerror="this.onerror=null; this.src='https://picsum.photos/1280/720?blur=1';">
+            `;
+
+            msgDiv.appendChild(senderSpan);
+            msgDiv.appendChild(bodyDiv);
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        let speechRecognizer = null;
+        let isListening = false;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        function toggleVoiceInput() {
+            if (!SpeechRecognition) {
+                alert('Voice speech recognition is not supported in this browser.');
+                return;
+            }
+            const btn = document.getElementById('mic-btn');
+            if (isListening) {
+                if (speechRecognizer) speechRecognizer.stop();
+                isListening = false;
+                btn.classList.remove('listening');
+            } else {
+                speechRecognizer = new SpeechRecognition();
+                speechRecognizer.continuous = false;
+                speechRecognizer.interimResults = false;
+                speechRecognizer.lang = 'en-US';
+
+                speechRecognizer.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    document.getElementById('chat-input').value = text;
+                    sendImageMessage();
+                    isListening = false;
+                    btn.classList.remove('listening');
+                };
+
+                speechRecognizer.onerror = () => {
+                    isListening = false;
+                    btn.classList.remove('listening');
+                };
+
+                speechRecognizer.start();
+                isListening = true;
+                btn.classList.add('listening');
+            }
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.4 + 0.4,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.35 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0, 255, 255, ${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+</body>
+</html>
