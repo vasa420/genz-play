@@ -4,29 +4,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI ARCADE | Game Selection</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap" rel="stylesheet">
+    <title>VETRI ARCADE | Premium Game Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00FFFF;
+            --primary-glow: rgba(0, 255, 255, 0.4);
             --secondary: #8A2BE2;
             --accent: #FFD700;
             --danger: #FF3E3E;
-            --bg: #050510;
+            --danger-glow: rgba(255, 62, 62, 0.4);
+            --orange: #FF6400;
+            --bg: #030309;
+            --card-bg: rgba(10, 10, 24, 0.65);
+            --border: rgba(255, 255, 255, 0.12);
         }
 
-        body,
-        html {
+        * {
+            box-sizing: border-box;
+            user-select: none;
             margin: 0;
             padding: 0;
+        }
+
+        body, html {
             width: 100%;
             height: 100%;
             background: var(--bg);
-            color: white;
+            color: #fff;
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
         }
 
+        /* Ambient Video Background */
         #bg-video {
             position: fixed;
             top: 0;
@@ -35,9 +45,8 @@
             height: 100%;
             object-fit: cover;
             z-index: -2;
-            opacity: 0.8;
-            /* Increased opacity */
-            filter: brightness(0.7);
+            opacity: 0.65;
+            filter: brightness(0.55) contrast(1.1);
         }
 
         .overlay {
@@ -46,11 +55,80 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.9) 100%);
+            background: radial-gradient(circle at center, rgba(3, 3, 9, 0.4) 0%, rgba(3, 3, 9, 0.92) 100%);
             z-index: -1;
             pointer-events: none;
         }
 
+        /* Particle Canvas Overlay */
+        #particle-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(5, 5, 15, 0.65);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00FF88;
+            box-shadow: 0 0 10px #00FF88;
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .live-clock {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Scrollable Container */
         .container {
             position: relative;
             z-index: 10;
@@ -59,74 +137,86 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px;
+            padding: 110px 40px 60px 40px;
             box-sizing: border-box;
             overflow-y: auto;
         }
 
+        /* Header Hero Section */
         header {
             text-align: center;
-            margin-bottom: 60px;
-            animation: fadeInDown 1s ease-out;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
         }
 
         .logo-text {
-            font-size: 12px;
-            letter-spacing: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 10px;
             color: var(--primary);
             font-weight: 900;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px var(--primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px var(--primary-glow);
         }
 
         h1 {
-            font-size: 48px;
+            font-size: clamp(36px, 6vw, 64px);
             font-weight: 900;
             margin: 0;
-            letter-spacing: 4px;
-            background: linear-gradient(to right, #FFF, #AAA);
+            letter-spacing: 6px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #00FFFF 40%, #8A2BE2 70%, #FFD700 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+            text-transform: uppercase;
         }
 
+        .hero-sub {
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        /* Game Grid Layout */
         .game-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
+            gap: 35px;
             width: 100%;
-            max-width: 1200px;
-            padding-bottom: 100px;
+            max-width: 1280px;
+            padding-bottom: 80px;
         }
 
+        /* Premium Game Card */
         .game-card {
             position: relative;
-            height: 450px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            height: 480px;
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 28px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
             text-align: center;
-            padding: 40px;
+            padding: 35px 25px;
             box-sizing: border-box;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
         }
 
         .game-card:hover {
-            transform: translateY(-15px) scale(1.02);
+            transform: translateY(-12px) scale(1.02);
             border-color: var(--primary);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 255, 255, 0.2);
-        }
-
-        .game-card.horror:hover {
-            border-color: var(--danger);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 62, 62, 0.2);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 35px var(--primary-glow);
         }
 
         .card-bg {
@@ -135,307 +225,360 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            transition: transform 0.8s ease;
+            z-index: 1;
+            transition: transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.5s ease;
             background-size: cover;
             background-position: center;
-            filter: brightness(0.6) grayscale(0.2);
+            filter: brightness(0.65) saturate(1.1);
         }
 
         .game-card:hover .card-bg {
             transform: scale(1.1);
-            filter: brightness(0.8) grayscale(0);
+            filter: brightness(0.85) saturate(1.35);
         }
 
-        .game-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-            transition: transform 0.4s ease;
+        /* Gradient Dark Overlay for readability */
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(3, 3, 9, 0.2) 0%, rgba(3, 3, 9, 0.88) 75%, rgba(3, 3, 9, 0.98) 100%);
+            z-index: 2;
+            pointer-events: none;
         }
 
-        .game-card:hover .game-icon {
-            transform: scale(1.2) rotate(5deg);
+        .card-content {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(0, 255, 255, 0.12);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .game-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 900;
             letter-spacing: 2px;
-            margin: 0 0 10px;
-        }
-
-        .game-desc {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.6;
-            margin-bottom: 30px;
+            margin: 0 0 20px 0;
+            color: #FFF;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            text-transform: uppercase;
         }
 
         .btn-launch {
-            width: fit-content;
-            padding: 12px 30px;
-            background: white;
-            color: black;
-            border-radius: 30px;
+            width: 85%;
+            padding: 14px 28px;
+            background: #FFF;
+            color: #000;
+            border-radius: 12px;
             font-weight: 900;
             font-size: 12px;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
-            transition: 0.3s;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .game-card:hover .btn-launch {
-            background: var(--primary);
-            box-shadow: 0 0 20px var(--primary);
+            background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            color: #FFF;
+            box-shadow: 0 0 25px var(--primary-glow);
+            transform: scale(1.05);
         }
 
+        /* Distinct Color Themes Per Card */
+        /* Horror / Unknown */
+        .game-card.unknown:hover {
+            border-color: #8A2BE2;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(138, 43, 226, 0.4);
+        }
+        .game-card.unknown:hover .btn-launch {
+            background: linear-gradient(135deg, #8A2BE2, #00FFFF);
+            color: #FFF;
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.6);
+        }
+
+        /* Chess */
+        .game-card.chess:hover {
+            border-color: #00FF88;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 255, 136, 0.4);
+        }
+        .game-card.chess:hover .btn-launch {
+            background: linear-gradient(135deg, #00FF88, #FFD700);
+            color: #000;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+        }
+
+        /* Cricket */
+        .game-card.cricket:hover {
+            border-color: #39FF14;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(57, 255, 20, 0.4);
+        }
+        .game-card.cricket:hover .btn-launch {
+            background: linear-gradient(135deg, #39FF14, #00E5FF);
+            color: #000;
+            box-shadow: 0 0 25px rgba(57, 255, 20, 0.6);
+        }
+
+        /* No Exit / Project Silence */
+        .game-card.horror:hover {
+            border-color: var(--danger);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 35px var(--danger-glow);
+        }
         .game-card.horror:hover .btn-launch {
-            background: var(--danger);
-            box-shadow: 0 0 20px var(--danger);
-            color: white;
+            background: linear-gradient(135deg, #FF3E3E, #990000);
+            color: #FFF;
+            box-shadow: 0 0 25px var(--danger-glow);
         }
 
-        /* ATTACKS card styles */
-        .game-card.attacks {
-            border-color: rgba(255, 100, 0, 0.2);
-        }
-
+        /* Attacks */
         .game-card.attacks:hover {
-            border-color: #FF6400;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 100, 0, 0.35);
+            border-color: var(--orange);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(255, 100, 0, 0.4);
         }
-
         .game-card.attacks:hover .btn-launch {
-            background: linear-gradient(135deg, #FF6400, #FF2200);
+            background: linear-gradient(135deg, #FF6400, #FFD700);
+            color: #000;
             box-shadow: 0 0 25px rgba(255, 100, 0, 0.7);
-            color: white;
         }
 
-        /* SURVIVE IT card styles */
-        .game-card.survive-it {
-            border-color: rgba(255, 0, 127, 0.2);
-        }
-
-        .game-card.survive-it:hover {
-            border-color: #FF007F;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 0, 127, 0.35);
-        }
-
-        .game-card.survive-it:hover .btn-launch {
-            background: linear-gradient(135deg, #FF007F, #7F00FF);
-            box-shadow: 0 0 25px rgba(255, 0, 127, 0.7);
-            color: white;
-        }
-
-        .coming-soon-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #FF6400, #FF2200);
-            color: white;
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            box-shadow: 0 0 16px rgba(255, 100, 0, 0.6);
-            animation: pulseGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseGlow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 16px rgba(255, 100, 0, 0.6);
-            }
-
-            50% {
-                box-shadow: 0 0 30px rgba(255, 100, 0, 1);
-            }
-        }
-
+        /* Animations */
         @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .game-card:nth-child(1) {
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
-        }
-
-        .game-card:nth-child(2) {
-            animation: fadeInUp 0.8s ease-out 0.3s backwards;
-        }
-
-        .game-card:nth-child(3) {
-            animation: fadeInUp 0.8s ease-out 0.4s backwards;
-        }
-
-        .game-card:nth-child(4) {
-            animation: fadeInUp 0.8s ease-out 0.5s backwards;
-        }
-
-        .game-card:nth-child(5) {
-            animation: fadeInUp 0.8s ease-out 0.6s backwards;
-        }
-
-        .game-card:nth-child(6) {
-            animation: fadeInUp 0.8s ease-out 0.7s backwards;
-        }
-
-        .game-card:nth-child(7) {
-            animation: fadeInUp 0.8s ease-out 0.8s backwards;
-        }
-
-        .game-card:nth-child(8) {
-            animation: fadeInUp 0.8s ease-out 0.9s backwards;
-        }
-
-        .game-card:nth-child(9) {
-            animation: fadeInUp 0.8s ease-out 1.0s backwards;
-        }
+        .game-card:nth-child(1) { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards; }
+        .game-card:nth-child(2) { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards; }
+        .game-card:nth-child(3) { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards; }
+        .game-card:nth-child(4) { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards; }
+        .game-card:nth-child(5) { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards; }
 
         /* Custom Scrollbar */
-        .container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        .container::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
-        }
+        .container::-webkit-scrollbar { width: 8px; }
+        .container::-webkit-scrollbar-track { background: transparent; }
+        .container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        .container::-webkit-scrollbar-thumb:hover { background: var(--primary); }
     </style>
 </head>
 
 <body>
 
+    <!-- Ambient Video Background -->
     <video id="bg-video" autoplay muted loop playsinline>
         <source src="b_e_bd_c_f_c_mp_.mp4" type="video/mp4">
     </video>
     <div class="overlay"></div>
+    <canvas id="particle-bg"></canvas>
 
+    <!-- Top Navbar Header -->
+    <nav class="top-navbar">
+        <div class="nav-logo">
+            <span style="font-size: 18px;">⚡</span> VETRI ARCADE SYSTEM
+        </div>
+        <div class="nav-right">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="status-dot"></div>
+                <span>ONLINE · 100% OPERATIONAL</span>
+            </div>
+            <span>|</span>
+            <div class="live-clock" id="live-clock">00:00:00 AM</div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
     <div class="container">
         <header>
-            <div class="logo-text">VETRI ARCADE SYSTEM</div>
+            <div class="logo-text">VETRI STUDIOS SYSTEM</div>
             <h1>CHOOSE ANYTHING</h1>
+            <div class="hero-sub">SELECT YOUR EXPERIENCE TO BEGIN</div>
         </header>
 
         <div class="game-grid">
-            <!-- Horror -->
-            <div class="game-card horror" onclick="location.href='horror_game.html'">
-                <div class="card-bg" style="background-image: url('horror_intro.png')"></div>
-                <div class="game-icon">📱</div>
-                <h2 class="game-title">THE UNKNOWN</h2>
-                <div class="btn-launch">START STORY</div>
-            </div>
 
-            <!-- Chess -->
-            <div class="game-card" onclick="location.href='chess_login.html'">
-                <div class="card-bg" style="background-image: url('media__1776592780529.png')"></div>
-                <div class="game-icon">♟️</div>
-                <h2 class="game-title">GRANDMASTER CHESS</h2>
-                <div class="btn-launch">PLAY CHESS</div>
-            </div>
-
-            <!-- Hand Cricket -->
-            <div class="game-card" onclick="location.href='hand_cricket_login.html'">
-                <div class="card-bg" style="background-image: url('cricket_stadium_bg.png')"></div>
-                <div class="game-icon">🏏</div>
-                <h2 class="game-title">HAND CRICKET PRO</h2>
-                <div class="btn-launch">PLAY MATCH</div>
-            </div>
-
-
-            <!-- No Exit -->
-            <div class="game-card horror" onclick="location.href='no_exit.html'">
-                <div class="card-bg" style="background-image: url('no_exit_bg.png')"></div>
-                <div
-                    style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.4); margin-bottom: 15px; font-style: italic;">
-                    PROJECT SILENCE</div>
-                <div class="game-icon">🚪</div>
-                <h2 class="game-title">NO EXIT</h2>
-                <div class="btn-launch" style="background-color: #ff3b30; color: #fff;">ENTER LOOP</div>
-                <div
-                    style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 4px; color: #888; margin-top: 15px; text-transform: uppercase;">
-                    LEAVE THE DARKNESS</div>
-            </div>
-
-
-            <!-- ATTACKS -->
-            <div class="game-card attacks" onclick="location.href='attacks_intro.html'">
-                <div class="card-bg"
-                    style="background-image: url('squad_photo.jpg'); background-size: contain; background-position: center center; background-repeat: no-repeat; background-color: #0a0a15; filter: brightness(0.75);">
+            <!-- 1. The Unknown (Horror) -->
+            <div class="game-card unknown" onclick="launchGame('horror_game.html')">
+                <div class="card-bg" style="background-image: url('horror_intro.png');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-badge" style="background: rgba(138, 43, 226, 0.2); border-color: var(--secondary); color: #C880FF;">📱 PSYCHOLOGICAL STORY</div>
+                    <h2 class="game-title">THE UNKNOWN</h2>
+                    <div class="btn-launch">📱 START STORY</div>
                 </div>
-                <div class="coming-soon-badge" style="background: linear-gradient(135deg, #00FF66, #009933);">🔥 LIVE</div>
-                <h2 class="game-title"
-                    style="font-size: 32px; letter-spacing: 4px; background: linear-gradient(135deg, #FF6400, #FFD700); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
-                    ATTACKS</h2>
-                <div class="btn-launch"
-                    style="background: linear-gradient(135deg,#FF6400,#FF2200); color: #fff; letter-spacing: 3px; opacity: 1; cursor: pointer;">
-                    LAUNCH GAME</div>
-                <div
-                    style="font-family: 'Outfit', monospace; font-size: 10px; letter-spacing: 4px; color: rgba(255,200,100,0.8); margin-top: 14px; text-transform: uppercase;">
-                    PREPARE FOR BATTLE</div>
             </div>
+
+            <!-- 2. Grandmaster Chess -->
+            <div class="game-card chess" onclick="launchGame('chess_login.html')">
+                <div class="card-bg" style="background-image: url('media__1776592780529.png');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-badge" style="background: rgba(0, 255, 136, 0.18); border-color: #00FF88; color: #00FF88;">♟️ TACTICAL CHESS</div>
+                    <h2 class="game-title">GRANDMASTER CHESS</h2>
+                    <div class="btn-launch">♟️ PLAY CHESS</div>
+                </div>
+            </div>
+
+            <!-- 3. Hand Cricket Pro -->
+            <div class="game-card cricket" onclick="launchGame('hand_cricket_login.html')">
+                <div class="card-bg" style="background-image: url('cricket_stadium_bg.png');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-badge" style="background: rgba(57, 255, 20, 0.18); border-color: #39FF14; color: #39FF14;">🏏 STADIUM MATCH</div>
+                    <h2 class="game-title">HAND CRICKET PRO</h2>
+                    <div class="btn-launch">🏏 PLAY MATCH</div>
+                </div>
+            </div>
+
+            <!-- 4. No Exit (Project Silence) -->
+            <div class="game-card horror" onclick="launchGame('no_exit.html')">
+                <div class="card-bg" style="background-image: url('no_exit_bg.png');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-badge" style="background: rgba(255, 62, 62, 0.2); border-color: var(--danger); color: #FF6666;">🚪 PROJECT SILENCE</div>
+                    <h2 class="game-title" style="color: #FF3E3E;">NO EXIT</h2>
+                    <div class="btn-launch">🚪 ENTER LOOP</div>
+                </div>
+            </div>
+
+            <!-- 5. Attacks Studio Intel -->
+            <div class="game-card attacks" onclick="launchGame('attacks_intro.html')">
+                <div class="card-bg" style="background-image: url('squad_photo.jpg');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-badge" style="background: rgba(255, 100, 0, 0.2); border-color: var(--orange); color: #FF9944;">🔥 LIVE SQUAD ARENA</div>
+                    <h2 class="game-title" style="background: linear-gradient(135deg, #FF6400, #FFD700); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">ATTACKS</h2>
+                    <div class="btn-launch">⚔️ LAUNCH GAME</div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        window.onload = function () {
-            const video = document.getElementById('bg-video');
-            if (video) {
-                video.play().catch(e => {
-                    console.warn("Autoplay blocked, waiting for interaction.");
-                });
-            }
-        };
+        // Web Audio Synthesizer hover & click sounds
+        let audioCtx = null;
 
-        // Start sound and enter fullscreen on first user interaction
-        function handleInteraction() {
-            const video = document.getElementById('bg-video');
-            if (video) {
-                video.muted = false;
-            }
-
-            const doc = window.document;
-            const docEl = doc.documentElement;
-            const requestFS = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-            if (requestFS && !doc.fullscreenElement) {
-                requestFS.call(docEl).catch(e => console.warn("Fullscreen request failed:", e));
-            }
+        function playSound(freq = 440, type = 'sine', duration = 0.08) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
         }
 
-        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => {
-            document.body.addEventListener(evt, handleInteraction, { once: true });
+        // Add sound triggers on card hovers
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mouseenter', () => playSound(520, 'triangle', 0.06));
         });
+
+        function launchGame(url) {
+            playSound(880, 'sine', 0.15);
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 99999; opacity: 0;
+                transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                display: flex; align-items: center; justify-content: center;
+                font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 4px; color: var(--primary);
+                text-transform: uppercase;
+            `;
+            dimmer.innerText = 'LAUNCHING EXPERIENCE...';
+            document.body.appendChild(dimmer);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => { window.location.href = url; }, 700);
+            }));
+        }
+
+        // Real-Time Navbar Clock
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) clockEl.textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Canvas Particle Background
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 45; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.5 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.35 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0, 255, 255, ${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
     </script>
 </body>
 
