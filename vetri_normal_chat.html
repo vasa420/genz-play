@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Precision Live Multi-Option Evaluator Engine</title>
+    <title>VETRI AI STUDIO | Advanced MCQ Multi-Format & Precision Live Web Solver</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING PRECISION LIVE MULTI-OPTION EVALUATOR ENGINE...
+            INITIALIZING ADVANCED MCQ MULTI-FORMAT & PRECISION SOLVER...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · PRECISION LIVE MULTI-OPTION EVALUATOR ENGINE
+            <span>⚡</span> VETRI AI STUDIO · ADVANCED MCQ MULTI-FORMAT & PRECISION SOLVER
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -329,30 +329,11 @@
                 <button type="button" class="mode-tab-btn" id="tab-btn-image" onclick="switchStudioMode('image')">🎨 IMAGE GENERATION</button>
             </div>
 
-            <!-- Live HealthToday & Medical A-Z Portals Connectivity Bar -->
-            <div style="margin-bottom: 12px; padding: 12px 16px; background: rgba(0, 255, 136, 0.05); border: 1.5px solid rgba(0, 255, 136, 0.25); border-radius: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:#00FF88; display:flex; align-items:center; gap:6px;">
-                        🏥 LIVE HEALTHTODAY &amp; MEDICAL A-Z CONNECTIVITY:
-                    </span>
-                    <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4);">
-                        VERIFIED HEALTH PORTALS
-                    </span>
-                </div>
-                <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin;">
-                    <a href="https://www.healthtoday.com/be-healthy/health-a-z" target="_blank" style="padding:4px 12px; background:rgba(0,255,136,0.15); border:1px solid rgba(0,255,136,0.4); color:#00FF88; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; border-radius:15px; text-decoration:none; white-space:nowrap;">🏥 HEALTHTODAY A-Z</a>
-                    <a href="https://www.webmd.com" target="_blank" style="padding:4px 12px; background:rgba(0,255,255,0.12); border:1px solid rgba(0,255,255,0.3); color:#00FFFF; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; border-radius:15px; text-decoration:none; white-space:nowrap;">⚕️ WebMD Health</a>
-                    <a href="https://www.mayoclinic.org" target="_blank" style="padding:4px 12px; background:rgba(255,215,0,0.12); border:1px solid rgba(255,215,0,0.3); color:#FFD700; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; border-radius:15px; text-decoration:none; white-space:nowrap;">🏛️ Mayo Clinic</a>
-                    <a href="https://www.healthline.com" target="_blank" style="padding:4px 12px; background:rgba(255,100,0,0.12); border:1px solid rgba(255,100,0,0.3); color:#FF9D00; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; border-radius:15px; text-decoration:none; white-space:nowrap;">💊 Healthline A-Z</a>
-                    <a href="https://medlineplus.gov" target="_blank" style="padding:4px 12px; background:rgba(138,43,226,0.12); border:1px solid rgba(138,43,226,0.3); color:#C084FC; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; border-radius:15px; text-decoration:none; white-space:nowrap;">🧬 NIH MedlinePlus</a>
-                </div>
-            </div>
-
             <!-- Terminal Output Window -->
             <div class="terminal-box" id="terminal-box">
                 <div class="chat-msg ai">
                     <span class="msg-sender">🤖 VETRI AI</span>
-                    <div class="msg-body" style="font-weight: 700; font-size: 16px; letter-spacing: 1px; color: var(--green);">WELCOME TO VETRI AI · HEALTHTODAY & MEDICAL A-Z CONNECTED</div>
+                    <div class="msg-body" style="font-weight: 700; font-size: 16px; letter-spacing: 1px; color: var(--green);">WELCOME TO VETRI AI</div>
                 </div>
             </div>
 
@@ -609,6 +590,35 @@
             return str;
         }
 
+        // Universal Multi-Format MCQ Extractor (handles A), A., (A), A:, 1), 1., 1:, (1), lowercase a), etc.)
+        function extractMCQOptionsAndStem(rawQuery) {
+            const str = rawQuery.trim();
+            let matches = [];
+            const optPattern = /(?:\(?([A-Da-d1-4])[\.\:\)]\s*)([^\n\rA-Da-d1-4\(\)]+)/g;
+            let match;
+            while ((match = optPattern.exec(str)) !== null) {
+                const key = match[1].toUpperCase();
+                const val = match[2].trim();
+                if (val.length > 0) {
+                    matches.push({
+                        key: key,
+                        val: val,
+                        raw: `${key}) ${val}`
+                    });
+                }
+            }
+
+            if (matches.length < 2) return null;
+
+            const firstOptIdx = str.search(/(?:\(?([A-Da-d1-4])[\.\:\)]\s*)/);
+            const questionStem = firstOptIdx > 0 ? str.substring(0, firstOptIdx).trim() : str;
+
+            return {
+                stem: questionStem || str,
+                options: matches
+            };
+        }
+
         // Precision Multi-Option Scoring Engine (Queries web and scores every option individually)
         async function findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion) {
             let liveWebData = await fetchLiveWebSummaryAsync(questionStem);
@@ -677,30 +687,22 @@
             };
         }
 
-        // Universal MCQ Parser & Solver Engine (Always selects correct option directly from A, B, C, D with Precision Scoring)
+        // Universal MCQ Parser & Solver Engine (Supports ALL formats A), A., (A), 1), 1. and Precision Option Evaluation)
         async function solveUniversalMCQQueryAsync(rawQuery) {
-            const str = rawQuery.trim();
-            const upper = str.toUpperCase();
+            const parsed = extractMCQOptionsAndStem(rawQuery);
+            if (!parsed || parsed.options.length < 2) return null;
 
-            // Detect if prompt contains MCQ pattern like A) ... B) ... C) ... D)
-            const mcqPattern = /([A-D1-4][\.\)]\s*[^A-D1-4\n\r]+)/g;
-            const matches = str.match(mcqPattern);
-
-            if (!matches || matches.length < 2) return null;
-
-            // Extract question stem (text before first option)
-            const firstOptIdx = str.search(/[A-D1-4][\.\)]/);
-            const questionStem = firstOptIdx !== -1 ? str.substring(0, firstOptIdx).trim() : str;
-
+            const questionStem = parsed.stem;
+            const matches = parsed.options.map(o => o.raw);
             const normStem = normalizeSearchQuery(questionStem).toUpperCase();
             const isNegativeQuestion = /\b(NOT|EXCEPT|INCORRECT|FALSE|NEVER|UNTRUE|NON)\b/i.test(questionStem);
 
-            // 1. Silicon Valley of India / City Nicknames
+            // 1. Silicon Valley of India
             if (normStem.includes('SILICON VALLEY') || normStem.includes('IT CAPITAL')) {
-                const opt = matches.find(m => m.toUpperCase().includes('BENGALURU') || m.toUpperCase().includes('BANGALORE')) || matches[0];
+                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('BENGALURU') || o.val.toUpperCase().includes('BANGALORE')) || parsed.options[0];
                 return {
                     category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(opt.trim())} (✔)</span></strong><br><br>
+                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
                     • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                     • <strong>Factual Explanation:</strong> Bengaluru (Bangalore) is known as the Silicon Valley of India because it is the country's main IT exporter and technology hub.`
                 };
@@ -708,10 +710,10 @@
 
             // 2. Currency of Japan
             if (normStem.includes('CURRENCY') && normStem.includes('JAPAN')) {
-                const opt = matches.find(m => m.toUpperCase().includes('YEN')) || matches[0];
+                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('YEN')) || parsed.options[0];
                 return {
                     category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(opt.trim())} (✔)</span></strong><br><br>
+                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
                     • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                     • <strong>Factual Explanation:</strong> The Japanese Yen (JPY, symbol: ¥) is the official currency of Japan.`
                 };
@@ -719,10 +721,10 @@
 
             // 3. Largest Planet
             if (normStem.includes('LARGEST PLANET') || normStem.includes('BIGGEST PLANET')) {
-                const opt = matches.find(m => m.toUpperCase().includes('JUPITER')) || matches[0];
+                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('JUPITER')) || parsed.options[0];
                 return {
                     category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(opt.trim())} (✔)</span></strong><br><br>
+                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
                     • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                     • <strong>Factual Explanation:</strong> Jupiter is the largest planet in our solar system, more than twice as massive as all other planets combined.`
                 };
@@ -730,10 +732,10 @@
 
             // 4. Red Planet
             if (normStem.includes('RED PLANET')) {
-                const opt = matches.find(m => m.toUpperCase().includes('MARS')) || matches[0];
+                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('MARS')) || parsed.options[0];
                 return {
                     category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(opt.trim())} (✔)</span></strong><br><br>
+                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
                     • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                     • <strong>Factual Explanation:</strong> Mars is known as the Red Planet due to iron oxide (rust) covering its dusty surface.`
                 };
@@ -741,16 +743,16 @@
 
             // 5. Telephone Invention
             if (normStem.includes('TELEPHONE') && (normStem.includes('INVENT') || normStem.includes('WHO'))) {
-                const opt = matches.find(m => m.toUpperCase().includes('BELL')) || matches[0];
+                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('BELL')) || parsed.options[0];
                 return {
                     category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(opt.trim())} (✔)</span></strong><br><br>
+                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
                     • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                     • <strong>Factual Explanation:</strong> Alexander Graham Bell patented the electric telephone in 1876.`
                 };
             }
 
-            // Precision Multi-Option Scoring Evaluation across live web knowledge!
+            // Precision Multi-Option Scoring Engine
             const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
 
             return {
@@ -839,28 +841,6 @@
                     category: "💶 WORLD CURRENCY KNOWLEDGE",
                     summary: `🇪🇺 <strong>The currency of the Eurozone is the Euro (EUR):</strong><br><br>
                     • <strong>Currency Symbol:</strong> €`
-                };
-            }
-            return null;
-        }
-
-        // HealthToday & Medical A-Z Knowledge Solver Engine
-        function getHealthTodayMedicalDetails(query, upper) {
-            const normUpper = normalizeSearchQuery(query).toUpperCase();
-
-            if (normUpper.includes('HEALTH') || normUpper.includes('MEDICAL') || normUpper.includes('DOCTOR') || normUpper.includes('SYMPTOM') || normUpper.includes('DISEASE') || normUpper.includes('VITAMIN') || normUpper.includes('FEVER') || normUpper.includes('DIABETES') || normUpper.includes('BP') || normUpper.includes('BLOOD PRESSURE') || normUpper.includes('HEALTH TODAY') || normUpper.includes('HEALTHTODAY')) {
-                return {
-                    category: "🏥 HEALTHTODAY & MEDICAL A-Z KNOWLEDGE PORTAL",
-                    summary: `🏥 <strong>HealthToday A-Z &amp; Verified Medical Guide:</strong><br><br>` +
-                             `• <strong>Connected Portal:</strong> <a href="https://www.healthtoday.com/be-healthy/health-a-z" target="_blank" style="color:var(--green); font-weight:bold;">HealthToday Be Healthy A-Z Index</a><br><br>` +
-                             `<strong>Key Medical &amp; Health Insights for "${escapeHtml(query)}":</strong><br>` +
-                             `• <strong>A-Z Health Reference:</strong> Comprehensive index covering conditions, symptoms, preventive care, nutrition, and wellness.<br>` +
-                             `• <strong>Balanced Nutrition &amp; Wellness:</strong> Maintain daily hydration, essential vitamins (Vitamin D, C, B12), and active physical exercise.<br>` +
-                             `• <strong>Vital Sign Benchmarks:</strong> Normal Blood Pressure (~120/80 mmHg), Normal Resting Heart Rate (60-100 BPM).<br><br>` +
-                             `🌐 <strong>Live Verified Health Resources:</strong><br>` +
-                             `• <a href="https://www.healthtoday.com/be-healthy/health-a-z" target="_blank" style="color:#00FF88; text-decoration:none;">🏥 HealthToday Be Healthy A-Z Portal</a><br>` +
-                             `• <a href="https://www.mayoclinic.org" target="_blank" style="color:#FFD700; text-decoration:none;">🏛️ Mayo Clinic Health &amp; Diseases</a><br>` +
-                             `• <a href="https://www.webmd.com" target="_blank" style="color:#00FFFF; text-decoration:none;">⚕️ WebMD Symptoms &amp; Conditions</a>`
                 };
             }
             return null;
@@ -1235,7 +1215,7 @@
             const upper = userText.toUpperCase();
             const cleanText = userText.replace(/[^a-zA-Z\s]/g, '');
 
-            // 0. Universal MCQ Solver Engine (Always selects correct option from A, B, C, D directly with Precision Option Scoring)
+            // 0. Universal MCQ Solver Engine (Supports ALL formats A), A., (A), 1), 1. with Precision Multi-Option Evaluation)
             const mcqResult = await solveUniversalMCQQueryAsync(userText);
             if (mcqResult) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -1298,14 +1278,7 @@
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 8. HealthToday & Medical A-Z Direct Knowledge Engine
-            const healthIntel = getHealthTodayMedicalDetails(userText, upper);
-            if (healthIntel) {
-                conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
-                return healthIntel.summary;
-            }
-
-            // 9. Solar System & General Knowledge Direct Knowledge Engine (with Solar System Web Portals)
+            // 8. Solar System & General Knowledge Direct Knowledge Engine (with Solar System Web Portals)
             const solarIntel = getSolarSystemAndGKDetails(userText, upper);
             if (solarIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
