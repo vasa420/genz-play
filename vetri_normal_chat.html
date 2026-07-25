@@ -717,6 +717,13 @@
 
             if (matches.length < 2) return null;
 
+            // Trim trailing prompt metadata (e.g. Answer: Blue Whale, Correct: B) from the last option
+            if (matches.length > 0) {
+                const lastOpt = matches[matches.length - 1];
+                lastOpt.val = lastOpt.val.replace(/\s+(Answer|Ans|Solution|Correct)[\:\=].*$/i, '').trim();
+                lastOpt.raw = `${lastOpt.key}) ${lastOpt.val}`;
+            }
+
             return {
                 stem: questionStem || str,
                 options: matches
@@ -727,7 +734,40 @@
         async function findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion) {
             const normStem = questionStem.toUpperCase();
 
-            // 1. National Animal of India (Bengal Tiger since April 1973; Lion was before 1973)
+            // 1. Largest Mammal / Largest Animal on Earth (Blue Whale)
+            if ((normStem.includes('LARGEST MAMMAL') || normStem.includes('BIGGEST MAMMAL') || normStem.includes('LARGEST ANIMAL')) && !normStem.includes('LAND')) {
+                const whaleOpt = matches.find(m => m.toUpperCase().includes('BLUE WHALE') || m.toUpperCase().includes('WHALE'));
+                if (whaleOpt) {
+                    return {
+                        matchedOpt: whaleOpt.trim(),
+                        explanation: "The Blue Whale (Balaenoptera musculus) is the largest mammal and the largest animal known to have ever existed on Earth, reaching lengths of up to 30 meters and weighing up to 200 tons.",
+                        customReasons: {
+                            'ELEPHANT': "The African Bush Elephant is the largest land mammal, but the Blue Whale is vastly larger overall.",
+                            'BLUE WHALE': "The Blue Whale (Balaenoptera musculus) is the largest mammal and animal on Earth, weighing up to 200 tons.",
+                            'WHALE': "The Blue Whale (Balaenoptera musculus) is the largest mammal and animal on Earth.",
+                            'GIRAFFE': "The Giraffe is the tallest living land animal, not the largest mammal.",
+                            'HIPPOPOTAMUS': "The Hippopotamus is the 3rd largest land mammal, after elephants and rhinos."
+                        }
+                    };
+                }
+            }
+
+            // 2. Largest Land Mammal (Elephant)
+            if (normStem.includes('LAND MAMMAL') || (normStem.includes('LAND') && normStem.includes('MAMMAL'))) {
+                const eleOpt = matches.find(m => m.toUpperCase().includes('ELEPHANT'));
+                if (eleOpt) {
+                    return {
+                        matchedOpt: eleOpt.trim(),
+                        explanation: "The African Bush Elephant is the largest living land mammal, weighing up to 11 tons.",
+                        customReasons: {
+                            'ELEPHANT': "The African Bush Elephant is the largest living land mammal.",
+                            'BLUE WHALE': "The Blue Whale is a marine mammal, not a land mammal."
+                        }
+                    };
+                }
+            }
+
+            // 3. National Animal of India (Bengal Tiger since April 1973; Lion was before 1973)
             if (normStem.includes('NATIONAL ANIMAL') && normStem.includes('INDIA')) {
                 const tigerOpt = matches.find(m => m.toUpperCase().includes('TIGER'));
                 if (tigerOpt) {
