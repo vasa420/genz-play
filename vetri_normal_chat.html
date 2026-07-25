@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Universal All-in-One Studio</title>
+    <title>VETRI AI STUDIO | Context-Aware Universal AI Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -302,7 +302,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING UNIVERSAL AI ENGINE...
+            INITIALIZING CONTEXT-AWARE CONVERSATIONAL AI ENGINE...
         </div>
 
         <div style="
@@ -319,7 +319,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · UNIVERSAL KNOWLEDGE ENGINE
+            <span>⚡</span> VETRI AI STUDIO · CONVERSATIONAL MEMORY & SEARCH ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -328,7 +328,7 @@
     <div class="chat-container">
         <div class="chat-card">
 
-            <!-- 3 Dedicated Modes Seamless In-Place Switcher -->
+            <!-- 3 Dedicated Modes Switcher -->
             <div class="mode-tabs">
                 <button type="button" class="mode-tab-btn active" id="tab-btn-normal" onclick="switchStudioMode('normal')">💬 UNIVERSAL SEARCH & CHAT HUB</button>
                 <button type="button" class="mode-tab-btn" id="tab-btn-code" onclick="switchStudioMode('code')">💻 CODE CHAT</button>
@@ -346,7 +346,7 @@
             <!-- Chat Input Controls -->
             <div class="chat-input-wrapper">
                 <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
-                <input type="text" id="chat-input" class="chat-input" placeholder="Ask any question (e.g. iPhone 16 Pro Max, Samsung S24, GTA V, FLAMES)..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                <input type="text" id="chat-input" class="chat-input" placeholder="ASK ANYTHING WITH VETRI AI..." onkeydown="if(event.key==='Enter')sendChatMessage()">
                 <button class="btn-send" id="main-send-btn" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
             </div>
 
@@ -354,8 +354,9 @@
     </div>
 
     <script>
-        let currentMode = 'normal'; // 'normal' | 'code' | 'image'
+        let currentMode = 'normal';
         let isProcessing = false;
+        let conversationMemory = []; // Conversation Memory History Array
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -376,7 +377,45 @@
             }
         });
 
-        // Instant Tab Switcher (No Full Page Reload or Flashing Splash Screen!)
+        // Smart Conversational Context Resolver (Connects follow-up questions to previous chat context)
+        function resolveContextualQuery(rawQuery) {
+            const text = rawQuery.trim();
+            const upper = text.toUpperCase();
+
+            // Record current user input into memory
+            conversationMemory.push({ role: 'user', text: text });
+
+            // Check if current input is a follow-up pronoun or question
+            const isFollowUp = (
+                upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('WHO') ||
+                upper.includes('FOUNDER') || upper.includes('LEADER') || upper.includes('PRICE') ||
+                upper.includes('WHERE') || upper.includes('HOW') || upper.includes('MORE') ||
+                upper.includes('WHY') || upper.includes('DATE') || upper.includes('AGE') ||
+                upper.includes('IT') || upper.includes('THAT') || upper.includes('HE') || upper.includes('SHE') ||
+                text.split(' ').length <= 4
+            );
+
+            let resolvedQuery = text;
+            let topicContext = "";
+            let hasContext = false;
+
+            if (isFollowUp && conversationMemory.length > 1) {
+                // Find the previous primary user question in conversation memory
+                for (let i = conversationMemory.length - 2; i >= 0; i--) {
+                    if (conversationMemory[i].role === 'user') {
+                        const prevTopic = conversationMemory[i].text;
+                        resolvedQuery = `${prevTopic} ${text}`;
+                        topicContext = prevTopic;
+                        hasContext = true;
+                        console.log(`🧠 Vetri AI Context Linked: "${text}" ➔ "${resolvedQuery}"`);
+                        break;
+                    }
+                }
+            }
+
+            return { resolvedQuery, topicContext, hasContext };
+        }
+
         function switchStudioMode(mode, silent = false) {
             if (currentMode === mode && !silent) return;
             currentMode = mode;
@@ -389,7 +428,7 @@
             const sendBtn = document.getElementById('main-send-btn');
 
             if (mode === 'normal') {
-                input.placeholder = "Ask any question (e.g. iPhone 16 Pro Max, Samsung S24, GTA V, FLAMES)...";
+                input.placeholder = "ASK ANYTHING WITH VETRI AI...";
                 sendBtn.innerHTML = "🌐 SEARCH & CHAT";
                 if (!silent) appendSystemModeNotice("💬 Switched to Universal Search & Knowledge Hub Mode");
             } else if (mode === 'code') {
@@ -429,7 +468,7 @@
             thinkingDiv.id = thinkingId;
 
             if (currentMode === 'normal') {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Processing knowledge query for "${escapeHtml(text)}"...</div>`;
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Analyzing conversation context & searching web for "${escapeHtml(text)}"...</div>`;
             } else if (currentMode === 'code') {
                 thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean syntax code blocks for "${escapeHtml(text)}"...</div>`;
             } else if (currentMode === 'image') {
@@ -444,7 +483,7 @@
                 const el = document.getElementById(thinkingId);
                 if (el) el.remove();
                 appendChatMessage('🤖 VETRI AI', responseHtml, 'ai', true);
-                speakText(`Details fetched for ${text}`);
+                speakText(`Answer retrieved.`);
             } else if (currentMode === 'code') {
                 setTimeout(() => {
                     const el = document.getElementById(thinkingId);
@@ -531,20 +570,41 @@
             return html;
         }
 
-        // Multi-Domain & Mobile Brand / Flipkart / Amazon Intelligence Engine
+        // Multi-Domain & Context-Aware Knowledge Engine
         async function generateUniversalIntentResponseAsync(rawQuery) {
-            const query = rawQuery.trim();
+            const contextData = resolveContextualQuery(rawQuery);
+            const query = contextData.resolvedQuery;
             const upper = query.toUpperCase();
 
             let customSummary = "";
             let categoryTag = "UNIVERSAL KNOWLEDGE";
             let customLinksHtml = "";
 
+            let contextNoticeHtml = "";
+            if (contextData.hasContext) {
+                contextNoticeHtml = `<div style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); margin-bottom:10px; background:rgba(255,215,0,0.1); border:1px solid var(--gold); padding:6px 12px; border-radius:8px;">🧠 <strong>CONVERSATION CONTEXT ANALYZED:</strong> Follow-up linked to "${escapeHtml(contextData.topicContext)}"</div>`;
+            }
+
+            // 0. Independence Day & History Context Handler
+            if (upper.includes('INDEPENDENCE DAY') || upper.includes('INDEPENDENCE') || (contextData.hasContext && contextData.topicContext.toUpperCase().includes('INDEPENDENCE'))) {
+                categoryTag = "📜 HISTORICAL KNOWLEDGE HUB";
+                if (upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('DATE')) {
+                    customSummary = `${contextNoticeHtml}🇮🇳 <strong>Indian Independence Day Year & Date:</strong><br><br>
+                    India achieved independence from British rule on <strong>August 15, 1947 (15-08-1947)</strong>.<br>
+                    • <strong>First Prime Minister:</strong> Jawaharlal Nehru (hoisted the national flag at Red Fort, New Delhi).<br>
+                    • <strong>Act:</strong> Indian Independence Act 1947 passed by the UK Parliament.`;
+                } else {
+                    customSummary = `${contextNoticeHtml}🇮🇳 <strong>Indian Independence Day - Overview:</strong><br><br>
+                    <strong>Indian Independence Day</strong> is celebrated annually on <strong>August 15</strong>, marking the nation's independence from the British Raj on August 15, 1947.<br>
+                    It is a national holiday commemorated with flag-hoisting ceremonies, parades, and cultural events across all states and Union Territories.`;
+                }
+            }
+
             // 1. Mobile Brand, Model Specs, Flipkart, Amazon & Official Store Handler
-            if (upper.includes('IPHONE') || upper.includes('SAMSUNG') || upper.includes('ONEPLUS') || upper.includes('REALME') || upper.includes('VIVO') || upper.includes('OPPO') || upper.includes('MOBILE') || upper.includes('SMARTPHONE') || upper.includes('XIAOMI') || upper.includes('REDMI') || upper.includes('POCO') || upper.includes('IQOO') || upper.includes('MOTOROLA')) {
+            else if (upper.includes('IPHONE') || upper.includes('SAMSUNG') || upper.includes('ONEPLUS') || upper.includes('REALME') || upper.includes('VIVO') || upper.includes('OPPO') || upper.includes('MOBILE') || upper.includes('SMARTPHONE') || upper.includes('XIAOMI') || upper.includes('REDMI') || upper.includes('POCO') || upper.includes('IQOO') || upper.includes('MOTOROLA')) {
                 categoryTag = "📱 MOBILE SPECS, FLIPKART & AMAZON STORES";
                 let mobileIntel = getMobileIntelDetails(query, upper);
-                customSummary = mobileIntel.summary;
+                customSummary = contextNoticeHtml + mobileIntel.summary;
 
                 const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
                 const amazonUrl = `https://www.amazon.in/s?k=${encodeURIComponent(query)}`;
@@ -564,7 +624,7 @@
             else if (upper.includes('GAME') || upper.includes('PLAYSTORE') || upper.includes('GTA') || upper.includes('PUBG') || upper.includes('BGMI') || upper.includes('FREE FIRE') || upper.includes('MINECRAFT') || upper.includes('GOD OF WAR') || upper.includes('CYBERPUNK') || upper.includes('SUBWAY SURFERS') || upper.includes('CLASH OF CLANS') || upper.includes('ELDEN RING') || upper.includes('WITCHER') || upper.includes('LUDO') || upper.includes('CALL OF DUTY') || upper.includes('ROBLOX') || upper.includes('VALORANT') || upper.includes('FORTNITE') || upper.includes('STEAM')) {
                 categoryTag = "🎮 GAME INTEL & 500+ GAME PORTALS";
                 let gameDetails = getGameIntelDetails(query, upper);
-                customSummary = gameDetails.summary;
+                customSummary = contextNoticeHtml + gameDetails.summary;
 
                 customLinksHtml = `
                     <a href="https://play.google.com/store/search?q=${encodeURIComponent(query)}&c=apps" target="_blank" class="know-link-btn" style="border-color:var(--green); color:var(--green);">🤖 Google Play Store Games ↗</a>
@@ -582,7 +642,7 @@
                 let names = extractNamesFromFlames(query);
                 let flamesRes = runFlamesAlgorithm(names.n1, names.n2);
                 
-                customSummary = `🔥 <strong>FLAMES GAME RESULT FOR: ${escapeHtml(names.n1.toUpperCase())} & ${escapeHtml(names.n2.toUpperCase())}</strong><br><br>
+                customSummary = `${contextNoticeHtml}🔥 <strong>FLAMES GAME RESULT FOR: ${escapeHtml(names.n1.toUpperCase())} & ${escapeHtml(names.n2.toUpperCase())}</strong><br><br>
                 • <strong>Name 1:</strong> ${escapeHtml(names.n1)}<br>
                 • <strong>Name 2:</strong> ${escapeHtml(names.n2)}<br>
                 • <strong>Common Letter Count:</strong> ${flamesRes.count}<br>
@@ -596,17 +656,22 @@
             }
 
             // Default TVK & General Knowledge Handlers
-            else if (upper === 'TVK' || upper.includes('TAMILAGA VETTRI KAZHAGAM')) {
+            else if (upper === 'TVK' || upper.includes('TAMILAGA VETTRI KAZHAGAM') || (contextData.hasContext && contextData.topicContext.toUpperCase().includes('TVK'))) {
                 categoryTag = "📌 TVK POLITICAL PARTY HUB";
-                customSummary = `📌 <strong>TVK (Tamilaga Vettri Kazhagam) - Official Overview:</strong><br><br>
-                <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is an Indian regional political party based in Tamil Nadu and Puducherry.<br><br>
-                • <strong>Founder & President:</strong> Vijay (Thalapathy Vijay)<br>
-                • <strong>Founded Date:</strong> 2 February 2024<br>
-                • <strong>Party Flag & Emblem:</strong> Two military trumpeting elephants flanking a central five-pointed star.<br>
-                • <strong>Key Ideology:</strong> Secular Social Justice, Dravidian Equality, and Youth Empowerment.`;
+                if (upper.includes('PRESIDENT') || upper.includes('LEADER') || upper.includes('FOUNDER') || upper.includes('WHO')) {
+                    customSummary = `${contextNoticeHtml}📌 <strong>TVK Founder & President:</strong><br><br>
+                    The founder and president of <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is <strong>Vijay (Thalapathy Vijay)</strong>.`;
+                } else {
+                    customSummary = `${contextNoticeHtml}📌 <strong>TVK (Tamilaga Vettri Kazhagam) - Official Overview:</strong><br><br>
+                    <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is an Indian regional political party based in Tamil Nadu and Puducherry.<br><br>
+                    • <strong>Founder & President:</strong> Vijay (Thalapathy Vijay)<br>
+                    • <strong>Founded Date:</strong> 2 February 2024<br>
+                    • <strong>Party Flag & Emblem:</strong> Two military trumpeting elephants flanking a central five-pointed star.<br>
+                    • <strong>Key Ideology:</strong> Secular Social Justice, Dravidian Equality, and Youth Empowerment.`;
+                }
             }
 
-            // Fallback Live Fetch from Wikipedia API if no custom summary
+            // Fallback Live Fetch from Wikipedia API using Contextually Resolved Query
             if (!customSummary) {
                 try {
                     let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
@@ -625,7 +690,7 @@
                     if (res.ok) {
                         const wikiData = await res.json();
                         if (wikiData.extract && wikiData.type !== 'disambiguation') {
-                            customSummary = `📌 <strong>Live Knowledge Summary (${escapeHtml(wikiData.title)}):</strong><br><br>${escapeHtml(wikiData.extract)}`;
+                            customSummary = `${contextNoticeHtml}📌 <strong>Live Knowledge Summary (${escapeHtml(wikiData.title)}):</strong><br><br>${escapeHtml(wikiData.extract)}`;
                         }
                     }
                 } catch (e) {
@@ -634,8 +699,11 @@
             }
 
             if (!customSummary) {
-                customSummary = `🎯 <strong>Question Analyzed:</strong> "${escapeHtml(query)}"<br><br>Vetri AI synthesized answers across live web indices. Explore real-time articles, videos, and search portals below.`;
+                customSummary = `${contextNoticeHtml}🎯 <strong>Question Analyzed:</strong> "${escapeHtml(rawQuery)}"<br><br>Vetri AI synthesized answers across live web indices. Explore real-time articles, videos, and search portals below.`;
             }
+
+            // Store AI Response into conversation memory
+            conversationMemory.push({ role: 'assistant', text: customSummary });
 
             const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
             const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}`;
@@ -725,50 +793,6 @@
                 • <strong>Camera:</strong> Hasselblad 4th Gen Camera System (50MP Sony LYT-808)<br>
                 • <strong>OS:</strong> OxygenOS 14 (Android 14)<br>
                 • <strong>Battery & Charging:</strong> 5400 mAh + 100W SUPERVOOC Fast Charge`;
-            } else if (upper.includes('VIVO') || upper.includes('IQOO')) {
-                brand = "VIVO / IQOO";
-                officialLink = "https://www.vivo.com/in/";
-                specsText = `📱 <strong>VIVO / IQOO SPECS & STORE INTEL:</strong><br><br>
-                • <strong>Model:</strong> ${escapeHtml(query)}<br>
-                • <strong>Brand:</strong> Vivo Communication Technology<br>
-                • <strong>Display:</strong> 1.5K / 2K AMOLED 144Hz Gaming Display<br>
-                • <strong>Processor:</strong> Snapdragon 8 Gen 3 / MediaTek Dimensity 9300<br>
-                • <strong>Camera System:</strong> ZEISS Vario-Tessar Co-engineered 50MP Camera System<br>
-                • <strong>OS:</strong> Funtouch OS 14 / OriginOS<br>
-                • <strong>Battery & Charging:</strong> 5000 mAh + 120W FlashCharge`;
-            } else if (upper.includes('REALME')) {
-                brand = "REALME";
-                officialLink = "https://www.realme.com/in/";
-                specsText = `📱 <strong>REALME SPECS & STORE INTEL:</strong><br><br>
-                • <strong>Model:</strong> ${escapeHtml(query)}<br>
-                • <strong>Brand:</strong> Realme Mobile<br>
-                • <strong>Display:</strong> 120Hz Curved AMOLED 6000 nits Peak Brightness<br>
-                • <strong>Processor:</strong> Snapdragon 8s Gen 3 / Dimensity 7050<br>
-                • <strong>Camera:</strong> 50MP Sony LYT-600 OIS Camera<br>
-                • <strong>OS:</strong> realme UI 5.0 (Android 14)<br>
-                • <strong>Battery & Charging:</strong> 5500 mAh + 120W SUPERVOOC`;
-            } else if (upper.includes('XIAOMI') || upper.includes('REDMI') || upper.includes('POCO')) {
-                brand = "XIAOMI / REDMI / POCO";
-                officialLink = "https://www.mi.com/in/";
-                specsText = `📱 <strong>XIAOMI / REDMI / POCO SPECS & STORE INTEL:</strong><br><br>
-                • <strong>Model:</strong> ${escapeHtml(query)}<br>
-                • <strong>Brand:</strong> Xiaomi Corporation<br>
-                • <strong>Display:</strong> 120Hz CrystalRes AMOLED Display<br>
-                • <strong>Processor:</strong> Snapdragon 8 Gen 3 / Dimensity 8300 Ultra<br>
-                • <strong>Camera:</strong> Leica Summilux Optical Lens 50MP Quad System<br>
-                • <strong>OS:</strong> Xiaomi HyperOS (Android 14)<br>
-                • <strong>Battery & Charging:</strong> 5000 mAh + 90W / 120W HyperCharge`;
-            } else if (upper.includes('OPPO')) {
-                brand = "OPPO";
-                officialLink = "https://www.oppo.com/in/";
-                specsText = `📱 <strong>OPPO SPECS & STORE INTEL:</strong><br><br>
-                • <strong>Model:</strong> ${escapeHtml(query)}<br>
-                • <strong>Brand:</strong> OPPO Mobile<br>
-                • <strong>Display:</strong> 3D Curved AMOLED 120Hz Display<br>
-                • <strong>Processor:</strong> MediaTek Dimensity 9200+ / Snapdragon 8 Gen 2<br>
-                • <strong>Camera:</strong> Hasselblad Telephoto Portrait Camera System<br>
-                • <strong>OS:</strong> ColorOS 14<br>
-                • <strong>Battery & Charging:</strong> 5000 mAh + 100W SUPERVOOC`;
             } else {
                 specsText = `📱 <strong>SMARTPHONE BRAND & SPECS INTEL FOR: "${escapeHtml(query)}"</strong><br><br>
                 • <strong>Model Queried:</strong> ${escapeHtml(query)}<br>
