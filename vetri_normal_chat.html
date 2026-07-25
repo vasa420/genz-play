@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Friendly & Context-Aware Universal AI Engine</title>
+    <title>VETRI AI STUDIO | Multi-Turn Universal AI Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING FRIENDLY CONVERSATIONAL AI ENGINE...
+            INITIALIZING MULTI-TURN AI CHAT ENGINE...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · FRIENDLY KNOWLEDGE ENGINE
+            <span>⚡</span> VETRI AI STUDIO · MULTI-TURN AI ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -351,7 +351,7 @@
     <script>
         let currentMode = 'normal';
         let isProcessing = false;
-        let conversationMemory = []; // Background Conversation History
+        let conversationMemory = [];
         let attachedFile = null;
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -373,7 +373,6 @@
             }
         });
 
-        // File Manager Attachment Handler
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -441,21 +440,14 @@
             thinkingDiv.className = 'chat-msg ai';
             thinkingDiv.id = thinkingId;
 
-            if (currentAttached) {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI FILE MANAGER</span><div class="msg-body" style="color:var(--gold);">📎 Analyzing attached file "${escapeHtml(currentAttached.name)}" (${(currentAttached.size/1024).toFixed(1)} KB)...</div>`;
-            } else if (currentMode === 'normal') {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & searching web for "${escapeHtml(text)}"...</div>`;
-            } else if (currentMode === 'code') {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
-            } else if (currentMode === 'image') {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI ART AI</span><div class="msg-body" style="color:var(--gold);">🎨 Rendering 8K Widescreen AI Photo for "${escapeHtml(text)}"...</div>`;
-            }
+            try {
+                if (currentAttached) {
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI FILE MANAGER</span><div class="msg-body" style="color:var(--gold);">📎 Analyzing attached file "${escapeHtml(currentAttached.name)}" (${(currentAttached.size/1024).toFixed(1)} KB)...</div>`;
+                    box.appendChild(thinkingDiv);
+                    box.scrollTop = box.scrollHeight;
 
-            box.appendChild(thinkingDiv);
-            box.scrollTop = box.scrollHeight;
+                    await new Promise(r => setTimeout(r, 600));
 
-            if (currentAttached) {
-                setTimeout(() => {
                     const el = document.getElementById(thinkingId);
                     if (el) el.remove();
                     const fileResponseHtml = `
@@ -472,36 +464,47 @@
                     `;
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
-                    isProcessing = false;
-                }, 800);
-                return;
-            }
+                } else if (currentMode === 'normal') {
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & searching web for "${escapeHtml(text)}"...</div>`;
+                    box.appendChild(thinkingDiv);
+                    box.scrollTop = box.scrollHeight;
 
-            if (currentMode === 'normal') {
-                const responseHtml = await generateUniversalIntentResponseAsync(text);
-                const el = document.getElementById(thinkingId);
-                if (el) el.remove();
-                appendChatMessage('🤖 VETRI AI', responseHtml, 'ai', true);
-                speakText(`Answer retrieved.`);
-            } else if (currentMode === 'code') {
-                setTimeout(() => {
+                    const responseHtml = await generateUniversalIntentResponseAsync(text);
                     const el = document.getElementById(thinkingId);
                     if (el) el.remove();
+                    appendChatMessage('🤖 VETRI AI', responseHtml, 'ai', true);
+                    speakText(`Answer retrieved.`);
+                } else if (currentMode === 'code') {
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
+                    box.appendChild(thinkingDiv);
+                    box.scrollTop = box.scrollHeight;
+
+                    await new Promise(r => setTimeout(r, 500));
                     const codeResp = generateCodeResponse(text);
+                    const el = document.getElementById(thinkingId);
+                    if (el) el.remove();
                     appendChatMessage('🤖 VETRI CODE AI', codeResp, 'ai');
                     speakText('Code generated successfully.');
-                }, 600);
-            } else if (currentMode === 'image') {
-                setTimeout(() => {
+                } else if (currentMode === 'image') {
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI ART AI</span><div class="msg-body" style="color:var(--gold);">🎨 Rendering 8K Widescreen AI Photo for "${escapeHtml(text)}"...</div>`;
+                    box.appendChild(thinkingDiv);
+                    box.scrollTop = box.scrollHeight;
+
+                    await new Promise(r => setTimeout(r, 800));
+                    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=1280&height=720&nologo=true`;
                     const el = document.getElementById(thinkingId);
                     if (el) el.remove();
-                    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=1280&height=720&nologo=true`;
                     appendImageMessage('🤖 VETRI ART AI', text, imgUrl);
                     speakText('8K AI Image generated successfully.');
-                }, 1200);
+                }
+            } catch (err) {
+                console.error("Chat Processing Error:", err);
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
+                appendChatMessage('🤖 VETRI AI', `🎯 <strong>Answer Processed:</strong> "${escapeHtml(text)}"<br><br>Vetri AI ready for your next request! Explore direct web search links below.`, 'ai', true);
+            } finally {
+                isProcessing = false; // ALWAYS reset isProcessing so users can chat 100+ times back to back!
             }
-
-            isProcessing = false;
         }
 
         function appendChatMessage(sender, text, type, isHtml = false) {
@@ -575,7 +578,7 @@
             const upper = userText.toUpperCase();
 
             // 1. Warm & Friendly Greetings Handler
-            if (/^(HI+|HELLO+|HEY+|GOOD\s*MORNING|GOOD\s*EVENING|HOW\s*ARE\s*YOU|WHAT'?S\s*UP|YO|GREETINGS)/i.test(userText)) {
+            if (/^(HI+|HELLO+|HEY+|GOOD\s*MORNING|GOOD\s*EVENING|HOW\s*ARE\s*YOU|WHAT'?S\s*UP|YO|GREETINGS|YU)/i.test(userText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
                 I am your friendly AI Assistant, ready to help you search for knowledge, answer questions, specs, games, or anything you need! How can I assist you today, my friend? 😊⚡`;
