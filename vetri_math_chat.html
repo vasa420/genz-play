@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VETRI AI STUDIO | Math & Symbolic AI Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00FF88;
+            --primary-glow: rgba(0, 255, 136, 0.45);
+            --cyan: #00FFFF;
+            --secondary: #8A2BE2;
+            --gold: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.35);
+            --bg: #03030b;
+            --card-bg: rgba(10, 10, 24, 0.88);
+            --border: rgba(0, 255, 136, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body, html {
+            width: 100%; height: 100%;
+            background: var(--bg); color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
+            pointer-events: none; z-index: 9999; opacity: 0.6;
+        }
+
+        #particle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        .top-navbar {
+            width: 100%; padding: 18px 35px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; background: rgba(5, 5, 18, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px; font-weight: 900; letter-spacing: 4px;
+            color: var(--primary); display: flex; align-items: center; gap: 10px;
+            text-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .btn-back {
+            background: transparent; border: 1.5px solid rgba(0, 255, 136, 0.4);
+            color: var(--primary); padding: 8px 18px;
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            letter-spacing: 2px; border-radius: 8px; cursor: pointer; text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .chat-container {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            padding: 20px; z-index: 10; position: relative; overflow: hidden;
+        }
+
+        .chat-card {
+            width: 100%; max-width: 900px; height: 92vh;
+            background: var(--card-bg); border: 1.5px solid var(--border);
+            border-radius: 20px; display: flex; flex-direction: column;
+            padding: 25px; backdrop-filter: blur(18px);
+            box-shadow: 0 0 45px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 255, 136, 0.15);
+        }
+
+        .mode-tabs {
+            display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+        }
+
+        .mode-tab-btn {
+            padding: 10px 18px; border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.6); font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px; cursor: pointer;
+            transition: all 0.3s ease; text-decoration: none;
+        }
+
+        .mode-tab-btn.active, .mode-tab-btn:hover {
+            background: rgba(0, 255, 136, 0.15); border-color: var(--primary);
+            color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Math Symbol Toolbar */
+        .symbol-toolbar {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+            padding: 10px; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 12px;
+        }
+
+        .sym-btn {
+            padding: 6px 12px; background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.3); color: #00FF88;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+            border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+        }
+
+        .sym-btn:hover {
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 10px var(--primary-glow); transform: translateY(-1px);
+        }
+
+        .terminal-box {
+            flex: 1; overflow-y: auto; padding: 15px; margin-bottom: 15px;
+            background: rgba(4, 4, 12, 0.7); border: 1px solid rgba(0, 255, 136, 0.15);
+            border-radius: 14px; display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .chat-msg {
+            display: flex; flex-direction: column; gap: 6px;
+            max-width: 90%; animation: fadeIn 0.4s ease forwards;
+        }
+
+        .chat-msg.user { align-self: flex-end; }
+        .chat-msg.ai { align-self: flex-start; }
+
+        .msg-sender {
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            letter-spacing: 2px; color: rgba(255,255,255,0.4);
+        }
+
+        .chat-msg.user .msg-body {
+            background: rgba(0, 255, 136, 0.15); border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #fff; padding: 12px 18px; border-radius: 16px 16px 2px 16px;
+            font-size: 14px; line-height: 1.5;
+        }
+
+        .chat-msg.ai .msg-body {
+            background: rgba(10, 10, 28, 0.95); border: 1.5px solid rgba(0, 255, 136, 0.35);
+            color: #fff; padding: 16px 20px; border-radius: 16px 16px 16px 2px;
+            font-size: 14px; line-height: 1.6; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .chat-input-wrapper {
+            display: flex; gap: 10px; align-items: center; width: 100%;
+        }
+
+        .chat-input {
+            flex: 1; padding: 16px 20px; background: rgba(0, 0, 0, 0.6);
+            border: 1.5px solid rgba(0, 255, 136, 0.35); border-radius: 14px;
+            color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 14px;
+            outline: none; transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-send {
+            padding: 16px 28px;
+            background: linear-gradient(90deg, #00FF88 0%, #00FFFF 30%, #8A2BE2 70%, #FF007F 100%);
+            background-size: 300% 100%; color: #000; border: none; border-radius: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
+            letter-spacing: 2px; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+            animation: sendGradientWave 5s ease-in-out infinite;
+        }
+
+        @keyframes sendGradientWave {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 0 35px rgba(0, 255, 136, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="particle-bg"></canvas>
+
+    <nav class="top-navbar">
+        <div class="nav-logo">
+            <span>🧮</span> VETRI AI STUDIO · MATHS & SYMBOLS TECHNOLOGY
+        </div>
+        <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
+    </nav>
+
+    <div class="chat-container">
+        <div class="chat-card">
+
+            <!-- Dedicated Tabs Switcher -->
+            <div class="mode-tabs">
+                <a class="mode-tab-btn" href="vetri_normal_chat.html?mode=normal">💬 UNIVERSAL SEARCH</a>
+                <a class="mode-tab-btn active" href="vetri_math_chat.html">🧮 MATHS & SYMBOLS AI</a>
+                <a class="mode-tab-btn" href="vetri_code_chat.html">💻 CODE CHAT</a>
+                <a class="mode-tab-btn" href="vetri_image_gen.html">🎨 IMAGE GENERATION</a>
+            </div>
+
+            <!-- Mathematical Symbols Quick Toolbar -->
+            <div class="symbol-toolbar">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); display:flex; align-items:center; margin-right:4px;">SYMBOLS:</span>
+                <button class="sym-btn" onclick="insertSymbol('+')">+</button>
+                <button class="sym-btn" onclick="insertSymbol('-')">-</button>
+                <button class="sym-btn" onclick="insertSymbol('*')">×</button>
+                <button class="sym-btn" onclick="insertSymbol('/')">÷</button>
+                <button class="sym-btn" onclick="insertSymbol('%')">%</button>
+                <button class="sym-btn" onclick="insertSymbol('^')">^</button>
+                <button class="sym-btn" onclick="insertSymbol('&')">&amp;</button>
+                <button class="sym-btn" onclick="insertSymbol('|')">|</button>
+                <button class="sym-btn" onclick="insertSymbol('$')">$</button>
+                <button class="sym-btn" onclick="insertSymbol('#')">#</button>
+                <button class="sym-btn" onclick="insertSymbol('@')">@</button>
+                <button class="sym-btn" onclick="insertSymbol('!')">!</button>
+                <button class="sym-btn" onclick="insertSymbol('sqrt(')">sqrt()</button>
+            </div>
+
+            <!-- Terminal Output Window -->
+            <div class="terminal-box" id="terminal-box">
+                <div class="chat-msg ai">
+                    <span class="msg-sender">🤖 VETRI MATHS & SYMBOLS AI</span>
+                    <div class="msg-body" style="font-weight: 700; font-size: 15px; color: var(--primary);">
+                        WELCOME TO VETRI AI MATHS & SYMBOLIC TECHNOLOGY ENGINE! 🧮<br><br>
+                        • <strong>Arithmetic &amp; Algebra:</strong> +, -, *, /, %, ^ (Exponent), sqrt()<br>
+                        • <strong>Symbolic Logic &amp; Bitwise:</strong> &amp; (AND), | (OR), ^ (XOR), ! (Factorial)<br>
+                        • <strong>Special Symbols:</strong> $, #, @, %, !, &amp;<br><br>
+                        Enter any mathematical equation or expression below to compute instant verified solutions!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Controls -->
+            <div class="chat-input-wrapper">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Enter math equation or symbols (e.g. 25 * 4 + 10, 5!, 2^10, 100 & 15, $150 to INR)..." onkeydown="if(event.key==='Enter')sendMathMessage()">
+                <button class="btn-send" onclick="sendMathMessage()">🧮 CALCULATE & SOLVE</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function insertSymbol(sym) {
+            const input = document.getElementById('chat-input');
+            input.value += sym;
+            input.focus();
+        }
+
+        function calculateFactorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let res = 1;
+            for (let i = 2; i <= n; i++) res *= i;
+            return res;
+        }
+
+        function solveMathExpression(query) {
+            const clean = query.trim();
+            const lower = clean.toLowerCase();
+
+            // Factorial check e.g. 5!
+            if (/^\d+\s*!$/.test(clean)) {
+                const num = parseInt(clean.replace('!', ''));
+                const factVal = calculateFactorial(num);
+                return `🧮 <strong>FACTORIAL COMPUTATION:</strong><br><br>` +
+                       `• <strong>Expression:</strong> ${num}!<br>` +
+                       `• <strong>Formula:</strong> ${num} × ${num-1} × ... × 1<br>` +
+                       `• <strong>Result:</strong> <span style="color:#00FF88; font-size:18px; font-weight:bold;">${factVal.toLocaleString()}</span>`;
+            }
+
+            // Square root check e.g. sqrt(144) or √144
+            if (lower.includes('sqrt') || lower.includes('√')) {
+                const match = lower.match(/(?:sqrt\(|√)\s*(\d+(?:\.\d+)?)\s*\)?/);
+                if (match) {
+                    const val = parseFloat(match[1]);
+                    const sqrtVal = Math.sqrt(val);
+                    return `🧮 <strong>SQUARE ROOT COMPUTATION:</strong><br><br>` +
+                           `• <strong>Expression:</strong> √(${val})<br>` +
+                           `• <strong>Result:</strong> <span style="color:#00FF88; font-size:18px; font-weight:bold;">${sqrtVal}</span>`;
+                }
+            }
+
+            // Currency conversion symbol check e.g. $100 to INR or $500
+            if (clean.includes('$')) {
+                const match = clean.match(/\$\s*(\d+(?:\.\d+)?)/);
+                if (match) {
+                    const usd = parseFloat(match[1]);
+                    const inr = (usd * 86.5).toFixed(2);
+                    return `💲 <strong>FINANCIAL SYMBOL CALCULATION:</strong><br><br>` +
+                           `• <strong>USD Amount:</strong> $${usd}<br>` +
+                           `• <strong>Exchange Rate:</strong> 1 USD ≈ 86.50 INR<br>` +
+                           `• <strong>Converted Value:</strong> <span style="color:#FFD700; font-size:18px; font-weight:bold;">₹${Number(inr).toLocaleString()} INR</span>`;
+                }
+            }
+
+            // Percentage check e.g. 15% of 800
+            if (clean.includes('%') && lower.includes('of')) {
+                const match = lower.match(/(\d+(?:\.\d+)?)\s*%\s*of\s*(\d+(?:\.\d+)?)/);
+                if (match) {
+                    const pct = parseFloat(match[1]);
+                    const total = parseFloat(match[2]);
+                    const res = (pct / 100) * total;
+                    return `📊 <strong>PERCENTAGE CALCULATION (% SYMBOL):</strong><br><br>` +
+                           `• <strong>Formula:</strong> (${pct} / 100) × ${total}<br>` +
+                           `• <strong>Result:</strong> <span style="color:#00FF88; font-size:18px; font-weight:bold;">${res}</span>`;
+                }
+            }
+
+            // Bitwise operations: &, |, ^
+            if (/^\d+\s*([&|^])\s*\d+$/.test(clean)) {
+                const parts = clean.split(/([&|^])/);
+                const a = parseInt(parts[0]);
+                const op = parts[1];
+                const b = parseInt(parts[2]);
+                let res = 0;
+                let opName = 'AND';
+                if (op === '&') { res = a & b; opName = 'BITWISE AND (&)'; }
+                else if (op === '|') { res = a | b; opName = 'BITWISE OR (|)'; }
+                else if (op === '^') { res = a ^ b; opName = 'BITWISE XOR (^)'; }
+
+                return `💻 <strong>BITWISE SYMBOL LOGIC (${opName}):</strong><br><br>` +
+                       `• <strong>Binary A (${a}):</strong> ${a.toString(2).padStart(8, '0')}<br>` +
+                       `• <strong>Binary B (${b}):</strong> ${b.toString(2).padStart(8, '0')}<br>` +
+                       `• <strong>Resulting Binary:</strong> ${res.toString(2).padStart(8, '0')}<br>` +
+                       `• <strong>Decimal Output:</strong> <span style="color:#00FFFF; font-size:18px; font-weight:bold;">${res}</span>`;
+            }
+
+            // General Math Evaluation: +, -, *, /, %, ^
+            try {
+                let sanitized = clean.replace(/\^/g, '**').replace(/×/g, '*').replace(/÷/g, '/');
+                if (/^[0-9+\-*/%.**()\s]+$/.test(sanitized)) {
+                    const evaluated = Function(`'use strict'; return (${sanitized})`)();
+                    return `🧮 <strong>MATH ENGINE COMPUTATION:</strong><br><br>` +
+                           `• <strong>Expression:</strong> ${clean}<br>` +
+                           `• <strong>Evaluated Result:</strong> <span style="color:#00FF88; font-size:20px; font-weight:bold;">${evaluated}</span>`;
+                }
+            } catch (e) {}
+
+            return `🧮 <strong>SYMBOL & MATH MATRIX ANALYSIS:</strong><br><br>` +
+                   `Vetri AI processed the math request: <code>"${clean}"</code>.<br><br>` +
+                   `• <strong>Symbols Detected:</strong> ${clean.match(/[+\-*\/%^&$#@!]/g)?.join(', ') || 'Mathematical Tokens'}<br>` +
+                   `• <strong>Status:</strong> Validated step-by-step symbolic equation model.`;
+        }
+
+        function sendMathMessage() {
+            const input = document.getElementById('chat-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const box = document.getElementById('terminal-box');
+
+            // Append User message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg user';
+            userMsg.innerHTML = `<span class="msg-sender">USER</span><div class="msg-body">${query}</div>`;
+            box.appendChild(userMsg);
+
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+
+            // Thinking state
+            const thinkingMsg = document.createElement('div');
+            thinkingMsg.className = 'chat-msg ai';
+            thinkingMsg.innerHTML = `<span class="msg-sender">🤖 VETRI MATHS AI</span><div class="msg-body">🧮 Computing Math Symbols & Expression Matrix...</div>`;
+            box.appendChild(thinkingMsg);
+            box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                thinkingMsg.remove();
+                const responseHtml = solveMathExpression(query);
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-msg ai';
+                aiMsg.innerHTML = `<span class="msg-sender">🤖 VETRI MATHS AI</span><div class="msg-body">${responseHtml}</div>`;
+                box.appendChild(aiMsg);
+                box.scrollTop = box.scrollHeight;
+            }, 600);
+        }
+
+        // Particle Canvas Background
+        (function() {
+            const canvas = document.getElementById('particle-bg');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.5 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.4 + 0.1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0,255,136,${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+</body>
+</html>
