@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Normal Chat & Knowledge Hub</title>
+    <title>VETRI AI STUDIO | Universal Knowledge & Search Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -110,7 +110,6 @@
             box-shadow: 0 0 25px var(--primary-glow);
         }
 
-        /* Knowledge Network Status Bar */
         .network-badge-bar {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(0, 255, 255, 0.05); border: 1px solid rgba(0, 255, 255, 0.2);
@@ -126,7 +125,7 @@
         .source-chip {
             background: rgba(0, 255, 255, 0.08); border: 1px solid rgba(0, 255, 255, 0.25);
             color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 10px;
-            padding: 5px 12px; border-radius: 20px; cursor: pointer; transition: 0.2s;
+            padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: 0.2s;
         }
 
         .source-chip:hover {
@@ -188,16 +187,21 @@
         .knowledge-card-title {
             font-family: 'JetBrains Mono', monospace; font-size: 11px;
             letter-spacing: 2px; color: var(--primary); text-transform: uppercase;
-            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+            margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .intent-tag {
+            background: rgba(255, 215, 0, 0.15); border: 1px solid var(--gold);
+            color: var(--gold); padding: 3px 10px; border-radius: 6px; font-size: 10px;
         }
 
         .links-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px;
         }
 
         .know-link-btn {
             background: rgba(0, 255, 255, 0.08); border: 1px solid rgba(0, 255, 255, 0.25);
-            color: #fff; padding: 8px 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+            color: #fff; padding: 10px 14px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;
             font-size: 11px; text-decoration: none; transition: 0.25s; display: flex; align-items: center; justify-content: space-between;
         }
 
@@ -240,36 +244,16 @@
         @keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
         .btn-send {
-            padding: 16px 28px;
-            background: linear-gradient(90deg, 
-                #00FFFF 0%, 
-                #0088FF 20%, 
-                #8A2BE2 40%, 
-                #FF007F 60%, 
-                #FF9900 80%, 
-                #00FFFF 100%
-            );
-            background-size: 300% 100%;
+            padding: 16px 28px; background: linear-gradient(135deg, #00FFFF, #8A2BE2);
             color: #fff; border: none; border-radius: 14px;
             font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
-            letter-spacing: 2px; cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-            animation: sendGradientWave 5s ease-in-out infinite;
-        }
-
-        @keyframes sendGradientWave {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 20px var(--primary-glow);
         }
 
         .btn-send:hover {
-            transform: translateY(-2px) scale(1.03);
-            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
+            transform: translateY(-2px); box-shadow: 0 0 30px var(--primary);
         }
-
-        @keyframes slowFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slowZoomIn { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     </style>
 </head>
 <body>
@@ -283,7 +267,7 @@
         background: #03030b; z-index: 99999;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s ease;
-        text-align: text; padding: 30px; box-sizing: border-box; text-align:center;
+        text-align: center; padding: 30px; box-sizing: border-box;
     ">
         <div style="
             font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 8px;
@@ -311,7 +295,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            CONNECTING NEURAL AI & KNOWLEDGE BASES...
+            ANALYZING QUESTION INTENT & GLOBAL WEB CHANNELS...
         </div>
 
         <div style="
@@ -328,7 +312,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · NORMAL CHAT & KNOWLEDGE NETWORK
+            <span>⚡</span> VETRI AI STUDIO · UNIVERSAL INTENT SEARCH ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← BACK TO ARCADE HUB</a>
     </nav>
@@ -339,33 +323,32 @@
 
             <!-- 3 Dedicated Mode Selection Pages Navigation -->
             <div class="mode-tabs">
-                <a class="mode-tab-btn active" href="vetri_normal_chat.html">💬 NORMAL CHAT & KNOWLEDGE HUB</a>
+                <a class="mode-tab-btn active" href="vetri_normal_chat.html">💬 UNIVERSAL SEARCH & CHAT HUB</a>
                 <a class="mode-tab-btn" href="vetri_code_chat.html">💻 CODE CHAT</a>
                 <a class="mode-tab-btn" href="vetri_image_gen.html">🎨 IMAGE GENERATION</a>
             </div>
 
-            <!-- Network Status Bar -->
+            <!-- Universal Network Status Bar -->
             <div class="network-badge-bar">
-                <span>🌐 CONNECTED TO GOOGLE SEARCH & 100+ EDUCATIONAL NETWORKS</span>
-                <span style="color:var(--green);">● LIVE SEARCH READY</span>
+                <span>🌐 UNIVERSAL SEARCH & INTENT ENGINE: GOOGLE, 100+ EDUCATIONAL SITES, BIG TECH, NEWS, TRANSLATION & SPORTS</span>
+                <span style="color:var(--green);">● LIVE RECOGNITION READY</span>
             </div>
 
-            <!-- Quick Knowledge Search Presets -->
+            <!-- Intent & Category Presets -->
             <div class="source-chips">
-                <div class="source-chip" onclick="quickSearch('Quantum Computing principles')">🔍 Google Search: Quantum Computing</div>
-                <div class="source-chip" onclick="quickSearch('Artificial Intelligence history')">📚 Wikipedia: AI History</div>
-                <div class="source-chip" onclick="quickSearch('Machine Learning algorithms')">🎓 Scholar: Machine Learning</div>
-                <div class="source-chip" onclick="quickSearch('Calculus derivatives math')">🧮 Wolfram: Calculus</div>
-                <div class="source-chip" onclick="quickSearch('Data Structures and Algorithms')">💻 GeeksforGeeks: DSA</div>
-                <div class="source-chip" onclick="quickSearch('Physics Thermodynamics')">🏫 Khan Academy: Physics</div>
+                <div class="source-chip" onclick="quickSearch('Translate Hello How are you to Tamil')">🌐 Tamil - English Translation</div>
+                <div class="source-chip" onclick="quickSearch('IPL Cricket score today and match updates')">🏏 Sports & IPL Cricket</div>
+                <div class="source-chip" onclick="quickSearch('Google AI Studio news and market value')">🏢 Big Tech: Google & Apple</div>
+                <div class="source-chip" onclick="quickSearch('Latest world news headlines today')">📰 Global News & Headlines</div>
+                <div class="source-chip" onclick="quickSearch('Quantum Computing principles physics')">🎓 Educational: Science & Physics</div>
             </div>
 
             <!-- Terminal Output Window -->
             <div class="terminal-box" id="terminal-box">
                 <div class="chat-msg ai">
-                    <span class="msg-sender">🤖 VETRI AI KNOWLEDGE ASSISTANT</span>
+                    <span class="msg-sender">🤖 VETRI AI INTENT ENGINE</span>
                     <div class="msg-body">
-                        Welcome to VETRI STUDIOS Normal Chat! I am connected to <strong>Google Search</strong> and <strong>100+ Educational Knowledge Bases</strong> (Wikipedia, Google Scholar, WolframAlpha, Khan Academy, Britannica, Coursera, GeeksforGeeks, MIT OpenCourseWare, JSTOR, PubMed). Ask any question to get detailed solutions and direct live search links!
+                        Welcome to VETRI UNIVERSAL SEARCH! Type any question. Vetri AI will automatically read your question intent and route search links to <strong>Google</strong>, <strong>Educational Portals (100+)</strong>, <strong>Big Companies (Google, Apple, Microsoft)</strong>, <strong>Global News Outlets (BBC, Reuters)</strong>, <strong>Tamil/English Translators</strong>, and <strong>Live Sports Networks (ESPN, Cricbuzz)</strong>!
                     </div>
                 </div>
             </div>
@@ -373,7 +356,7 @@
             <!-- Chat Input Controls -->
             <div class="chat-input-wrapper">
                 <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
-                <input type="text" id="chat-input" class="chat-input" placeholder="Search Google, ask any general knowledge or educational question... (Press Enter to Search)" onkeydown="if(event.key==='Enter')sendChatMessage()">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Type any question (Educational, Corporate, News, Tamil Translation, Sports)..." onkeydown="if(event.key==='Enter')sendChatMessage()">
                 <button class="btn-send" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
             </div>
 
@@ -381,7 +364,6 @@
     </div>
 
     <script>
-        // Cinematic Slow Motion Splash Controller
         window.addEventListener('DOMContentLoaded', () => {
             const overlay = document.getElementById('vetri-intro-overlay');
             const progress = document.getElementById('intro-progress-bar');
@@ -420,7 +402,7 @@
             const thinkingDiv = document.createElement('div');
             thinkingDiv.className = 'chat-msg ai';
             thinkingDiv.id = thinkingId;
-            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI KNOWLEDGE ASSISTANT</span><div class="msg-body" style="color:var(--gold);">🟡 Querying Google & 100+ Educational Knowledge Bases for "${escapeHtml(text)}"... please wait</div>`;
+            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI INTENT ENGINE</span><div class="msg-body" style="color:var(--gold);">🟡 Reading question intent & querying global web indices for "${escapeHtml(text)}"...</div>`;
             box.appendChild(thinkingDiv);
             box.scrollTop = box.scrollHeight;
 
@@ -428,9 +410,9 @@
                 const el = document.getElementById(thinkingId);
                 if (el) el.remove();
 
-                const responseHtml = generateKnowledgeResponse(text);
-                appendChatMessage('🤖 VETRI AI KNOWLEDGE ASSISTANT', responseHtml, 'ai', true);
-                speakText(`Search completed for ${text}`);
+                const responseHtml = generateUniversalIntentResponse(text);
+                appendChatMessage('🤖 VETRI AI INTENT ENGINE', responseHtml, 'ai', true);
+                speakText(`Query analyzed.`);
                 isProcessing = false;
             }, 700);
         }
@@ -459,58 +441,143 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        function generateKnowledgeResponse(rawQuery) {
+        // Smart Universal Intent Analyzer
+        function generateUniversalIntentResponse(rawQuery) {
             const query = rawQuery.trim();
             const upper = query.toUpperCase();
 
+            // 1. Detect Intent Category
+            let categoryName = "GENERAL KNOWLEDGE";
+            let categoryIcon = "🧠";
             let summaryText = "";
 
-            const mathResult = tryEvaluateMath(upper);
-            if (mathResult) {
-                summaryText = mathResult;
-            } else if (upper.includes('TIME') || upper.includes('DATE') || upper.includes('CLOCK') || upper.includes('TODAY')) {
-                const now = new Date();
-                summaryText = `⏰ LIVE DATE & TIME:\nDate: ${now.toDateString()}\nTime: ${now.toLocaleTimeString()}`;
-            } else if (upper.includes('APTITUDE') || upper.includes('TRAIN') || upper.includes('SPEED') || upper.includes('PROBABILITY')) {
-                summaryText = `🧮 Aptitude Solution Overview:\nFormula: Speed = Distance / Time\nExample: A train 150m long moving at 60 km/hr crosses a bridge in 30 seconds.\nSpeed in m/s = 60 * (5/18) = 16.67 m/s\nTotal Distance = Speed * Time = 16.67 * 30 = 500m\nBridge Length = 500m - 150m = 350 meters!`;
+            const isTamilTranslation = upper.includes('TAMIL') || upper.includes('ENGLISH') || upper.includes('TRANSLATE') || upper.includes('MEANING') || upper.includes('DICTIONARY') || upper.includes('LANGUAGE');
+            const isSports = upper.includes('CRICKET') || upper.includes('IPL') || upper.includes('FOOTBALL') || upper.includes('SPORTS') || upper.includes('SCORE') || upper.includes('MATCH') || upper.includes('TENNIS') || upper.includes('GOAL') || upper.includes('DHONI') || upper.includes('KOHLI');
+            const isCompany = upper.includes('GOOGLE') || upper.includes('MICROSOFT') || upper.includes('APPLE') || upper.includes('TESLA') || upper.includes('AMAZON') || upper.includes('META') || upper.includes('NVIDIA') || upper.includes('STOCK') || upper.includes('COMPANY') || upper.includes('BUSINESS');
+            const isNews = upper.includes('NEWS') || upper.includes('HEADLINES') || upper.includes('BREAKING') || upper.includes('WORLD') || upper.includes('POLITICS') || upper.includes('WEATHER') || upper.includes('UPDATE');
+            const isEducation = upper.includes('SCIENCE') || upper.includes('PHYSICS') || upper.includes('MATH') || upper.includes('CODE') || upper.includes('ALGORITHM') || upper.includes('HISTORY') || upper.includes('APTITUDE') || upper.includes('TRAIN') || upper.includes('SPEED');
+
+            if (isTamilTranslation) {
+                categoryName = "TAMIL & ENGLISH TRANSLATION";
+                categoryIcon = "🌐";
+                summaryText = `🌐 <strong>Translation & Language Engine Activated:</strong> "${escapeHtml(query)}"<br><br>Vetri AI processed language tokens. Use the direct Tamil <-> English translation links below for instant dictionaries, pronunciations, and grammar analysis.`;
+            } else if (isSports) {
+                categoryName = "SPORTS & CRICKET NETWORK";
+                categoryIcon = "🏏";
+                summaryText = `🏏 <strong>Live Sports Indexing:</strong> "${escapeHtml(query)}"<br><br>Vetri AI identified sports / match query. Real-time scores, player stats, commentary, and tournament tables available via live sports links below.`;
+            } else if (isCompany) {
+                categoryName = "BIG TECH & CORPORATE HUB";
+                categoryIcon = "🏢";
+                summaryText = `🏢 <strong>Corporate & Market Intelligence:</strong> "${escapeHtml(query)}"<br><br>Vetri AI mapped company & market entities. Check stock quotes, business reports, and official corporate portals below.`;
+            } else if (isNews) {
+                categoryName = "GLOBAL NEWS & HEADLINES";
+                categoryIcon = "📰";
+                summaryText = `📰 <strong>Global News Network:</strong> "${escapeHtml(query)}"<br><br>Vetri AI synchronized daily world news indices. Access breaking headlines and live reporting below.`;
+            } else if (isEducation) {
+                categoryName = "EDUCATIONAL & ACADEMIC BASES (100+)";
+                categoryIcon = "🎓";
+                const mathResult = tryEvaluateMath(upper);
+                if (mathResult) {
+                    summaryText = mathResult;
+                } else if (upper.includes('APTITUDE') || upper.includes('TRAIN')) {
+                    summaryText = `🧮 <strong>Aptitude Problem Solution:</strong><br>Formula: Speed = Distance / Time<br>Example: A train 150m long moving at 60 km/hr crosses a bridge in 30 seconds.<br>Speed in m/s = 60 * (5/18) = 16.67 m/s<br>Total Distance = Speed * Time = 16.67 * 30 = 500m<br>Bridge Length = 500m - 150m = 350 meters!`;
+                } else {
+                    summaryText = `🎓 <strong>Educational & Academic Breakdown:</strong> "${escapeHtml(query)}"<br><br>Vetri AI analyzed subject curriculum. Access peer-reviewed papers, computational solvers, and video lectures below.`;
+                }
             } else {
-                summaryText = `🎯 <strong>Query Knowledge Breakdown:</strong> "${escapeHtml(query)}"<br><br>Vetri AI synthesized answer across global educational indices. You can explore verified reference papers, academic articles, and live search engines directly via the 100+ educational portal connections below.`;
+                summaryText = `🎯 <strong>Universal Knowledge Synthesis:</strong> "${escapeHtml(query)}"<br><br>Vetri AI evaluated question intent across 100+ web indices. Direct search portals provided below.`;
             }
 
-            // Direct Search Links to Google and 100+ Educational & Knowledge Networks
+            // Universal Search Portal Generator
             const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
             const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}`;
-            const scholarUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}`;
-            const wolframUrl = `https://www.wolframalpha.com/input?i=${encodeURIComponent(query)}`;
-            const gfgUrl = `https://www.geeksforgeeks.org/search/?q=${encodeURIComponent(query)}`;
-            const khanUrl = `https://www.khanacademy.org/search?page_search_query=${encodeURIComponent(query)}`;
-            const britannicaUrl = `https://www.britannica.com/search?query=${encodeURIComponent(query)}`;
-            const pubmedUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(query)}`;
-            const ocwUrl = `https://ocw.mit.edu/search/?q=${encodeURIComponent(query)}`;
-            const jstorUrl = `https://www.jstor.org/action/doBasicSearch?Query=${encodeURIComponent(query)}`;
 
-            const knowledgeCardHtml = `
+            // Category-Specific Portals
+            let customLinksHtml = '';
+
+            if (isTamilTranslation) {
+                const gTranslateUrl = `https://translate.google.com/?sl=auto&tl=ta&text=${encodeURIComponent(query)}&op=translate`;
+                const cambridgeUrl = `https://dictionary.cambridge.org/spellcheck/english/?q=${encodeURIComponent(query)}`;
+                const shabdkoshUrl = `https://www.shabdkosh.com/search-dictionary?e=${encodeURIComponent(query)}&lc=ta`;
+                const oxfordUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}+tamil+meaning+dictionary`;
+
+                customLinksHtml = `
+                    <a href="${gTranslateUrl}" target="_blank" class="know-link-btn">🌐 Google Translate (Tamil) ↗</a>
+                    <a href="${shabdkoshUrl}" target="_blank" class="know-link-btn">🗣️ Shabdkosh Tamil Dictionary ↗</a>
+                    <a href="${cambridgeUrl}" target="_blank" class="know-link-btn">📖 Cambridge Dictionary ↗</a>
+                    <a href="${oxfordUrl}" target="_blank" class="know-link-btn">📜 Oxford English-Tamil Meaning ↗</a>
+                `;
+            } else if (isSports) {
+                const cricinfoUrl = `https://www.espncricinfo.com/search?q=${encodeURIComponent(query)}`;
+                const cricbuzzUrl = `https://www.cricbuzz.com/search?q=${encodeURIComponent(query)}`;
+                const espnUrl = `https://www.espn.com/search/_/q/${encodeURIComponent(query)}`;
+                const bbcSportUrl = `https://www.bbc.com/sport/search?q=${encodeURIComponent(query)}`;
+
+                customLinksHtml = `
+                    <a href="${cricinfoUrl}" target="_blank" class="know-link-btn">🏏 ESPNcricinfo Live Scores ↗</a>
+                    <a href="${cricbuzzUrl}" target="_blank" class="know-link-btn">🏆 Cricbuzz Match Hub ↗</a>
+                    <a href="${espnUrl}" target="_blank" class="know-link-btn">🏅 ESPN Sports Network ↗</a>
+                    <a href="${bbcSportUrl}" target="_blank" class="know-link-btn">⚽ BBC Sport Coverage ↗</a>
+                `;
+            } else if (isCompany) {
+                const googleFinanceUrl = `https://www.google.com/finance/quote/${encodeURIComponent(query)}`;
+                const linkedinUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(query)}`;
+                const bloombergUrl = `https://www.bloomberg.com/search?query=${encodeURIComponent(query)}`;
+                const techcrunchUrl = `https://techcrunch.com/search/${encodeURIComponent(query)}`;
+
+                customLinksHtml = `
+                    <a href="${googleFinanceUrl}" target="_blank" class="know-link-btn">📈 Google Finance & Stocks ↗</a>
+                    <a href="${linkedinUrl}" target="_blank" class="know-link-btn">💼 LinkedIn Corporate Network ↗</a>
+                    <a href="${bloombergUrl}" target="_blank" class="know-link-btn">📊 Bloomberg Business ↗</a>
+                    <a href="${techcrunchUrl}" target="_blank" class="know-link-btn">🚀 TechCrunch Company News ↗</a>
+                `;
+            } else if (isNews) {
+                const gNewsUrl = `https://news.google.com/search?q=${encodeURIComponent(query)}`;
+                const bbcNewsUrl = `https://www.bbc.co.uk/search?q=${encodeURIComponent(query)}`;
+                const reutersUrl = `https://www.reuters.com/site-search/?query=${encodeURIComponent(query)}`;
+                const toiUrl = `https://timesofindia.indiatimes.com/topic/${encodeURIComponent(query)}`;
+
+                customLinksHtml = `
+                    <a href="${gNewsUrl}" target="_blank" class="know-link-btn">📰 Google News Daily ↗</a>
+                    <a href="${bbcNewsUrl}" target="_blank" class="know-link-btn">🌍 BBC World Headlines ↗</a>
+                    <a href="${reutersUrl}" target="_blank" class="know-link-btn">🗞️ Reuters Breaking News ↗</a>
+                    <a href="${toiUrl}" target="_blank" class="know-link-btn">🇮🇳 Times of India Portal ↗</a>
+                `;
+            } else {
+                // Default 100+ Educational Websites
+                const scholarUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}`;
+                const wolframUrl = `https://www.wolframalpha.com/input?i=${encodeURIComponent(query)}`;
+                const gfgUrl = `https://www.geeksforgeeks.org/search/?q=${encodeURIComponent(query)}`;
+                const khanUrl = `https://www.khanacademy.org/search?page_search_query=${encodeURIComponent(query)}`;
+                const britannicaUrl = `https://www.britannica.com/search?query=${encodeURIComponent(query)}`;
+                const pubmedUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(query)}`;
+
+                customLinksHtml = `
+                    <a href="${scholarUrl}" target="_blank" class="know-link-btn">🎓 Google Scholar Research ↗</a>
+                    <a href="${wolframUrl}" target="_blank" class="know-link-btn">🧮 WolframAlpha Math ↗</a>
+                    <a href="${gfgUrl}" target="_blank" class="know-link-btn">💻 GeeksforGeeks Portal ↗</a>
+                    <a href="${khanUrl}" target="_blank" class="know-link-btn">🏫 Khan Academy Courses ↗</a>
+                    <a href="${britannicaUrl}" target="_blank" class="know-link-btn">📖 Encyclopaedia Britannica ↗</a>
+                    <a href="${pubmedUrl}" target="_blank" class="know-link-btn">🔬 PubMed Medical Science ↗</a>
+                `;
+            }
+
+            const outputCardHtml = `
                 <div>${summaryText}</div>
                 <div class="knowledge-card">
                     <div class="knowledge-card-title">
-                        <span>🌐 LIVE EDUCATIONAL SOURCES & KNOWLEDGE BASES (CONNECTED)</span>
+                        <span>${categoryIcon} DIRECT SEARCH PORTALS FOR YOUR QUESTION</span>
+                        <span class="intent-tag">INTENT: ${categoryName}</span>
                     </div>
                     <div class="links-grid">
-                        <a href="${googleUrl}" target="_blank" class="know-link-btn">🔍 Google Search ↗</a>
+                        <a href="${googleUrl}" target="_blank" class="know-link-btn">🔍 Google Search Engine ↗</a>
                         <a href="${wikiUrl}" target="_blank" class="know-link-btn">📚 Wikipedia Encyclopedia ↗</a>
-                        <a href="${scholarUrl}" target="_blank" class="know-link-btn">🎓 Google Scholar Research ↗</a>
-                        <a href="${wolframUrl}" target="_blank" class="know-link-btn">🧮 WolframAlpha Computational ↗</a>
-                        <a href="${gfgUrl}" target="_blank" class="know-link-btn">💻 GeeksforGeeks Portal ↗</a>
-                        <a href="${khanUrl}" target="_blank" class="know-link-btn">🏫 Khan Academy ↗</a>
-                        <a href="${britannicaUrl}" target="_blank" class="know-link-btn">📖 Encyclopaedia Britannica ↗</a>
-                        <a href="${pubmedUrl}" target="_blank" class="know-link-btn">🔬 PubMed Medical Index ↗</a>
-                        <a href="${ocwUrl}" target="_blank" class="know-link-btn">🎓 MIT OpenCourseWare ↗</a>
-                        <a href="${jstorUrl}" target="_blank" class="know-link-btn">📜 JSTOR Academic Library ↗</a>
+                        ${customLinksHtml}
                     </div>
                 </div>
             `;
 
-            return knowledgeCardHtml;
+            return outputCardHtml;
         }
 
         function tryEvaluateMath(str) {
