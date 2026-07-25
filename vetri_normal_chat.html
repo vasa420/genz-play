@@ -717,65 +717,124 @@
             };
         }
 
-        // Precision Multi-Option Scoring Engine (Built-in Factual Knowledge Matching)
+        // Precision Multi-Option Scoring Engine (Built-in Factual Knowledge & National Symbols Engine)
         async function findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion) {
             const normStem = questionStem.toUpperCase();
 
-            // 1. Largest State in India by Area
-            if ((normStem.includes('LARGEST STATE') || normStem.includes('BIGGEST STATE')) && normStem.includes('INDIA')) {
-                const rajOpt = matches.find(m => m.toUpperCase().includes('RAJASTHAN'));
-                if (rajOpt) return { matchedOpt: rajOpt.trim(), explanation: "Rajasthan is the largest state in India by area, covering 342,239 square kilometers (10.4% of India's total geographical area), followed by Madhya Pradesh and Maharashtra." };
+            // 1. National Animal of India (Bengal Tiger since April 1973; Lion was before 1973)
+            if (normStem.includes('NATIONAL ANIMAL') && normStem.includes('INDIA')) {
+                const tigerOpt = matches.find(m => m.toUpperCase().includes('TIGER'));
+                if (tigerOpt) {
+                    return {
+                        matchedOpt: tigerOpt.trim(),
+                        explanation: "The Royal Bengal Tiger (Panthera tigris) was declared the official National Animal of India in April 1973 during the launch of Project Tiger, replacing the Asiatic Lion which was the national animal prior to 1973.",
+                        customReasons: {
+                            'LION': "The Asiatic Lion was the national animal of India prior to 1973, but is no longer the national animal today.",
+                            'ELEPHANT': "The Indian Elephant was declared the official National Heritage Animal of India in 2010, not the primary National Animal.",
+                            'TIGER': "The Royal Bengal Tiger (Panthera tigris) is the official National Animal of India, adopted in April 1973.",
+                            'LEOPARD': "The Indian Leopard is a protected big cat species in India but has no official national animal designation."
+                        }
+                    };
+                }
             }
 
-            // 2. Smallest State in India
+            // 2. National Bird of India
+            if (normStem.includes('NATIONAL BIRD') && normStem.includes('INDIA')) {
+                const peacockOpt = matches.find(m => m.toUpperCase().includes('PEACOCK'));
+                if (peacockOpt) {
+                    return {
+                        matchedOpt: peacockOpt.trim(),
+                        explanation: "The Indian Peacock (Pavo cristatus) was declared the National Bird of India in 1963 due to its rich involvement in Indian mythology and cultural heritage.",
+                        customReasons: {
+                            'PEACOCK': "The Indian Peacock (Pavo cristatus) is the official National Bird of India, declared in 1963."
+                        }
+                    };
+                }
+            }
+
+            // 3. Highest Peak in India (Kanchenjunga = 8,586m; Everest is Nepal/China)
+            if ((normStem.includes('HIGHEST PEAK') || normStem.includes('HIGHEST MOUNTAIN')) && normStem.includes('INDIA')) {
+                const kancOpt = matches.find(m => m.toUpperCase().includes('KANCHENJUNGA') || m.toUpperCase().includes('KANCHANJUNGA'));
+                if (kancOpt) {
+                    return {
+                        matchedOpt: kancOpt.trim(),
+                        explanation: "Kanchenjunga (8,586 meters), located on the border between Sikkim, India and Nepal, is the highest mountain peak in India and the 3rd highest peak in the world. (Mount Everest is located in Nepal/Tibet, NOT in India).",
+                        customReasons: {
+                            'EVEREST': "Mount Everest (8,848.86 m) is the highest peak in the world, but is located in Nepal/China, NOT in India.",
+                            'KANCHENJUNGA': "Kanchenjunga (8,586 m) in Sikkim is the highest mountain peak within India.",
+                            'K2': "K2 (8,611 m) is located in Pakistan-administered Gilgit-Baltistan (PoK).",
+                            'NANDA DEVI': "Nanda Devi (7,816 m) is the 2nd highest peak in India, entirely within Uttarakhand."
+                        }
+                    };
+                }
+            }
+
+            // 4. Largest State in India by Area
+            if ((normStem.includes('LARGEST STATE') || normStem.includes('BIGGEST STATE')) && normStem.includes('INDIA')) {
+                const rajOpt = matches.find(m => m.toUpperCase().includes('RAJASTHAN'));
+                if (rajOpt) {
+                    return {
+                        matchedOpt: rajOpt.trim(),
+                        explanation: "Rajasthan is the largest state in India by area, covering 342,239 square kilometers (10.4% of India's total area), followed by Madhya Pradesh (2nd), Maharashtra (3rd), and Uttar Pradesh (4th).",
+                        customReasons: {
+                            'MAHARASHTRA': "Maharashtra is the 3rd largest state by area in India (307,713 km²).",
+                            'RAJASTHAN': "Rajasthan is the 1st largest state by area in India (342,239 km²).",
+                            'MADHYA PRADESH': "Madhya Pradesh is the 2nd largest state by area in India (308,245 km²).",
+                            'UTTAR PRADESH': "Uttar Pradesh is the 4th largest state by area (240,928 km²), though it is 1st in population."
+                        }
+                    };
+                }
+            }
+
+            // 5. Smallest State in India
             if ((normStem.includes('SMALLEST STATE')) && normStem.includes('INDIA')) {
                 const goaOpt = matches.find(m => m.toUpperCase().includes('GOA'));
                 if (goaOpt) return { matchedOpt: goaOpt.trim(), explanation: "Goa is the smallest state in India by area, covering 3,702 square kilometers." };
             }
 
-            // 3. Most Populous State in India
+            // 6. Most Populous State in India
             if ((normStem.includes('POPULOUS') || normStem.includes('POPULATION')) && normStem.includes('INDIA')) {
                 const upOpt = matches.find(m => m.toUpperCase().includes('UTTAR PRADESH'));
                 if (upOpt) return { matchedOpt: upOpt.trim(), explanation: "Uttar Pradesh is the most populous state in India with a population exceeding 200 million." };
             }
 
-            // 4. Silicon Valley of India
+            // 7. Silicon Valley of India
             if (normStem.includes('SILICON VALLEY') || normStem.includes('IT CAPITAL')) {
                 const benOpt = matches.find(m => m.toUpperCase().includes('BENGALURU') || m.toUpperCase().includes('BANGALORE'));
                 if (benOpt) return { matchedOpt: benOpt.trim(), explanation: "Bengaluru (Bangalore) is known as the Silicon Valley of India because it is the country's main IT exporter and technology hub." };
             }
 
-            // 5. Largest Planet
+            // 8. Largest Planet
             if (normStem.includes('LARGEST PLANET') || normStem.includes('BIGGEST PLANET')) {
                 const jupOpt = matches.find(m => m.toUpperCase().includes('JUPITER'));
                 if (jupOpt) return { matchedOpt: jupOpt.trim(), explanation: "Jupiter is the largest planet in our solar system, more than twice as massive as all other planets combined." };
             }
 
-            // 6. Red Planet
+            // 9. Red Planet
             if (normStem.includes('RED PLANET')) {
                 const marsOpt = matches.find(m => m.toUpperCase().includes('MARS'));
                 if (marsOpt) return { matchedOpt: marsOpt.trim(), explanation: "Mars is known as the Red Planet due to iron oxide (rust) covering its dusty surface." };
             }
 
-            // 7. Smallest Planet
+            // 10. Smallest Planet
             if (normStem.includes('SMALLEST PLANET')) {
                 const mercOpt = matches.find(m => m.toUpperCase().includes('MERCURY'));
                 if (mercOpt) return { matchedOpt: mercOpt.trim(), explanation: "Mercury is the smallest planet in the solar system." };
             }
 
-            // 8. Hottest Planet
+            // 11. Hottest Planet
             if (normStem.includes('HOTTEST PLANET')) {
                 const venOpt = matches.find(m => m.toUpperCase().includes('VENUS'));
                 if (venOpt) return { matchedOpt: venOpt.trim(), explanation: "Venus is the hottest planet in the solar system with surface temperatures reaching 465°C." };
             }
 
-            // 9. Capital of India
+            // 12. Capital of India
             if (normStem.includes('CAPITAL') && normStem.includes('INDIA')) {
                 const delOpt = matches.find(m => m.toUpperCase().includes('DELHI'));
                 if (delOpt) return { matchedOpt: delOpt.trim(), explanation: "New Delhi is the official capital of India." };
             }
 
-            // 10. Currency of Japan
+            // 13. Currency of Japan
             if (normStem.includes('CURRENCY') && normStem.includes('JAPAN')) {
                 const yenOpt = matches.find(m => m.toUpperCase().includes('YEN'));
                 if (yenOpt) return { matchedOpt: yenOpt.trim(), explanation: "The Japanese Yen (JPY) is the official currency of Japan." };
@@ -822,14 +881,26 @@
             // Precision Multi-Option Scoring Engine
             const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
             const matchedOptText = evalRes.matchedOpt;
+            const customReasons = evalRes.customReasons || {};
 
-            // Generate full option-by-option factual breakdown with individual 1-sentence reasons
+            // Generate full option-by-option factual breakdown with individual 1-sentence factual reasons
             let allOptsAnalysis = parsed.options.map(o => {
                 const isCorrect = matchedOptText.toUpperCase().includes(o.val.toUpperCase());
                 const statusTag = isCorrect ? '<span style="color:var(--green); font-weight:900;">[✔ CORRECT]</span>' : '<span style="color:#ff4444; font-weight:900;">[❌ INCORRECT]</span>';
-                const reason = isCorrect 
-                    ? `Fulfills all constraints for "${escapeHtml(questionStem)}".`
-                    : `Does not satisfy the required factual constraints for "${escapeHtml(questionStem)}".`;
+                
+                // Find custom fact-based reason if matched in customReasons dictionary
+                let matchedReason = null;
+                for (let k in customReasons) {
+                    if (o.val.toUpperCase().includes(k)) {
+                        matchedReason = customReasons[k];
+                        break;
+                    }
+                }
+
+                const reason = matchedReason || (isCorrect 
+                    ? `Satisfies all factual criteria for "${escapeHtml(questionStem)}".`
+                    : `Factually incorrect for the constraints specified in "${escapeHtml(questionStem)}".`);
+
                 return `• <strong>${escapeHtml(o.raw)}</strong> (${statusTag}) - ${reason}`;
             }).join('<br>');
 
