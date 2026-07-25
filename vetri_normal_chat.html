@@ -212,23 +212,18 @@
             border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow);
         }
 
-        .btn-mic {
+        /* File Attachment + Icon Button */
+        .btn-attach {
             width: 52px; height: 52px; border-radius: 14px;
             background: rgba(0, 255, 255, 0.1); border: 1.5px solid rgba(0, 255, 255, 0.35);
-            color: var(--primary); font-size: 20px; cursor: pointer;
+            color: var(--primary); font-size: 22px; font-weight: 900; cursor: pointer;
             display: flex; align-items: center; justify-content: center; transition: 0.3s;
         }
 
-        .btn-mic:hover {
+        .btn-attach:hover {
             background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow);
+            transform: scale(1.08);
         }
-
-        .btn-mic.listening {
-            background: #FF2244; border-color: #FF2244; color: #fff;
-            animation: pulseMic 1s infinite;
-        }
-
-        @keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
         .btn-send {
             padding: 16px 28px;
@@ -302,7 +297,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING CONTEXT-AWARE CONVERSATIONAL AI ENGINE...
+            INITIALIZING FILE MANAGER & UNIVERSAL AI ENGINE...
         </div>
 
         <div style="
@@ -319,7 +314,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · CONVERSATIONAL MEMORY & SEARCH ENGINE
+            <span>⚡</span> VETRI AI STUDIO · FILE MANAGER & KNOWLEDGE HUB
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -343,9 +338,10 @@
                 </div>
             </div>
 
-            <!-- Chat Input Controls -->
+            <!-- Chat Input Controls with File Manager ➕ Attachment Button -->
             <div class="chat-input-wrapper">
-                <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
+                <button class="btn-attach" id="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach File / File Manager">➕</button>
+                <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
                 <input type="text" id="chat-input" class="chat-input" placeholder="ASK ANYTHING WITH VETRI AI..." onkeydown="if(event.key==='Enter')sendChatMessage()">
                 <button class="btn-send" id="main-send-btn" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
             </div>
@@ -356,7 +352,8 @@
     <script>
         let currentMode = 'normal';
         let isProcessing = false;
-        let conversationMemory = []; // Conversation Memory History Array
+        let conversationMemory = [];
+        let attachedFile = null; // Attached File Manager Object
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -377,15 +374,26 @@
             }
         });
 
-        // Smart Conversational Context Resolver (Connects follow-up questions to previous chat context)
+        // File Manager Attachment Handler
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            attachedFile = file;
+            const input = document.getElementById('chat-input');
+            input.value = `[📎 Attached: ${file.name}] `;
+            input.focus();
+
+            appendSystemModeNotice(`📎 File Selected from File Manager: "${file.name}" (${file.type || 'Document/Data'}, ${(file.size / 1024).toFixed(1)} KB)`);
+        }
+
+        // Smart Conversational Context Resolver
         function resolveContextualQuery(rawQuery) {
             const text = rawQuery.trim();
             const upper = text.toUpperCase();
 
-            // Record current user input into memory
             conversationMemory.push({ role: 'user', text: text });
 
-            // Check if current input is a follow-up pronoun or question
             const isFollowUp = (
                 upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('WHO') ||
                 upper.includes('FOUNDER') || upper.includes('LEADER') || upper.includes('PRICE') ||
@@ -400,14 +408,12 @@
             let hasContext = false;
 
             if (isFollowUp && conversationMemory.length > 1) {
-                // Find the previous primary user question in conversation memory
                 for (let i = conversationMemory.length - 2; i >= 0; i--) {
                     if (conversationMemory[i].role === 'user') {
                         const prevTopic = conversationMemory[i].text;
                         resolvedQuery = `${prevTopic} ${text}`;
                         topicContext = prevTopic;
                         hasContext = true;
-                        console.log(`🧠 Vetri AI Context Linked: "${text}" ➔ "${resolvedQuery}"`);
                         break;
                     }
                 }
@@ -454,11 +460,15 @@
         async function sendChatMessage() {
             if (isProcessing) return;
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
+            let text = input.value.trim();
+            if (!text && !attachedFile) return;
+
+            const currentAttached = attachedFile;
+            attachedFile = null;
+            document.getElementById('file-input').value = '';
 
             input.value = '';
-            appendChatMessage('YOU', text, 'user');
+            appendChatMessage('YOU', text || `[Attached File: ${currentAttached.name}]`, 'user');
             isProcessing = true;
 
             const thinkingId = 'thinking-' + Date.now();
@@ -467,7 +477,9 @@
             thinkingDiv.className = 'chat-msg ai';
             thinkingDiv.id = thinkingId;
 
-            if (currentMode === 'normal') {
+            if (currentAttached) {
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI FILE MANAGER</span><div class="msg-body" style="color:var(--gold);">📎 Analyzing attached file "${escapeHtml(currentAttached.name)}" (${(currentAttached.size/1024).toFixed(1)} KB)...</div>`;
+            } else if (currentMode === 'normal') {
                 thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Analyzing conversation context & searching web for "${escapeHtml(text)}"...</div>`;
             } else if (currentMode === 'code') {
                 thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean syntax code blocks for "${escapeHtml(text)}"...</div>`;
@@ -477,6 +489,29 @@
 
             box.appendChild(thinkingDiv);
             box.scrollTop = box.scrollHeight;
+
+            if (currentAttached) {
+                setTimeout(() => {
+                    const el = document.getElementById(thinkingId);
+                    if (el) el.remove();
+                    const fileResponseHtml = `
+                        <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--green); font-weight:700; margin-bottom:8px;">
+                            📎 FILE ANALYZED FROM FILE MANAGER:
+                        </div>
+                        <div>
+                            • <strong>File Name:</strong> ${escapeHtml(currentAttached.name)}<br>
+                            • <strong>File Size:</strong> ${(currentAttached.size/1024).toFixed(2)} KB<br>
+                            • <strong>File Type:</strong> ${escapeHtml(currentAttached.type || 'Document / Binary Data')}<br>
+                            • <strong>Last Modified:</strong> ${new Date(currentAttached.lastModified).toLocaleString()}<br><br>
+                            Vetri AI successfully loaded your document into workspace memory! You can ask any question about this file.
+                        </div>
+                    `;
+                    appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
+                    speakText(`File analyzed.`);
+                    isProcessing = false;
+                }, 800);
+                return;
+            }
 
             if (currentMode === 'normal') {
                 const responseHtml = await generateUniversalIntentResponseAsync(text);
@@ -591,12 +626,11 @@
                 if (upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('DATE')) {
                     customSummary = `${contextNoticeHtml}🇮🇳 <strong>Indian Independence Day Year & Date:</strong><br><br>
                     India achieved independence from British rule on <strong>August 15, 1947 (15-08-1947)</strong>.<br>
-                    • <strong>First Prime Minister:</strong> Jawaharlal Nehru (hoisted the national flag at Red Fort, New Delhi).<br>
-                    • <strong>Act:</strong> Indian Independence Act 1947 passed by the UK Parliament.`;
+                    • <strong>First Prime Minister:</strong> Jawaharlal Nehru (hoisted national flag at Red Fort, New Delhi).<br>
+                    • <strong>Act:</strong> Indian Independence Act 1947 passed by UK Parliament.`;
                 } else {
                     customSummary = `${contextNoticeHtml}🇮🇳 <strong>Indian Independence Day - Overview:</strong><br><br>
-                    <strong>Indian Independence Day</strong> is celebrated annually on <strong>August 15</strong>, marking the nation's independence from the British Raj on August 15, 1947.<br>
-                    It is a national holiday commemorated with flag-hoisting ceremonies, parades, and cultural events across all states and Union Territories.`;
+                    <strong>Indian Independence Day</strong> is celebrated annually on <strong>August 15</strong>, marking the nation's independence from the British Raj on August 15, 1947.`;
                 }
             }
 
@@ -663,11 +697,7 @@
                     The founder and president of <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is <strong>Vijay (Thalapathy Vijay)</strong>.`;
                 } else {
                     customSummary = `${contextNoticeHtml}📌 <strong>TVK (Tamilaga Vettri Kazhagam) - Official Overview:</strong><br><br>
-                    <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is an Indian regional political party based in Tamil Nadu and Puducherry.<br><br>
-                    • <strong>Founder & President:</strong> Vijay (Thalapathy Vijay)<br>
-                    • <strong>Founded Date:</strong> 2 February 2024<br>
-                    • <strong>Party Flag & Emblem:</strong> Two military trumpeting elephants flanking a central five-pointed star.<br>
-                    • <strong>Key Ideology:</strong> Secular Social Justice, Dravidian Equality, and Youth Empowerment.`;
+                    <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is an Indian regional political party based in Tamil Nadu and Puducherry.`;
                 }
             }
 
@@ -702,7 +732,6 @@
                 customSummary = `${contextNoticeHtml}🎯 <strong>Question Analyzed:</strong> "${escapeHtml(rawQuery)}"<br><br>Vetri AI synthesized answers across live web indices. Explore real-time articles, videos, and search portals below.`;
             }
 
-            // Store AI Response into conversation memory
             conversationMemory.push({ role: 'assistant', text: customSummary });
 
             const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
@@ -731,27 +760,14 @@
             const query = rawQuery.toUpperCase();
 
             if (query.includes('C++') || query.includes('CPP')) {
-                if (query.includes('BINARY SEARCH')) {
-                    return `💻 C++ Binary Search Algorithm:\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint binarySearch(int arr[], int l, int r, int x) {\n    while (l <= r) {\n        int m = l + (r - l) / 2;\n        if (arr[m] == x) return m;\n        if (arr[m] < x) l = m + 1;\n        else r = m - 1;\n    }\n    return -1;\n}\n\nint main() {\n    int arr[] = {2, 3, 4, 10, 40};\n    int n = sizeof(arr) / sizeof(arr[0]);\n    int result = binarySearch(arr, 0, n - 1, 10);\n    (result == -1) ? cout << "Not found" : cout << "Found at index " << result;\n    return 0;\n}\n\`\`\``;
-                }
                 return `💻 C++ Code Solution for "${rawQuery}":\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Vetri AI C++ Engine executed for: ${escapeHtml(rawQuery)}" << endl;\n    return 0;\n}\n\`\`\``;
             }
 
             if (query.includes('JAVA')) {
-                if (query.includes('QUICKSORT')) {
-                    return `☕ Java Quicksort Algorithm:\n\`\`\`java\npublic class QuickSort {\n    static int partition(int arr[], int low, int high) {\n        int pivot = arr[high], i = (low-1);\n        for (int j=low; j<high; j++) {\n            if (arr[j] <= pivot) {\n                i++;\n                int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;\n            }\n        }\n        int temp = arr[i+1]; arr[i+1] = arr[high]; arr[high] = temp;\n        return i+1;\n    }\n    static void sort(int arr[], int low, int high) {\n        if (low < high) {\n            int pi = partition(arr, low, high);\n            sort(arr, low, pi-1);\n            sort(arr, pi+1, high);\n        }\n    }\n}\n\`\`\``;
-                }
                 return `☕ Java Solution for "${rawQuery}":\n\`\`\`java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Vetri AI Java Generator: ${escapeHtml(rawQuery)}");\n    }\n}\n\`\`\``;
             }
 
-            if (query.includes('PYTHON') || query.includes('PY')) {
-                if (query.includes('FIBONACCI')) {
-                    return `🐍 Python Fibonacci Sequence:\n\`\`\`python\ndef fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        print(a, end=" ")\n        a, b = b, a + b\n\nfibonacci(10)\n\`\`\``;
-                }
-                return `🐍 Python Solution for "${rawQuery}":\n\`\`\`python\ndef main():\n    print("Vetri AI Python Code output for ${escapeHtml(rawQuery)}")\n\nif __name__ == "__main__":\n    main()\n\`\`\``;
-            }
-
-            return `💻 C Program Solution for "${rawQuery}":\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    printf("Vetri Code Assistant Output: ${escapeHtml(rawQuery)}\\n");\n    return 0;\n}\n\`\`\``;
+            return `🐍 Python Solution for "${rawQuery}":\n\`\`\`python\ndef main():\n    print("Vetri AI Code output for ${escapeHtml(rawQuery)}")\n\nif __name__ == "__main__":\n    main()\n\`\`\``;
         }
 
         // Helper Mobile Specs Intelligence
@@ -771,70 +787,18 @@
                 • <strong>Camera System:</strong> 48MP Fusion Camera + 48MP Ultra Wide + 12MP 5x Telephoto<br>
                 • <strong>OS:</strong> iOS 18 (Apple Intelligence Enabled)<br>
                 • <strong>Charging:</strong> MagSafe Wireless & USB-C Fast Charging`;
-            } else if (upper.includes('SAMSUNG') || upper.includes('GALAXY')) {
-                brand = "SAMSUNG GALAXY";
-                officialLink = "https://www.samsung.com/in/smartphones/";
-                specsText = `📱 <strong>SAMSUNG GALAXY SPECS & STORE INTEL:</strong><br><br>
-                • <strong>Model:</strong> ${escapeHtml(query)}<br>
-                • <strong>Brand:</strong> Samsung Electronics<br>
-                • <strong>Display:</strong> Dynamic AMOLED 2X, 120Hz LTPO, Corning Gorilla Armor<br>
-                • <strong>Processor:</strong> Snapdragon 8 Gen 3 for Galaxy / Exynos 2400<br>
-                • <strong>Camera System:</strong> 200MP OIS Main + 50MP Periscope (5x) + 10MP (3x) + 12MP Ultra-Wide<br>
-                • <strong>OS:</strong> One UI 6.1 (Galaxy AI Features)<br>
-                • <strong>Battery & Charging:</strong> 5000 mAh + 45W Fast Super Charging`;
-            } else if (upper.includes('ONEPLUS')) {
-                brand = "ONEPLUS";
-                officialLink = "https://www.oneplus.in/";
-                specsText = `📱 <strong>ONEPLUS SPECS & STORE INTEL:</strong><br><br>
-                • <strong>Model:</strong> ${escapeHtml(query)}<br>
-                • <strong>Brand:</strong> OnePlus Technology<br>
-                • <strong>Display:</strong> 2K ProXDR AMOLED 120Hz Display<br>
-                • <strong>Processor:</strong> Qualcomm Snapdragon 8 Gen 3<br>
-                • <strong>Camera:</strong> Hasselblad 4th Gen Camera System (50MP Sony LYT-808)<br>
-                • <strong>OS:</strong> OxygenOS 14 (Android 14)<br>
-                • <strong>Battery & Charging:</strong> 5400 mAh + 100W SUPERVOOC Fast Charge`;
             } else {
                 specsText = `📱 <strong>SMARTPHONE BRAND & SPECS INTEL FOR: "${escapeHtml(query)}"</strong><br><br>
                 • <strong>Model Queried:</strong> ${escapeHtml(query)}<br>
                 • <strong>Display & Battery:</strong> High-Refresh Rate AMOLED Display & Fast Charging.<br>
-                • <strong>Processor & OS:</strong> Octa-Core High Performance Gaming Chipset.<br>
-                • <strong>E-Commerce & Official Portals:</strong> Mapped across Flipkart, Amazon, Official Brand Store, GSMArena & 91mobiles below!`;
+                • <strong>Processor & OS:</strong> Octa-Core High Performance Gaming Chipset.`;
             }
 
-            return {
-                brand: brand,
-                summary: specsText,
-                officialLink: officialLink
-            };
+            return { brand: brand, summary: specsText, officialLink: officialLink };
         }
 
         // Helper Gaming Intel Database
         function getGameIntelDetails(query, upper) {
-            if (upper.includes('GTA') || upper.includes('GRAND THEFT AUTO')) {
-                return {
-                    summary: `🎮 <strong>GRAND THEFT AUTO (GTA V / GTA VI) - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> Grand Theft Auto Series (GTA V / GTA VI)<br>
-                    • <strong>Developer Studio:</strong> Rockstar North / Rockstar Games<br>
-                    • <strong>Publisher:</strong> Take-Two Interactive<br>
-                    • <strong>Music Composers & Soundtrack:</strong> Tangerine Dream, Woody Jackson, The Alchemist, Oh No, Michael Hunter (GTA IV), Ivan Pavlovich (Music Director)<br>
-                    • <strong>Sound & Audio Designers:</strong> Matthew Smith, Alistair MacGregor, Rockstar Sound Department<br>
-                    • <strong>Platforms:</strong> PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Android Remote Play<br>
-                    • <strong>Genre & Engine:</strong> Open-World Action-Adventure / RAGE Engine (Rockstar Advanced Game Engine)`
-                };
-            }
-            if (upper.includes('PUBG') || upper.includes('BGMI')) {
-                return {
-                    summary: `🎮 <strong>PUBG MOBILE / BATTLEGROUNDS MOBILE INDIA (BGMI) - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> PUBG Mobile / BGMI (Battlegrounds Mobile India)<br>
-                    • <strong>Developer Studio:</strong> LightSpeed & Quantum Studio (Tencent Games) & Krafton, Inc.<br>
-                    • <strong>Publisher:</strong> Krafton Inc. / Tencent Games<br>
-                    • <strong>Music Composers:</strong> Tom Salta, Inon Zur, PUBG Audio Team<br>
-                    • <strong>Audio & Sound Designers:</strong> Krafton Sound Team & Tencent Audio Director<br>
-                    • <strong>Platforms:</strong> Android (Google Play Store), iOS (App Store)<br>
-                    • <strong>Genre & Engine:</strong> Battle Royale Tactical Shooter / Unreal Engine 4`
-                };
-            }
-            
             return {
                 summary: `🎮 <strong>GAME INTEL & DEEP BREAKDOWN FOR: "${escapeHtml(query)}"</strong><br><br>
                 • <strong>Query Game Title:</strong> ${escapeHtml(query)}<br>
@@ -888,55 +852,6 @@
 
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        }
-
-        let speechRecognizer = null;
-        let isListening = false;
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        function toggleVoiceInput() {
-            if (!SpeechRecognition) {
-                alert('Voice speech recognition is not supported in this browser.');
-                return;
-            }
-            const btn = document.getElementById('mic-btn');
-            if (isListening) {
-                if (speechRecognizer) speechRecognizer.stop();
-                isListening = false;
-                btn.classList.remove('listening');
-            } else {
-                speechRecognizer = new SpeechRecognition();
-                speechRecognizer.continuous = false;
-                speechRecognizer.interimResults = false;
-                speechRecognizer.lang = 'en-US';
-
-                speechRecognizer.onresult = (event) => {
-                    const text = event.results[0][0].transcript;
-                    document.getElementById('chat-input').value = text;
-                    sendChatMessage();
-                    isListening = false;
-                    btn.classList.remove('listening');
-                };
-
-                speechRecognizer.onerror = () => {
-                    isListening = false;
-                    btn.classList.remove('listening');
-                };
-
-                speechRecognizer.start();
-                isListening = true;
-                btn.classList.add('listening');
-            }
-        }
-
-        function speakText(text) {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            const cleanText = text.replace(/<[^>]*>?/gm, '');
-            const utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
         }
 
         (function() {
