@@ -110,28 +110,6 @@
             box-shadow: 0 0 25px var(--primary-glow);
         }
 
-        .network-badge-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(0, 255, 255, 0.05); border: 1px solid rgba(0, 255, 255, 0.2);
-            padding: 8px 16px; border-radius: 10px; margin-bottom: 12px;
-            font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px;
-            color: var(--primary);
-        }
-
-        .source-chips {
-            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
-        }
-
-        .source-chip {
-            background: rgba(0, 255, 255, 0.08); border: 1px solid rgba(0, 255, 255, 0.25);
-            color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 10px;
-            padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: 0.2s;
-        }
-
-        .source-chip:hover {
-            background: var(--primary); color: #000; box-shadow: 0 0 12px var(--primary-glow);
-        }
-
         .terminal-box {
             flex: 1; background: rgba(4, 4, 12, 0.95);
             border: 1px solid rgba(0, 255, 255, 0.2);
@@ -315,7 +293,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            CONNECTING 500+ GAME PORTALS, PLAYSTORE & KNOWLEDGE API...
+            CONNECTING FLIPKART, AMAZON, MOBILE BRANDS & KNOWLEDGE API...
         </div>
 
         <div style="
@@ -332,7 +310,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · 500+ GAME INTEL & KNOWLEDGE HUB
+            <span>⚡</span> VETRI AI STUDIO · UNIVERSAL KNOWLEDGE ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -348,8 +326,6 @@
                 <a class="mode-tab-btn" href="vetri_image_gen.html">🎨 IMAGE GENERATION</a>
             </div>
 
-
-
             <!-- Terminal Output Window -->
             <div class="terminal-box" id="terminal-box">
                 <div class="chat-msg ai">
@@ -361,7 +337,7 @@
             <!-- Chat Input Controls -->
             <div class="chat-input-wrapper">
                 <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
-                <input type="text" id="chat-input" class="chat-input" placeholder="Ask game developer/composer (e.g. GTA V, PUBG, God of War, Minecraft)..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Ask any question (e.g. iPhone 16 Pro Max, Samsung S24, GTA V, FLAMES)..." onkeydown="if(event.key==='Enter')sendChatMessage()">
                 <button class="btn-send" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
             </div>
 
@@ -382,14 +358,6 @@
             }
         });
 
-        function quickSearch(promptText) {
-            const input = document.getElementById('chat-input');
-            if (input) {
-                input.value = promptText;
-                sendChatMessage();
-            }
-        }
-
         let isProcessing = false;
 
         async function sendChatMessage() {
@@ -407,7 +375,7 @@
             const thinkingDiv = document.createElement('div');
             thinkingDiv.className = 'chat-msg ai';
             thinkingDiv.id = thinkingId;
-            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI KNOWLEDGE ENGINE</span><div class="msg-body" style="color:var(--gold);">🟡 Fetching 500+ game databases, developer info & music composers for "${escapeHtml(text)}"...</div>`;
+            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI KNOWLEDGE ENGINE</span><div class="msg-body" style="color:var(--gold);">🟡 Reading query, specs, Flipkart, Amazon & official brand portals for "${escapeHtml(text)}"...</div>`;
             box.appendChild(thinkingDiv);
             box.scrollTop = box.scrollHeight;
 
@@ -417,7 +385,7 @@
             if (el) el.remove();
 
             appendChatMessage('🤖 VETRI AI KNOWLEDGE ENGINE', responseHtml, 'ai', true);
-            speakText(`Game intel retrieved for ${text}`);
+            speakText(`Details fetched for ${text}`);
             isProcessing = false;
         }
 
@@ -445,7 +413,7 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // Multi-Domain & 500+ Games Knowledge Engine
+        // Multi-Domain & Mobile Brand / Flipkart / Amazon Intelligence Engine
         async function generateUniversalIntentResponseAsync(rawQuery) {
             const query = rawQuery.trim();
             const upper = query.toUpperCase();
@@ -454,8 +422,28 @@
             let categoryTag = "UNIVERSAL KNOWLEDGE";
             let customLinksHtml = "";
 
-            // 1. Video Games, Play Store Games & Composer Intel Engine (500+ Game Portals)
-            if (upper.includes('GAME') || upper.includes('PLAYSTORE') || upper.includes('GTA') || upper.includes('PUBG') || upper.includes('BGMI') || upper.includes('FREE FIRE') || upper.includes('MINECRAFT') || upper.includes('GOD OF WAR') || upper.includes('CYBERPUNK') || upper.includes('SUBWAY SURFERS') || upper.includes('CLASH OF CLANS') || upper.includes('ELDEN RING') || upper.includes('WITCHER') || upper.includes('LUDO') || upper.includes('CALL OF DUTY') || upper.includes('ROBLOX') || upper.includes('VALORANT') || upper.includes('FORTNITE') || upper.includes('STEAM')) {
+            // 1. Mobile Brand, Model Specs, Flipkart, Amazon & Official Store Handler
+            if (upper.includes('IPHONE') || upper.includes('SAMSUNG') || upper.includes('ONEPLUS') || upper.includes('REALME') || upper.includes('VIVO') || upper.includes('OPPO') || upper.includes('MOBILE') || upper.includes('SMARTPHONE') || upper.includes('XIAOMI') || upper.includes('REDMI') || upper.includes('POCO') || upper.includes('IQOO') || upper.includes('MOTOROLA')) {
+                categoryTag = "📱 MOBILE SPECS, FLIPKART & AMAZON STORES";
+                let mobileIntel = getMobileIntelDetails(query, upper);
+                customSummary = mobileIntel.summary;
+
+                const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
+                const amazonUrl = `https://www.amazon.in/s?k=${encodeURIComponent(query)}`;
+                const gsmarenaUrl = `https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(query)}`;
+                const mobiles91Url = `https://www.91mobiles.com/search.php?q=${encodeURIComponent(query)}`;
+
+                customLinksHtml = `
+                    <a href="${flipkartUrl}" target="_blank" class="know-link-btn" style="border-color:#2874f0; color:#2874f0;">🛒 Flipkart Store Search ↗</a>
+                    <a href="${amazonUrl}" target="_blank" class="know-link-btn" style="border-color:#FF9900; color:#FF9900;">📦 Amazon India Store ↗</a>
+                    <a href="${mobileIntel.officialLink}" target="_blank" class="know-link-btn" style="border-color:var(--green); color:var(--green);">🏢 Official Brand Store ↗</a>
+                    <a href="${gsmarenaUrl}" target="_blank" class="know-link-btn">📱 GSMArena Detailed Specs ↗</a>
+                    <a href="${mobiles91Url}" target="_blank" class="know-link-btn">⚡ 91mobiles Price Compare ↗</a>
+                `;
+            }
+
+            // 2. Video Games, Play Store Games & Composer Intel Engine (500+ Game Portals)
+            else if (upper.includes('GAME') || upper.includes('PLAYSTORE') || upper.includes('GTA') || upper.includes('PUBG') || upper.includes('BGMI') || upper.includes('FREE FIRE') || upper.includes('MINECRAFT') || upper.includes('GOD OF WAR') || upper.includes('CYBERPUNK') || upper.includes('SUBWAY SURFERS') || upper.includes('CLASH OF CLANS') || upper.includes('ELDEN RING') || upper.includes('WITCHER') || upper.includes('LUDO') || upper.includes('CALL OF DUTY') || upper.includes('ROBLOX') || upper.includes('VALORANT') || upper.includes('FORTNITE') || upper.includes('STEAM')) {
                 categoryTag = "🎮 GAME INTEL & 500+ GAME PORTALS";
                 
                 let gameDetails = getGameIntelDetails(query, upper);
@@ -471,7 +459,7 @@
                 `;
             }
 
-            // 2. FLAMES Game Handler
+            // 3. FLAMES Game Handler
             else if (upper.includes('FLAMES') || upper.includes('LOVE CALCULATOR') || upper.includes('FRIEND OR ENEMY')) {
                 categoryTag = "🔥 FLAMES GAME CALCULATOR";
                 let names = extractNamesFromFlames(query);
@@ -490,7 +478,7 @@
                 `;
             }
 
-            // 3. Physics, Chemistry, Biology, Zoology & Science
+            // 4. Physics, Chemistry, Biology, Zoology & Science
             else if (upper.includes('PHYSICS') || upper.includes('CHEMISTRY') || upper.includes('BIOLOGY') || upper.includes('ZOOLOGY') || upper.includes('BOTANY') || upper.includes('ATOM') || upper.includes('GENETICS')) {
                 categoryTag = "⚛️ SCIENCE & ACADEMIC PORTALS";
                 customSummary = `🔬 <strong>Science & Experimental Knowledge:</strong> "${escapeHtml(query)}"<br><br>Vetri AI processed science query. Access interactive lab simulations, chemical structures, biological taxonomies, and physics formulas below.`;
@@ -503,7 +491,7 @@
                 `;
             }
 
-            // 4. Maths & Aptitude Engine
+            // 5. Maths & Aptitude Engine
             else if (upper.includes('MATH') || upper.includes('APTITUDE') || upper.includes('PERCENTAGE') || upper.includes('PROBABILITY') || upper.includes('SPEED') || upper.includes('DISTANCE') || upper.includes('TIME AND WORK')) {
                 categoryTag = "🧮 MATHS & APTITUDE ENGINE";
                 const mathResult = tryEvaluateMath(upper);
@@ -521,18 +509,6 @@
                     <a href="https://www.indiabix.com/aptitude/questions-and-answers/" target="_blank" class="know-link-btn">📊 IndiaBIX Aptitude Practice ↗</a>
                     <a href="https://www.geeksforgeeks.org/aptitude-questions-and-answers/" target="_blank" class="know-link-btn">💻 GeeksforGeeks Aptitude ↗</a>
                     <a href="https://www.mathway.com/" target="_blank" class="know-link-btn">📐 Mathway Algebra & Calculus ↗</a>
-                `;
-            }
-
-            // 5. Mobile Brands & Specs Engine
-            else if (upper.includes('IPHONE') || upper.includes('SAMSUNG') || upper.includes('ONEPLUS') || upper.includes('REALME') || upper.includes('VIVO') || upper.includes('OPPO') || upper.includes('MOBILE') || upper.includes('SMARTPHONE')) {
-                categoryTag = "📱 MOBILE BRANDS & TECH SPECS";
-                customSummary = `📱 <strong>Mobile Brand & Specs Intelligence:</strong> "${escapeHtml(query)}"<br><br>Vetri AI mapped Smartphone specifications, benchmark scores, camera sensor specs, and price comparisons across global mobile portals.`;
-
-                customLinksHtml = `
-                    <a href="https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">📱 GSMArena Mobile Specs ↗</a>
-                    <a href="https://www.91mobiles.com/search.php?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🛒 91mobiles Price & Specs ↗</a>
-                    <a href="https://www.gadgets360.com/search?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">⚡ NDTV Gadgets360 ↗</a>
                 `;
             }
 
@@ -635,6 +611,104 @@
             `;
 
             return outputCardHtml;
+        }
+
+        // Helper Mobile Specs Intelligence (Brand, Model, Display, Chipset, Camera, OS, Battery)
+        function getMobileIntelDetails(query, upper) {
+            let brand = "SMARTPHONE";
+            let officialLink = "https://www.google.com/search?q=" + encodeURIComponent(query + " official store");
+            let specsText = "";
+
+            if (upper.includes('IPHONE') || upper.includes('APPLE')) {
+                brand = "APPLE IPHONE";
+                officialLink = "https://www.apple.com/in/shop/buy-iphone";
+                specsText = `📱 <strong>APPLE IPHONE SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> Apple Inc.<br>
+                • <strong>Display:</strong> Super Retina XDR OLED with ProMotion 120Hz<br>
+                • <strong>Processor:</strong> Apple A18 Pro / A17 Pro Bionic Chip<br>
+                • <strong>Camera System:</strong> 48MP Fusion Camera + 48MP Ultra Wide + 12MP 5x Telephoto<br>
+                • <strong>OS:</strong> iOS 18 (Apple Intelligence Enabled)<br>
+                • <strong>Charging:</strong> MagSafe Wireless & USB-C Fast Charging`;
+            } else if (upper.includes('SAMSUNG') || upper.includes('GALAXY')) {
+                brand = "SAMSUNG GALAXY";
+                officialLink = "https://www.samsung.com/in/smartphones/";
+                specsText = `📱 <strong>SAMSUNG GALAXY SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> Samsung Electronics<br>
+                • <strong>Display:</strong> Dynamic AMOLED 2X, 120Hz LTPO, Corning Gorilla Armor<br>
+                • <strong>Processor:</strong> Snapdragon 8 Gen 3 for Galaxy / Exynos 2400<br>
+                • <strong>Camera System:</strong> 200MP OIS Main + 50MP Periscope (5x) + 10MP (3x) + 12MP Ultra-Wide<br>
+                • <strong>OS:</strong> One UI 6.1 (Galaxy AI Features)<br>
+                • <strong>Battery & Charging:</strong> 5000 mAh + 45W Fast Super Charging`;
+            } else if (upper.includes('ONEPLUS')) {
+                brand = "ONEPLUS";
+                officialLink = "https://www.oneplus.in/";
+                specsText = `📱 <strong>ONEPLUS SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> OnePlus Technology<br>
+                • <strong>Display:</strong> 2K ProXDR AMOLED 120Hz Display<br>
+                • <strong>Processor:</strong> Qualcomm Snapdragon 8 Gen 3<br>
+                • <strong>Camera:</strong> Hasselblad 4th Gen Camera System (50MP Sony LYT-808)<br>
+                • <strong>OS:</strong> OxygenOS 14 (Android 14)<br>
+                • <strong>Battery & Charging:</strong> 5400 mAh + 100W SUPERVOOC Fast Charge`;
+            } else if (upper.includes('VIVO') || upper.includes('IQOO')) {
+                brand = "VIVO / IQOO";
+                officialLink = "https://www.vivo.com/in/";
+                specsText = `📱 <strong>VIVO / IQOO SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> Vivo Communication Technology<br>
+                • <strong>Display:</strong> 1.5K / 2K AMOLED 144Hz Gaming Display<br>
+                • <strong>Processor:</strong> Snapdragon 8 Gen 3 / MediaTek Dimensity 9300<br>
+                • <strong>Camera System:</strong> ZEISS Vario-Tessar Co-engineered 50MP Camera System<br>
+                • <strong>OS:</strong> Funtouch OS 14 / OriginOS<br>
+                • <strong>Battery & Charging:</strong> 5000 mAh + 120W FlashCharge`;
+            } else if (upper.includes('REALME')) {
+                brand = "REALME";
+                officialLink = "https://www.realme.com/in/";
+                specsText = `📱 <strong>REALME SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> Realme Mobile<br>
+                • <strong>Display:</strong> 120Hz Curved AMOLED 6000 nits Peak Brightness<br>
+                • <strong>Processor:</strong> Snapdragon 8s Gen 3 / Dimensity 7050<br>
+                • <strong>Camera:</strong> 50MP Sony LYT-600 OIS Camera<br>
+                • <strong>OS:</strong> realme UI 5.0 (Android 14)<br>
+                • <strong>Battery & Charging:</strong> 5500 mAh + 120W SUPERVOOC`;
+            } else if (upper.includes('XIAOMI') || upper.includes('REDMI') || upper.includes('POCO')) {
+                brand = "XIAOMI / REDMI / POCO";
+                officialLink = "https://www.mi.com/in/";
+                specsText = `📱 <strong>XIAOMI / REDMI / POCO SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> Xiaomi Corporation<br>
+                • <strong>Display:</strong> 120Hz CrystalRes AMOLED Display<br>
+                • <strong>Processor:</strong> Snapdragon 8 Gen 3 / Dimensity 8300 Ultra<br>
+                • <strong>Camera:</strong> Leica Summilux Optical Lens 50MP Quad System<br>
+                • <strong>OS:</strong> Xiaomi HyperOS (Android 14)<br>
+                • <strong>Battery & Charging:</strong> 5000 mAh + 90W / 120W HyperCharge`;
+            } else if (upper.includes('OPPO')) {
+                brand = "OPPO";
+                officialLink = "https://www.oppo.com/in/";
+                specsText = `📱 <strong>OPPO SPECS & STORE INTEL:</strong><br><br>
+                • <strong>Model:</strong> ${escapeHtml(query)}<br>
+                • <strong>Brand:</strong> OPPO Mobile<br>
+                • <strong>Display:</strong> 3D Curved AMOLED 120Hz Display<br>
+                • <strong>Processor:</strong> MediaTek Dimensity 9200+ / Snapdragon 8 Gen 2<br>
+                • <strong>Camera:</strong> Hasselblad Telephoto Portrait Camera System<br>
+                • <strong>OS:</strong> ColorOS 14<br>
+                • <strong>Battery & Charging:</strong> 5000 mAh + 100W SUPERVOOC`;
+            } else {
+                specsText = `📱 <strong>SMARTPHONE BRAND & SPECS INTEL FOR: "${escapeHtml(query)}"</strong><br><br>
+                • <strong>Model Queried:</strong> ${escapeHtml(query)}<br>
+                • <strong>Display & Battery:</strong> High-Refresh Rate AMOLED Display & Fast Charging.<br>
+                • <strong>Processor & OS:</strong> Octa-Core High Performance Gaming Chipset.<br>
+                • <strong>E-Commerce & Official Portals:</strong> Mapped across Flipkart, Amazon, Official Brand Store, GSMArena & 91mobiles below!`;
+            }
+
+            return {
+                brand: brand,
+                summary: specsText,
+                officialLink: officialLink
+            };
         }
 
         // Helper Gaming Intel Database (Developer, Publisher, Composers, Audio Directors)
