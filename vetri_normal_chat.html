@@ -1594,29 +1594,32 @@
                 The factual answer and live web indices for <strong>"${escapeHtml(userText)}"</strong> are retrieved below.`;
             }
 
-            conversationMemory.push({ role: 'assistant', text: customSummary });
+            const isExplicitLiveWebReq = /\b(LIVE|REAL TIME|REALTIME|STOCK|STOCKS|WEATHER|LIVE SCORE|CURRENT NEWS|LATEST NEWS|SEARCH WEB|GOOGLE THIS)\b/i.test(userText);
 
-            const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTopic)}`;
-            const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(searchTopic)}`;
-            const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(searchTopic)}`;
+            if (isExplicitLiveWebReq) {
+                const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTopic)}`;
+                const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(searchTopic)}`;
+                const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(searchTopic)}`;
 
-            const outputCardHtml = `
-                <div>${customSummary}</div>
-                <div class="knowledge-card">
-                    <div class="knowledge-card-title">
-                        <span>🌐 DIRECT WEB & LIVE KNOWLEDGE APIs FOR "${escapeHtml(userText)}"</span>
-                        <span class="intent-tag">${categoryTag}</span>
+                return `
+                    <div>${customSummary}</div>
+                    <div class="knowledge-card">
+                        <div class="knowledge-card-title">
+                            <span>🌐 LIVE SEARCH ENGINE INDICES FOR "${escapeHtml(userText)}"</span>
+                            <span class="intent-tag">${categoryTag}</span>
+                        </div>
+                        <div class="links-grid">
+                            <a href="${googleUrl}" target="_blank" class="know-link-btn">🔍 Google CSE ↗</a>
+                            <a href="${braveUrl}" target="_blank" class="know-link-btn" style="border-color:#FF3B00; color:#FF3B00;">🦁 Brave Search API ↗</a>
+                            <a href="${wikiUrl}" target="_blank" class="know-link-btn">📚 Wikipedia REST API ↗</a>
+                            ${customLinksHtml}
+                        </div>
                     </div>
-                    <div class="links-grid">
-                        <a href="${googleUrl}" target="_blank" class="know-link-btn">🔍 Google CSE ↗</a>
-                        <a href="${braveUrl}" target="_blank" class="know-link-btn" style="border-color:#FF3B00; color:#FF3B00;">🦁 Brave Search API ↗</a>
-                        <a href="${wikiUrl}" target="_blank" class="know-link-btn">📚 Wikipedia REST API ↗</a>
-                        ${customLinksHtml}
-                    </div>
-                </div>
-            `;
+                `;
+            }
 
-            return outputCardHtml;
+            // Default: Direct built-in AI response with zero external web dependency
+            return customSummary;
         }
 
         // Code Generation Engine Function
