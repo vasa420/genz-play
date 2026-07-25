@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | 15 Knowledge Portals & 4 Search APIs Engine</title>
+    <title>VETRI AI STUDIO | Math Engine, 15 Portals & 4 Search APIs</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING 15 EDUCATIONAL WEBSITES & 4 KNOWLEDGE APIs...
+            INITIALIZING MATH ENGINE, 15 WEBSITES & 4 KNOWLEDGE APIs...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · 15 EDUCATIONAL WEBSITES & 4 SEARCH APIs
+            <span>⚡</span> VETRI AI STUDIO · MATH ENGINE & 15 EDUCATIONAL WEBSITES
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -477,7 +477,7 @@
                 } else if (currentMode === 'code') {
                     thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
-                    box.scrollTop = box.scrollHeight;
+                    box.scrollHeight;
 
                     await new Promise(r => setTimeout(r, 500));
                     const codeResp = generateCodeResponse(text);
@@ -570,6 +570,30 @@
                 }
             }
             return html;
+        }
+
+        // Mathematical Calculation Engine
+        function evaluateMathCalculation(rawText) {
+            let str = rawText.trim();
+            let cleanExpr = str.replace(/[^0-9\+\-\*\/\%\^\(\)\.\s]/g, '');
+            if (!cleanExpr || !/[0-9]/.test(cleanExpr)) return null;
+
+            const isPureMath = /^[0-9\s\+\-\*\/\%\^\(\)\.]+$/.test(cleanExpr);
+            if (!isPureMath) return null;
+
+            try {
+                let evalExpr = cleanExpr.replace(/\^/g, '**');
+                let result = Function('"use strict"; return (' + evalExpr + ')')();
+                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+                    return {
+                        expression: cleanExpr.trim(),
+                        result: result
+                    };
+                }
+            } catch (e) {
+                return null;
+            }
+            return null;
         }
 
         // 22-Module Master Computer Science & Software Engineering Knowledge Engine
@@ -781,6 +805,11 @@
             const text = rawQuery.trim();
             const upper = text.toUpperCase();
 
+            // Do NOT trigger symbol dictionary if query contains numbers (e.g. 1+2, 5*10)
+            if (/[0-9]/.test(text)) {
+                return { found: false };
+            }
+
             const symbolMap = [
                 { sym: '+', name: 'Plus Sign', category: 'Math & Programming', desc: 'Used for addition in mathematics (e.g., 5 + 3 = 8), indicating positive numbers, and string concatenation in programming.' },
                 { sym: '-', name: 'Minus Sign / Hyphen / Dash', category: 'Math & Grammar', desc: 'Used for subtraction in mathematics (e.g., 10 - 4 = 6), indicating negative numbers, or joining words in grammar.' },
@@ -805,7 +834,12 @@
                 { sym: '`', name: 'Backtick / Grave Accent', category: 'Programming', desc: 'Used for template literals in JavaScript (`Hello ${name}`) and executing shell commands in Bash.' }
             ];
 
-            if (upper.includes('SYMBOL') || upper.includes('NAME OF THIS') || upper.includes('NAME') || text.length <= 4) {
+            const explicitSymbolSearch = (
+                upper.includes('SYMBOL') || upper.includes('NAME OF THIS') || upper.includes('WHAT SYMBOL IS') ||
+                upper.includes('MEANING OF') || text.length === 1
+            );
+
+            if (explicitSymbolSearch) {
                 for (let item of symbolMap) {
                     if (text.includes(item.sym) || upper.includes(item.name.toUpperCase())) {
                         return {
@@ -828,21 +862,31 @@
             const upper = userText.toUpperCase();
             const cleanText = userText.replace(/[^a-zA-Z\s]/g, '');
 
-            // 0. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
+            // 0. Mathematical Calculation Engine (Evaluates 1+2, 5*10, 100-25, 25/5, 2^8)
+            const mathResult = evaluateMathCalculation(userText);
+            if (mathResult) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
+                return `🔢 <strong>MATHEMATICAL CALCULATION RESULT:</strong><br><br>
+                • <strong>Math Expression:</strong> <code style="font-size:16px;">${escapeHtml(mathResult.expression)}</code><br>
+                • <strong>Calculated Answer:</strong> <span style="color:var(--green); font-size:26px; font-weight:900; font-family:'JetBrains Mono', monospace;">${mathResult.result}</span><br><br>
+                <em>Calculation evaluated via Vetri AI Precision Math Engine.</em>`;
+            }
+
+            // 1. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
             if (/^(h+[e3]+l+o+|h+e+y+|h+i+|h+l+o+|g+o+o+d+\s*m+o+r+n+i+n+g+|w+h+a+t+'?s+\s*u+p+|y+o+|g+r+e+e+t+i+n+g+s+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
                 I am your intelligent AI Assistant, built like ChatGPT & Gemini! I am ready to help you with computer science, programming, general knowledge, math, mobile specs, games, or any question you have. How can I assist you today, my friend? 😊⚡`;
             }
 
-            // 1. Flexible Farewells Handler
+            // 2. Flexible Farewells Handler
             if (/^(b+y+e+|g+o+o+d+b+y+e+|s+e+e+\s*y+o+u+|t+a+k+e+\s*c+a+r+e+|c+y+a+|g+o+o+d+\s*n+i+g+h+t+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Goodbye, my friend!</strong><br><br>
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 2. Symbol Dictionary Engine
+            // 3. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
             const symbolIntel = getSymbolIntelDetails(userText);
             if (symbolIntel.found) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
@@ -853,7 +897,7 @@
                 • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
             }
 
-            // 3. 22-Module Master Computer Science & Software Engineering Engine
+            // 4. 22-Module Master Computer Science & Software Engineering Engine
             const csIntel = getProgrammingIntelDetails(userText, upper);
             if (csIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
