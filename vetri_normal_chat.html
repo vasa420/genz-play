@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Direct Knowledge & Search Synthesis</title>
+    <title>VETRI AI STUDIO | Fuzzy Normalizer & Direct Knowledge Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING DIRECT ANSWER SYNTHESIS & LIVE WEB INDEX...
+            INITIALIZING FUZZY TYPO NORMALIZER & DIRECT KNOWLEDGE SYNTHESIS...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · DIRECT ANSWER SYNTHESIS ENGINE
+            <span>⚡</span> VETRI AI STUDIO · FUZZY TYPO NORMALIZER & DIRECT ANSWERS
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -538,8 +538,7 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = 'chat-msg ai';
 
-            const senderSpan = document.createElement('span');
-            senderSpan.className = 'msg-sender';
+            const senderSpan = document.className = 'msg-sender';
             senderSpan.textContent = sender;
 
             const bodyDiv = document.createElement('div');
@@ -572,6 +571,24 @@
             return html;
         }
 
+        // Fuzzy Query Normalizer & Typo Fixer Engine
+        function normalizeSearchQuery(rawText) {
+            let str = rawText.toLowerCase();
+            str = str
+                .replace(/\bplannet\b|\bplanett\b|\bplanets\b/g, 'planet')
+                .replace(/\bjupitor\b|\bjupitr\b/g, 'jupiter')
+                .replace(/\bvenuse\b/g, 'venus')
+                .replace(/\bmarrs\b/g, 'mars')
+                .replace(/\bsatren\b/g, 'saturn')
+                .replace(/\bsoler\b|\bsolor\b/g, 'solar')
+                .replace(/\bindependance\b/g, 'independence')
+                .replace(/\bcomputr\b|\bcompiter\b/g, 'computer')
+                .replace(/\bstak\b/g, 'stack')
+                .replace(/\bque\b/g, 'queue')
+                .replace(/\balgoritm\b|\balgorithim\b/g, 'algorithm');
+            return str;
+        }
+
         // Mathematical Calculation Engine
         function evaluateMathCalculation(rawText) {
             let str = rawText.trim();
@@ -596,34 +613,36 @@
             return null;
         }
 
-        // Solar System & General Knowledge Direct Knowledge Engine
+        // Solar System & General Knowledge Direct Knowledge Engine (Handles Typos e.g. red plannet)
         function getSolarSystemAndGKDetails(query, upper) {
-            if (upper.includes('LARGEST PLANET') || (upper.includes('JUPITER') && upper.includes('PLANET'))) {
+            const normUpper = normalizeSearchQuery(query).toUpperCase();
+
+            if (normUpper.includes('LARGEST PLANET') || normUpper.includes('BIGGEST PLANET') || (normUpper.includes('JUPITER') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>The largest planet in our solar system is Jupiter:</strong><br><br>
                     <strong>Jupiter</strong> is a massive gas giant that is more than twice as massive as all other planets in the Solar System combined. It is the fifth planet from the Sun, famous for its iconic <strong>Great Red Spot</strong> (a giant storm larger than Earth) and having over 95 moons (including Ganymede, the largest moon in the Solar System).`
                 };
             }
-            if (upper.includes('SMALLEST PLANET') || (upper.includes('MERCURY') && upper.includes('PLANET'))) {
+            if (normUpper.includes('SMALLEST PLANET') || (normUpper.includes('MERCURY') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>The smallest planet in our solar system is Mercury:</strong><br><br>
                     <strong>Mercury</strong> is the closest planet to the Sun and the smallest planet in the Solar System. It is only slightly larger than Earth's Moon and has no atmosphere or moons.`
                 };
             }
-            if (upper.includes('HOTTEST PLANET') || (upper.includes('VENUS') && upper.includes('PLANET'))) {
+            if (normUpper.includes('HOTTEST PLANET') || (normUpper.includes('VENUS') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>The hottest planet in our solar system is Venus:</strong><br><br>
                     <strong>Venus</strong> is the second planet from the Sun and the hottest planet in the Solar System with surface temperatures exceeding 465°C (870°F). This is due to an intense runaway greenhouse effect caused by its dense carbon dioxide atmosphere.`
                 };
             }
-            if (upper.includes('RED PLANET') || (upper.includes('MARS') && upper.includes('PLANET'))) {
+            if (normUpper.includes('RED PLANET') || (normUpper.includes('RED') && normUpper.includes('PLANET')) || (normUpper.includes('MARS') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
-                    summary: `🪐 <strong>Mars is known as the Red Planet:</strong><br><br>
-                    <strong>Mars</strong> is the fourth planet from the Sun. It appears reddish due to iron oxide (rust) covering its dusty surface. It features Olympus Mons (the largest volcano in the Solar System) and two moons (Phobos and Deimos).`
+                    summary: `🪐 <strong>Mars is known as the Red Planet in our solar system:</strong><br><br>
+                    <strong>Mars</strong> is the fourth planet from the Sun. It appears reddish-orange due to iron oxide (rust) covering its dusty surface. It features Olympus Mons (the largest volcano in the Solar System) and two moons (Phobos and Deimos).`
                 };
             }
             return null;
@@ -631,8 +650,10 @@
 
         // 22-Module Master Computer Science & Software Engineering Knowledge Engine
         function getProgrammingIntelDetails(query, upper) {
+            const normUpper = normalizeSearchQuery(query).toUpperCase();
+
             // Module 1: Computer Basics & Hardware
-            if (upper.includes('HARDWARE') || upper.includes('SOFTWARE') || upper.includes('CPU') || upper.includes('BIOS') || upper.includes('NUMBER SYSTEM') || upper.includes('BINARY') || upper.includes('ASCII')) {
+            if (normUpper.includes('HARDWARE') || normUpper.includes('SOFTWARE') || normUpper.includes('CPU') || normUpper.includes('BIOS') || normUpper.includes('NUMBER SYSTEM') || normUpper.includes('BINARY') || normUpper.includes('ASCII')) {
                 return {
                     category: "💻 MODULE 1: COMPUTER BASICS & NUMBER SYSTEMS",
                     summary: `💻 <strong>Computer Fundamentals & Hardware Breakdown:</strong><br><br>
@@ -646,7 +667,7 @@
             }
 
             // Module 2: Operating System (OS)
-            if ((upper.includes('PROCESS') && upper.includes('THREAD')) || upper.includes('PAGING') || upper.includes('DEADLOCK') || upper.includes('VIRTUAL MEMORY')) {
+            if ((normUpper.includes('PROCESS') && normUpper.includes('THREAD')) || normUpper.includes('PAGING') || normUpper.includes('DEADLOCK') || normUpper.includes('VIRTUAL MEMORY')) {
                 return {
                     category: "⚙️ MODULE 2: OPERATING SYSTEM CONCEPTS",
                     summary: `⚙️ <strong>Operating Systems (OS) Architecture:</strong><br><br>
@@ -659,7 +680,7 @@
             }
 
             // Module 3: Computer Networks
-            if (upper.includes('OSI') || upper.includes('TCP') || upper.includes('HTTP') || upper.includes('DNS') || upper.includes('IP ADDRESS') || upper.includes('FIREWALL')) {
+            if (normUpper.includes('OSI') || normUpper.includes('TCP') || normUpper.includes('HTTP') || normUpper.includes('DNS') || normUpper.includes('IP ADDRESS') || normUpper.includes('FIREWALL')) {
                 return {
                     category: "🌐 MODULE 3: COMPUTER NETWORKING",
                     summary: `🌐 <strong>Computer Networks & Protocol Suite:</strong><br><br>
@@ -671,7 +692,7 @@
             }
 
             // Module 4: Programming Fundamentals & DSA
-            if ((upper.includes('ARRAY') && upper.includes('STRING')) || upper.includes('ARRAY VS STRING')) {
+            if ((normUpper.includes('ARRAY') && normUpper.includes('STRING')) || normUpper.includes('ARRAY VS STRING')) {
                 return {
                     category: "💻 MODULE 4: PROGRAMMING FUNDAMENTALS",
                     summary: `💻 <strong>Difference Between Array and String:</strong><br><br>
@@ -681,7 +702,7 @@
             }
 
             // Module 5: Data Structures (Stack, Queue, Trees, Graphs)
-            if (upper.includes('STACK') || upper.includes('QUEUE') || upper.includes('TREE') || upper.includes('GRAPH') || upper.includes('HEAP')) {
+            if (normUpper.includes('STACK') || normUpper.includes('QUEUE') || normUpper.includes('TREE') || normUpper.includes('GRAPH') || normUpper.includes('HEAP')) {
                 return {
                     category: "💻 MODULE 5: DATA STRUCTURES & ALGORITHMS",
                     summary: `💻 <strong>Data Structures (Basic $\\to$ Advanced):</strong><br><br>
@@ -694,7 +715,7 @@
             }
 
             // Module 6: Object-Oriented Programming (OOP)
-            if (upper.includes('OOP') || upper.includes('OBJECT ORIENTED') || upper.includes('INHERITANCE') || upper.includes('POLYMORPHISM')) {
+            if (normUpper.includes('OOP') || normUpper.includes('OBJECT ORIENTED') || normUpper.includes('INHERITANCE') || normUpper.includes('POLYMORPHISM')) {
                 return {
                     category: "💻 MODULE 6: OBJECT-ORIENTED PROGRAMMING (OOP)",
                     summary: `💻 <strong>OOP 4 Pillars & Core Concepts:</strong><br><br>
@@ -706,7 +727,7 @@
             }
 
             // Module 7: Algorithms & Complexity
-            if (upper.includes('BIG O') || upper.includes('SORTING') || upper.includes('SEARCHING') || upper.includes('DYNAMIC PROGRAMMING')) {
+            if (normUpper.includes('BIG O') || normUpper.includes('SORTING') || normUpper.includes('SEARCHING') || normUpper.includes('DYNAMIC PROGRAMMING')) {
                 return {
                     category: "📊 MODULE 7: ALGORITHMS & COMPLEXITY",
                     summary: `📊 <strong>Algorithms & Time Complexity Breakdown:</strong><br><br>
@@ -717,7 +738,7 @@
             }
 
             // Module 8: Databases & SQL
-            if (upper.includes('SQL') || upper.includes('NOSQL') || upper.includes('NORMALIZATION') || upper.includes('ACID')) {
+            if (normUpper.includes('SQL') || normUpper.includes('NOSQL') || normUpper.includes('NORMALIZATION') || normUpper.includes('ACID')) {
                 return {
                     category: "🗄️ MODULE 8: DATABASE MANAGEMENT SYSTEMS (DBMS)",
                     summary: `🗄️ <strong>Database Systems & SQL:</strong><br><br>
@@ -728,7 +749,7 @@
             }
 
             // Module 9: Software Engineering & Design Patterns
-            if (upper.includes('SDLC') || upper.includes('AGILE') || upper.includes('DESIGN PATTERN') || upper.includes('SINGLETON') || upper.includes('MVC')) {
+            if (normUpper.includes('SDLC') || normUpper.includes('AGILE') || normUpper.includes('DESIGN PATTERN') || normUpper.includes('SINGLETON') || normUpper.includes('MVC')) {
                 return {
                     category: "🏛️ MODULE 9: SOFTWARE ENGINEERING & DESIGN PATTERNS",
                     summary: `🏛️ <strong>Software Engineering & Design Patterns:</strong><br><br>
@@ -739,7 +760,7 @@
             }
 
             // Module 10: Web Development & Frameworks
-            if (upper.includes('HTML') || upper.includes('CSS') || upper.includes('REACT') || upper.includes('NODE') || upper.includes('EXPRESS') || upper.includes('REST API')) {
+            if (normUpper.includes('HTML') || normUpper.includes('CSS') || normUpper.includes('REACT') || normUpper.includes('NODE') || normUpper.includes('EXPRESS') || normUpper.includes('REST API')) {
                 return {
                     category: "🌐 MODULE 10: WEB DEVELOPMENT & FULL STACK",
                     summary: `🌐 <strong>Full Stack Web Development Architecture:</strong><br><br>
@@ -750,7 +771,7 @@
             }
 
             // Module 11: DevOps, Cloud & System Design
-            if (upper.includes('GIT') || upper.includes('DOCKER') || upper.includes('KUBERNETES') || upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('LOAD BALANCER')) {
+            if (normUpper.includes('GIT') || normUpper.includes('DOCKER') || normUpper.includes('KUBERNETES') || normUpper.includes('AWS') || normUpper.includes('SYSTEM DESIGN') || normUpper.includes('LOAD BALANCER')) {
                 return {
                     category: "☁️ MODULE 11: DEVOPS, CLOUD & SYSTEM DESIGN",
                     summary: `☁️ <strong>DevOps, Cloud Computing & System Design:</strong><br><br>
@@ -762,7 +783,7 @@
             }
 
             // Module 12: AI, ML & Placement Interview Prep
-            if (upper.includes('MACHINE LEARNING') || upper.includes('AI') || upper.includes('INTERVIEW') || upper.includes('TCS') || upper.includes('INFOSYS') || upper.includes('ACCENTURE')) {
+            if (normUpper.includes('MACHINE LEARNING') || normUpper.includes('AI') || normUpper.includes('INTERVIEW') || normUpper.includes('TCS') || normUpper.includes('INFOSYS') || normUpper.includes('ACCENTURE')) {
                 return {
                     category: "🤖 MODULE 12: AI, ML & TECH INTERVIEW PREP",
                     summary: `🤖 <strong>AI/ML & Tech Company Interview Guide:</strong><br><br>
@@ -777,9 +798,10 @@
             return null;
         }
 
-        // Real-Time Web Knowledge Fetcher & Synthesis Engine
+        // Real-Time Web Knowledge Fetcher & Synthesis Engine (with Fuzzy Normalizer)
         async function fetchLiveWebSummaryAsync(topic) {
-            const query = topic.trim();
+            const normalizedQuery = normalizeSearchQuery(topic).trim();
+            const query = normalizedQuery || topic.trim();
 
             // 1. DuckDuckGo Instant Answer API
             try {
@@ -798,29 +820,25 @@
                 console.log("DDG Fetch Error:", e);
             }
 
-            // 2. Wikipedia Summary REST API
+            // 2. Wikipedia Search API with Auto-Correction
             try {
-                let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-                let res = await fetch(wikiUrl);
-                
-                if (!res.ok || res.status === 404) {
-                    const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+                const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+                if (searchRes.ok) {
                     const searchData = await searchRes.json();
                     if (searchData.query && searchData.query.search.length > 0) {
                         const topTitle = searchData.query.search[0].title;
-                        wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`;
-                        res = await fetch(wikiUrl);
-                    }
-                }
-
-                if (res.ok) {
-                    const wikiData = await res.json();
-                    if (wikiData.extract && wikiData.type !== 'disambiguation') {
-                        return {
-                            source: "Wikipedia Live Encyclopedia",
-                            title: wikiData.title,
-                            summary: wikiData.extract
-                        };
+                        const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`;
+                        const res = await fetch(wikiUrl);
+                        if (res.ok) {
+                            const wikiData = await res.json();
+                            if (wikiData.extract && wikiData.type !== 'disambiguation') {
+                                return {
+                                    source: "Wikipedia Live Encyclopedia",
+                                    title: wikiData.title,
+                                    summary: wikiData.extract
+                                };
+                            }
+                        }
                     }
                 }
             } catch (e) {
@@ -916,7 +934,7 @@
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 3. Solar System & General Knowledge Direct Knowledge Engine
+            // 3. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
             const solarIntel = getSolarSystemAndGKDetails(userText, upper);
             if (solarIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -957,7 +975,7 @@
                 upper.includes('FLAMES') || upper.includes('CONCEPT') || upper.includes('DATA STRUCTURE') ||
                 upper.includes('DEVOPS') || upper.includes('DOCKER') || upper.includes('KUBERNETES') ||
                 upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('CYBER') ||
-                upper.includes('PLANET') || upper.includes('SOLAR SYSTEM')
+                upper.includes('PLANET') || upper.includes('SOLAR')
             );
 
             let searchTopic = userText;
@@ -1093,7 +1111,7 @@
                 }
             }
 
-            // Fallback Real-Time Web Synthesis Engine (DuckDuckGo + Wikipedia)
+            // Fallback Real-Time Web Synthesis Engine (DuckDuckGo + Wikipedia with Auto-Correction)
             if (!customSummary) {
                 const liveData = await fetchLiveWebSummaryAsync(searchTopic);
                 if (liveData) {
