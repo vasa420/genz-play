@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Universal Direct MCQ Answer Engine</title>
+    <title>VETRI AI STUDIO | Precision Live Multi-Option Evaluator Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING UNIVERSAL DIRECT MCQ ANSWER ENGINE...
+            INITIALIZING PRECISION LIVE MULTI-OPTION EVALUATOR ENGINE...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · UNIVERSAL DIRECT MCQ ANSWER ENGINE
+            <span>⚡</span> VETRI AI STUDIO · PRECISION LIVE MULTI-OPTION EVALUATOR ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -465,7 +465,7 @@
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
                 } else if (currentMode === 'normal') {
-                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Analyzing full question & selecting correct option for "${escapeHtml(text)}"...</div>`;
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Analyzing full question & scoring options for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
                     box.scrollTop = box.scrollHeight;
 
@@ -538,7 +538,8 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = 'chat-msg ai';
 
-            const senderSpan = document.className = 'msg-sender';
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
             senderSpan.textContent = sender;
 
             const bodyDiv = document.createElement('div');
@@ -589,7 +590,75 @@
             return str;
         }
 
-        // Universal MCQ Parser & Solver Engine (Always selects correct option directly from A, B, C, D with NO warning banners)
+        // Precision Multi-Option Scoring Engine (Queries web and scores every option individually)
+        async function findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion) {
+            let liveWebData = await fetchLiveWebSummaryAsync(questionStem);
+            let summaryText = (liveWebData && liveWebData.summary) ? liveWebData.summary : '';
+            let summaryUpper = summaryText.toUpperCase();
+
+            let bestOpt = null;
+            let highestScore = -1;
+
+            for (let opt of matches) {
+                const optLabel = opt.trim();
+                const cleanVal = optLabel.replace(/^[A-D1-4][\.\)]\s*/, '').trim();
+                const cleanValUpper = cleanVal.toUpperCase();
+
+                if (!cleanValUpper) continue;
+
+                let score = 0;
+
+                if (!isNegativeQuestion) {
+                    if (summaryUpper.includes(cleanValUpper)) {
+                        score += 100;
+                    } else {
+                        const tokens = cleanValUpper.split(/\s+/).filter(w => w.length > 2);
+                        for (let t of tokens) {
+                            if (summaryUpper.includes(t)) score += 20;
+                        }
+                    }
+                } else {
+                    if (!summaryUpper.includes(cleanValUpper)) {
+                        score += 50;
+                    }
+                }
+
+                if (score > highestScore) {
+                    highestScore = score;
+                    bestOpt = optLabel;
+                }
+            }
+
+            if (highestScore <= 0) {
+                for (let opt of matches) {
+                    const optLabel = opt.trim();
+                    const cleanVal = optLabel.replace(/^[A-D1-4][\.\)]\s*/, '').trim();
+                    if (!cleanVal) continue;
+
+                    const specificData = await fetchLiveWebSummaryAsync(`${questionStem} ${cleanVal}`);
+                    if (specificData && specificData.summary) {
+                        const specUpper = specificData.summary.toUpperCase();
+                        const stemTokens = questionStem.toUpperCase().split(/\s+/).filter(w => w.length > 3);
+                        let stemMatches = 0;
+                        for (let st of stemTokens) {
+                            if (specUpper.includes(st)) stemMatches++;
+                        }
+                        if (stemMatches > highestScore) {
+                            highestScore = stemMatches;
+                            bestOpt = optLabel;
+                            summaryText = specificData.summary;
+                        }
+                    }
+                }
+            }
+
+            return {
+                matchedOpt: bestOpt || matches[0].trim(),
+                explanation: summaryText || `Evaluated against live web knowledge for "${questionStem}".`
+            };
+        }
+
+        // Universal MCQ Parser & Solver Engine (Always selects correct option directly from A, B, C, D with Precision Scoring)
         async function solveUniversalMCQQueryAsync(rawQuery) {
             const str = rawQuery.trim();
             const upper = str.toUpperCase();
@@ -662,43 +731,14 @@
                 };
             }
 
-            // Live Web Search Fallback - Always Picks an Option from A, B, C, D!
-            const liveWebData = await fetchLiveWebSummaryAsync(questionStem);
-            let matchedOpt = null;
-
-            if (liveWebData && liveWebData.summary) {
-                const summaryUpper = liveWebData.summary.toUpperCase();
-                if (!isNegativeQuestion) {
-                    for (let opt of matches) {
-                        const cleanOptVal = opt.replace(/^[A-D1-4][\.\)]\s*/, '').trim().toUpperCase();
-                        if (cleanOptVal.length > 1 && summaryUpper.includes(cleanOptVal)) {
-                            matchedOpt = opt.trim();
-                            break;
-                        }
-                    }
-                } else {
-                    for (let opt of matches) {
-                        const cleanOptVal = opt.replace(/^[A-D1-4][\.\)]\s*/, '').trim().toUpperCase();
-                        if (cleanOptVal.length > 1 && !summaryUpper.includes(cleanOptVal)) {
-                            matchedOpt = opt.trim();
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Always select an option from A, B, C, D
-            if (!matchedOpt) {
-                matchedOpt = matches[0].trim();
-            }
-
-            const explanation = (liveWebData && liveWebData.summary) ? liveWebData.summary : `Based on full question analysis of "${questionStem}".`;
+            // Precision Multi-Option Scoring Evaluation across live web knowledge!
+            const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
 
             return {
                 category: "🎯 MCQ DIRECT ANSWER",
-                summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOpt)} (✔)</span></strong><br><br>
+                summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(evalRes.matchedOpt)} (✔)</span></strong><br><br>
                 • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                • <strong>Factual Explanation:</strong> ${escapeHtml(explanation)}`
+                • <strong>Factual Explanation:</strong> ${escapeHtml(evalRes.explanation)}`
             };
         }
 
@@ -1154,7 +1194,7 @@
             const upper = userText.toUpperCase();
             const cleanText = userText.replace(/[^a-zA-Z\s]/g, '');
 
-            // 0. Universal MCQ Solver Engine (Always selects correct option from A, B, C, D directly)
+            // 0. Universal MCQ Solver Engine (Always selects correct option from A, B, C, D directly with Precision Option Scoring)
             const mcqResult = await solveUniversalMCQQueryAsync(userText);
             if (mcqResult) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
