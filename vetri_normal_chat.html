@@ -835,14 +835,17 @@
                 };
             }
 
+            const allOptsFormatted = parsed.options.map(o => `• <strong>${escapeHtml(o.raw)}</strong>`).join('<br>');
+
             // Precision Multi-Option Scoring Engine
             const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
 
             return {
                 category: "🎯 MCQ DIRECT ANSWER",
                 summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(evalRes.matchedOpt)} (✔)</span></strong><br><br>
-                • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                • <strong>Factual Explanation:</strong> ${escapeHtml(evalRes.explanation)}`
+                • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br><br>
+                • <strong>Provided Options Breakdown:</strong><br>${allOptsFormatted}<br><br>
+                • <strong>Step-by-Step Factual Explanation:</strong> ${escapeHtml(evalRes.explanation)}`
             };
         }
 
