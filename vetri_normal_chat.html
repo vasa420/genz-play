@@ -591,6 +591,12 @@
         }
 
         function appendChatMessage(sender, text, type, isHtml = false) {
+            // Front-End Handling Safeguard: Ensure output text actually exists before attempting to render
+            if (!text || (typeof text === 'string' && text.trim() === '')) {
+                console.error("AI returned an empty response. Rendering blocked.");
+                return;
+            }
+
             const box = document.getElementById('terminal-box');
             const msgDiv = document.createElement('div');
             msgDiv.className = `chat-msg ${type}`;
