@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Google CSE & Live Web API Connectivity</title>
+    <title>VETRI AI STUDIO | Precision Answers & Inventions Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING GOOGLE CSE & LIVE SEARCH ENGINE APIS...
+            INITIALIZING INVENTIONS & PRECISION KNOWLEDGE ENGINE...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · GOOGLE CSE & LIVE SEARCH API CONNECTIVITY
+            <span>⚡</span> VETRI AI STUDIO · INVENTIONS & PRECISION KNOWLEDGE ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -538,8 +538,7 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = 'chat-msg ai';
 
-            const senderSpan = document.createElement('span');
-            senderSpan.className = 'msg-sender';
+            const senderSpan = document.className = 'msg-sender';
             senderSpan.textContent = sender;
 
             const bodyDiv = document.createElement('div');
@@ -588,6 +587,42 @@
                 .replace(/\bque\b/g, 'queue')
                 .replace(/\balgoritm\b|\balgorithim\b/g, 'algorithm');
             return str;
+        }
+
+        // Inventions & Famous Discoveries Engine
+        function getInventionsAndFamousPeopleDetails(query, upper) {
+            const normUpper = normalizeSearchQuery(query).toUpperCase();
+
+            if (normUpper.includes('TELEPHONE') && (normUpper.includes('INVENTED') || normUpper.includes('WHO') || normUpper.includes('CREATOR'))) {
+                return {
+                    category: "💡 HISTORICAL INVENTIONS INTEL",
+                    summary: `📞 <strong>Alexander Graham Bell invented the telephone:</strong><br><br>
+                    <strong>Alexander Graham Bell</strong> was awarded the first U.S. patent for the electric telephone on <strong>March 7, 1876</strong>. On March 10, 1876, he made the famous first phone call to his assistant Thomas Watson, saying: <em>"Mr. Watson, come here, I want to see you."</em>`
+                };
+            }
+            if ((normUpper.includes('COMPUTER') || normUpper.includes('CALCULATING ENGINE')) && (normUpper.includes('INVENTED') || normUpper.includes('FATHER') || normUpper.includes('WHO'))) {
+                return {
+                    category: "💡 HISTORICAL INVENTIONS INTEL",
+                    summary: `💻 <strong>Charles Babbage invented the mechanical computer:</strong><br><br>
+                    • <strong>Father of the Computer:</strong> <strong>Charles Babbage</strong> designed the Difference Engine and Analytical Engine in the 1820s.<br>
+                    • <strong>Father of Modern Computer Science:</strong> <strong>Alan Turing</strong> conceptualized digital computation and the Turing Machine.`
+                };
+            }
+            if (normUpper.includes('LIGHT BULB') && (normUpper.includes('INVENTED') || normUpper.includes('WHO'))) {
+                return {
+                    category: "💡 HISTORICAL INVENTIONS INTEL",
+                    summary: `💡 <strong>Thomas Edison invented the practical incandescent light bulb:</strong><br><br>
+                    <strong>Thomas Alva Edison</strong> patented the long-lasting carbon filament incandescent light bulb in <strong>1879</strong>.`
+                };
+            }
+            if (normUpper.includes('GRAVITY') && (normUpper.includes('DISCOVERED') || normUpper.includes('WHO'))) {
+                return {
+                    category: "💡 SCIENTIFIC DISCOVERIES INTEL",
+                    summary: `🍏 <strong>Sir Isaac Newton discovered gravity:</strong><br><br>
+                    <strong>Sir Isaac Newton</strong> formulated the Universal Law of Gravitation in <strong>1687</strong> after observing an apple falling from a tree.`
+                };
+            }
+            return null;
         }
 
         // Mathematical Calculation Engine
@@ -921,7 +956,14 @@
                 <em>Calculation evaluated via Vetri AI Precision Math Engine.</em>`;
             }
 
-            // 1. Google & Live Search API Connection Intelligence Handler
+            // 1. Inventions & Historical Discoveries Engine (e.g. Telephone, Computer, Light bulb)
+            const inventionIntel = getInventionsAndFamousPeopleDetails(userText, upper);
+            if (inventionIntel) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
+                return inventionIntel.summary;
+            }
+
+            // 2. Google & Live Search API Connection Intelligence Handler
             if (upper.includes('CONNECTED TO GOOGLE') || upper.includes('CONNECT TO GOOGLE') || upper.includes('GOOGLE CONNECT') || upper.includes('ARE YOU CONNECTED')) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `🌐 <strong>YES! Vetri AI is fully connected to Google & Live Search Engine APIs!</strong><br><br>
@@ -932,28 +974,28 @@
                 Every prompt you enter is automatically processed across live Google & web search indices to give you instant, accurate answers! ⚡🔍`;
             }
 
-            // 2. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
+            // 3. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
             if (/^(h+[e3]+l+o+|h+e+y+|h+i+|h+l+o+|g+o+o+d+\s*m+o+r+n+i+n+g+|w+h+a+t+'?s+\s*u+p+|y+o+|g+r+e+e+t+i+n+g+s+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
                 I am your intelligent AI Assistant, built like ChatGPT & Gemini! I am ready to help you with computer science, programming, general knowledge, math, mobile specs, games, or any question you have. How can I assist you today, my friend? 😊⚡`;
             }
 
-            // 3. Flexible Farewells Handler
+            // 4. Flexible Farewells Handler
             if (/^(b+y+e+|g+o+o+d+b+y+e+|s+e+e+\s*y+o+u+|t+a+k+e+\s*c+a+r+e+|c+y+a+|g+o+o+d+\s*n+i+g+h+t+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Goodbye, my friend!</strong><br><br>
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 4. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
+            // 5. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
             const solarIntel = getSolarSystemAndGKDetails(userText, upper);
             if (solarIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return solarIntel.summary;
             }
 
-            // 5. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
+            // 6. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
             const symbolIntel = getSymbolIntelDetails(userText);
             if (symbolIntel.found) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
@@ -964,7 +1006,7 @@
                 • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
             }
 
-            // 6. 22-Module Master Computer Science & Software Engineering Engine
+            // 7. 22-Module Master Computer Science & Software Engineering Engine
             const csIntel = getProgrammingIntelDetails(userText, upper);
             if (csIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -987,7 +1029,7 @@
                 upper.includes('FLAMES') || upper.includes('CONCEPT') || upper.includes('DATA STRUCTURE') ||
                 upper.includes('DEVOPS') || upper.includes('DOCKER') || upper.includes('KUBERNETES') ||
                 upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('CYBER') ||
-                upper.includes('PLANET') || upper.includes('SOLAR')
+                upper.includes('PLANET') || upper.includes('SOLAR') || upper.includes('TELEPHONE')
             );
 
             let searchTopic = userText;
@@ -1015,7 +1057,7 @@
             let customLinksHtml = "";
 
             // Competitive Exams, Aptitude, GK & Scientific Web Network (15 Portals + 4 APIs)
-            if (searchUpper.includes('APTITUDE') || searchUpper.includes('REASONING') || searchUpper.includes('GK') || searchUpper.includes('CURRENT AFFAIRS') || searchUpper.includes('QUIZ') || searchUpper.includes('MCQ') || searchUpper.includes('BANKING') || searchUpper.includes('SSC') || searchUpper.includes('UPSC') || searchUpper.includes('EXAM') || searchUpper.includes('NASA') || searchUpper.includes('SPACE') || searchUpper.includes('HEALTH') || searchUpper.includes('WHO') || searchUpper.includes('NATGEO') || searchUpper.includes('BRITANNICA') || searchUpper.includes('INDIABIX') || searchUpper.includes('TESTBOOK') || searchUpper.includes('ADDA247')) {
+            if (searchUpper.includes('APTITUDE') || searchUpper.includes('REASONING') || searchUpper.includes('GK') || searchUpper.includes('CURRENT AFFAIRS') || searchUpper.includes('QUIZ') || searchUpper.includes('MCQ') || searchUpper.includes('BANKING') || searchUpper.includes('SSC') || searchUpper.includes('UPSC') || searchUpper.includes('EXAM') || searchUpper.includes('NASA') || searchUpper.includes('SPACE') || searchUpper.includes('HEALTH') || searchUpper.includes('WORLD HEALTH ORGANIZATION') || searchUpper.includes('NATGEO') || searchUpper.includes('BRITANNICA') || searchUpper.includes('INDIABIX') || searchUpper.includes('TESTBOOK') || searchUpper.includes('ADDA247')) {
                 categoryTag = "🎓 15 EDUCATIONAL WEBSITES & 4 KNOWLEDGE APIs HUB";
                 customSummary = `🎓 <strong>Aptitude, Exam Prep & Knowledge Hub for: "${escapeHtml(searchTopic)}"</strong><br><br>
                 • <strong>Aptitude & Reasoning MCQs:</strong> Mapped across IndiaBIX, Testbook, Adda247 & BYJU'S Exam Prep.<br>
