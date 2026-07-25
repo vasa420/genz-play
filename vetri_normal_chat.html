@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | 22-Module Master Computer Science & Software Suite</title>
+    <title>VETRI AI STUDIO | Real-Time Web Analysis & CS Suite</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING 22-MODULE MASTER COMPUTER SCIENCE ENGINE...
+            INITIALIZING REAL-TIME WEB KNOWLEDGE SYNTHESIS...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · 22-MODULE MASTER CS KNOWLEDGE ENGINE
+            <span>⚡</span> VETRI AI STUDIO · REAL-TIME WEB SEARCH & KNOWLEDGE ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -465,7 +465,7 @@
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
                 } else if (currentMode === 'normal') {
-                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & searching web for "${escapeHtml(text)}"...</div>`;
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & analyzing live web knowledge for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
                     box.scrollTop = box.scrollHeight;
 
@@ -580,7 +580,7 @@
                     category: "💻 MODULE 1: COMPUTER BASICS & NUMBER SYSTEMS",
                     summary: `💻 <strong>Computer Fundamentals & Hardware Breakdown:</strong><br><br>
                     • <strong>Computer:</strong> Electronic programmable device accepting raw data input, processing it via CPU, and producing output.<br>
-                    • <strong>Hardware vs Software:</strong> Hardware refers to physical physical components (CPU, RAM, Motherboard); Software refers to programs & code (OS, Applications).<br>
+                    • <strong>Hardware vs Software:</strong> Hardware refers to physical components (CPU, RAM, Motherboard); Software refers to programs & code (OS, Applications).<br>
                     • <strong>CPU (Central Processing Unit):</strong> Brain of computer containing ALU (Arithmetic Logic Unit), CU (Control Unit), and Registers.<br>
                     • <strong>RAM vs ROM:</strong> RAM is volatile temporary working memory; ROM is non-volatile permanent firmware memory storing BIOS/UEFI.<br>
                     • <strong>Number Systems:</strong> Decimal (Base 10), Binary (Base 2), Octal (Base 8), Hexadecimal (Base 16).<br>
@@ -589,7 +589,7 @@
             }
 
             // Module 2: Operating System (OS)
-            if (upper.includes('PROCESS') && upper.includes('THREAD') || upper.includes('PAGING') || upper.includes('DEADLOCK') || upper.includes('VIRTUAL MEMORY')) {
+            if ((upper.includes('PROCESS') && upper.includes('THREAD')) || upper.includes('PAGING') || upper.includes('DEADLOCK') || upper.includes('VIRTUAL MEMORY')) {
                 return {
                     category: "⚙️ MODULE 2: OPERATING SYSTEM CONCEPTS",
                     summary: `⚙️ <strong>Operating Systems (OS) Architecture:</strong><br><br>
@@ -715,6 +715,62 @@
                     2. Core CS Subjects: OOP, DBMS, SQL Queries, OS, Computer Networks.<br>
                     3. Practical Tools: Git, GitHub, REST APIs, HTML/CSS/JavaScript.`
                 };
+            }
+
+            return null;
+        }
+
+        // Real-Time Web Knowledge Fetcher & Synthesis Engine
+        async function fetchLiveWebSummaryAsync(topic) {
+            const cleanTopic = topic
+                .replace(/PLEASE|ANALYZE|THE|WEBSITE|AND|TELL|CORRECT|ANSWER|WRONG|OUTPUT|WHAT|IS|EXPLAIN|ABOUT/gi, ' ')
+                .trim();
+            const query = cleanTopic || topic;
+
+            // 1. DuckDuckGo Instant Answer API
+            try {
+                const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+                if (ddgRes.ok) {
+                    const ddgData = await ddgRes.json();
+                    if (ddgData.AbstractText) {
+                        return {
+                            source: "DuckDuckGo Live Index",
+                            title: ddgData.Heading || query,
+                            summary: ddgData.AbstractText
+                        };
+                    }
+                }
+            } catch (e) {
+                console.log("DDG Fetch Error:", e);
+            }
+
+            // 2. Wikipedia Summary REST API
+            try {
+                let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+                let res = await fetch(wikiUrl);
+                
+                if (!res.ok || res.status === 404) {
+                    const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+                    const searchData = await searchRes.json();
+                    if (searchData.query && searchData.query.search.length > 0) {
+                        const topTitle = searchData.query.search[0].title;
+                        wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`;
+                        res = await fetch(wikiUrl);
+                    }
+                }
+
+                if (res.ok) {
+                    const wikiData = await res.json();
+                    if (wikiData.extract && wikiData.type !== 'disambiguation') {
+                        return {
+                            source: "Wikipedia Live Encyclopedia",
+                            title: wikiData.title,
+                            summary: wikiData.extract
+                        };
+                    }
+                }
+            } catch (e) {
+                console.log("Wiki Fetch Error:", e);
             }
 
             return null;
@@ -937,31 +993,12 @@
                 }
             }
 
-            // Fallback Live Fetch from Wikipedia API with Clean Query
+            // Fallback Real-Time Web Synthesis Engine (DuckDuckGo + Wikipedia)
             if (!customSummary) {
-                try {
-                    const cleanedTopic = cleanWikipediaQuery(searchTopic) || searchTopic;
-                    let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanedTopic)}`;
-                    let res = await fetch(wikiUrl);
-                    
-                    if (!res.ok || res.status === 404) {
-                        const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanedTopic)}&format=json&origin=*`);
-                        const searchData = await searchRes.json();
-                        if (searchData.query && searchData.query.search.length > 0) {
-                            const topTitle = searchData.query.search[0].title;
-                            wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`;
-                            res = await fetch(wikiUrl);
-                        }
-                    }
-
-                    if (res.ok) {
-                        const wikiData = await res.json();
-                        if (wikiData.extract && wikiData.type !== 'disambiguation') {
-                            customSummary = `📌 <strong>Live Knowledge Summary (${escapeHtml(wikiData.title)}):</strong><br><br>${escapeHtml(wikiData.extract)}`;
-                        }
-                    }
-                } catch (e) {
-                    console.log('Wiki API Error:', e);
+                const liveData = await fetchLiveWebSummaryAsync(searchTopic);
+                if (liveData) {
+                    categoryTag = `🌐 LIVE WEB KNOWLEDGE (${liveData.source})`;
+                    customSummary = `📌 <strong>Live Web Knowledge Summary (${escapeHtml(liveData.title)}):</strong><br><br>${escapeHtml(liveData.summary)}`;
                 }
             }
 
