@@ -128,6 +128,47 @@
             font-weight: 700;
         }
 
+        .feedback-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+        }
+
+        .feedback-link:hover {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Feedback Modal */
+        .feedback-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 3, 12, 0.85); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(12px); opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feedback-modal-overlay.active {
+            display: flex; opacity: 1;
+        }
+
+        .feedback-card {
+            background: rgba(10, 10, 24, 0.92);
+            border: 1.5px solid var(--primary);
+            border-radius: 20px; padding: 35px; width: 90%; max-width: 420px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px var(--primary-glow);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .feedback-modal-overlay.active .feedback-card {
+            transform: scale(1);
+        }
+
         /* Scrollable Container */
         .container {
             position: relative;
@@ -425,7 +466,10 @@
                 <span>ONLINE · 100% OPERATIONAL</span>
             </div>
             <span>|</span>
-            <div class="live-clock" id="live-clock">00:00:00 AM</div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+                <div class="live-clock" id="live-clock">00:00:00 AM</div>
+                <div class="feedback-link" onclick="openFeedbackModal()" title="Submit Feedback">💬 FEEDBACK</div>
+            </div>
         </div>
     </nav>
 
@@ -589,7 +633,50 @@
             }
             draw();
         })();
+
+        // Feedback Modal Functions
+        function openFeedbackModal() {
+            playSound(600, 'sine', 0.08);
+            const overlay = document.getElementById('feedback-modal');
+            if (overlay) overlay.classList.add('active');
+        }
+
+        function closeFeedbackModal() {
+            playSound(400, 'sine', 0.08);
+            const overlay = document.getElementById('feedback-modal');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        function submitFeedback() {
+            const input = document.getElementById('feedback-text');
+            const text = input ? input.value.trim() : '';
+            if (!text) return;
+
+            playSound(880, 'sine', 0.15);
+            try {
+                const stored = JSON.parse(localStorage.getItem('vetri_feedback_list') || '[]');
+                stored.push({ text: text, time: new Date().toISOString() });
+                localStorage.setItem('vetri_feedback_list', JSON.stringify(stored));
+            } catch(e){}
+
+            if (input) input.value = '';
+            closeFeedbackModal();
+            alert('✅ THANK YOU! YOUR FEEDBACK HAS BEEN SUBMITTED.');
+        }
     </script>
+
+    <!-- Feedback Modal HTML -->
+    <div class="feedback-modal-overlay" id="feedback-modal" onclick="if(event.target===this)closeFeedbackModal()">
+        <div class="feedback-card">
+            <h3 style="font-size: 20px; letter-spacing: 3px; font-weight: 900; color: var(--primary); margin-bottom: 8px;">SUBMIT FEEDBACK</h3>
+            <p style="font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-family: 'JetBrains Mono', monospace; margin-bottom: 20px;">SHARE YOUR SUGGESTIONS OR IDEAS WITH VETRI STUDIOS</p>
+            <textarea id="feedback-text" rows="4" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,255,255,0.3); border-radius: 10px; color: #fff; padding: 12px; font-family: 'Outfit', sans-serif; font-size: 13px; outline: none; margin-bottom: 20px; resize: none;" placeholder="Type your feedback here..."></textarea>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeFeedbackModal()" style="flex: 1; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; border-radius: 8px; cursor: pointer;">CANCEL</button>
+                <button onclick="submitFeedback()" style="flex: 1; padding: 12px; background: var(--primary); border: none; color: #000; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 900; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px var(--primary-glow);">SUBMIT</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
