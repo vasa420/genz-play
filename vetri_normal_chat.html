@@ -850,6 +850,15 @@
         function getIndianGeographyDetails(query, upper) {
             const normUpper = normalizeSearchQuery(query).toUpperCase();
 
+            if ((normUpper.includes('CAPITAL') && (normUpper.includes('INDIA') || normUpper.includes('INDIAN'))) && !normUpper.includes('PUNISHMENT')) {
+                return {
+                    category: "🇮🇳 INDIAN CAPITAL & GEOGRAPHY KNOWLEDGE",
+                    summary: `🇮🇳 <strong>The capital of India is New Delhi:</strong><br><br>
+                    • <strong>Capital City:</strong> <span style="color:var(--green); font-size:20px; font-weight:900;">New Delhi (✔)</span><br>
+                    • <strong>Details:</strong> New Delhi became the capital of India in 1911 (officially inaugurated in 1931), replacing Kolkata (Calcutta). It houses all three branches of the Government of India (Rashtrapati Bhavan, Parliament House, and Supreme Court).`
+                };
+            }
+
             if (normUpper.includes('SILICON VALLEY OF INDIA') || (normUpper.includes('SILICON VALLEY') && normUpper.includes('INDIA')) || (normUpper.includes('IT CAPITAL') && normUpper.includes('INDIA'))) {
                 return {
                     category: "🏙️ INDIAN GEOGRAPHY & CITIES KNOWLEDGE",
