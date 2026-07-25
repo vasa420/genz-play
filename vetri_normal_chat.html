@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Multi-Turn Universal AI Engine</title>
+    <title>VETRI AI STUDIO | Symbol Dictionary & Knowledge Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING MULTI-TURN AI CHAT ENGINE...
+            INITIALIZING SYMBOL DICTIONARY & UNIVERSAL AI...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · MULTI-TURN AI ENGINE
+            <span>⚡</span> VETRI AI STUDIO · SYMBOL DICTIONARY & SEARCH ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -503,7 +503,7 @@
                 if (el) el.remove();
                 appendChatMessage('🤖 VETRI AI', `🎯 <strong>Answer Processed:</strong> "${escapeHtml(text)}"<br><br>Vetri AI ready for your next request! Explore direct web search links below.`, 'ai', true);
             } finally {
-                isProcessing = false; // ALWAYS reset isProcessing so users can chat 100+ times back to back!
+                isProcessing = false;
             }
         }
 
@@ -572,10 +572,74 @@
             return html;
         }
 
-        // Multi-Domain Knowledge & Warm Conversational AI Engine
+        // Symbol Dictionary & Special Punctuation Engine
+        function getSymbolIntelDetails(rawQuery) {
+            const text = rawQuery.trim();
+            const upper = text.toUpperCase();
+
+            const symbolMap = [
+                { sym: '+', name: 'Plus Sign', category: 'Math & Programming', desc: 'Used for addition in mathematics (e.g., 5 + 3 = 8), indicating positive numbers, and string concatenation in programming.' },
+                { sym: '-', name: 'Minus Sign / Hyphen / Dash', category: 'Math & Grammar', desc: 'Used for subtraction in mathematics (e.g., 10 - 4 = 6), indicating negative numbers, or joining words in grammar.' },
+                { sym: '*', name: 'Asterisk / Star / Multiplication Sign', category: 'Math & Programming', desc: 'Used for multiplication in math (5 * 2 = 10), wildcard search in computer files, and pointer dereferencing in C/C++.' },
+                { sym: '/', name: 'Forward Slash / Solidus', category: 'Math & Computing', desc: 'Used for division (10 / 2 = 5), web URLs (http://), and directory paths in Linux/macOS.' },
+                { sym: '\\', name: 'Backslash / Reverse Solidus', category: 'Computing', desc: 'Used as an escape character in programming (e.g., \\n for new line) and folder path separator in Windows OS.' },
+                { sym: '%', name: 'Percent Sign / Modulo Operator', category: 'Math & Computing', desc: 'Indicates percentage (e.g., 50%) and modulo remainder operator in programming (e.g., 10 % 3 = 1).' },
+                { sym: '=', name: 'Equal Sign / Assignment Operator', category: 'Math & Programming', desc: 'Denotes equality in mathematics and variable assignment in programming languages (e.g., x = 5).' },
+                { sym: '&', name: 'Ampersand', category: 'Grammar & Computing', desc: 'Represents the word "and", bitwise AND in programming, and memory address operator in C.' },
+                { sym: '|', name: 'Pipe Symbol / Vertical Bar', category: 'Computing & Logic', desc: 'Used as logical OR operator in programming (||) and command piping in Unix/Linux terminals.' },
+                { sym: '^', name: 'Caret / Hat Symbol', category: 'Math & Programming', desc: 'Used to indicate exponentiation in math (2^3 = 8) and bitwise XOR in programming.' },
+                { sym: '~', name: 'Tilde', category: 'Computing & Grammar', desc: 'Represents approximate values (~50), bitwise NOT operator, and Unix user home directory (~/).' },
+                { sym: '#', name: 'Hashtag / Hash / Pound Sign / Octothorpe', category: 'Social Media & Coding', desc: 'Used for social media tagging (#trending), preprocessor directives in C/C++ (#include), and ID selectors in CSS.' },
+                { sym: '@', name: 'At Sign / Commercial At', category: 'Email & Programming', desc: 'Used in email addresses (user@domain.com), social media mentions (@username), and decorators in Python.' },
+                { sym: '$', name: 'Dollar Sign', category: 'Currency & Programming', desc: 'Represents US Dollar currency ($), shell prompt, variable prefix in PHP/Bash, and jQuery ($).' },
+                { sym: '!', name: 'Exclamation Mark / Bang', category: 'Grammar & Programming', desc: 'Used for emphasis in punctuation, factorial in math (5! = 120), and logical NOT in coding (!true = false).' },
+                { sym: '?', name: 'Question Mark', category: 'Grammar & Programming', desc: 'Used at the end of interrogative sentences and ternary conditional operator in programming (condition ? true : false).' },
+                { sym: ':', name: 'Colon', category: 'Grammar & Math', desc: 'Used to introduce lists, ratios in math (1:2), and namespace resolution operator in C++ (std::cout).' },
+                { sym: ';', name: 'Semicolon', category: 'Grammar & Programming', desc: 'Used to connect independent clauses in writing and mandatory statement terminator in C/C++/Java/JS.' },
+                { sym: '.', name: 'Period / Full Stop / Dot', category: 'Grammar & Programming', desc: 'Marks end of sentences, decimal point in numbers (3.14), and object member accessor in programming.' },
+                { sym: ',', name: 'Comma', category: 'Grammar', desc: 'Used to separate items in lists and parameters in function calls.' },
+                { sym: '`', name: 'Backtick / Grave Accent', category: 'Programming', desc: 'Used for template literals in JavaScript (`Hello ${name}`) and executing shell commands in Bash.' },
+                { sym: '(', name: 'Left Parenthesis / Round Bracket', category: 'Math & Coding', desc: 'Used to group mathematical expressions and pass function parameters.' },
+                { sym: ')', name: 'Right Parenthesis / Round Bracket', category: 'Math & Coding', desc: 'Closing round bracket for expressions and functions.' },
+                { sym: '[', name: 'Left Square Bracket', category: 'Coding', desc: 'Used for array indexing and list declarations in programming.' },
+                { sym: ']', name: 'Right Square Bracket', category: 'Coding', desc: 'Closing bracket for arrays and lists.' },
+                { sym: '{', name: 'Left Curly Brace', category: 'Coding', desc: 'Defines code blocks in C/C++/Java/JS and object dictionaries.' },
+                { sym: '}', name: 'Right Curly Brace', category: 'Coding', desc: 'Closing brace for code blocks and objects.' }
+            ];
+
+            // If user asks about symbol name or types symbol explicitly
+            if (upper.includes('SYMBOL') || upper.includes('NAME OF THIS') || upper.includes('NAME') || text.length <= 5) {
+                for (let item of symbolMap) {
+                    if (text.includes(item.sym) || upper.includes(item.name.toUpperCase())) {
+                        return {
+                            found: true,
+                            symbol: item.sym,
+                            name: item.name,
+                            category: item.category,
+                            desc: item.desc
+                        };
+                    }
+                }
+            }
+
+            return { found: false };
+        }
+
+        // Multi-Domain Knowledge Engine
         async function generateUniversalIntentResponseAsync(rawQuery) {
             const userText = rawQuery.trim();
             const upper = userText.toUpperCase();
+
+            // 0. Symbol Dictionary & Punctuation Recognition Engine
+            const symbolIntel = getSymbolIntelDetails(userText);
+            if (symbolIntel.found) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
+                return `🔣 <strong>SYMBOL DICTIONARY INTEL:</strong><br><br>
+                • <strong>Symbol Character:</strong> <span style="color:var(--primary); font-size:24px; font-weight:900;">${escapeHtml(symbolIntel.symbol)}</span><br>
+                • <strong>Official Name:</strong> <span style="color:var(--gold); font-size:16px; font-weight:900;">${escapeHtml(symbolIntel.name)}</span><br>
+                • <strong>Domain / Category:</strong> ${escapeHtml(symbolIntel.category)}<br>
+                • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
+            }
 
             // 1. Warm & Friendly Greetings Handler
             if (/^(HI+|HELLO+|HEY+|GOOD\s*MORNING|GOOD\s*EVENING|HOW\s*ARE\s*YOU|WHAT'?S\s*UP|YO|GREETINGS|YU)/i.test(userText)) {
@@ -591,10 +655,8 @@
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // Record as main topic in background memory
             conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
 
-            // Extract last primary topic for background search if current input is a follow-up
             let searchTopic = userText;
             const isFollowUp = (
                 upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('WHO') ||
@@ -608,7 +670,6 @@
                 for (let i = conversationMemory.length - 2; i >= 0; i--) {
                     if (conversationMemory[i].isMainTopic && conversationMemory[i].text !== userText) {
                         searchTopic = `${conversationMemory[i].text} ${userText}`;
-                        console.log(`🧠 Background Context Link: "${searchTopic}"`);
                         break;
                     }
                 }
