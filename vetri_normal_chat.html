@@ -770,7 +770,7 @@
             };
         }
 
-        // Universal MCQ Parser & Solver Engine (Supports ALL formats A), A., (A), 1), 1. and Precision Option Evaluation)
+        // Universal MCQ Parser & Solver Engine (Follows strict format: Correct Answer: Option letter + Full option text \n Explanation:)
         async function solveUniversalMCQQueryAsync(rawQuery) {
             const parsed = extractMCQOptionsAndStem(rawQuery);
             if (!parsed || parsed.options.length < 2) return null;
@@ -780,72 +780,21 @@
             const normStem = normalizeSearchQuery(questionStem).toUpperCase();
             const isNegativeQuestion = /\b(NOT|EXCEPT|INCORRECT|FALSE|NEVER|UNTRUE|NON)\b/i.test(questionStem);
 
-            // 1. Silicon Valley of India
-            if (normStem.includes('SILICON VALLEY') || normStem.includes('IT CAPITAL')) {
-                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('BENGALURU') || o.val.toUpperCase().includes('BANGALORE')) || parsed.options[0];
-                return {
-                    category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
-                    • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                    • <strong>Factual Explanation:</strong> Bengaluru (Bangalore) is known as the Silicon Valley of India because it is the country's main IT exporter and technology hub.`
-                };
-            }
-
-            // 2. Currency of Japan
-            if (normStem.includes('CURRENCY') && normStem.includes('JAPAN')) {
-                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('YEN')) || parsed.options[0];
-                return {
-                    category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
-                    • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                    • <strong>Factual Explanation:</strong> The Japanese Yen (JPY, symbol: ¥) is the official currency of Japan.`
-                };
-            }
-
-            // 3. Largest Planet
-            if (normStem.includes('LARGEST PLANET') || normStem.includes('BIGGEST PLANET')) {
-                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('JUPITER')) || parsed.options[0];
-                return {
-                    category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
-                    • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                    • <strong>Factual Explanation:</strong> Jupiter is the largest planet in our solar system, more than twice as massive as all other planets combined.`
-                };
-            }
-
-            // 4. Red Planet
-            if (normStem.includes('RED PLANET')) {
-                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('MARS')) || parsed.options[0];
-                return {
-                    category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
-                    • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                    • <strong>Factual Explanation:</strong> Mars is known as the Red Planet due to iron oxide (rust) covering its dusty surface.`
-                };
-            }
-
-            // 5. Telephone Invention
-            if (normStem.includes('TELEPHONE') && (normStem.includes('INVENT') || normStem.includes('WHO'))) {
-                const optObj = parsed.options.find(o => o.val.toUpperCase().includes('BELL')) || parsed.options[0];
-                return {
-                    category: "🎯 MCQ DIRECT ANSWER",
-                    summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optObj.raw)} (✔)</span></strong><br><br>
-                    • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                    • <strong>Factual Explanation:</strong> Alexander Graham Bell patented the electric telephone in 1876.`
-                };
-            }
-
-            const allOptsFormatted = parsed.options.map(o => `• <strong>${escapeHtml(o.raw)}</strong>`).join('<br>');
-
             // Precision Multi-Option Scoring Engine
             const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
+            const matchedOptText = evalRes.matchedOpt;
+
+            // Generate option breakdown explaining why correct and why others wrong
+            let wrongOptsList = parsed.options.filter(o => !matchedOptText.toUpperCase().includes(o.val.toUpperCase()));
+            let wrongOptsExplanation = wrongOptsList.length > 0
+                ? `<br><br>• <strong>Other Options Breakdown:</strong> ${wrongOptsList.map(o => `<em>${escapeHtml(o.raw)}</em> is incorrect for "${escapeHtml(questionStem)}"`).join('; ')}.`
+                : '';
 
             return {
                 category: "🎯 MCQ DIRECT ANSWER",
-                summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(evalRes.matchedOpt)} (✔)</span></strong><br><br>
-                • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br><br>
-                • <strong>Provided Options Breakdown:</strong><br>${allOptsFormatted}<br><br>
-                • <strong>Step-by-Step Factual Explanation:</strong> ${escapeHtml(evalRes.explanation)}`
+                summary: `<strong>Correct Answer:</strong> <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOptText)}</span><br><br>
+                <strong>Explanation:</strong><br>
+                ${escapeHtml(evalRes.explanation)}${wrongOptsExplanation}`
             };
         }
 
