@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Direct Answers & World Knowledge Engine</title>
+    <title>VETRI AI STUDIO | Precision Answers & Solar System Network</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING DIRECT ANSWERS & WORLD CURRENCY KNOWLEDGE...
+            INITIALIZING SOLAR SYSTEM & GEOGRAPHY DIRECT ANSWERS...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · DIRECT ANSWERS & WORLD CURRENCIES KNOWLEDGE
+            <span>⚡</span> VETRI AI STUDIO · SOLAR SYSTEM & GEOGRAPHY INTEL
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -477,7 +477,7 @@
                 } else if (currentMode === 'code') {
                     thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
-                    box.scrollHeight;
+                    box.scrollTop = box.scrollHeight;
 
                     await new Promise(r => setTimeout(r, 500));
                     const codeResp = generateCodeResponse(text);
@@ -588,6 +588,36 @@
                 .replace(/\bque\b/g, 'queue')
                 .replace(/\balgoritm\b|\balgorithim\b/g, 'algorithm');
             return str;
+        }
+
+        // Indian Geography & City Nicknames Engine
+        function getIndianGeographyDetails(query, upper) {
+            const normUpper = normalizeSearchQuery(query).toUpperCase();
+
+            if (normUpper.includes('SILICON VALLEY OF INDIA') || (normUpper.includes('SILICON VALLEY') && normUpper.includes('INDIA')) || (normUpper.includes('IT CAPITAL') && normUpper.includes('INDIA'))) {
+                return {
+                    category: "🏙️ INDIAN GEOGRAPHY & CITIES KNOWLEDGE",
+                    summary: `🏙️ <strong>Bengaluru (Bangalore) is known as the Silicon Valley of India:</strong><br><br>
+                    • <strong>Correct Option:</strong> <span style="color:var(--green); font-size:18px; font-weight:900;">B) Bengaluru (✔)</span><br>
+                    • <strong>Details:</strong> Bengaluru earned the title "Silicon Valley of India" because it is the country's leading IT exporter and technology hub, home to ISRO headquarters, Infosys, Wipro, and thousands of tech startups.`
+                };
+            }
+            if (normUpper.includes('PINK CITY') || (normUpper.includes('JAIPUR') && normUpper.includes('CITY'))) {
+                return {
+                    category: "🏙️ INDIAN GEOGRAPHY & CITIES KNOWLEDGE",
+                    summary: `🏛️ <strong>Jaipur is known as the Pink City of India:</strong><br><br>
+                    • <strong>Location:</strong> Capital of Rajasthan.<br>
+                    • <strong>History:</strong> Painted pink in 1876 by Maharaja Ram Singh to welcome the Prince of Wales.`
+                };
+            }
+            if (normUpper.includes('SPICE GARDEN') && normUpper.includes('INDIA')) {
+                return {
+                    category: "🌿 INDIAN GEOGRAPHY & CITIES KNOWLEDGE",
+                    summary: `🌿 <strong>Kerala is known as the Spice Garden of India:</strong><br><br>
+                    • Famous for producing black pepper, cardamom, cinnamon, cloves, and nutmeg.`
+                };
+            }
+            return null;
         }
 
         // World Currencies Knowledge Engine
@@ -703,7 +733,7 @@
             return null;
         }
 
-        // Solar System & General Knowledge Direct Knowledge Engine (Handles Typos e.g. red plannet)
+        // Solar System & General Knowledge Direct Knowledge Engine (with Solar System Web Portals)
         function getSolarSystemAndGKDetails(query, upper) {
             const normUpper = normalizeSearchQuery(query).toUpperCase();
 
@@ -711,28 +741,32 @@
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>The largest planet in our solar system is Jupiter:</strong><br><br>
-                    <strong>Jupiter</strong> is a massive gas giant that is more than twice as massive as all other planets in the Solar System combined. It is the fifth planet from the Sun, famous for its iconic <strong>Great Red Spot</strong> (a giant storm larger than Earth) and having over 95 moons (including Ganymede, the largest moon in the Solar System).`
+                    <strong>Jupiter</strong> is a massive gas giant that is more than twice as massive as all other planets in the Solar System combined. It is the fifth planet from the Sun, famous for its iconic <strong>Great Red Spot</strong> (a giant storm larger than Earth) and having over 95 moons (including Ganymede, the largest moon in the Solar System).`,
+                    isSolar: true
                 };
             }
             if (normUpper.includes('SMALLEST PLANET') || (normUpper.includes('MERCURY') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>The smallest planet in our solar system is Mercury:</strong><br><br>
-                    <strong>Mercury</strong> is the closest planet to the Sun and the smallest planet in the Solar System. It is only slightly larger than Earth's Moon and has no atmosphere or moons.`
+                    <strong>Mercury</strong> is the closest planet to the Sun and the smallest planet in the Solar System. It is only slightly larger than Earth's Moon and has no atmosphere or moons.`,
+                    isSolar: true
                 };
             }
             if (normUpper.includes('HOTTEST PLANET') || (normUpper.includes('VENUS') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>The hottest planet in our solar system is Venus:</strong><br><br>
-                    <strong>Venus</strong> is the second planet from the Sun and the hottest planet in the Solar System with surface temperatures exceeding 465°C (870°F). This is due to an intense runaway greenhouse effect caused by its dense carbon dioxide atmosphere.`
+                    <strong>Venus</strong> is the second planet from the Sun and the hottest planet in the Solar System with surface temperatures exceeding 465°C (870°F). This is due to an intense runaway greenhouse effect caused by its dense carbon dioxide atmosphere.`,
+                    isSolar: true
                 };
             }
             if (normUpper.includes('RED PLANET') || (normUpper.includes('RED') && normUpper.includes('PLANET')) || (normUpper.includes('MARS') && (normUpper.includes('PLANET') || normUpper.includes('SOLAR')))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
                     summary: `🪐 <strong>Mars is known as the Red Planet in our solar system:</strong><br><br>
-                    <strong>Mars</strong> is the fourth planet from the Sun. It appears reddish-orange due to iron oxide (rust) covering its dusty surface. It features Olympus Mons (the largest volcano in the Solar System) and two moons (Phobos and Deimos).`
+                    <strong>Mars</strong> is the fourth planet from the Sun. It appears reddish-orange due to iron oxide (rust) covering its dusty surface. It features Olympus Mons (the largest volcano in the Solar System) and two moons (Phobos and Deimos).`,
+                    isSolar: true
                 };
             }
             return null;
@@ -872,8 +906,8 @@
                 };
             }
 
-            // Module 12: AI, ML & Placement Interview Prep
-            if (normUpper.includes('MACHINE LEARNING') || normUpper.includes('AI') || normUpper.includes('INTERVIEW') || normUpper.includes('TCS') || normUpper.includes('INFOSYS') || normUpper.includes('ACCENTURE')) {
+            // Module 12: AI, ML & Placement Interview Prep (Exact Word Match to Prevent Matching 'INDIAN')
+            if (normUpper.includes('MACHINE LEARNING') || /\bAI\b/i.test(query) || normUpper.includes('ARTIFICIAL INTELLIGENCE') || normUpper.includes('TCS') || normUpper.includes('INFOSYS') || normUpper.includes('ACCENTURE')) {
                 return {
                     category: "🤖 MODULE 12: AI, ML & TECH INTERVIEW PREP",
                     summary: `🤖 <strong>AI/ML & Tech Company Interview Guide:</strong><br><br>
@@ -1010,21 +1044,28 @@
                 <em>Calculation evaluated via Vetri AI Precision Math Engine.</em>`;
             }
 
-            // 1. World Currencies Knowledge Engine (e.g. Currency of Japan -> Yen)
+            // 1. Indian Geography & City Nicknames Engine (e.g. Silicon Valley of India -> Bengaluru)
+            const geoIntel = getIndianGeographyDetails(userText, upper);
+            if (geoIntel) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
+                return geoIntel.summary;
+            }
+
+            // 2. World Currencies Knowledge Engine (e.g. Currency of Japan -> Yen)
             const currencyIntel = getCurrenciesAndGKDetails(userText, upper);
             if (currencyIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return currencyIntel.summary;
             }
 
-            // 2. Inventions & Historical Discoveries Engine (e.g. Telephone, Computer, Light bulb)
+            // 3. Inventions & Historical Discoveries Engine (e.g. Telephone, Computer, Light bulb)
             const inventionIntel = getInventionsAndFamousPeopleDetails(userText, upper);
             if (inventionIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return inventionIntel.summary;
             }
 
-            // 3. Google & Live Search API Connection Intelligence Handler
+            // 4. Google & Live Search API Connection Intelligence Handler
             if (upper.includes('CONNECTED TO GOOGLE') || upper.includes('CONNECT TO GOOGLE') || upper.includes('GOOGLE CONNECT') || upper.includes('ARE YOU CONNECTED')) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `🌐 <strong>YES! Vetri AI is fully connected to Google & Live Search Engine APIs!</strong><br><br>
@@ -1035,28 +1076,44 @@
                 Every prompt you enter is automatically processed across live Google & web search indices to give you instant, accurate answers! ⚡🔍`;
             }
 
-            // 4. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
+            // 5. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
             if (/^(h+[e3]+l+o+|h+e+y+|h+i+|h+l+o+|g+o+o+d+\s*m+o+r+n+i+n+g+|w+h+a+t+'?s+\s*u+p+|y+o+|g+r+e+e+t+i+n+g+s+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
                 I am your intelligent AI Assistant, built like ChatGPT & Gemini! I am ready to help you with computer science, programming, general knowledge, math, mobile specs, games, or any question you have. How can I assist you today, my friend? 😊⚡`;
             }
 
-            // 5. Flexible Farewells Handler
+            // 6. Flexible Farewells Handler
             if (/^(b+y+e+|g+o+o+d+b+y+e+|s+e+e+\s*y+o+u+|t+a+k+e+\s*c+a+r+e+|c+y+a+|g+o+o+d+\s*n+i+g+h+t+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Goodbye, my friend!</strong><br><br>
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 6. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
+            // 7. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
             const solarIntel = getSolarSystemAndGKDetails(userText, upper);
             if (solarIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
-                return solarIntel.summary;
+                const solarWebsitesHtml = `
+                    <div class="knowledge-card" style="margin-top:14px;">
+                        <div class="knowledge-card-title">
+                            <span>🚀 LIVE SOLAR SYSTEM & ASTRONOMY WEBSITES NETWORK</span>
+                            <span class="intent-tag">🪐 NASA & SPACE APIS</span>
+                        </div>
+                        <div class="links-grid">
+                            <a href="https://solarsystem.nasa.gov/planets/overview/" target="_blank" class="know-link-btn" style="border-color:#00FFFF; color:#00FFFF;">🚀 NASA Solar System Exploration ↗</a>
+                            <a href="https://www.isro.gov.in/" target="_blank" class="know-link-btn" style="border-color:var(--gold); color:var(--gold);">🛰️ ISRO Space Research Organisation ↗</a>
+                            <a href="https://nineplanets.org/" target="_blank" class="know-link-btn">🌌 Nine Planets Astronomy Index ↗</a>
+                            <a href="https://www.space.com/" target="_blank" class="know-link-btn">🔭 Space.com Astronomy News ↗</a>
+                            <a href="https://www.esa.int/" target="_blank" class="know-link-btn">🌐 ESA European Space Agency ↗</a>
+                            <a href="https://www.britannica.com/topic/Solar-System" target="_blank" class="know-link-btn">📚 Britannica Solar System Guide ↗</a>
+                        </div>
+                    </div>
+                `;
+                return solarIntel.summary + solarWebsitesHtml;
             }
 
-            // 7. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
+            // 8. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
             const symbolIntel = getSymbolIntelDetails(userText);
             if (symbolIntel.found) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
@@ -1067,7 +1124,7 @@
                 • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
             }
 
-            // 8. 22-Module Master Computer Science & Software Engineering Engine
+            // 9. 22-Module Master Computer Science & Software Engineering Engine
             const csIntel = getProgrammingIntelDetails(userText, upper);
             if (csIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -1091,7 +1148,7 @@
                 upper.includes('DEVOPS') || upper.includes('DOCKER') || upper.includes('KUBERNETES') ||
                 upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('CYBER') ||
                 upper.includes('PLANET') || upper.includes('SOLAR') || upper.includes('TELEPHONE') ||
-                upper.includes('CURRENCY')
+                upper.includes('CURRENCY') || upper.includes('SILICON VALLEY')
             );
 
             let searchTopic = userText;
