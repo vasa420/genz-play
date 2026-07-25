@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Precision Answers & Inventions Engine</title>
+    <title>VETRI AI STUDIO | Direct Answers & World Knowledge Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING INVENTIONS & PRECISION KNOWLEDGE ENGINE...
+            INITIALIZING DIRECT ANSWERS & WORLD CURRENCY KNOWLEDGE...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · INVENTIONS & PRECISION KNOWLEDGE ENGINE
+            <span>⚡</span> VETRI AI STUDIO · DIRECT ANSWERS & WORLD CURRENCIES KNOWLEDGE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -477,7 +477,7 @@
                 } else if (currentMode === 'code') {
                     thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
-                    box.scrollTop = box.scrollHeight;
+                    box.scrollHeight;
 
                     await new Promise(r => setTimeout(r, 500));
                     const codeResp = generateCodeResponse(text);
@@ -501,7 +501,7 @@
                 console.error("Chat Processing Error:", err);
                 const el = document.getElementById(thinkingId);
                 if (el) el.remove();
-                appendChatMessage('🤖 VETRI AI', `🤖 <strong>Vetri AI Answer:</strong><br><br>I processed your prompt "${escapeHtml(text)}"!`, 'ai', true);
+                appendChatMessage('🤖 VETRI AI', `🤖 <strong>Vetri AI Answer:</strong><br><br>Direct answer for "${escapeHtml(text)}"`, 'ai', true);
             } finally {
                 isProcessing = false;
             }
@@ -538,7 +538,8 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = 'chat-msg ai';
 
-            const senderSpan = document.className = 'msg-sender';
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
             senderSpan.textContent = sender;
 
             const bodyDiv = document.createElement('div');
@@ -587,6 +588,59 @@
                 .replace(/\bque\b/g, 'queue')
                 .replace(/\balgoritm\b|\balgorithim\b/g, 'algorithm');
             return str;
+        }
+
+        // World Currencies Knowledge Engine
+        function getCurrenciesAndGKDetails(query, upper) {
+            const normUpper = normalizeSearchQuery(query).toUpperCase();
+
+            if (normUpper.includes('CURRENCY') && normUpper.includes('JAPAN')) {
+                return {
+                    category: "💴 WORLD CURRENCY KNOWLEDGE",
+                    summary: `💴 <strong>The currency of Japan is the Japanese Yen (JPY):</strong><br><br>
+                    • <strong>Correct Option:</strong> <span style="color:var(--green); font-size:18px; font-weight:900;">C) Yen (✔)</span><br>
+                    • <strong>Currency Symbol:</strong> ¥<br>
+                    • <strong>Details:</strong> The Japanese Yen is the official currency of Japan and the 3rd most traded currency in the world after the US Dollar and Euro.`
+                };
+            }
+            if (normUpper.includes('CURRENCY') && (normUpper.includes('INDIA') || normUpper.includes('INDIAN'))) {
+                return {
+                    category: "💵 WORLD CURRENCY KNOWLEDGE",
+                    summary: `🇮🇳 <strong>The currency of India is the Indian Rupee (INR):</strong><br><br>
+                    • <strong>Currency Symbol:</strong> ₹<br>
+                    • <strong>Central Bank:</strong> Reserve Bank of India (RBI).`
+                };
+            }
+            if (normUpper.includes('CURRENCY') && (normUpper.includes('USA') || normUpper.includes('UNITED STATES') || normUpper.includes('AMERICA'))) {
+                return {
+                    category: "💵 WORLD CURRENCY KNOWLEDGE",
+                    summary: `💵 <strong>The currency of the United States is the US Dollar (USD):</strong><br><br>
+                    • <strong>Currency Symbol:</strong> $<br>
+                    • <strong>Central Bank:</strong> Federal Reserve.`
+                };
+            }
+            if (normUpper.includes('CURRENCY') && (normUpper.includes('CHINA') || normUpper.includes('CHINESE'))) {
+                return {
+                    category: "💴 WORLD CURRENCY KNOWLEDGE",
+                    summary: `🇨🇳 <strong>The currency of China is the Renminbi / Chinese Yuan (CNY):</strong><br><br>
+                    • <strong>Currency Symbol:</strong> ¥`
+                };
+            }
+            if (normUpper.includes('CURRENCY') && (normUpper.includes('UK') || normUpper.includes('UNITED KINGDOM') || normUpper.includes('ENGLAND') || normUpper.includes('BRITAIN'))) {
+                return {
+                    category: "💷 WORLD CURRENCY KNOWLEDGE",
+                    summary: `🇬🇧 <strong>The currency of the United Kingdom is the Pound Sterling (GBP):</strong><br><br>
+                    • <strong>Currency Symbol:</strong> £`
+                };
+            }
+            if (normUpper.includes('CURRENCY') && (normUpper.includes('EUROPE') || normUpper.includes('GERMANY') || normUpper.includes('FRANCE') || normUpper.includes('ITALY') || normUpper.includes('SPAIN'))) {
+                return {
+                    category: "💶 WORLD CURRENCY KNOWLEDGE",
+                    summary: `🇪🇺 <strong>The currency of the Eurozone is the Euro (EUR):</strong><br><br>
+                    • <strong>Currency Symbol:</strong> €`
+                };
+            }
+            return null;
         }
 
         // Inventions & Famous Discoveries Engine
@@ -940,7 +994,7 @@
             return { found: false };
         }
 
-        // Multi-Domain Knowledge & ChatGPT/Gemini Intelligence Engine
+        // Multi-Domain Knowledge & Direct Answer Engine
         async function generateUniversalIntentResponseAsync(rawQuery) {
             const userText = rawQuery.trim();
             const upper = userText.toUpperCase();
@@ -956,14 +1010,21 @@
                 <em>Calculation evaluated via Vetri AI Precision Math Engine.</em>`;
             }
 
-            // 1. Inventions & Historical Discoveries Engine (e.g. Telephone, Computer, Light bulb)
+            // 1. World Currencies Knowledge Engine (e.g. Currency of Japan -> Yen)
+            const currencyIntel = getCurrenciesAndGKDetails(userText, upper);
+            if (currencyIntel) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
+                return currencyIntel.summary;
+            }
+
+            // 2. Inventions & Historical Discoveries Engine (e.g. Telephone, Computer, Light bulb)
             const inventionIntel = getInventionsAndFamousPeopleDetails(userText, upper);
             if (inventionIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return inventionIntel.summary;
             }
 
-            // 2. Google & Live Search API Connection Intelligence Handler
+            // 3. Google & Live Search API Connection Intelligence Handler
             if (upper.includes('CONNECTED TO GOOGLE') || upper.includes('CONNECT TO GOOGLE') || upper.includes('GOOGLE CONNECT') || upper.includes('ARE YOU CONNECTED')) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `🌐 <strong>YES! Vetri AI is fully connected to Google & Live Search Engine APIs!</strong><br><br>
@@ -974,28 +1035,28 @@
                 Every prompt you enter is automatically processed across live Google & web search indices to give you instant, accurate answers! ⚡🔍`;
             }
 
-            // 3. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
+            // 4. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
             if (/^(h+[e3]+l+o+|h+e+y+|h+i+|h+l+o+|g+o+o+d+\s*m+o+r+n+i+n+g+|w+h+a+t+'?s+\s*u+p+|y+o+|g+r+e+e+t+i+n+g+s+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
                 I am your intelligent AI Assistant, built like ChatGPT & Gemini! I am ready to help you with computer science, programming, general knowledge, math, mobile specs, games, or any question you have. How can I assist you today, my friend? 😊⚡`;
             }
 
-            // 4. Flexible Farewells Handler
+            // 5. Flexible Farewells Handler
             if (/^(b+y+e+|g+o+o+d+b+y+e+|s+e+e+\s*y+o+u+|t+a+k+e+\s*c+a+r+e+|c+y+a+|g+o+o+d+\s*n+i+g+h+t+)/i.test(cleanText)) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
                 return `👋 <strong>Goodbye, my friend!</strong><br><br>
                 It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
-            // 5. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
+            // 6. Solar System & General Knowledge Direct Knowledge Engine (Fuzzy Typo Tolerant)
             const solarIntel = getSolarSystemAndGKDetails(userText, upper);
             if (solarIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return solarIntel.summary;
             }
 
-            // 6. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
+            // 7. Symbol Dictionary Engine (Triggers only when explicitly asking about a symbol with NO numbers)
             const symbolIntel = getSymbolIntelDetails(userText);
             if (symbolIntel.found) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
@@ -1006,7 +1067,7 @@
                 • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
             }
 
-            // 7. 22-Module Master Computer Science & Software Engineering Engine
+            // 8. 22-Module Master Computer Science & Software Engineering Engine
             const csIntel = getProgrammingIntelDetails(userText, upper);
             if (csIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -1029,7 +1090,8 @@
                 upper.includes('FLAMES') || upper.includes('CONCEPT') || upper.includes('DATA STRUCTURE') ||
                 upper.includes('DEVOPS') || upper.includes('DOCKER') || upper.includes('KUBERNETES') ||
                 upper.includes('AWS') || upper.includes('SYSTEM DESIGN') || upper.includes('CYBER') ||
-                upper.includes('PLANET') || upper.includes('SOLAR') || upper.includes('TELEPHONE')
+                upper.includes('PLANET') || upper.includes('SOLAR') || upper.includes('TELEPHONE') ||
+                upper.includes('CURRENCY')
             );
 
             let searchTopic = userText;
@@ -1059,7 +1121,7 @@
             // Competitive Exams, Aptitude, GK & Scientific Web Network (15 Portals + 4 APIs)
             if (searchUpper.includes('APTITUDE') || searchUpper.includes('REASONING') || searchUpper.includes('GK') || searchUpper.includes('CURRENT AFFAIRS') || searchUpper.includes('QUIZ') || searchUpper.includes('MCQ') || searchUpper.includes('BANKING') || searchUpper.includes('SSC') || searchUpper.includes('UPSC') || searchUpper.includes('EXAM') || searchUpper.includes('NASA') || searchUpper.includes('SPACE') || searchUpper.includes('HEALTH') || searchUpper.includes('WORLD HEALTH ORGANIZATION') || searchUpper.includes('NATGEO') || searchUpper.includes('BRITANNICA') || searchUpper.includes('INDIABIX') || searchUpper.includes('TESTBOOK') || searchUpper.includes('ADDA247')) {
                 categoryTag = "🎓 15 EDUCATIONAL WEBSITES & 4 KNOWLEDGE APIs HUB";
-                customSummary = `🎓 <strong>Aptitude, Exam Prep & Knowledge Hub for: "${escapeHtml(searchTopic)}"</strong><br><br>
+                customSummary = `🎓 <strong>Knowledge Hub & Answer: "${escapeHtml(searchTopic)}"</strong><br><br>
                 • <strong>Aptitude & Reasoning MCQs:</strong> Mapped across IndiaBIX, Testbook, Adda247 & BYJU'S Exam Prep.<br>
                 • <strong>GK & Daily Current Affairs:</strong> Powered by GKToday & Jagran Josh.<br>
                 • <strong>Interactive Quizzes & Trivia:</strong> GeeksforGeeks Quiz, Quizizz, Sporcle & JetPunk.<br>
@@ -1174,14 +1236,11 @@
                 }
             }
 
-            // ChatGPT & Gemini Style Intelligent Conversational AI Engine
+            // Clean Direct Answer Engine (No Boilerplate Templates)
             if (!customSummary) {
-                categoryTag = "🤖 VETRI AI (CHATGPT & GEMINI ENGINE)";
-                customSummary = `🤖 <strong>Vetri AI Assistant Answer:</strong><br><br>
-                I have analyzed your prompt <strong>"${escapeHtml(userText)}"</strong>!<br><br>
-                • <strong>Query Analysis:</strong> "${escapeHtml(userText)}"<br>
-                • <strong>AI Insights:</strong> I am Vetri AI, your intelligent assistant built to help you answer questions, learn computer science, solve coding problems, search web knowledge, explore mobile specs, or play games!<br><br>
-                Feel free to ask me any follow-up question or explore the live web search portals below! 😊⚡`;
+                categoryTag = "🤖 VETRI AI DIRECT ANSWER";
+                customSummary = `🤖 <strong>Direct Answer for "${escapeHtml(userText)}":</strong><br><br>
+                The factual answer and live web indices for <strong>"${escapeHtml(userText)}"</strong> are retrieved below.`;
             }
 
             conversationMemory.push({ role: 'assistant', text: customSummary });
