@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Context-Aware Universal AI Engine</title>
+    <title>VETRI AI STUDIO | Friendly & Context-Aware Universal AI Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -212,7 +212,6 @@
             border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow);
         }
 
-        /* File Attachment + Icon Button */
         .btn-attach {
             width: 52px; height: 52px; border-radius: 14px;
             background: rgba(0, 255, 255, 0.1); border: 1.5px solid rgba(0, 255, 255, 0.35);
@@ -297,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING FILE MANAGER & UNIVERSAL AI ENGINE...
+            INITIALIZING FRIENDLY CONVERSATIONAL AI ENGINE...
         </div>
 
         <div style="
@@ -314,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · FILE MANAGER & KNOWLEDGE HUB
+            <span>⚡</span> VETRI AI STUDIO · FRIENDLY KNOWLEDGE ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -323,10 +322,9 @@
     <div class="chat-container">
         <div class="chat-card">
 
-            <!-- 4 Dedicated Modes Switcher -->
+            <!-- 3 Dedicated Modes Switcher -->
             <div class="mode-tabs">
                 <button type="button" class="mode-tab-btn active" id="tab-btn-normal" onclick="switchStudioMode('normal')">💬 UNIVERSAL SEARCH & CHAT HUB</button>
-                <a class="mode-tab-btn" href="vetri_math_chat.html">🧮 MATHS & SYMBOLS AI</a>
                 <button type="button" class="mode-tab-btn" id="tab-btn-code" onclick="switchStudioMode('code')">💻 CODE CHAT</button>
                 <button type="button" class="mode-tab-btn" id="tab-btn-image" onclick="switchStudioMode('image')">🎨 IMAGE GENERATION</button>
             </div>
@@ -353,8 +351,8 @@
     <script>
         let currentMode = 'normal';
         let isProcessing = false;
-        let conversationMemory = [];
-        let attachedFile = null; // Attached File Manager Object
+        let conversationMemory = []; // Background Conversation History
+        let attachedFile = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -386,41 +384,6 @@
             input.focus();
 
             appendSystemModeNotice(`📎 File Selected from File Manager: "${file.name}" (${file.type || 'Document/Data'}, ${(file.size / 1024).toFixed(1)} KB)`);
-        }
-
-        // Smart Conversational Context Resolver
-        function resolveContextualQuery(rawQuery) {
-            const text = rawQuery.trim();
-            const upper = text.toUpperCase();
-
-            conversationMemory.push({ role: 'user', text: text });
-
-            const isFollowUp = (
-                upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('WHO') ||
-                upper.includes('FOUNDER') || upper.includes('LEADER') || upper.includes('PRICE') ||
-                upper.includes('WHERE') || upper.includes('HOW') || upper.includes('MORE') ||
-                upper.includes('WHY') || upper.includes('DATE') || upper.includes('AGE') ||
-                upper.includes('IT') || upper.includes('THAT') || upper.includes('HE') || upper.includes('SHE') ||
-                text.split(' ').length <= 4
-            );
-
-            let resolvedQuery = text;
-            let topicContext = "";
-            let hasContext = false;
-
-            if (isFollowUp && conversationMemory.length > 1) {
-                for (let i = conversationMemory.length - 2; i >= 0; i--) {
-                    if (conversationMemory[i].role === 'user') {
-                        const prevTopic = conversationMemory[i].text;
-                        resolvedQuery = `${prevTopic} ${text}`;
-                        topicContext = prevTopic;
-                        hasContext = true;
-                        break;
-                    }
-                }
-            }
-
-            return { resolvedQuery, topicContext, hasContext };
         }
 
         function switchStudioMode(mode, silent = false) {
@@ -481,9 +444,9 @@
             if (currentAttached) {
                 thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI FILE MANAGER</span><div class="msg-body" style="color:var(--gold);">📎 Analyzing attached file "${escapeHtml(currentAttached.name)}" (${(currentAttached.size/1024).toFixed(1)} KB)...</div>`;
             } else if (currentMode === 'normal') {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Analyzing conversation context & searching web for "${escapeHtml(text)}"...</div>`;
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & searching web for "${escapeHtml(text)}"...</div>`;
             } else if (currentMode === 'code') {
-                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean syntax code blocks for "${escapeHtml(text)}"...</div>`;
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean code for "${escapeHtml(text)}"...</div>`;
             } else if (currentMode === 'image') {
                 thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI ART AI</span><div class="msg-body" style="color:var(--gold);">🎨 Rendering 8K Widescreen AI Photo for "${escapeHtml(text)}"...</div>`;
             }
@@ -504,7 +467,7 @@
                             • <strong>File Size:</strong> ${(currentAttached.size/1024).toFixed(2)} KB<br>
                             • <strong>File Type:</strong> ${escapeHtml(currentAttached.type || 'Document / Binary Data')}<br>
                             • <strong>Last Modified:</strong> ${new Date(currentAttached.lastModified).toLocaleString()}<br><br>
-                            Vetri AI successfully loaded your document into workspace memory! You can ask any question about this file.
+                            Vetri AI successfully loaded your document into workspace memory! Feel free to ask any question about this file.
                         </div>
                     `;
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
@@ -606,45 +569,77 @@
             return html;
         }
 
-        // Multi-Domain & Context-Aware Knowledge Engine
+        // Multi-Domain Knowledge & Warm Conversational AI Engine
         async function generateUniversalIntentResponseAsync(rawQuery) {
-            const contextData = resolveContextualQuery(rawQuery);
-            const query = contextData.resolvedQuery;
-            const upper = query.toUpperCase();
+            const userText = rawQuery.trim();
+            const upper = userText.toUpperCase();
 
+            // 1. Warm & Friendly Greetings Handler
+            if (/^(HI+|HELLO+|HEY+|GOOD\s*MORNING|GOOD\s*EVENING|HOW\s*ARE\s*YOU|WHAT'?S\s*UP|YO|GREETINGS)/i.test(userText)) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
+                return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
+                I am your friendly AI Assistant, ready to help you search for knowledge, answer questions, specs, games, or anything you need! How can I assist you today, my friend? 😊⚡`;
+            }
+
+            // 2. Warm & Friendly Farewell Handler
+            if (/^(BYE+|GOODBYE+|SEE\s*YOU|TAKE\s*CARE|CYA|NIGHT|GOOD\s*NIGHT)/i.test(userText)) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
+                return `👋 <strong>Goodbye, my friend!</strong><br><br>
+                It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
+            }
+
+            // Record as main topic in background memory
+            conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
+
+            // Extract last primary topic for background search if current input is a follow-up
+            let searchTopic = userText;
+            const isFollowUp = (
+                upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('WHO') ||
+                upper.includes('FOUNDER') || upper.includes('LEADER') || upper.includes('PRICE') ||
+                upper.includes('WHERE') || upper.includes('HOW') || upper.includes('MORE') ||
+                upper.includes('WHY') || upper.includes('DATE') || upper.includes('AGE') ||
+                userText.split(' ').length <= 3
+            );
+
+            if (isFollowUp && conversationMemory.length > 1) {
+                for (let i = conversationMemory.length - 2; i >= 0; i--) {
+                    if (conversationMemory[i].isMainTopic && conversationMemory[i].text !== userText) {
+                        searchTopic = `${conversationMemory[i].text} ${userText}`;
+                        console.log(`🧠 Background Context Link: "${searchTopic}"`);
+                        break;
+                    }
+                }
+            }
+
+            const searchUpper = searchTopic.toUpperCase();
             let customSummary = "";
             let categoryTag = "UNIVERSAL KNOWLEDGE";
             let customLinksHtml = "";
 
-            let contextNoticeHtml = "";
-            if (contextData.hasContext) {
-                contextNoticeHtml = `<div style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); margin-bottom:10px; background:rgba(255,215,0,0.1); border:1px solid var(--gold); padding:6px 12px; border-radius:8px;">🧠 <strong>CONVERSATION CONTEXT ANALYZED:</strong> Follow-up linked to "${escapeHtml(contextData.topicContext)}"</div>`;
-            }
-
-            // 0. Independence Day & History Context Handler
-            if (upper.includes('INDEPENDENCE DAY') || upper.includes('INDEPENDENCE') || (contextData.hasContext && contextData.topicContext.toUpperCase().includes('INDEPENDENCE'))) {
+            // Historical Knowledge
+            if (searchUpper.includes('INDEPENDENCE DAY') || searchUpper.includes('INDEPENDENCE')) {
                 categoryTag = "📜 HISTORICAL KNOWLEDGE HUB";
-                if (upper.includes('YEAR') || upper.includes('WHEN') || upper.includes('DATE')) {
-                    customSummary = `${contextNoticeHtml}🇮🇳 <strong>Indian Independence Day Year & Date:</strong><br><br>
+                if (searchUpper.includes('YEAR') || searchUpper.includes('WHEN') || searchUpper.includes('DATE')) {
+                    customSummary = `🇮🇳 <strong>Indian Independence Day Year & Date:</strong><br><br>
                     India achieved independence from British rule on <strong>August 15, 1947 (15-08-1947)</strong>.<br>
                     • <strong>First Prime Minister:</strong> Jawaharlal Nehru (hoisted national flag at Red Fort, New Delhi).<br>
                     • <strong>Act:</strong> Indian Independence Act 1947 passed by UK Parliament.`;
                 } else {
-                    customSummary = `${contextNoticeHtml}🇮🇳 <strong>Indian Independence Day - Overview:</strong><br><br>
+                    customSummary = `🇮🇳 <strong>Indian Independence Day - Overview:</strong><br><br>
                     <strong>Indian Independence Day</strong> is celebrated annually on <strong>August 15</strong>, marking the nation's independence from the British Raj on August 15, 1947.`;
                 }
             }
 
-            // 1. Mobile Brand, Model Specs, Flipkart, Amazon & Official Store Handler
-            else if (upper.includes('IPHONE') || upper.includes('SAMSUNG') || upper.includes('ONEPLUS') || upper.includes('REALME') || upper.includes('VIVO') || upper.includes('OPPO') || upper.includes('MOBILE') || upper.includes('SMARTPHONE') || upper.includes('XIAOMI') || upper.includes('REDMI') || upper.includes('POCO') || upper.includes('IQOO') || upper.includes('MOTOROLA')) {
+            // Mobile Brands & E-Commerce
+            else if (searchUpper.includes('IPHONE') || searchUpper.includes('SAMSUNG') || searchUpper.includes('ONEPLUS') || searchUpper.includes('REALME') || searchUpper.includes('VIVO') || searchUpper.includes('OPPO') || searchUpper.includes('MOBILE') || searchUpper.includes('SMARTPHONE') || searchUpper.includes('XIAOMI') || searchUpper.includes('REDMI') || searchUpper.includes('POCO') || searchUpper.includes('IQOO') || searchUpper.includes('MOTOROLA')) {
                 categoryTag = "📱 MOBILE SPECS, FLIPKART & AMAZON STORES";
-                let mobileIntel = getMobileIntelDetails(query, upper);
-                customSummary = contextNoticeHtml + mobileIntel.summary;
+                let mobileIntel = getMobileIntelDetails(searchTopic, searchUpper);
+                customSummary = mobileIntel.summary;
 
-                const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
-                const amazonUrl = `https://www.amazon.in/s?k=${encodeURIComponent(query)}`;
-                const gsmarenaUrl = `https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(query)}`;
-                const mobiles91Url = `https://www.91mobiles.com/search.php?q=${encodeURIComponent(query)}`;
+                const flipkartUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(searchTopic)}`;
+                const amazonUrl = `https://www.amazon.in/s?k=${encodeURIComponent(searchTopic)}`;
+                const gsmarenaUrl = `https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(searchTopic)}`;
+                const mobiles91Url = `https://www.91mobiles.com/search.php?q=${encodeURIComponent(searchTopic)}`;
 
                 customLinksHtml = `
                     <a href="${flipkartUrl}" target="_blank" class="know-link-btn" style="border-color:#2874f0; color:#2874f0;">🛒 Flipkart Store Search ↗</a>
@@ -655,29 +650,29 @@
                 `;
             }
 
-            // 2. Video Games, Play Store Games & Composer Intel Engine (500+ Game Portals)
-            else if (upper.includes('GAME') || upper.includes('PLAYSTORE') || upper.includes('GTA') || upper.includes('PUBG') || upper.includes('BGMI') || upper.includes('FREE FIRE') || upper.includes('MINECRAFT') || upper.includes('GOD OF WAR') || upper.includes('CYBERPUNK') || upper.includes('SUBWAY SURFERS') || upper.includes('CLASH OF CLANS') || upper.includes('ELDEN RING') || upper.includes('WITCHER') || upper.includes('LUDO') || upper.includes('CALL OF DUTY') || upper.includes('ROBLOX') || upper.includes('VALORANT') || upper.includes('FORTNITE') || upper.includes('STEAM')) {
+            // Video Games & Portals
+            else if (searchUpper.includes('GAME') || searchUpper.includes('PLAYSTORE') || searchUpper.includes('GTA') || searchUpper.includes('PUBG') || searchUpper.includes('BGMI') || searchUpper.includes('FREE FIRE') || searchUpper.includes('MINECRAFT') || searchUpper.includes('GOD OF WAR') || searchUpper.includes('CYBERPUNK') || searchUpper.includes('SUBWAY SURFERS') || searchUpper.includes('CLASH OF CLANS') || searchUpper.includes('ELDEN RING') || searchUpper.includes('WITCHER') || searchUpper.includes('LUDO') || searchUpper.includes('CALL OF DUTY') || searchUpper.includes('ROBLOX') || searchUpper.includes('VALORANT') || searchUpper.includes('FORTNITE') || searchUpper.includes('STEAM')) {
                 categoryTag = "🎮 GAME INTEL & 500+ GAME PORTALS";
-                let gameDetails = getGameIntelDetails(query, upper);
-                customSummary = contextNoticeHtml + gameDetails.summary;
+                let gameDetails = getGameIntelDetails(searchTopic, searchUpper);
+                customSummary = gameDetails.summary;
 
                 customLinksHtml = `
-                    <a href="https://play.google.com/store/search?q=${encodeURIComponent(query)}&c=apps" target="_blank" class="know-link-btn" style="border-color:var(--green); color:var(--green);">🤖 Google Play Store Games ↗</a>
-                    <a href="https://www.apple.com/us/search/${encodeURIComponent(query)}?src=globalnav_apps" target="_blank" class="know-link-btn">🍎 Apple App Store Games ↗</a>
-                    <a href="https://rawg.io/search?query=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🎮 RAWG 500,000+ Game Database ↗</a>
-                    <a href="https://store.steampowered.com/search/?term=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🕹️ Steam PC Gaming Store ↗</a>
-                    <a href="https://www.ign.com/search?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">⚡ IGN Game Reviews & Guides ↗</a>
-                    <a href="https://vgmdb.net/search?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🎵 VGMdb Game Music Composers ↗</a>
+                    <a href="https://play.google.com/store/search?q=${encodeURIComponent(searchTopic)}&c=apps" target="_blank" class="know-link-btn" style="border-color:var(--green); color:var(--green);">🤖 Google Play Store Games ↗</a>
+                    <a href="https://www.apple.com/us/search/${encodeURIComponent(searchTopic)}?src=globalnav_apps" target="_blank" class="know-link-btn">🍎 Apple App Store Games ↗</a>
+                    <a href="https://rawg.io/search?query=${encodeURIComponent(searchTopic)}" target="_blank" class="know-link-btn">🎮 RAWG 500,000+ Game Database ↗</a>
+                    <a href="https://store.steampowered.com/search/?term=${encodeURIComponent(searchTopic)}" target="_blank" class="know-link-btn">🕹️ Steam PC Gaming Store ↗</a>
+                    <a href="https://www.ign.com/search?q=${encodeURIComponent(searchTopic)}" target="_blank" class="know-link-btn">⚡ IGN Game Reviews & Guides ↗</a>
+                    <a href="https://vgmdb.net/search?q=${encodeURIComponent(searchTopic)}" target="_blank" class="know-link-btn">🎵 VGMdb Game Music Composers ↗</a>
                 `;
             }
 
-            // 3. FLAMES Game Handler
-            else if (upper.includes('FLAMES') || upper.includes('LOVE CALCULATOR') || upper.includes('FRIEND OR ENEMY')) {
+            // FLAMES
+            else if (searchUpper.includes('FLAMES') || searchUpper.includes('LOVE CALCULATOR') || searchUpper.includes('FRIEND OR ENEMY')) {
                 categoryTag = "🔥 FLAMES GAME CALCULATOR";
-                let names = extractNamesFromFlames(query);
+                let names = extractNamesFromFlames(searchTopic);
                 let flamesRes = runFlamesAlgorithm(names.n1, names.n2);
                 
-                customSummary = `${contextNoticeHtml}🔥 <strong>FLAMES GAME RESULT FOR: ${escapeHtml(names.n1.toUpperCase())} & ${escapeHtml(names.n2.toUpperCase())}</strong><br><br>
+                customSummary = `🔥 <strong>FLAMES GAME RESULT FOR: ${escapeHtml(names.n1.toUpperCase())} & ${escapeHtml(names.n2.toUpperCase())}</strong><br><br>
                 • <strong>Name 1:</strong> ${escapeHtml(names.n1)}<br>
                 • <strong>Name 2:</strong> ${escapeHtml(names.n2)}<br>
                 • <strong>Common Letter Count:</strong> ${flamesRes.count}<br>
@@ -690,26 +685,26 @@
                 `;
             }
 
-            // Default TVK & General Knowledge Handlers
-            else if (upper === 'TVK' || upper.includes('TAMILAGA VETTRI KAZHAGAM') || (contextData.hasContext && contextData.topicContext.toUpperCase().includes('TVK'))) {
+            // TVK
+            else if (searchUpper.includes('TVK') || searchUpper.includes('TAMILAGA VETTRI KAZHAGAM')) {
                 categoryTag = "📌 TVK POLITICAL PARTY HUB";
-                if (upper.includes('PRESIDENT') || upper.includes('LEADER') || upper.includes('FOUNDER') || upper.includes('WHO')) {
-                    customSummary = `${contextNoticeHtml}📌 <strong>TVK Founder & President:</strong><br><br>
+                if (searchUpper.includes('PRESIDENT') || searchUpper.includes('LEADER') || searchUpper.includes('FOUNDER') || searchUpper.includes('WHO')) {
+                    customSummary = `📌 <strong>TVK Founder & President:</strong><br><br>
                     The founder and president of <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is <strong>Vijay (Thalapathy Vijay)</strong>.`;
                 } else {
-                    customSummary = `${contextNoticeHtml}📌 <strong>TVK (Tamilaga Vettri Kazhagam) - Official Overview:</strong><br><br>
+                    customSummary = `📌 <strong>TVK (Tamilaga Vettri Kazhagam) - Official Overview:</strong><br><br>
                     <strong>Tamilaga Vettri Kazhagam (TVK)</strong> is an Indian regional political party based in Tamil Nadu and Puducherry.`;
                 }
             }
 
-            // Fallback Live Fetch from Wikipedia API using Contextually Resolved Query
+            // Fallback Live Fetch from Wikipedia API
             if (!customSummary) {
                 try {
-                    let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+                    let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(searchTopic)}`;
                     let res = await fetch(wikiUrl);
                     
                     if (!res.ok || res.status === 404) {
-                        const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+                        const searchRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchTopic)}&format=json&origin=*`);
                         const searchData = await searchRes.json();
                         if (searchData.query && searchData.query.search.length > 0) {
                             const topTitle = searchData.query.search[0].title;
@@ -721,7 +716,7 @@
                     if (res.ok) {
                         const wikiData = await res.json();
                         if (wikiData.extract && wikiData.type !== 'disambiguation') {
-                            customSummary = `${contextNoticeHtml}📌 <strong>Live Knowledge Summary (${escapeHtml(wikiData.title)}):</strong><br><br>${escapeHtml(wikiData.extract)}`;
+                            customSummary = `📌 <strong>Live Knowledge Summary (${escapeHtml(wikiData.title)}):</strong><br><br>${escapeHtml(wikiData.extract)}`;
                         }
                     }
                 } catch (e) {
@@ -730,19 +725,19 @@
             }
 
             if (!customSummary) {
-                customSummary = `${contextNoticeHtml}🎯 <strong>Question Analyzed:</strong> "${escapeHtml(rawQuery)}"<br><br>Vetri AI synthesized answers across live web indices. Explore real-time articles, videos, and search portals below.`;
+                customSummary = `🎯 <strong>Question Analyzed:</strong> "${escapeHtml(userText)}"<br><br>Vetri AI synthesized answers across live web indices. Explore real-time articles, videos, and search portals below.`;
             }
 
             conversationMemory.push({ role: 'assistant', text: customSummary });
 
-            const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}`;
+            const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTopic)}`;
+            const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(searchTopic)}`;
 
             const outputCardHtml = `
                 <div>${customSummary}</div>
                 <div class="knowledge-card">
                     <div class="knowledge-card-title">
-                        <span>🌐 DIRECT WEB PORTALS FOR "${escapeHtml(query)}"</span>
+                        <span>🌐 DIRECT WEB PORTALS FOR "${escapeHtml(userText)}"</span>
                         <span class="intent-tag">${categoryTag}</span>
                     </div>
                     <div class="links-grid">
