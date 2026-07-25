@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Smart Question & MCQ Direct Answer Engine</title>
+    <title>VETRI AI STUDIO | Universal Deep Question & Live Web MCQ Solver</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING FULL QUESTION ANALYZER & MCQ SOLVER ENGINE...
+            INITIALIZING UNIVERSAL DEEP QUESTION & LIVE WEB MCQ SOLVER...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · SMART MCQ & QUESTION SOLVER ENGINE
+            <span>⚡</span> VETRI AI STUDIO · UNIVERSAL DEEP QUESTION & LIVE WEB MCQ SOLVER
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -465,7 +465,7 @@
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
                 } else if (currentMode === 'normal') {
-                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Reading full question & extracting direct answer for "${escapeHtml(text)}"...</div>`;
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Reading full question carefully & extracting direct answer for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
                     box.scrollTop = box.scrollHeight;
 
@@ -590,8 +590,8 @@
             return str;
         }
 
-        // Universal MCQ Parser & Solver Engine
-        function solveUniversalMCQQuery(rawQuery) {
+        // Universal MCQ Parser & Solver Engine (with Live Web Dynamic Matcher)
+        async function solveUniversalMCQQueryAsync(rawQuery) {
             const str = rawQuery.trim();
             const upper = str.toUpperCase();
 
@@ -665,6 +665,37 @@
                     • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                     • <strong>Factual Explanation:</strong> Alexander Graham Bell patented the electric telephone in 1876.`
                 };
+            }
+
+            // Dynamic Live Web Search MCQ Solver Fallback for ANY unknown MCQ!
+            const liveWebData = await fetchLiveWebSummaryAsync(questionStem);
+            if (liveWebData && liveWebData.summary) {
+                const summaryUpper = liveWebData.summary.toUpperCase();
+                let matchedOpt = null;
+
+                for (let opt of matches) {
+                    const cleanOptVal = opt.replace(/^[A-D1-4][\.\)]\s*/, '').trim().toUpperCase();
+                    if (cleanOptVal.length > 1 && summaryUpper.includes(cleanOptVal)) {
+                        matchedOpt = opt.trim();
+                        break;
+                    }
+                }
+
+                if (matchedOpt) {
+                    return {
+                        category: "🎯 LIVE WEB MCQ DIRECT ANSWER",
+                        summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOpt)} (✔)</span></strong><br><br>
+                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
+                        • <strong>Factual Explanation (${escapeHtml(liveWebData.title)}):</strong> ${escapeHtml(liveWebData.summary)}`
+                    };
+                } else {
+                    return {
+                        category: "🎯 LIVE WEB KNOWLEDGE FOR MCQ",
+                        summary: `💡 <strong>FACTUAL KNOWLEDGE FOR QUESTION: "${escapeHtml(questionStem)}"</strong><br><br>
+                        ${escapeHtml(liveWebData.summary)}<br><br>
+                        • <strong>Options Provided:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}`
+                    };
+                }
             }
 
             return null;
@@ -1114,8 +1145,8 @@
             const upper = userText.toUpperCase();
             const cleanText = userText.replace(/[^a-zA-Z\s]/g, '');
 
-            // 0. Universal MCQ Solver Engine (Prioritizes reading full question & option A, B, C, D)
-            const mcqResult = solveUniversalMCQQuery(userText);
+            // 0. Universal MCQ Solver Engine (Prioritizes reading full question & options A, B, C, D live)
+            const mcqResult = await solveUniversalMCQQueryAsync(userText);
             if (mcqResult) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return mcqResult.summary;
