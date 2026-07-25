@@ -964,6 +964,15 @@
                     <strong>Thomas Alva Edison</strong> patented the long-lasting carbon filament incandescent light bulb in <strong>1879</strong>.`
                 };
             }
+            if (normUpper.includes('RAMAN') || (normUpper.includes('NOBEL') && normUpper.includes('PHYSICS') && (normUpper.includes('1930') || normUpper.includes('INDIAN')))) {
+                return {
+                    category: "🏆 NOBEL PRIZE & FAMOUS SCIENTISTS INTEL",
+                    summary: `🏆 <strong>Sir C. V. Raman won the Nobel Prize in Physics in 1930:</strong><br><br>
+                    • <strong>Scientist:</strong> <span style="color:var(--green); font-size:20px; font-weight:900;">Sir C. V. Raman (✔)</span><br>
+                    • <strong>Discovery:</strong> The <strong>Raman Effect</strong> (scattering of light when passing through transparent materials).<br>
+                    • <strong>Honor:</strong> First Asian and first non-white person to receive a Nobel Prize in any branch of science.`
+                };
+            }
             if (normUpper.includes('GRAVITY') && (normUpper.includes('DISCOVERED') || normUpper.includes('WHO'))) {
                 return {
                     category: "💡 SCIENTIFIC DISCOVERIES INTEL",
@@ -974,14 +983,19 @@
             return null;
         }
 
-        // Mathematical Calculation Engine
+        // Mathematical Calculation Engine (Requires explicit operator +, -, *, /, %, ^ or math intent word)
         function evaluateMathCalculation(rawText) {
             let str = rawText.trim();
+            let upper = str.toUpperCase();
+
+            // Require explicit math operator (+, -, *, /, %, ^) OR explicit math intent word
+            const hasMathOperator = /[\+\-\*\/\%\^]/.test(str);
+            const hasMathIntent = /\b(CALCULATE|SOLVE|EVALUATE|COMPUTE|SUM|PRODUCT|MULTIPLY|DIVIDE|ARITHMETIC|MATH|EQUATION)\b/i.test(str);
+
+            if (!hasMathOperator && !hasMathIntent) return null;
+
             let cleanExpr = str.replace(/[^0-9\+\-\*\/\%\^\(\)\.\s]/g, '');
             if (!cleanExpr || !/[0-9]/.test(cleanExpr)) return null;
-
-            const isPureMath = /^[0-9\s\+\-\*\/\%\^\(\)\.]+$/.test(cleanExpr);
-            if (!isPureMath) return null;
 
             try {
                 let evalExpr = cleanExpr.replace(/\^/g, '**');
