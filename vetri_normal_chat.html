@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Deep Intent & Negative Question Solver Engine</title>
+    <title>VETRI AI STUDIO | Option Verification & Mismatch Warning Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING DEEP QUESTION INTENT & NEGATIVE QUESTION SOLVER...
+            INITIALIZING OPTION VERIFICATION & MISMATCH WARNING ENGINE...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · DEEP QUESTION INTENT & NEGATIVE QUESTION SOLVER
+            <span>⚡</span> VETRI AI STUDIO · OPTION VERIFICATION & MISMATCH WARNING ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -465,7 +465,7 @@
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
                 } else if (currentMode === 'normal') {
-                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Reading full question carefully & analyzing negative/positive intent for "${escapeHtml(text)}"...</div>`;
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Reading full question & verifying options for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
                     box.scrollTop = box.scrollHeight;
 
@@ -590,7 +590,7 @@
             return str;
         }
 
-        // Universal MCQ Parser & Solver Engine (with Negative & Opposite Polarity Intent Analyzer)
+        // Universal MCQ Parser & Solver Engine (with Option Mismatch & Verification Warning System)
         async function solveUniversalMCQQueryAsync(rawQuery) {
             const str = rawQuery.trim();
             const upper = str.toUpperCase();
@@ -606,133 +606,130 @@
             const questionStem = firstOptIdx !== -1 ? str.substring(0, firstOptIdx).trim() : str;
 
             const normStem = normalizeSearchQuery(questionStem).toUpperCase();
-
-            // Detect if question stem contains negative words ("NOT", "EXCEPT", "INCORRECT", "FALSE", "NEVER", "UNTRUE", "NON")
             const isNegativeQuestion = /\b(NOT|EXCEPT|INCORRECT|FALSE|NEVER|UNTRUE|NON)\b/i.test(questionStem);
 
             // 1. Silicon Valley of India / City Nicknames
             if (normStem.includes('SILICON VALLEY') || normStem.includes('IT CAPITAL')) {
+                const optB = matches.find(m => m.toUpperCase().includes('BENGALURU') || m.toUpperCase().includes('BANGALORE'));
                 if (!isNegativeQuestion) {
-                    const optB = matches.find(m => m.toUpperCase().includes('BENGALURU') || m.toUpperCase().includes('BANGALORE'));
-                    const matchedLabel = optB ? optB.trim() : "B) Bengaluru";
-                    return {
-                        category: "🎯 MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Bengaluru (Bangalore) is known as the Silicon Valley of India because it is the country's main IT exporter and technology hub, home to ISRO headquarters, Infosys, Wipro, and thousands of tech startups.`
-                    };
-                } else {
-                    const nonB = matches.find(m => !m.toUpperCase().includes('BENGALURU') && !m.toUpperCase().includes('BANGALORE'));
-                    const matchedLabel = nonB ? nonB.trim() : matches[0].trim();
-                    return {
-                        category: "🎯 NEGATIVE MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER FOR NEGATIVE QUESTION: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Bengaluru is the Silicon Valley of India. Therefore, ${escapeHtml(matchedLabel)} is NOT the Silicon Valley of India.`
-                    };
+                    if (optB) {
+                        return {
+                            category: "🎯 MCQ DIRECT ANSWER",
+                            summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optB.trim())} (✔)</span></strong><br><br>
+                            • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
+                            • <strong>Factual Explanation:</strong> Bengaluru (Bangalore) is known as the Silicon Valley of India because it is the country's main IT exporter and technology hub.`
+                        };
+                    } else {
+                        return {
+                            category: "⚠️ OPTION MISMATCH WARNING",
+                            summary: `⚠️ <strong>FACTUAL ANSWER IS NOT LISTED IN YOUR OPTIONS:</strong><br><br>
+                            • <strong>True Factual Answer:</strong> <span style="color:var(--gold); font-size:22px; font-weight:900;">Bengaluru (Bangalore)</span><br>
+                            • <strong>Your Provided Options:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}<br><br>
+                            • <strong>Explanation:</strong> The correct answer for "Silicon Valley of India" is <strong>Bengaluru</strong>, but it is <strong>NOT present</strong> in the options you provided! Please double-check your options choices.`
+                        };
+                    }
                 }
             }
 
             // 2. Currency of Japan
             if (normStem.includes('CURRENCY') && normStem.includes('JAPAN')) {
+                const optC = matches.find(m => m.toUpperCase().includes('YEN'));
                 if (!isNegativeQuestion) {
-                    const optC = matches.find(m => m.toUpperCase().includes('YEN'));
-                    const matchedLabel = optC ? optC.trim() : "C) Yen";
-                    return {
-                        category: "🎯 MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> The Japanese Yen (JPY, symbol: ¥) is the official currency of Japan.`
-                    };
-                } else {
-                    const nonYen = matches.find(m => !m.toUpperCase().includes('YEN'));
-                    const matchedLabel = nonYen ? nonYen.trim() : matches[0].trim();
-                    return {
-                        category: "🎯 NEGATIVE MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER FOR NEGATIVE QUESTION: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Yen is the currency of Japan. Therefore, ${escapeHtml(matchedLabel)} is NOT the currency of Japan.`
-                    };
+                    if (optC) {
+                        return {
+                            category: "🎯 MCQ DIRECT ANSWER",
+                            summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optC.trim())} (✔)</span></strong><br><br>
+                            • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
+                            • <strong>Factual Explanation:</strong> The Japanese Yen (JPY, symbol: ¥) is the official currency of Japan.`
+                        };
+                    } else {
+                        return {
+                            category: "⚠️ OPTION MISMATCH WARNING",
+                            summary: `⚠️ <strong>FACTUAL ANSWER IS NOT LISTED IN YOUR OPTIONS:</strong><br><br>
+                            • <strong>True Factual Answer:</strong> <span style="color:var(--gold); font-size:22px; font-weight:900;">Yen (JPY)</span><br>
+                            • <strong>Your Provided Options:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}<br><br>
+                            • <strong>Explanation:</strong> The currency of Japan is <strong>Yen</strong>, but it is <strong>NOT listed</strong> among your options (${matches.map(m => escapeHtml(m.trim())).join(', ')}).`
+                        };
+                    }
                 }
             }
 
-            // 3. Largest Planet vs Smallest Planet vs NOT Largest
+            // 3. Largest Planet
             if (normStem.includes('LARGEST PLANET') || normStem.includes('BIGGEST PLANET')) {
+                const optJ = matches.find(m => m.toUpperCase().includes('JUPITER'));
                 if (!isNegativeQuestion) {
-                    const optJ = matches.find(m => m.toUpperCase().includes('JUPITER'));
-                    const matchedLabel = optJ ? optJ.trim() : "Jupiter";
-                    return {
-                        category: "🎯 MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Jupiter is the largest planet in our solar system, more than twice as massive as all other planets combined.`
-                    };
-                } else {
-                    const nonJ = matches.find(m => !m.toUpperCase().includes('JUPITER'));
-                    const matchedLabel = nonJ ? nonJ.trim() : matches[0].trim();
-                    return {
-                        category: "🎯 NEGATIVE MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER FOR NEGATIVE QUESTION: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Jupiter is the largest planet in our solar system. Therefore, ${escapeHtml(matchedLabel)} is NOT the largest planet.`
-                    };
+                    if (optJ) {
+                        return {
+                            category: "🎯 MCQ DIRECT ANSWER",
+                            summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optJ.trim())} (✔)</span></strong><br><br>
+                            • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
+                            • <strong>Factual Explanation:</strong> Jupiter is the largest planet in our solar system, more than twice as massive as all other planets combined.`
+                        };
+                    } else {
+                        return {
+                            category: "⚠️ OPTION MISMATCH WARNING",
+                            summary: `⚠️ <strong>FACTUAL ANSWER IS NOT LISTED IN YOUR OPTIONS:</strong><br><br>
+                            • <strong>True Factual Answer:</strong> <span style="color:var(--gold); font-size:22px; font-weight:900;">Jupiter</span><br>
+                            • <strong>Your Provided Options:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}<br><br>
+                            • <strong>Explanation:</strong> Jupiter is the largest planet in the Solar System. However, the correct answer (Jupiter) is <strong>NOT present</strong> in your provided options (${matches.map(m => escapeHtml(m.trim())).join(', ')}). Please verify your question!`
+                        };
+                    }
                 }
             }
 
             // 4. Red Planet
             if (normStem.includes('RED PLANET')) {
+                const optM = matches.find(m => m.toUpperCase().includes('MARS'));
                 if (!isNegativeQuestion) {
-                    const optM = matches.find(m => m.toUpperCase().includes('MARS'));
-                    const matchedLabel = optM ? optM.trim() : "Mars";
-                    return {
-                        category: "🎯 MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Mars is known as the Red Planet due to iron oxide (rust) covering its dusty surface.`
-                    };
-                } else {
-                    const nonM = matches.find(m => !m.toUpperCase().includes('MARS'));
-                    const matchedLabel = nonM ? nonM.trim() : matches[0].trim();
-                    return {
-                        category: "🎯 NEGATIVE MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER FOR NEGATIVE QUESTION: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Mars is the Red Planet. Therefore, ${escapeHtml(matchedLabel)} is NOT the Red Planet.`
-                    };
+                    if (optM) {
+                        return {
+                            category: "🎯 MCQ DIRECT ANSWER",
+                            summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optM.trim())} (✔)</span></strong><br><br>
+                            • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
+                            • <strong>Factual Explanation:</strong> Mars is known as the Red Planet due to iron oxide (rust) covering its dusty surface.`
+                        };
+                    } else {
+                        return {
+                            category: "⚠️ OPTION MISMATCH WARNING",
+                            summary: `⚠️ <strong>FACTUAL ANSWER IS NOT LISTED IN YOUR OPTIONS:</strong><br><br>
+                            • <strong>True Factual Answer:</strong> <span style="color:var(--gold); font-size:22px; font-weight:900;">Mars</span><br>
+                            • <strong>Your Provided Options:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}<br><br>
+                            • <strong>Explanation:</strong> Mars is the Red Planet. The correct answer (Mars) is <strong>NOT listed</strong> among your options (${matches.map(m => escapeHtml(m.trim())).join(', ')}).`
+                        };
+                    }
                 }
             }
 
             // 5. Telephone Invention
             if (normStem.includes('TELEPHONE') && (normStem.includes('INVENT') || normStem.includes('WHO'))) {
+                const optB = matches.find(m => m.toUpperCase().includes('BELL'));
                 if (!isNegativeQuestion) {
-                    const optB = matches.find(m => m.toUpperCase().includes('BELL'));
-                    const matchedLabel = optB ? optB.trim() : "Alexander Graham Bell";
-                    return {
-                        category: "🎯 MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Alexander Graham Bell patented the electric telephone in 1876.`
-                    };
-                } else {
-                    const nonB = matches.find(m => !m.toUpperCase().includes('BELL'));
-                    const matchedLabel = nonB ? nonB.trim() : matches[0].trim();
-                    return {
-                        category: "🎯 NEGATIVE MCQ DIRECT ANSWER",
-                        summary: `✅ <strong>CORRECT ANSWER FOR NEGATIVE QUESTION: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedLabel)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
-                        • <strong>Factual Explanation:</strong> Alexander Graham Bell invented the telephone. Therefore, ${escapeHtml(matchedLabel)} did NOT invent the telephone.`
-                    };
+                    if (optB) {
+                        return {
+                            category: "🎯 MCQ DIRECT ANSWER",
+                            summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(optB.trim())} (✔)</span></strong><br><br>
+                            • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
+                            • <strong>Factual Explanation:</strong> Alexander Graham Bell patented the electric telephone in 1876.`
+                        };
+                    } else {
+                        return {
+                            category: "⚠️ OPTION MISMATCH WARNING",
+                            summary: `⚠️ <strong>FACTUAL ANSWER IS NOT LISTED IN YOUR OPTIONS:</strong><br><br>
+                            • <strong>True Factual Answer:</strong> <span style="color:var(--gold); font-size:22px; font-weight:900;">Alexander Graham Bell</span><br>
+                            • <strong>Your Provided Options:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}<br><br>
+                            • <strong>Explanation:</strong> Alexander Graham Bell invented the telephone, but his name is <strong>NOT listed</strong> in the options you provided.`
+                        };
+                    }
                 }
             }
 
-            // Dynamic Live Web Search MCQ Solver Fallback with Polarity Aware Matching!
+            // Dynamic Live Web Search MCQ Solver Fallback with Option Verification Warning System!
             const liveWebData = await fetchLiveWebSummaryAsync(questionStem);
             if (liveWebData && liveWebData.summary) {
                 const summaryUpper = liveWebData.summary.toUpperCase();
                 let matchedOpt = null;
 
                 if (!isNegativeQuestion) {
-                    // Positive question: find option that IS in summary
                     for (let opt of matches) {
                         const cleanOptVal = opt.replace(/^[A-D1-4][\.\)]\s*/, '').trim().toUpperCase();
                         if (cleanOptVal.length > 1 && summaryUpper.includes(cleanOptVal)) {
@@ -741,7 +738,6 @@
                         }
                     }
                 } else {
-                    // Negative question: find option that is NOT in summary
                     for (let opt of matches) {
                         const cleanOptVal = opt.replace(/^[A-D1-4][\.\)]\s*/, '').trim().toUpperCase();
                         if (cleanOptVal.length > 1 && !summaryUpper.includes(cleanOptVal)) {
@@ -755,15 +751,16 @@
                     return {
                         category: isNegativeQuestion ? "🎯 NEGATIVE MCQ DIRECT ANSWER" : "🎯 LIVE WEB MCQ DIRECT ANSWER",
                         summary: `✅ <strong>CORRECT ANSWER: <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOpt)} (✔)</span></strong><br><br>
-                        • <strong>Full Question Analyzed (${isNegativeQuestion ? 'Negative Intent Detected' : 'Positive Intent'}):</strong> "${escapeHtml(questionStem)}"<br>
+                        • <strong>Full Question Analyzed:</strong> "${escapeHtml(questionStem)}"<br>
                         • <strong>Factual Explanation (${escapeHtml(liveWebData.title)}):</strong> ${escapeHtml(liveWebData.summary)}`
                     };
                 } else {
                     return {
-                        category: "🎯 LIVE WEB KNOWLEDGE FOR MCQ",
-                        summary: `💡 <strong>FACTUAL KNOWLEDGE FOR QUESTION: "${escapeHtml(questionStem)}"</strong><br><br>
-                        ${escapeHtml(liveWebData.summary)}<br><br>
-                        • <strong>Options Provided:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}`
+                        category: "⚠️ OPTION MISMATCH WARNING",
+                        summary: `⚠️ <strong>FACTUAL ANSWER IS NOT LISTED IN YOUR OPTIONS:</strong><br><br>
+                        • <strong>Live Factual Answer Summary (${escapeHtml(liveWebData.title)}):</strong> ${escapeHtml(liveWebData.summary)}<br><br>
+                        • <strong>Your Provided Options:</strong> ${matches.map(m => escapeHtml(m.trim())).join(' | ')}<br><br>
+                        • <strong>Notice:</strong> The correct factual answer is detailed above, but none of your options (${matches.map(m => escapeHtml(m.trim())).join(', ')}) match the true answer!`
                     };
                 }
             }
@@ -918,7 +915,6 @@
         function getSolarSystemAndGKDetails(query, upper) {
             const normUpper = normalizeSearchQuery(query).toUpperCase();
 
-            // Check if asking for SMALLEST, CLOSEST, FURTHEST, HOTTEST, etc.
             if (normUpper.includes('SMALLEST PLANET') || (normUpper.includes('SMALL') && normUpper.includes('PLANET'))) {
                 return {
                     category: "🪐 SOLAR SYSTEM & ASTRONOMY INTEL",
@@ -1224,7 +1220,7 @@
             const upper = userText.toUpperCase();
             const cleanText = userText.replace(/[^a-zA-Z\s]/g, '');
 
-            // 0. Universal MCQ Solver Engine (Prioritizes reading full question & options A, B, C, D with Negative Intent Support)
+            // 0. Universal MCQ Solver Engine (Prioritizes reading full question & options A, B, C, D with Option Verification System)
             const mcqResult = await solveUniversalMCQQueryAsync(userText);
             if (mcqResult) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
