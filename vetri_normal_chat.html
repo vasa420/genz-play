@@ -1283,7 +1283,7 @@
             return null;
         }
 
-        // Dedicated API Key AI Engine Completion Handler
+        // Dedicated API Key AI Engine Completion Handler (Zero Positional Bias & Deterministic Sampling temperature: 0.0)
         async function callApiKeyDirectEngineAsync(promptText) {
             const apiKey = localStorage.getItem('vetri_custom_api_key');
             if (!apiKey) return null;
@@ -1297,10 +1297,14 @@
                     },
                     body: JSON.stringify({
                         messages: [
-                            { role: 'system', content: 'You are Vetri AI, a highly accurate, truthful, and helpful AI assistant. Answer the user exact question directly and accurately.' },
+                            { 
+                                role: 'system', 
+                                content: 'You are Vetri AI, an unbiased, fact-checked educational quiz evaluator. You evaluate all options A, B, C, D individually FIRST based on factual facts before selecting the answer. Never default to option A or slot positions. Temperature is 0.0.' 
+                            },
                             { role: 'user', content: promptText }
                         ],
-                        model: 'openai'
+                        model: 'openai',
+                        temperature: 0.0
                     })
                 });
 
