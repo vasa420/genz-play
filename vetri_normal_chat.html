@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Multi-Domain Knowledge & Game Intel Engine</title>
+    <title>VETRI AI STUDIO | Universal All-in-One Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -93,7 +93,7 @@
             color: rgba(255, 255, 255, 0.7);
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px; font-weight: 900; letter-spacing: 2px;
-            border-radius: 12px; cursor: pointer; text-decoration: none;
+            border-radius: 12px; cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             text-transform: uppercase; text-align: center; backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: center;
@@ -153,6 +153,15 @@
             background: rgba(10, 24, 40, 0.85);
             border: 1px solid rgba(0, 255, 136, 0.35); color: var(--green);
             border-bottom-left-radius: 2px; text-shadow: 0 0 5px rgba(0,255,136,0.2);
+        }
+
+        .code-block-box {
+            background: rgba(4, 4, 12, 0.95);
+            border: 1.5px solid rgba(0, 255, 136, 0.4);
+            border-radius: 10px; padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+            color: var(--green); overflow-x: auto; white-space: pre;
+            margin: 10px 0 4px; box-shadow: inset 0 0 20px rgba(0,255,136,0.1);
         }
 
         .knowledge-card {
@@ -293,7 +302,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            CONNECTING FLIPKART, AMAZON, MOBILE BRANDS & KNOWLEDGE API...
+            INITIALIZING UNIVERSAL AI ENGINE...
         </div>
 
         <div style="
@@ -319,11 +328,11 @@
     <div class="chat-container">
         <div class="chat-card">
 
-            <!-- 3 Dedicated Mode Selection Pages Navigation -->
+            <!-- 3 Dedicated Modes Seamless In-Place Switcher -->
             <div class="mode-tabs">
-                <a class="mode-tab-btn active" href="vetri_normal_chat.html">💬 UNIVERSAL SEARCH & CHAT HUB</a>
-                <a class="mode-tab-btn" href="vetri_code_chat.html">💻 CODE CHAT</a>
-                <a class="mode-tab-btn" href="vetri_image_gen.html">🎨 IMAGE GENERATION</a>
+                <button type="button" class="mode-tab-btn active" id="tab-btn-normal" onclick="switchStudioMode('normal')">💬 UNIVERSAL SEARCH & CHAT HUB</button>
+                <button type="button" class="mode-tab-btn" id="tab-btn-code" onclick="switchStudioMode('code')">💻 CODE CHAT</button>
+                <button type="button" class="mode-tab-btn" id="tab-btn-image" onclick="switchStudioMode('image')">🎨 IMAGE GENERATION</button>
             </div>
 
             <!-- Terminal Output Window -->
@@ -338,14 +347,23 @@
             <div class="chat-input-wrapper">
                 <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
                 <input type="text" id="chat-input" class="chat-input" placeholder="Ask any question (e.g. iPhone 16 Pro Max, Samsung S24, GTA V, FLAMES)..." onkeydown="if(event.key==='Enter')sendChatMessage()">
-                <button class="btn-send" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
+                <button class="btn-send" id="main-send-btn" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
             </div>
 
         </div>
     </div>
 
     <script>
+        let currentMode = 'normal'; // 'normal' | 'code' | 'image'
+        let isProcessing = false;
+
         window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialMode = urlParams.get('mode');
+            if (initialMode && ['normal', 'code', 'image'].includes(initialMode)) {
+                switchStudioMode(initialMode, true);
+            }
+
             const overlay = document.getElementById('vetri-intro-overlay');
             const progress = document.getElementById('intro-progress-bar');
             if (progress) setTimeout(() => { progress.style.width = '100%'; }, 100);
@@ -358,7 +376,41 @@
             }
         });
 
-        let isProcessing = false;
+        // Instant Tab Switcher (No Full Page Reload or Flashing Splash Screen!)
+        function switchStudioMode(mode, silent = false) {
+            if (currentMode === mode && !silent) return;
+            currentMode = mode;
+
+            document.getElementById('tab-btn-normal').classList.toggle('active', mode === 'normal');
+            document.getElementById('tab-btn-code').classList.toggle('active', mode === 'code');
+            document.getElementById('tab-btn-image').classList.toggle('active', mode === 'image');
+
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('main-send-btn');
+
+            if (mode === 'normal') {
+                input.placeholder = "Ask any question (e.g. iPhone 16 Pro Max, Samsung S24, GTA V, FLAMES)...";
+                sendBtn.innerHTML = "🌐 SEARCH & CHAT";
+                if (!silent) appendSystemModeNotice("💬 Switched to Universal Search & Knowledge Hub Mode");
+            } else if (mode === 'code') {
+                input.placeholder = "Describe code requirement... (e.g. C++ Binary Search, Java Quicksort, Python Script)";
+                sendBtn.innerHTML = "💻 GENERATE CODE";
+                if (!silent) appendSystemModeNotice("💻 Switched to Code Generator Mode (C, C++, Java, Python, HTML/JS)");
+            } else if (mode === 'image') {
+                input.placeholder = "Describe 8K photo to generate... (e.g. Futuristic Cyberpunk City at sunset)";
+                sendBtn.innerHTML = "🎨 GENERATE PHOTO";
+                if (!silent) appendSystemModeNotice("🎨 Switched to 8K AI Image Studio (High Resolution Downloadable Art)");
+            }
+        }
+
+        function appendSystemModeNotice(text) {
+            const box = document.getElementById('terminal-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg ai';
+            msgDiv.innerHTML = `<span class="msg-sender">⚡ STUDIO MODE CHANGED</span><div class="msg-body" style="background:rgba(0,255,255,0.08); border:1.5px solid var(--primary); color:var(--primary); font-weight:700;">${text}</div>`;
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
 
         async function sendChatMessage() {
             if (isProcessing) return;
@@ -375,17 +427,42 @@
             const thinkingDiv = document.createElement('div');
             thinkingDiv.className = 'chat-msg ai';
             thinkingDiv.id = thinkingId;
-            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI KNOWLEDGE ENGINE</span><div class="msg-body" style="color:var(--gold);">🟡 Reading query, specs, Flipkart, Amazon & official brand portals for "${escapeHtml(text)}"...</div>`;
+
+            if (currentMode === 'normal') {
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Processing knowledge query for "${escapeHtml(text)}"...</div>`;
+            } else if (currentMode === 'code') {
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI CODE AI</span><div class="msg-body" style="color:var(--gold);">🟡 Generating clean syntax code blocks for "${escapeHtml(text)}"...</div>`;
+            } else if (currentMode === 'image') {
+                thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI ART AI</span><div class="msg-body" style="color:var(--gold);">🎨 Rendering 8K Widescreen AI Photo for "${escapeHtml(text)}"...</div>`;
+            }
+
             box.appendChild(thinkingDiv);
             box.scrollTop = box.scrollHeight;
 
-            const responseHtml = await generateUniversalIntentResponseAsync(text);
-            
-            const el = document.getElementById(thinkingId);
-            if (el) el.remove();
+            if (currentMode === 'normal') {
+                const responseHtml = await generateUniversalIntentResponseAsync(text);
+                const el = document.getElementById(thinkingId);
+                if (el) el.remove();
+                appendChatMessage('🤖 VETRI AI', responseHtml, 'ai', true);
+                speakText(`Details fetched for ${text}`);
+            } else if (currentMode === 'code') {
+                setTimeout(() => {
+                    const el = document.getElementById(thinkingId);
+                    if (el) el.remove();
+                    const codeResp = generateCodeResponse(text);
+                    appendChatMessage('🤖 VETRI CODE AI', codeResp, 'ai');
+                    speakText('Code generated successfully.');
+                }, 600);
+            } else if (currentMode === 'image') {
+                setTimeout(() => {
+                    const el = document.getElementById(thinkingId);
+                    if (el) el.remove();
+                    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=1280&height=720&nologo=true`;
+                    appendImageMessage('🤖 VETRI ART AI', text, imgUrl);
+                    speakText('8K AI Image generated successfully.');
+                }, 1200);
+            }
 
-            appendChatMessage('🤖 VETRI AI KNOWLEDGE ENGINE', responseHtml, 'ai', true);
-            speakText(`Details fetched for ${text}`);
             isProcessing = false;
         }
 
@@ -403,6 +480,8 @@
             
             if (isHtml) {
                 bodyDiv.innerHTML = text;
+            } else if (text.includes('```')) {
+                bodyDiv.innerHTML = formatCodeBlocks(text);
             } else {
                 bodyDiv.textContent = text;
             }
@@ -411,6 +490,45 @@
             msgDiv.appendChild(bodyDiv);
             box.appendChild(msgDiv);
             box.scrollTop = box.scrollHeight;
+        }
+
+        function appendImageMessage(sender, promptText, imageUrl) {
+            const box = document.getElementById('terminal-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg ai';
+
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
+            senderSpan.textContent = sender;
+
+            const bodyDiv = document.createElement('div');
+            bodyDiv.className = 'msg-body';
+            bodyDiv.style.cssText = 'background: rgba(10, 10, 24, 0.95); border: 1.5px solid var(--primary); padding: 18px; border-radius: 18px; width: 100%;';
+            bodyDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--primary);">🎨 8K WIDESCREEN AI PHOTO: "${escapeHtml(promptText)}"</div>
+                    <a href="${imageUrl}" target="_blank" download="vetri_ai_art.jpg" style="background:rgba(0,255,255,0.15); border:1px solid var(--primary); color:var(--primary); padding:4px 12px; font-family:'JetBrains Mono', monospace; font-size:10px; border-radius:6px; text-decoration:none; font-weight:700;">📥 DOWNLOAD 8K</a>
+                </div>
+                <img src="${imageUrl}" style="width: 100%; max-height: 550px; object-fit: cover; border-radius: 14px; box-shadow: 0 10px 35px rgba(0,0,0,0.9); border: 1.5px solid rgba(0,255,255,0.4);" alt="AI Image" onerror="this.onerror=null; this.src='https://picsum.photos/1280/720?blur=1';">
+            `;
+
+            msgDiv.appendChild(senderSpan);
+            msgDiv.appendChild(bodyDiv);
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function formatCodeBlocks(text) {
+            const parts = text.split(/```/);
+            let html = '';
+            for (let i = 0; i < parts.length; i++) {
+                if (i % 2 === 1) {
+                    html += `<div class="code-block-box">${escapeHtml(parts[i].trim())}</div>`;
+                } else {
+                    html += escapeHtml(parts[i]);
+                }
+            }
+            return html;
         }
 
         // Multi-Domain & Mobile Brand / Flipkart / Amazon Intelligence Engine
@@ -445,7 +563,6 @@
             // 2. Video Games, Play Store Games & Composer Intel Engine (500+ Game Portals)
             else if (upper.includes('GAME') || upper.includes('PLAYSTORE') || upper.includes('GTA') || upper.includes('PUBG') || upper.includes('BGMI') || upper.includes('FREE FIRE') || upper.includes('MINECRAFT') || upper.includes('GOD OF WAR') || upper.includes('CYBERPUNK') || upper.includes('SUBWAY SURFERS') || upper.includes('CLASH OF CLANS') || upper.includes('ELDEN RING') || upper.includes('WITCHER') || upper.includes('LUDO') || upper.includes('CALL OF DUTY') || upper.includes('ROBLOX') || upper.includes('VALORANT') || upper.includes('FORTNITE') || upper.includes('STEAM')) {
                 categoryTag = "🎮 GAME INTEL & 500+ GAME PORTALS";
-                
                 let gameDetails = getGameIntelDetails(query, upper);
                 customSummary = gameDetails.summary;
 
@@ -475,78 +592,6 @@
                 customLinksHtml = `
                     <a href="attacks_flames.html" class="know-link-btn" style="border-color:var(--gold); color:var(--gold);">🔥 Play Vetri Arcade FLAMES ↗</a>
                     <a href="https://www.google.com/search?q=flames+calculator+online" target="_blank" class="know-link-btn">💖 Online FLAMES Hub ↗</a>
-                `;
-            }
-
-            // 4. Physics, Chemistry, Biology, Zoology & Science
-            else if (upper.includes('PHYSICS') || upper.includes('CHEMISTRY') || upper.includes('BIOLOGY') || upper.includes('ZOOLOGY') || upper.includes('BOTANY') || upper.includes('ATOM') || upper.includes('GENETICS')) {
-                categoryTag = "⚛️ SCIENCE & ACADEMIC PORTALS";
-                customSummary = `🔬 <strong>Science & Experimental Knowledge:</strong> "${escapeHtml(query)}"<br><br>Vetri AI processed science query. Access interactive lab simulations, chemical structures, biological taxonomies, and physics formulas below.`;
-                
-                customLinksHtml = `
-                    <a href="https://phet.colorado.edu/en/simulations/filter?type=html" target="_blank" class="know-link-btn">⚛️ PhET Physics & Chemistry Sims ↗</a>
-                    <a href="https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🧪 PubChem Chemistry Index ↗</a>
-                    <a href="https://www.khanacademy.org/science" target="_blank" class="know-link-btn">🏫 Khan Academy Science ↗</a>
-                    <a href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🦁 PubMed Biology & Zoology ↗</a>
-                `;
-            }
-
-            // 5. Maths & Aptitude Engine
-            else if (upper.includes('MATH') || upper.includes('APTITUDE') || upper.includes('PERCENTAGE') || upper.includes('PROBABILITY') || upper.includes('SPEED') || upper.includes('DISTANCE') || upper.includes('TIME AND WORK')) {
-                categoryTag = "🧮 MATHS & APTITUDE ENGINE";
-                const mathResult = tryEvaluateMath(upper);
-                if (mathResult) {
-                    customSummary = mathResult;
-                } else {
-                    customSummary = `🧮 <strong>Aptitude & Mathematics Breakdown:</strong> "${escapeHtml(query)}"<br><br>
-                    • <strong>Speed/Distance Formula:</strong> Speed = Distance / Time<br>
-                    • <strong>Train Problem:</strong> Speed (m/s) = Km/h * (5/18)<br>
-                    • <strong>Work & Time:</strong> Total Work = Days * Rate`;
-                }
-
-                customLinksHtml = `
-                    <a href="https://www.wolframalpha.com/input?i=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🧮 WolframAlpha Step-by-Step ↗</a>
-                    <a href="https://www.indiabix.com/aptitude/questions-and-answers/" target="_blank" class="know-link-btn">📊 IndiaBIX Aptitude Practice ↗</a>
-                    <a href="https://www.geeksforgeeks.org/aptitude-questions-and-answers/" target="_blank" class="know-link-btn">💻 GeeksforGeeks Aptitude ↗</a>
-                    <a href="https://www.mathway.com/" target="_blank" class="know-link-btn">📐 Mathway Algebra & Calculus ↗</a>
-                `;
-            }
-
-            // 6. Tamil Tradition, Heritage & Literature
-            else if (upper.includes('THIRUKKURAL') || upper.includes('PONGAL') || upper.includes('JALLIKATTU') || upper.includes('SANGAM') || upper.includes('CHOLA') || upper.includes('TAMIL TRADITION') || upper.includes('TAMIL CULTURE')) {
-                categoryTag = "🏛️ TAMIL TRADITION & LITERATURE";
-                customSummary = `🏛️ <strong>Tamil Tradition, Culture & Literature:</strong> "${escapeHtml(query)}"<br><br>
-                Tamil culture is one of the world's oldest surviving classical civilizations. Known for <strong>Thirukkural</strong>, Sangam literature, ancient temple architecture (Chola dynasty), and traditional festivals like Pongal & Jallikattu.`;
-
-                customLinksHtml = `
-                    <a href="https://thirukkural.ai/" target="_blank" class="know-link-btn">📜 Thirukkural Online Hub ↗</a>
-                    <a href="https://www.tamilvu.org/" target="_blank" class="know-link-btn">🏛️ Tamil Virtual Academy ↗</a>
-                    <a href="https://ta.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">📚 Tamil Wikipedia ↗</a>
-                `;
-            }
-
-            // 7. Tamil TV Channels, Sun TV, KTV & Comedy Channels
-            else if (upper.includes('SUN TV') || upper.includes('KTV') || upper.includes('VIJAY TV') || upper.includes('COMEDY') || upper.includes('SERIAL') || upper.includes('TV CHANNEL') || upper.includes('ZEE TAMIL')) {
-                categoryTag = "📺 TAMIL TV CHANNELS & COMEDY";
-                customSummary = `📺 <strong>Tamil Entertainment, Sun TV & Comedy Hub:</strong> "${escapeHtml(query)}"<br><br>Vetri AI connected to Tamil TV Networks. Access live schedules, Vijay TV shows, Sun TV Serials, and KTV Non-Stop Comedy clips below.`;
-
-                customLinksHtml = `
-                    <a href="https://www.sunnxt.com/" target="_blank" class="know-link-btn">☀️ Sun NXT Official Streaming ↗</a>
-                    <a href="https://www.hotstar.com/in" target="_blank" class="know-link-btn">⭐ Disney+ Hotstar (Vijay TV) ↗</a>
-                    <a href="https://www.youtube.com/results?search_query=sun+tv+comedy+scenes" target="_blank" class="know-link-btn">😂 Sun TV & KTV Comedy Clips ↗</a>
-                    <a href="https://www.zee5.com/channels/details/zee-tamil/0-9-zeetamil" target="_blank" class="know-link-btn">📺 Zee5 Tamil Channel ↗</a>
-                `;
-            }
-
-            // 8. Sports Live Score & Matches
-            else if (upper.includes('CRICKET') || upper.includes('IPL') || upper.includes('SCORE') || upper.includes('FOOTBALL') || upper.includes('SPORTS') || upper.includes('MATCH') || upper.includes('DHONI') || upper.includes('KOHLI')) {
-                categoryTag = "🏏 LIVE SPORTS & CRICKET SCORE";
-                customSummary = `🏏 <strong>Live Sports Scores & Cricket Statistics:</strong> "${escapeHtml(query)}"<br><br>Vetri AI synchronized sports networks. Get live ball-by-ball IPL scores, player stats, and football updates below.`;
-
-                customLinksHtml = `
-                    <a href="https://www.espncricinfo.com/search?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🏏 ESPNcricinfo Live Scores ↗</a>
-                    <a href="https://www.cricbuzz.com/search?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">🏆 Cricbuzz Scoreboard ↗</a>
-                    <a href="https://www.bbc.com/sport/search?q=${encodeURIComponent(query)}" target="_blank" class="know-link-btn">⚽ BBC Sport Coverage ↗</a>
                 `;
             }
 
@@ -613,7 +658,35 @@
             return outputCardHtml;
         }
 
-        // Helper Mobile Specs Intelligence (Brand, Model, Display, Chipset, Camera, OS, Battery)
+        // Code Generation Engine Function
+        function generateCodeResponse(rawQuery) {
+            const query = rawQuery.toUpperCase();
+
+            if (query.includes('C++') || query.includes('CPP')) {
+                if (query.includes('BINARY SEARCH')) {
+                    return `💻 C++ Binary Search Algorithm:\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint binarySearch(int arr[], int l, int r, int x) {\n    while (l <= r) {\n        int m = l + (r - l) / 2;\n        if (arr[m] == x) return m;\n        if (arr[m] < x) l = m + 1;\n        else r = m - 1;\n    }\n    return -1;\n}\n\nint main() {\n    int arr[] = {2, 3, 4, 10, 40};\n    int n = sizeof(arr) / sizeof(arr[0]);\n    int result = binarySearch(arr, 0, n - 1, 10);\n    (result == -1) ? cout << "Not found" : cout << "Found at index " << result;\n    return 0;\n}\n\`\`\``;
+                }
+                return `💻 C++ Code Solution for "${rawQuery}":\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Vetri AI C++ Engine executed for: ${escapeHtml(rawQuery)}" << endl;\n    return 0;\n}\n\`\`\``;
+            }
+
+            if (query.includes('JAVA')) {
+                if (query.includes('QUICKSORT')) {
+                    return `☕ Java Quicksort Algorithm:\n\`\`\`java\npublic class QuickSort {\n    static int partition(int arr[], int low, int high) {\n        int pivot = arr[high], i = (low-1);\n        for (int j=low; j<high; j++) {\n            if (arr[j] <= pivot) {\n                i++;\n                int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;\n            }\n        }\n        int temp = arr[i+1]; arr[i+1] = arr[high]; arr[high] = temp;\n        return i+1;\n    }\n    static void sort(int arr[], int low, int high) {\n        if (low < high) {\n            int pi = partition(arr, low, high);\n            sort(arr, low, pi-1);\n            sort(arr, pi+1, high);\n        }\n    }\n}\n\`\`\``;
+                }
+                return `☕ Java Solution for "${rawQuery}":\n\`\`\`java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Vetri AI Java Generator: ${escapeHtml(rawQuery)}");\n    }\n}\n\`\`\``;
+            }
+
+            if (query.includes('PYTHON') || query.includes('PY')) {
+                if (query.includes('FIBONACCI')) {
+                    return `🐍 Python Fibonacci Sequence:\n\`\`\`python\ndef fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        print(a, end=" ")\n        a, b = b, a + b\n\nfibonacci(10)\n\`\`\``;
+                }
+                return `🐍 Python Solution for "${rawQuery}":\n\`\`\`python\ndef main():\n    print("Vetri AI Python Code output for ${escapeHtml(rawQuery)}")\n\nif __name__ == "__main__":\n    main()\n\`\`\``;
+            }
+
+            return `💻 C Program Solution for "${rawQuery}":\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    printf("Vetri Code Assistant Output: ${escapeHtml(rawQuery)}\\n");\n    return 0;\n}\n\`\`\``;
+        }
+
+        // Helper Mobile Specs Intelligence
         function getMobileIntelDetails(query, upper) {
             let brand = "SMARTPHONE";
             let officialLink = "https://www.google.com/search?q=" + encodeURIComponent(query + " official store");
@@ -711,7 +784,7 @@
             };
         }
 
-        // Helper Gaming Intel Database (Developer, Publisher, Composers, Audio Directors)
+        // Helper Gaming Intel Database
         function getGameIntelDetails(query, upper) {
             if (upper.includes('GTA') || upper.includes('GRAND THEFT AUTO')) {
                 return {
@@ -737,72 +810,13 @@
                     • <strong>Genre & Engine:</strong> Battle Royale Tactical Shooter / Unreal Engine 4`
                 };
             }
-            if (upper.includes('FREE FIRE')) {
-                return {
-                    summary: `🎮 <strong>FREE FIRE / FREE FIRE MAX - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> Garena Free Fire / Free Fire MAX<br>
-                    • <strong>Developer Studio:</strong> 111dots Studio<br>
-                    • <strong>Publisher:</strong> Garena (Sea Limited)<br>
-                    • <strong>Music Composers:</strong> Garena Audio Division & KSHMR (Theme Track: 'One More Round')<br>
-                    • <strong>Platforms:</strong> Android (Google Play Store), iOS (App Store)<br>
-                    • <strong>Genre & Engine:</strong> Third-Person Battle Royale / Unity Engine`
-                };
-            }
-            if (upper.includes('GOD OF WAR')) {
-                return {
-                    summary: `🎮 <strong>GOD OF WAR (RAGNARÖK) - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> God of War / God of War Ragnarök<br>
-                    • <strong>Developer Studio:</strong> Santa Monica Studio<br>
-                    • <strong>Publisher:</strong> Sony Interactive Entertainment<br>
-                    • <strong>Music Composer:</strong> Bear McCreary (Original 2005 Theme by Gerard Marino)<br>
-                    • <strong>Audio Directors:</strong> Michael Kent, Frank Bertaina<br>
-                    • <strong>Platforms:</strong> PlayStation 5, PlayStation 4, PC (Steam)<br>
-                    • <strong>Genre & Engine:</strong> Action-Adventure Hack and Slash / Proprietary Santa Monica Engine`
-                };
-            }
-            if (upper.includes('MINECRAFT')) {
-                return {
-                    summary: `🎮 <strong>MINECRAFT - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> Minecraft (Java & Bedrock Edition)<br>
-                    • <strong>Original Creator:</strong> Markus "Notch" Persson<br>
-                    • <strong>Developer Studio:</strong> Mojang Studios (Microsoft Xbox Game Studios)<br>
-                    • <strong>Music Composers:</strong> Daniel Rosenfeld (C418), Lena Raine, Gareth Coker, Kumi Tanioka<br>
-                    • <strong>Platforms:</strong> Android, iOS, PC, PlayStation, Xbox, Nintendo Switch<br>
-                    • <strong>Genre & Engine:</strong> Sandbox Survival & World Building / Lightweight Java & RenderDragon`
-                };
-            }
-            if (upper.includes('CYBERPUNK')) {
-                return {
-                    summary: `🎮 <strong>CYBERPUNK 2077 - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> Cyberpunk 2077 / Phantom Liberty<br>
-                    • <strong>Developer Studio:</strong> CD Projekt Red<br>
-                    • <strong>Publisher:</strong> CD Projekt<br>
-                    • <strong>Music Composers:</strong> Marcin Przybyłowicz, P.T. Adamczyk, Paul Leonard-Morgan<br>
-                    • <strong>Audio Directors:</strong> Krzysztof Lipka, Colin Walder<br>
-                    • <strong>Platforms:</strong> PC (Steam/GOG), PS5, Xbox Series X<br>
-                    • <strong>Genre & Engine:</strong> Open-World Cyberpunk RPG / REDengine 4`
-                };
-            }
-            if (upper.includes('ELDEN RING')) {
-                return {
-                    summary: `🎮 <strong>ELDEN RING - GAME INTEL:</strong><br><br>
-                    • <strong>Game Title:</strong> Elden Ring / Shadow of the Erdtree<br>
-                    • <strong>Developer Studio:</strong> FromSoftware (Directed by Hidetaka Miyazaki & George R. R. Martin)<br>
-                    • <strong>Publisher:</strong> Bandai Namco Entertainment<br>
-                    • <strong>Music Composers:</strong> Yuka Kitamura, Tsukasa Saitoh, Shoi Miyazawa, Yoshimi Kudo, Tai Tomisawa<br>
-                    • <strong>Platforms:</strong> PC, PlayStation 5, Xbox Series X/S<br>
-                    • <strong>Genre & Engine:</strong> Dark Fantasy Action RPG / Soulsborne Engine`
-                };
-            }
             
-            // Generic Game Intel
             return {
                 summary: `🎮 <strong>GAME INTEL & DEEP BREAKDOWN FOR: "${escapeHtml(query)}"</strong><br><br>
                 • <strong>Query Game Title:</strong> ${escapeHtml(query)}<br>
                 • <strong>Developer & Publisher Search:</strong> Mapped across RAWG (500,000+ Games) & PlayStore API.<br>
                 • <strong>Soundtrack & Composer Index:</strong> VGMdb Game Music Database.<br>
-                • <strong>Platforms:</strong> Android Play Store, Apple App Store, Steam PC, PlayStation, Xbox.<br>
-                • <strong>Game Details:</strong> Explore direct PlayStore download links, developer profiles, and score soundtracks below.`
+                • <strong>Platforms:</strong> Android Play Store, Apple App Store, Steam PC, PlayStation, Xbox.`
             };
         }
 
@@ -846,19 +860,6 @@
                 flames.splice(idx, 1);
             }
             return { result: flames[0].name, emoji: flames[0].emoji, count: count };
-        }
-
-        function tryEvaluateMath(str) {
-            try {
-                const cleaned = str.replace(/[^0-9\+\-\*\/\.\(\)\^]/g, '');
-                if (cleaned.length >= 3 && /[0-9]/.test(cleaned) && /[\+\-\*\/]/.test(cleaned)) {
-                    const ans = Function(`'use strict'; return (${cleaned.replace(/\^/g, '**')})`)();
-                    if (typeof ans === 'number' && !isNaN(ans) && isFinite(ans)) {
-                        return `🧮 Math Calculation Result:\n${cleaned} = ${ans}`;
-                    }
-                }
-            } catch(e){}
-            return null;
         }
 
         function escapeHtml(str) {
