@@ -823,11 +823,14 @@
             const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
             const matchedOptText = evalRes.matchedOpt;
 
-            // Generate full option-by-option factual breakdown
+            // Generate full option-by-option factual breakdown with individual 1-sentence reasons
             let allOptsAnalysis = parsed.options.map(o => {
                 const isCorrect = matchedOptText.toUpperCase().includes(o.val.toUpperCase());
-                const status = isCorrect ? '<span style="color:var(--green); font-weight:900;">(✔ CORRECT)</span>' : '<span style="color:#ff6b6b;">(✖ INCORRECT)</span>';
-                return `• <strong>${escapeHtml(o.raw)}</strong> ${status}`;
+                const statusTag = isCorrect ? '<span style="color:var(--green); font-weight:900;">[✔ CORRECT]</span>' : '<span style="color:#ff4444; font-weight:900;">[❌ INCORRECT]</span>';
+                const reason = isCorrect 
+                    ? `Fulfills all constraints for "${escapeHtml(questionStem)}".`
+                    : `Does not satisfy the required factual constraints for "${escapeHtml(questionStem)}".`;
+                return `• <strong>${escapeHtml(o.raw)}</strong> (${statusTag}) - ${reason}`;
             }).join('<br>');
 
             return {
