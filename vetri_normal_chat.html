@@ -1283,11 +1283,41 @@
             return null;
         }
 
-        // Dedicated API Key AI Engine Completion Handler (Zero Positional Bias & Deterministic Sampling temperature: 0.0)
+        // Dedicated API Key AI Engine Completion Handler (Supports OpenAI & Google Gemini 1.5 Flash API with temperature: 0.0)
         async function callApiKeyDirectEngineAsync(promptText) {
             const apiKey = localStorage.getItem('vetri_custom_api_key');
             if (!apiKey) return null;
 
+            // 1. Direct Google Gemini 1.5 Flash API Endpoint
+            if (apiKey.startsWith('AIzaSy')) {
+                try {
+                    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                    const geminiRes = await fetch(geminiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            systemInstruction: {
+                                parts: [{ text: "You are Vetri AI, an unbiased, fact-checked educational quiz evaluator. Always analyze options A, B, C, and D factually before declaring the answer. Never default to option A." }]
+                            },
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: {
+                                temperature: 0.0
+                            }
+                        })
+                    });
+
+                    if (geminiRes.ok) {
+                        const geminiData = await geminiRes.json();
+                        if (geminiData.candidates && geminiData.candidates[0].content.parts[0].text) {
+                            return geminiData.candidates[0].content.parts[0].text.trim();
+                        }
+                    }
+                } catch (gemErr) {
+                    console.log("Gemini 1.5 Flash API Error:", gemErr);
+                }
+            }
+
+            // 2. OpenAI / Custom API Key AI Engine Endpoint
             try {
                 const response = await fetch('https://text.pollinations.ai/', {
                     method: 'POST',
