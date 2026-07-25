@@ -202,15 +202,32 @@
         @keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
         .btn-send {
-            padding: 16px 28px; background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            padding: 16px 28px;
+            background: linear-gradient(90deg, 
+                #00FFFF 0%, 
+                #0088FF 20%, 
+                #8A2BE2 40%, 
+                #FF007F 60%, 
+                #FF9900 80%, 
+                #00FFFF 100%
+            );
+            background-size: 300% 100%;
             color: #fff; border: none; border-radius: 14px;
             font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
-            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 0 20px var(--primary-glow);
+            letter-spacing: 2px; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+            animation: sendGradientWave 5s ease-in-out infinite;
+        }
+
+        @keyframes sendGradientWave {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .btn-send:hover {
-            transform: translateY(-2px); box-shadow: 0 0 30px var(--primary);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
         }
 
         @keyframes slowFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
