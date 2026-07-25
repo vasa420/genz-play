@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · ADVANCED MCQ MULTI-FORMAT & PRECISION SOLVER
+            <span>⚡</span> VETRI AI STUDIO · PERMANENTLY DISCONNECTED FROM ALL WEBSITES
         </div>
         <div style="display:flex; gap:12px; align-items:center;">
             <button type="button" class="btn-back" style="border-color:var(--gold); color:var(--gold);" onclick="toggleApiKeyModal()">🔑 PASTE API KEY</button>
@@ -396,7 +396,7 @@
                 <button class="btn-attach" id="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach File / File Manager">➕</button>
                 <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
                 <input type="text" id="chat-input" class="chat-input" placeholder="ASK ANYTHING WITH VETRI AI..." onkeydown="if(event.key==='Enter')sendChatMessage()">
-                <button class="btn-send" id="main-send-btn" onclick="sendChatMessage()">🌐 SEARCH & CHAT</button>
+                <button class="btn-send" id="main-send-btn" onclick="sendChatMessage()">🤖 ASK VETRI AI</button>
             </div>
 
         </div>
@@ -1587,31 +1587,7 @@
                 The factual answer and live web indices for <strong>"${escapeHtml(userText)}"</strong> are retrieved below.`;
             }
 
-            const isExplicitLiveWebReq = /\b(LIVE|REAL TIME|REALTIME|STOCK|STOCKS|WEATHER|LIVE SCORE|CURRENT NEWS|LATEST NEWS|SEARCH WEB|GOOGLE THIS)\b/i.test(userText);
-
-            if (isExplicitLiveWebReq) {
-                const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTopic)}`;
-                const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(searchTopic)}`;
-                const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(searchTopic)}`;
-
-                return `
-                    <div>${customSummary}</div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">
-                            <span>🌐 LIVE SEARCH ENGINE INDICES FOR "${escapeHtml(userText)}"</span>
-                            <span class="intent-tag">${categoryTag}</span>
-                        </div>
-                        <div class="links-grid">
-                            <a href="${googleUrl}" target="_blank" class="know-link-btn">🔍 Google CSE ↗</a>
-                            <a href="${braveUrl}" target="_blank" class="know-link-btn" style="border-color:#FF3B00; color:#FF3B00;">🦁 Brave Search API ↗</a>
-                            <a href="${wikiUrl}" target="_blank" class="know-link-btn">📚 Wikipedia REST API ↗</a>
-                            ${customLinksHtml}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Default: Direct built-in AI response with zero external web dependency
+            // Direct built-in AI response with zero external web dependency
             return customSummary;
         }
 
