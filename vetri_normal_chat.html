@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Real-Time Web Analysis & CS Suite</title>
+    <title>VETRI AI STUDIO | ChatGPT & Gemini Intelligent Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -296,7 +296,7 @@
             color: rgba(255,255,255,0.6); text-transform: uppercase;
             opacity: 0; animation: slowFadeIn 1.5s ease-out 1.2s forwards;
         ">
-            INITIALIZING REAL-TIME WEB KNOWLEDGE SYNTHESIS...
+            INITIALIZING CHATGPT & GEMINI AI ENGINE...
         </div>
 
         <div style="
@@ -313,7 +313,7 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="nav-logo">
-            <span>⚡</span> VETRI AI STUDIO · REAL-TIME WEB SEARCH & KNOWLEDGE ENGINE
+            <span>⚡</span> VETRI AI STUDIO · CHATGPT & GEMINI INTELLIGENT ENGINE
         </div>
         <a class="btn-back" href="arcade_hub.html">← RETURN BACK</a>
     </nav>
@@ -465,7 +465,7 @@
                     appendChatMessage('🤖 VETRI AI FILE MANAGER', fileResponseHtml, 'ai', true);
                     speakText(`File analyzed.`);
                 } else if (currentMode === 'normal') {
-                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & analyzing live web knowledge for "${escapeHtml(text)}"...</div>`;
+                    thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI</span><div class="msg-body" style="color:var(--gold);">🟡 Thinking & analyzing prompt for "${escapeHtml(text)}"...</div>`;
                     box.appendChild(thinkingDiv);
                     box.scrollTop = box.scrollHeight;
 
@@ -501,7 +501,7 @@
                 console.error("Chat Processing Error:", err);
                 const el = document.getElementById(thinkingId);
                 if (el) el.remove();
-                appendChatMessage('🤖 VETRI AI', `🎯 <strong>Answer Processed:</strong> "${escapeHtml(text)}"<br><br>Vetri AI ready for your next request! Explore direct web search links below.`, 'ai', true);
+                appendChatMessage('🤖 VETRI AI', `🤖 <strong>Vetri AI Answer:</strong><br><br>I processed your prompt "${escapeHtml(text)}"! Explore search links below.`, 'ai', true);
             } finally {
                 isProcessing = false;
             }
@@ -833,12 +833,27 @@
                 .trim();
         }
 
-        // Multi-Domain Knowledge Engine
+        // Multi-Domain Knowledge & ChatGPT/Gemini Intelligence Engine
         async function generateUniversalIntentResponseAsync(rawQuery) {
             const userText = rawQuery.trim();
             const upper = userText.toUpperCase();
+            const cleanText = userText.replace(/[^a-zA-Z\s]/g, '');
 
-            // 0. Symbol Dictionary Engine
+            // 0. Flexible Greetings Handler (Matches hello, hellllo, heyyy, hiii, hlo, etc.)
+            if (/^(h+[e3]+l+o+|h+e+y+|h+i+|h+l+o+|g+o+o+d+\s*m+o+r+n+i+n+g+|w+h+a+t+'?s+\s*u+p+|y+o+|g+r+e+e+t+i+n+g+s+)/i.test(cleanText)) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
+                return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
+                I am your intelligent AI Assistant, built like ChatGPT & Gemini! I am ready to help you with computer science, programming, general knowledge, math, mobile specs, games, or any question you have. How can I assist you today, my friend? 😊⚡`;
+            }
+
+            // 1. Flexible Farewells Handler
+            if (/^(b+y+e+|g+o+o+d+b+y+e+|s+e+e+\s*y+o+u+|t+a+k+e+\s*c+a+r+e+|c+y+a+|g+o+o+d+\s*n+i+g+h+t+)/i.test(cleanText)) {
+                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
+                return `👋 <strong>Goodbye, my friend!</strong><br><br>
+                It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
+            }
+
+            // 2. Symbol Dictionary Engine
             const symbolIntel = getSymbolIntelDetails(userText);
             if (symbolIntel.found) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
@@ -849,25 +864,11 @@
                 • <strong>Usage & Meaning:</strong> ${escapeHtml(symbolIntel.desc)}`;
             }
 
-            // 1. 22-Module Master Computer Science & Software Engineering Engine
+            // 3. 22-Module Master Computer Science & Software Engineering Engine
             const csIntel = getProgrammingIntelDetails(userText, upper);
             if (csIntel) {
                 conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
                 return csIntel.summary;
-            }
-
-            // 2. Warm Greetings Handler
-            if (/^(HI+|HELLO+|HEY+|GOOD\s*MORNING|GOOD\s*EVENING|HOW\s*ARE\s*YOU|WHAT'?S\s*UP|YO|GREETINGS|YU)/i.test(userText)) {
-                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
-                return `👋 <strong>Hello there! Welcome to Vetri AI Studio!</strong><br><br>
-                I am your friendly AI Assistant, ready to help you search for knowledge, answer questions, computer science, specs, games, or anything you need! How can I assist you today, my friend? 😊⚡`;
-            }
-
-            // 3. Warm Farewell Handler
-            if (/^(BYE+|GOODBYE+|SEE\s*YOU|TAKE\s*CARE|CYA|NIGHT|GOOD\s*NIGHT)/i.test(userText)) {
-                conversationMemory.push({ role: 'user', text: userText, isMainTopic: false });
-                return `👋 <strong>Goodbye, my friend!</strong><br><br>
-                It was great chatting with you. Take care, have an awesome day ahead, and see you again soon! ⚡✨`;
             }
 
             conversationMemory.push({ role: 'user', text: userText, isMainTopic: true });
@@ -998,12 +999,18 @@
                 const liveData = await fetchLiveWebSummaryAsync(searchTopic);
                 if (liveData) {
                     categoryTag = `🌐 LIVE WEB KNOWLEDGE (${liveData.source})`;
-                    customSummary = `📌 <strong>Live Web Knowledge Summary (${escapeHtml(liveData.title)}):</strong><br><br>${escapeHtml(liveData.summary)}`;
+                    customSummary = `📌 <strong>Live Knowledge Summary (${escapeHtml(liveData.title)}):</strong><br><br>${escapeHtml(liveData.summary)}`;
                 }
             }
 
+            // ChatGPT & Gemini Style Intelligent Conversational AI Engine
             if (!customSummary) {
-                customSummary = `🎯 <strong>Question Analyzed:</strong> "${escapeHtml(userText)}"<br><br>Vetri AI synthesized answers across live web indices. Explore real-time articles, videos, and search portals below.`;
+                categoryTag = "🤖 VETRI AI (CHATGPT & GEMINI ENGINE)";
+                customSummary = `🤖 <strong>Vetri AI Assistant Answer:</strong><br><br>
+                I have analyzed your prompt <strong>"${escapeHtml(userText)}"</strong>!<br><br>
+                • <strong>Query Analysis:</strong> "${escapeHtml(userText)}"<br>
+                • <strong>AI Insights:</strong> I am Vetri AI, your intelligent assistant built to help you answer questions, learn computer science, solve coding problems, search web knowledge, explore mobile specs, or play games!<br><br>
+                Feel free to ask me any follow-up question or explore the live web search portals below! 😊⚡`;
             }
 
             conversationMemory.push({ role: 'assistant', text: customSummary });
