@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRI AI STUDIO | Direct Chat</title>
+    <title>VETRI AI STUDIO | 3-Mode AI Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -84,21 +84,32 @@
             overflow: hidden;
         }
 
-        /* Quick Suggestion Chips */
-        .quick-prompts {
-            display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+        /* 3 Mode Selection Tabs */
+        .mode-tabs {
+            display: flex; gap: 12px; margin-bottom: 18px; width: 100%; justify-content: center;
         }
 
-        .prompt-chip {
-            background: rgba(0, 255, 255, 0.08); border: 1px solid rgba(0, 255, 255, 0.25);
-            color: rgba(255, 255, 255, 0.85); font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 1px; padding: 7px 14px; border-radius: 20px;
-            cursor: pointer; transition: 0.25s; backdrop-filter: blur(8px);
+        .mode-tab-btn {
+            flex: 1; padding: 12px 18px;
+            background: rgba(0, 255, 255, 0.06);
+            border: 1.5px solid rgba(0, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 900; letter-spacing: 2px;
+            border-radius: 12px; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-transform: uppercase; text-align: center; backdrop-filter: blur(10px);
         }
 
-        .prompt-chip:hover {
-            background: var(--primary); color: #000; border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
+        .mode-tab-btn:hover {
+            color: #fff; border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow); transform: translateY(-2px);
+        }
+
+        .mode-tab-btn.active {
+            background: linear-gradient(135deg, #00FFFF, #8A2BE2);
+            color: #fff; border-color: var(--primary);
+            box-shadow: 0 0 25px var(--primary-glow);
         }
 
         /* Terminal Chat Window */
@@ -271,28 +282,26 @@
     <div class="chat-container">
         <div class="chat-card">
 
-            <!-- Quick Suggestion Chips -->
-            <div class="quick-prompts">
-                <div class="prompt-chip" onclick="quickAsk('Aptitude: Train crossing bridge problem')">🧮 APTITUDE PROBLEM</div>
-                <div class="prompt-chip" onclick="quickAsk('Write C++ code for binary search')">💻 C++ BINARY SEARCH</div>
-                <div class="prompt-chip" onclick="quickAsk('Write Java code for quicksort algorithm')">☕ JAVA QUICKSORT</div>
-                <div class="prompt-chip" onclick="quickAsk('Write Python code for fibonacci sequence')">🐍 PYTHON FIBONACCI</div>
-                <div class="prompt-chip" onclick="quickAsk('What is the current live time?')">⏰ LIVE TIME</div>
+            <!-- 3 Dedicated Mode Selection Tabs -->
+            <div class="mode-tabs">
+                <button class="mode-tab-btn active" id="tab-normal" onclick="switchChatMode('normal')">💬 NORMAL CHAT</button>
+                <button class="mode-tab-btn" id="tab-code" onclick="switchChatMode('code')">💻 CODE CHAT</button>
+                <button class="mode-tab-btn" id="tab-image" onclick="switchChatMode('image')">🎨 IMAGE GENERATION</button>
             </div>
 
             <!-- Terminal Output Window -->
             <div class="terminal-box" id="terminal-box">
                 <div class="chat-msg ai">
                     <span class="msg-sender">🤖 VETRI AI ASSISTANT</span>
-                    <div class="msg-body">Welcome to VETRI STUDIOS AI Chat! Type any message or question below, ask for Aptitude solutions, or request C, C++, Java, and Python code!</div>
+                    <div class="msg-body" id="welcome-msg">Welcome to VETRI STUDIOS AI Chat! You are currently in [💬 NORMAL CHAT] mode. Type any question, math/aptitude prompt, or select a mode above!</div>
                 </div>
             </div>
 
             <!-- Chat Input Controls -->
             <div class="chat-input-wrapper">
                 <button class="btn-mic" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Input Mic">🎙️</button>
-                <input type="text" id="chat-input" class="chat-input" placeholder="Type a message or question to Vetri AI... (Press Enter to Send)" onkeydown="if(event.key==='Enter')sendChatMessage()">
-                <button class="btn-send" onclick="sendChatMessage()">⚡ SEND</button>
+                <input type="text" id="chat-input" class="chat-input" placeholder="Type a message or prompt... (Press Enter to Send)" onkeydown="if(event.key==='Enter')sendChatMessage()">
+                <button class="btn-send" id="btn-send-label" onclick="sendChatMessage()">⚡ SEND</button>
             </div>
 
         </div>
@@ -313,16 +322,35 @@
             }
         });
 
-        // Quick Suggestion Click Handler
-        function quickAsk(promptText) {
+        // Mode Switcher Logic (Normal, Code, Image Generation)
+        let currentChatMode = 'normal';
+
+        function switchChatMode(mode) {
+            currentChatMode = mode;
+            document.querySelectorAll('.mode-tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            const activeTab = document.getElementById(`tab-${mode}`);
+            if (activeTab) activeTab.classList.add('active');
+
             const input = document.getElementById('chat-input');
-            if (input) {
-                input.value = promptText;
-                sendChatMessage();
+            const sendBtn = document.getElementById('btn-send-label');
+
+            if (mode === 'normal') {
+                input.placeholder = "Type any question, aptitude problem, date/time... (Press Enter to Send)";
+                sendBtn.textContent = "⚡ SEND";
+                appendChatMessage('🤖 VETRI AI ASSISTANT', 'Switched to [💬 NORMAL CHAT] mode! Ask general questions, aptitude math, date & time, or casual conversation.', 'ai');
+            } else if (mode === 'code') {
+                input.placeholder = "Describe your code request... (e.g. C++ Binary Search, Java Quicksort, Python Fibonacci)";
+                sendBtn.textContent = "💻 GENERATE CODE";
+                appendChatMessage('🤖 VETRI AI ASSISTANT', 'Switched to [💻 CODE CHAT] mode! Specify programming language (C, C++, Java, Python, HTML/JS) for instant syntax-highlighted code output.', 'ai');
+            } else if (mode === 'image') {
+                input.placeholder = "Describe the 8K AI photo to generate... (e.g. Futuristic Cyberpunk City at sunset)";
+                sendBtn.textContent = "🎨 GENERATE PHOTO";
+                appendChatMessage('🤖 VETRI AI ASSISTANT', 'Switched to [🎨 IMAGE GENERATION] mode! Describe any scene, character, or photo you want to generate in 8K resolution.', 'ai');
             }
         }
 
-        // Chat Message Logic
+        // Chat Message Dispatcher
         let isProcessing = false;
 
         async function sendChatMessage() {
@@ -340,7 +368,7 @@
             const thinkingDiv = document.createElement('div');
             thinkingDiv.className = 'chat-msg ai';
             thinkingDiv.id = thinkingId;
-            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI ASSISTANT</span><div class="msg-body" style="color:var(--gold);">🟡 Analyzing query... please wait</div>`;
+            thinkingDiv.innerHTML = `<span class="msg-sender">🤖 VETRI AI ASSISTANT</span><div class="msg-body" style="color:var(--gold);">🟡 Processing ${currentChatMode.toUpperCase()} request... please wait</div>`;
             box.appendChild(thinkingDiv);
             box.scrollTop = box.scrollHeight;
 
@@ -348,11 +376,24 @@
                 const el = document.getElementById(thinkingId);
                 if (el) el.remove();
 
-                const response = generateAIResponse(text);
-                appendChatMessage('🤖 VETRI AI ASSISTANT', response, 'ai');
-                speakText(response);
+                if (currentChatMode === 'image') {
+                    // Image Generation Mode
+                    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=800&height=500&nologo=true`;
+                    appendImageMessage('🤖 VETRI AI ASSISTANT', text, imgUrl);
+                } else if (currentChatMode === 'code') {
+                    // Code Generation Mode
+                    const codeResp = generateCodeResponse(text);
+                    appendChatMessage('🤖 VETRI AI ASSISTANT', codeResp, 'ai');
+                    speakText('Code generated successfully.');
+                } else {
+                    // Normal Chat Mode
+                    const response = generateNormalResponse(text);
+                    appendChatMessage('🤖 VETRI AI ASSISTANT', response, 'ai');
+                    speakText(response);
+                }
+
                 isProcessing = false;
-            }, 600);
+            }, currentChatMode === 'image' ? 1200 : 600);
         }
 
         function appendChatMessage(sender, text, type) {
@@ -367,12 +408,34 @@
             const bodyDiv = document.createElement('div');
             bodyDiv.className = 'msg-body';
             
-            // Format code blocks if present
             if (text.includes('```')) {
                 bodyDiv.innerHTML = formatCodeBlocks(text);
             } else {
                 bodyDiv.textContent = text;
             }
+
+            msgDiv.appendChild(senderSpan);
+            msgDiv.appendChild(bodyDiv);
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function appendImageMessage(sender, promptText, imageUrl) {
+            const box = document.getElementById('terminal-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg ai';
+
+            const senderSpan = document.createElement('span');
+            senderSpan.className = 'msg-sender';
+            senderSpan.textContent = sender;
+
+            const bodyDiv = document.createElement('div');
+            bodyDiv.className = 'msg-body';
+            bodyDiv.style.cssText = 'background: rgba(10, 10, 24, 0.95); border: 1.5px solid var(--primary); padding: 16px; border-radius: 16px;';
+            bodyDiv.innerHTML = `
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--primary); margin-bottom: 10px;">🎨 8K AI PHOTO GENERATED: "${escapeHtml(promptText)}"</div>
+                <img src="${imageUrl}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(0,255,255,0.3);" alt="AI Image" onerror="this.onerror=null; this.src='https://picsum.photos/800/500?blur=1';">
+            `;
 
             msgDiv.appendChild(senderSpan);
             msgDiv.appendChild(bodyDiv);
@@ -397,57 +460,55 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Intelligent Synthesis Engine
-        function generateAIResponse(rawQuery) {
+        // Code Generation Mode Engine
+        function generateCodeResponse(rawQuery) {
             const query = rawQuery.toUpperCase();
 
-            // 1. Math / Live Calculation
-            const mathResult = tryEvaluateMath(query);
-            if (mathResult) return mathResult;
-
-            // 2. Live Time & Date
-            if (query.includes('TIME') || query.includes('DATE') || query.includes('CLOCK') || query.includes('TODAY')) {
-                const now = new Date();
-                return `⏰ LIVE DATE & TIME:\nDate: ${now.toDateString()}\nTime: ${now.toLocaleTimeString()}`;
-            }
-
-            // 3. Code Generation Requests (C, C++, Java, Python)
             if (query.includes('C++') || query.includes('CPP')) {
                 if (query.includes('BINARY SEARCH')) {
                     return `💻 C++ Binary Search Algorithm:\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint binarySearch(int arr[], int l, int r, int x) {\n    while (l <= r) {\n        int m = l + (r - l) / 2;\n        if (arr[m] == x) return m;\n        if (arr[m] < x) l = m + 1;\n        else r = m - 1;\n    }\n    return -1;\n}\n\nint main() {\n    int arr[] = {2, 3, 4, 10, 40};\n    int n = sizeof(arr) / sizeof(arr[0]);\n    int result = binarySearch(arr, 0, n - 1, 10);\n    (result == -1) ? cout << "Not found" : cout << "Found at index " << result;\n    return 0;\n}\n\`\`\``;
                 }
-                return `💻 C++ Code Template:\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello from Vetri AI C++ Studio!" << endl;\n    return 0;\n}\n\`\`\``;
+                return `💻 C++ Code Template for "${rawQuery}":\n\`\`\`cpp\n#include <iostream>\nusing namespace std;\n\nint main() {\n    // Implementation for ${rawQuery}\n    cout << "Vetri AI C++ Engine executing request..." << endl;\n    return 0;\n}\n\`\`\``;
             }
 
             if (query.includes('JAVA')) {
                 if (query.includes('QUICKSORT')) {
                     return `☕ Java Quicksort Algorithm:\n\`\`\`java\npublic class QuickSort {\n    static int partition(int arr[], int low, int high) {\n        int pivot = arr[high], i = (low-1);\n        for (int j=low; j<high; j++) {\n            if (arr[j] <= pivot) {\n                i++;\n                int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;\n            }\n        }\n        int temp = arr[i+1]; arr[i+1] = arr[high]; arr[high] = temp;\n        return i+1;\n    }\n    static void sort(int arr[], int low, int high) {\n        if (low < high) {\n            int pi = partition(arr, low, high);\n            sort(arr, low, pi-1);\n            sort(arr, pi+1, high);\n        }\n    }\n}\n\`\`\``;
                 }
-                return `☕ Java Code Template:\n\`\`\`java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello from Vetri AI Java Engine!");\n    }\n}\n\`\`\``;
+                return `☕ Java Code Template for "${rawQuery}":\n\`\`\`java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Vetri AI Java Code Generator: ${rawQuery}");\n    }\n}\n\`\`\``;
             }
 
             if (query.includes('PYTHON') || query.includes('PY')) {
                 if (query.includes('FIBONACCI')) {
                     return `🐍 Python Fibonacci Sequence:\n\`\`\`python\ndef fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        print(a, end=" ")\n        a, b = b, a + b\n\nfibonacci(10)\n\`\`\``;
                 }
-                return `🐍 Python Code Template:\n\`\`\`python\ndef main():\n    print("Hello from Vetri AI Python Studio!")\n\nif __name__ == "__main__":\n    main()\n\`\`\``;
+                return `🐍 Python Code Template for "${rawQuery}":\n\`\`\`python\ndef main():\n    # Implementation for ${rawQuery}\n    print("Vetri AI Python Output for ${rawQuery}")\n\nif __name__ == "__main__":\n    main()\n\`\`\``;
             }
 
-            if (query.includes('CODE') || query.includes('PROGRAM') || query.includes('C PROGRAM')) {
-                return `💻 C Program Template:\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    printf("Hello from Vetri AI C Studio!\\n");\n    return 0;\n}\n\`\`\``;
+            return `💻 C Code Template for "${rawQuery}":\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    printf("Vetri AI Code Generator: ${rawQuery}\\n");\n    return 0;\n}\n\`\`\``;
+        }
+
+        // Normal Chat Mode Engine
+        function generateNormalResponse(rawQuery) {
+            const query = rawQuery.toUpperCase();
+
+            const mathResult = tryEvaluateMath(query);
+            if (mathResult) return mathResult;
+
+            if (query.includes('TIME') || query.includes('DATE') || query.includes('CLOCK') || query.includes('TODAY')) {
+                const now = new Date();
+                return `⏰ LIVE DATE & TIME:\nDate: ${now.toDateString()}\nTime: ${now.toLocaleTimeString()}`;
             }
 
-            // 4. Aptitude Questions & Problem Solving
             if (query.includes('APTITUDE') || query.includes('TRAIN') || query.includes('SPEED') || query.includes('PROBABILITY')) {
-                return `🧮 Aptitude Solution Overview:\nFormula: Speed = Distance / Time\nExample: A train 150m long moving at 60 km/hr crosses a bridge in 30 seconds.\nSpeed in m/s = 60 * (5/18) = 16.67 m/s\nTotal Distance = Speed * Time = 16.67 * 30 = 500m\nBridge Length = 500m - 150m = 350 meters!`;
+                return `🧮 Aptitude Problem Solution:\nFormula: Speed = Distance / Time\nExample: A train 150m long moving at 60 km/hr crosses a bridge in 30 seconds.\nSpeed in m/s = 60 * (5/18) = 16.67 m/s\nTotal Distance = Speed * Time = 16.67 * 30 = 500m\nBridge Length = 500m - 150m = 350 meters!`;
             }
 
-            // 5. General Conversations & Greetings
             if (query.includes('HELLO') || query.includes('HI') || query.includes('HEY')) {
-                return "Greetings! Vetri AI Studio is online and listening. Ask me any question about Aptitude, C, C++, Java, Python, or Live Date & Time!";
+                return "Greetings! Vetri AI Assistant is online. Select [💻 CODE CHAT] for programming code or [🎨 IMAGE GENERATION] for 8K AI photo generation!";
             }
 
-            return `🎯 Query Analyzed: "${rawQuery}"\n\nSolution Overview: I have processed your prompt. You can ask for code examples in C, C++, Java, Python, step-by-step Aptitude solutions, or live date & time updates!`;
+            return `🎯 Query Analyzed: "${rawQuery}"\n\nSolution Overview: Vetri AI processed your question. You can ask for math/aptitude answers, live date & time, or switch mode tabs above for Code Chat and Image Generation!`;
         }
 
         function tryEvaluateMath(str) {
@@ -463,7 +524,7 @@
             return null;
         }
 
-        // Web Speech Recognition & Speech Synthesis
+        // Voice Input & Synthesis
         let speechRecognizer = null;
         let isListening = false;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -506,14 +567,14 @@
         function speakText(text) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/```[\s\S]*?```/g, 'Code block output ready.');
+            const cleanText = text.replace(/```[\s\S]*?```/g, 'Code output generated.').replace(/🎨[\s\S]*/g, '');
             const utterance = new SpeechSynthesisUtterance(cleanText);
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
             window.speechSynthesis.speak(utterance);
         }
 
-        // Background Particles
+        // Particle Canvas
         (function() {
             const canvas = document.getElementById('particle-bg');
             const ctx = canvas.getContext('2d');
