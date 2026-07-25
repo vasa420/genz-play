@@ -823,17 +823,20 @@
             const evalRes = await findBestMatchingMCQOptionAsync(questionStem, matches, isNegativeQuestion);
             const matchedOptText = evalRes.matchedOpt;
 
-            // Generate option breakdown explaining why correct and why others wrong
-            let wrongOptsList = parsed.options.filter(o => !matchedOptText.toUpperCase().includes(o.val.toUpperCase()));
-            let wrongOptsExplanation = wrongOptsList.length > 0
-                ? `<br><br>• <strong>Other Options Breakdown:</strong> ${wrongOptsList.map(o => `<em>${escapeHtml(o.raw)}</em> is incorrect for "${escapeHtml(questionStem)}"`).join('; ')}.`
-                : '';
+            // Generate full option-by-option factual breakdown
+            let allOptsAnalysis = parsed.options.map(o => {
+                const isCorrect = matchedOptText.toUpperCase().includes(o.val.toUpperCase());
+                const status = isCorrect ? '<span style="color:var(--green); font-weight:900;">(✔ CORRECT)</span>' : '<span style="color:#ff6b6b;">(✖ INCORRECT)</span>';
+                return `• <strong>${escapeHtml(o.raw)}</strong> ${status}`;
+            }).join('<br>');
 
             return {
                 category: "🎯 MCQ DIRECT ANSWER",
                 summary: `<strong>Correct Answer:</strong> <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOptText)}</span><br><br>
-                <strong>Explanation:</strong><br>
-                ${escapeHtml(evalRes.explanation)}${wrongOptsExplanation}`
+                <strong>Options Verification Breakdown:</strong><br>
+                ${allOptsAnalysis}<br><br>
+                <strong>Factual Explanation:</strong><br>
+                ${escapeHtml(evalRes.explanation)}`
             };
         }
 
