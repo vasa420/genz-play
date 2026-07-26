@@ -929,12 +929,11 @@
             const matchedOptText = evalRes.matchedOpt;
             const customReasons = evalRes.customReasons || {};
 
-            // Generate full option-by-option factual breakdown with individual 1-sentence factual reasons
+            // Generate Evaluation-First Option-by-Option Factual Breakdown
             let allOptsAnalysis = parsed.options.map(o => {
                 const isCorrect = matchedOptText.toUpperCase().includes(o.val.toUpperCase());
                 const statusTag = isCorrect ? '<span style="color:var(--green); font-weight:900;">[✔ CORRECT]</span>' : '<span style="color:#ff4444; font-weight:900;">[❌ INCORRECT]</span>';
                 
-                // Find custom fact-based reason if matched in customReasons dictionary
                 let matchedReason = null;
                 for (let k in customReasons) {
                     if (o.val.toUpperCase().includes(k)) {
@@ -944,17 +943,17 @@
                 }
 
                 const reason = matchedReason || (isCorrect 
-                    ? `Satisfies all factual criteria for "${escapeHtml(questionStem)}".`
-                    : `Factually incorrect for the constraints specified in "${escapeHtml(questionStem)}".`);
+                    ? `Correct. Fulfills all factual criteria for "${escapeHtml(questionStem)}".`
+                    : `Incorrect. Factually invalid for "${escapeHtml(questionStem)}".`);
 
-                return `• <strong>${escapeHtml(o.raw)}</strong> (${statusTag}) - ${reason}`;
+                return `• <strong>Option ${escapeHtml(o.key)}: ${escapeHtml(o.val)}</strong> (${statusTag}) — ${reason}`;
             }).join('<br>');
 
             return {
                 category: "🎯 MCQ DIRECT ANSWER",
-                summary: `<strong>Correct Answer:</strong> <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOptText)}</span><br><br>
-                <strong>Options Verification Breakdown:</strong><br>
+                summary: `<strong>Option-by-Option Factual Evaluation:</strong><br>
                 ${allOptsAnalysis}<br><br>
+                <strong>Final Answer:</strong> <span style="color:var(--green); font-size:20px; font-weight:900;">${escapeHtml(matchedOptText)}</span><br><br>
                 <strong>Factual Explanation:</strong><br>
                 ${escapeHtml(evalRes.explanation)}`
             };
