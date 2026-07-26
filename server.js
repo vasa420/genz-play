@@ -12,8 +12,84 @@ const io = new Server(server, {
     }
 });
 
+// Middleware to parse JSON payloads
+app.use(express.json());
+
 // Serve static files from the current directory
 app.use(express.static(path.join(__dirname)));
+
+// Vetri AI Structured Quiz Evaluation REST API Endpoint
+app.post('/api/vetri-ai/evaluate-quiz', async (req, res) => {
+    try {
+        const { question, options, apiKey } = req.body;
+        if (!question || !options || !Array.isArray(options)) {
+            return res.status(400).json({ error: "Missing required fields: 'question' (string) and 'options' (array)." });
+        }
+
+        const key = apiKey || process.env.GEMINI_API_KEY || process.env.VETRI_API_KEY;
+
+        const systemInstruction = `You are Vetri AI, an unbiased, fact-checked educational quiz evaluator. 
+CRITICAL RULES:
+1. You MUST evaluate every option individually against verified real-world facts.
+2. Do NOT default to Option A or Option D.
+3. NEVER use generic boilerplate text like "Factually invalid for..." or "Satisfies all factual criteria". State real historical, scientific, or geographical facts in the reasoning for every choice.`;
+
+        if (key && key.startsWith('AIzaSy')) {
+            const responseSchema = {
+                type: "OBJECT",
+                properties: {
+                    analysis_per_option: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                option_letter: { type: "STRING" },
+                                is_correct: { type: "BOOLEAN" },
+                                reasoning: { type: "STRING" }
+                            },
+                            required: ["option_letter", "is_correct", "reasoning"]
+                        }
+                    },
+                    correct_option_letter: { type: "STRING" },
+                    correct_option_full: { type: "STRING" },
+                    factual_explanation: { type: "STRING" }
+                },
+                required: ["analysis_per_option", "correct_option_letter", "correct_option_full", "factual_explanation"]
+            };
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+            const geminiRes = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    system_instruction: { parts: [{ text: systemInstruction }] },
+                    contents: [{ parts: [{ text: `Question: ${question}\nOptions:\n${options.map((o, i) => `${String.fromCharCode(65 + i)}) ${o}`).join('\n')}` }] }],
+                    generationConfig: {
+                        temperature: 0.0,
+                        response_mime_type: "application/json",
+                        response_schema: responseSchema
+                    }
+                })
+            });
+
+            if (geminiRes.ok) {
+                const data = await geminiRes.json();
+                const jsonText = data.candidates[0].content.parts[0].text;
+                return res.json(JSON.parse(jsonText));
+            }
+        }
+
+        return res.json({
+            status: "success",
+            engine: "Vetri AI Primary Engine",
+            question: question,
+            options_count: options.length,
+            message: "Vetri AI REST API active on server.js at /api/vetri-ai/evaluate-quiz"
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
 
 // Redirect root path to arcade_hub.html
 app.get('/', (req, res) => {
