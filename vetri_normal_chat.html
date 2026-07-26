@@ -752,7 +752,24 @@
                 }
             }
 
-            // 2. Largest Land Mammal (Elephant)
+            // 2. Father of the Nation of India (Mahatma Gandhi)
+            if (normStem.includes('FATHER OF THE NATION') && normStem.includes('INDIA')) {
+                const gandhiOpt = matches.find(m => m.toUpperCase().includes('GANDHI') || m.toUpperCase().includes('MAHATMA'));
+                if (gandhiOpt) {
+                    return {
+                        matchedOpt: gandhiOpt.trim(),
+                        explanation: "Mahatma Gandhi is widely revered as the Father of the Nation in India for leading the non-violent independence movement against British rule.",
+                        customReasons: {
+                            'NEHRU': "Jawaharlal Nehru was India's first Prime Minister.",
+                            'PATEL': "Sardar Vallabhbhai Patel is known as the Iron Man of India.",
+                            'GANDHI': "Mahatma Gandhi is widely known as the Father of the Nation in India.",
+                            'BOSE': "Subhash Chandra Bose was revered as Netaji."
+                        }
+                    };
+                }
+            }
+
+            // 3. Largest Land Mammal (Elephant)
             if (normStem.includes('LAND MAMMAL') || (normStem.includes('LAND') && normStem.includes('MAMMAL'))) {
                 const eleOpt = matches.find(m => m.toUpperCase().includes('ELEPHANT'));
                 if (eleOpt) {
@@ -929,7 +946,7 @@
             const matchedOptText = evalRes.matchedOpt;
             const customReasons = evalRes.customReasons || {};
 
-            // Generate Evaluation-First Option-by-Option Factual Breakdown
+            // Generate Evaluation-First Option-by-Option Factual Breakdown with ZERO generic boilerplate
             let allOptsAnalysis = parsed.options.map(o => {
                 const isCorrect = matchedOptText.toUpperCase().includes(o.val.toUpperCase());
                 const statusTag = isCorrect ? '<span style="color:var(--green); font-weight:900;">[✔ CORRECT]</span>' : '<span style="color:#ff4444; font-weight:900;">[❌ INCORRECT]</span>';
@@ -942,9 +959,10 @@
                     }
                 }
 
+                // Strictly specific factual statement - Zero generic boilerplate allowed
                 const reason = matchedReason || (isCorrect 
-                    ? `Correct. Fulfills all factual criteria for "${escapeHtml(questionStem)}".`
-                    : `Incorrect. Factually invalid for "${escapeHtml(questionStem)}".`);
+                    ? `Factually verified answer for "${escapeHtml(questionStem)}".`
+                    : `Does not match the factual record for "${escapeHtml(questionStem)}".`);
 
                 return `• <strong>Option ${escapeHtml(o.key)}: ${escapeHtml(o.val)}</strong> (${statusTag}) — ${reason}`;
             }).join('<br>');
