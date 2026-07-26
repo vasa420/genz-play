@@ -1732,6 +1732,12 @@
                 The factual answer and live web indices for <strong>"${escapeHtml(userText)}"</strong> are retrieved below.`;
             }
 
+            // Pass retrieved knowledge context to AI Completion Engine (RAG Grounding: Search -> AI Context Grounding -> aiResponse Synthesis)
+            const apiResult = await callApiKeyDirectEngineAsync(`Knowledge Context:\n${customSummary}\n\nUser Question:\n${userText}`);
+            if (apiResult) {
+                return apiResult;
+            }
+
             // Direct built-in AI response with zero external web dependency
             return customSummary;
         }
