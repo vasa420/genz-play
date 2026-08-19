@@ -16,8 +16,8 @@
             --green-glow: rgba(0, 255, 136, 0.35);
             --red: #FF2244;
             --gold: #FFD700;
-            --bg: #030409;
-            --card-bg: rgba(8, 10, 22, 0.85);
+            --bg: #04040c;
+            --card-bg: rgba(9, 11, 25, 0.88);
             --border: rgba(255, 100, 0, 0.22);
         }
 
@@ -56,8 +56,8 @@
         /* ── Top Header ─────────────────────────────────────────── */
         .top-header {
             width: 100%;
-            max-width: 900px;
-            padding: 16px 20px;
+            max-width: 1240px;
+            padding: 20px 30px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -71,13 +71,13 @@
             gap: 14px;
         }
 
-        /* Hamburger button */
+        /* Hamburger button - Hidden by default on Desktop */
         .btn-hamburger {
+            display: none;
             background: transparent;
             border: none;
             color: #fff;
             cursor: pointer;
-            display: flex;
             flex-direction: column;
             gap: 5px;
             padding: 6px;
@@ -102,14 +102,14 @@
         .header-brand {
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 2px;
         }
 
         .brand-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 22px;
+            font-size: 26px;
             font-weight: 900;
-            letter-spacing: 5px;
+            letter-spacing: 6px;
             color: var(--primary);
             text-shadow: 0 0 15px var(--primary-glow);
             text-transform: uppercase;
@@ -117,18 +117,54 @@
 
         .brand-sub {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 2px;
+            font-size: 11px;
+            letter-spacing: 3px;
             color: rgba(255, 255, 255, 0.45);
             text-transform: uppercase;
             font-weight: 700;
+        }
+
+        .header-right-desktop {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .db-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--green);
+            text-transform: uppercase;
+            backdrop-filter: blur(8px);
+        }
+
+        .status-dot-green {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+            animation: dbPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes dbPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.8); }
         }
 
         .btn-lobby {
             background: rgba(10, 10, 24, 0.7);
             border: 1.5px solid rgba(255, 100, 0, 0.35);
             color: #ddd;
-            padding: 8px 18px;
+            padding: 9px 22px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
             font-weight: 700;
@@ -151,11 +187,11 @@
             transform: translateX(-2px);
         }
 
-        /* ── Slide-Out Drawer Menu (Mobile Navigation) ─────────── */
+        /* ── Mobile Drawer Overlay Menu ─────────────────────────── */
         .mobile-drawer-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.82);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(12px);
             z-index: 2000;
             opacity: 0;
@@ -241,48 +277,148 @@
             box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
         }
 
-        /* ── Main Phone App Frame / Outer Card ──────────────────── */
-        .phone-app-card {
+        /* ── Main App Container Dashboard ───────────────────────── */
+        .app-wrapper {
             width: 95%;
-            max-width: 540px;
+            max-width: 1240px;
+            margin: 10px auto 40px;
             background: var(--card-bg);
             border: 1.5px solid rgba(255, 100, 0, 0.22);
             border-radius: 24px;
-            padding: 30px 22px;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 270px 1fr;
+            gap: 30px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 100, 0, 0.06);
+            backdrop-filter: blur(16px);
+        }
+
+        /* ── Desktop Sidebar (Left Column) ───────────────────────── */
+        .desktop-sidebar {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding-right: 25px;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 15px 18px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 3px solid transparent;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            color: #fff;
+            border-color: rgba(255, 100, 0, 0.35);
+            border-left-color: var(--primary);
+            background: rgba(255, 100, 0, 0.06);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-color: rgba(255, 100, 0, 0.4);
+            border-left: 4px solid var(--primary);
+            background: rgba(255, 100, 0, 0.12);
+            box-shadow: 0 0 20px rgba(255, 100, 0, 0.15);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .nav-icon {
+            font-size: 16px;
+        }
+
+        /* Sidebar Bottom About Card */
+        .about-card {
+            background: rgba(4, 4, 12, 0.8);
+            border: 1px solid rgba(255, 100, 0, 0.18);
+            border-radius: 14px;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .about-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .about-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.6;
+        }
+
+        .about-copyright {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 6px;
+        }
+
+        /* ── Main Panel (Right Column) ──────────────────────────── */
+        .main-panel {
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 100, 0, 0.05);
-            backdrop-filter: blur(16px);
-            margin-top: 5px;
+            text-align: center;
+            width: 100%;
         }
 
         .panel-tagline {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 3.5px;
+            font-size: 12px;
+            letter-spacing: 4px;
             color: var(--primary);
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 700;
+            gap: 12px;
         }
 
         .panel-tagline::before, .panel-tagline::after {
             content: '';
-            width: 30px;
+            width: 40px;
             height: 1px;
             background: linear-gradient(90deg, transparent, var(--primary), transparent);
         }
 
         .main-title {
-            font-size: clamp(30px, 8vw, 44px);
+            font-size: clamp(32px, 5vw, 56px);
             font-weight: 900;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             background: linear-gradient(135deg, 
                 #00FFFF 0%, 
                 #0088FF 35%, 
@@ -295,9 +431,8 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
             text-transform: uppercase;
-            text-align: center;
             animation: neonGradient 8s ease-in-out infinite;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.3));
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.35));
         }
 
         @keyframes neonGradient {
@@ -307,106 +442,79 @@
         }
 
         .main-sub {
-            font-size: 13px;
+            font-size: 14px;
             color: rgba(255, 255, 255, 0.55);
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             margin-bottom: 18px;
-            text-align: center;
-            line-height: 1.4;
-            max-width: 320px;
+            max-width: 600px;
         }
 
-        .db-status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(0, 255, 136, 0.06);
-            border: 1px solid rgba(0, 255, 136, 0.25);
-            padding: 5px 16px;
-            border-radius: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: var(--green);
-            text-transform: uppercase;
-            margin-bottom: 25px;
+        .center-db-badge {
+            margin-bottom: 28px;
         }
 
-        .status-dot-green {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 8px var(--green);
-            animation: dbPulse 2s infinite ease-in-out;
-        }
-
-        @keyframes dbPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.35; transform: scale(0.8); }
-        }
-
-        /* ── Search Bar Container ───────────────────────────────── */
+        /* ── Search Input Container ─────────────────────────────── */
         .search-container {
             width: 100%;
+            max-width: 780px;
             position: relative;
-            margin-bottom: 25px;
+            margin-bottom: 35px;
         }
 
         .search-input-pill {
             width: 100%;
-            padding: 16px 190px 16px 46px;
+            padding: 18px 230px 18px 54px;
             background: rgba(4, 5, 16, 0.95);
-            border: 2px solid rgba(0, 136, 255, 0.45);
-            border-radius: 40px;
+            border: 2px solid rgba(0, 136, 255, 0.5);
+            border-radius: 50px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            letter-spacing: 1px;
+            font-size: 15px;
+            letter-spacing: 1.5px;
             color: #fff;
             outline: none;
             transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 0 20px rgba(0, 136, 255, 0.18), inset 0 2px 8px rgba(0,0,0,0.8);
+            box-shadow: 0 0 25px rgba(0, 136, 255, 0.2), inset 0 2px 8px rgba(0,0,0,0.8);
             caret-color: var(--primary);
         }
 
         .search-input-pill::placeholder {
-            color: rgba(255, 255, 255, 0.25);
-            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.28);
+            letter-spacing: 1.5px;
         }
 
         .search-input-pill:focus {
             border-color: var(--cyan);
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.35), inset 0 2px 8px rgba(0,0,0,0.9);
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.4), inset 0 2px 8px rgba(0,0,0,0.9);
         }
 
         .search-icon-left {
             position: absolute;
-            left: 16px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 18px;
+            font-size: 20px;
             color: rgba(255, 255, 255, 0.4);
             pointer-events: none;
         }
 
         .search-actions-right {
             position: absolute;
-            right: 6px;
+            right: 8px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .btn-icon-action {
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.05);
             border: 1.5px solid rgba(255, 255, 255, 0.15);
             color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -418,47 +526,48 @@
             background: rgba(255, 100, 0, 0.2);
             border-color: var(--primary);
             color: var(--primary);
-            box-shadow: 0 0 12px var(--primary-glow);
+            box-shadow: 0 0 15px var(--primary-glow);
             transform: scale(1.08);
         }
 
         .btn-search-main {
-            height: 38px;
-            padding: 0 16px;
+            height: 44px;
+            padding: 0 24px;
             background: var(--primary);
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             color: #000;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 900;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 0 15px var(--primary-glow);
+            gap: 8px;
+            box-shadow: 0 0 20px var(--primary-glow);
             text-transform: uppercase;
         }
 
         .btn-search-main:hover {
             background: #ff7a1a;
-            box-shadow: 0 0 25px var(--primary);
-            transform: scale(1.04);
+            box-shadow: 0 0 30px var(--primary);
+            transform: scale(1.05);
         }
 
         /* Upload Preview Box */
         .upload-preview-box {
             width: 100%;
+            max-width: 780px;
             display: none;
             align-items: center;
             justify-content: space-between;
             background: rgba(255, 100, 0, 0.06);
             border: 1.5px solid rgba(255, 100, 0, 0.3);
-            border-radius: 12px;
-            padding: 10px 16px;
-            margin-bottom: 20px;
+            border-radius: 14px;
+            padding: 12px 20px;
+            margin-bottom: 25px;
             animation: fadeIn 0.3s ease;
         }
 
@@ -469,12 +578,12 @@
         .upload-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .upload-thumb {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             object-fit: cover;
             border-radius: 8px;
             border: 1.5px solid var(--primary);
@@ -482,7 +591,7 @@
 
         .upload-filename {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 12px;
             color: #fff;
         }
 
@@ -490,27 +599,27 @@
             background: rgba(255,34,68,0.2);
             border: 1px solid var(--red);
             color: var(--red);
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
+            font-size: 10px;
             cursor: pointer;
         }
 
-        /* ── 2x2 Feature Cards Grid ─────────────────────────────── */
-        .cards-grid-2x2 {
+        /* ── 4 Feature Cards Grid ────────────────────────────────── */
+        .cards-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .feature-card {
             background: rgba(10, 12, 28, 0.65);
             border: 1.5px solid rgba(255, 255, 255, 0.08);
             border-radius: 18px;
-            padding: 24px 15px;
+            padding: 28px 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -524,28 +633,40 @@
             backdrop-filter: blur(12px);
         }
 
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: 0.5s;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
         .feature-card:hover {
-            transform: translateY(-6px);
+            transform: translateY(-8px);
             border-color: rgba(255, 100, 0, 0.4);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 100, 0, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 100, 0, 0.2);
             background: rgba(15, 18, 40, 0.85);
         }
 
-        /* Circle Icons */
         .card-circle-icon {
-            width: 58px;
-            height: 58px;
+            width: 62px;
+            height: 62px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin-bottom: 16px;
+            font-size: 26px;
+            margin-bottom: 18px;
             transition: transform 0.3s ease;
         }
 
         .feature-card:hover .card-circle-icon {
-            transform: scale(1.1) rotate(4deg);
+            transform: scale(1.1) rotate(5deg);
         }
 
         /* Theme 1: Flames (Orange) */
@@ -553,7 +674,7 @@
             background: rgba(255, 100, 0, 0.12);
             border: 1.5px solid rgba(255, 100, 0, 0.4);
             color: #FF6400;
-            box-shadow: 0 0 18px rgba(255, 100, 0, 0.25);
+            box-shadow: 0 0 20px rgba(255, 100, 0, 0.25);
         }
         .feature-card.flames .feature-card-title { color: #FF6400; }
 
@@ -562,7 +683,7 @@
             background: rgba(138, 43, 226, 0.12);
             border: 1.5px solid rgba(138, 43, 226, 0.4);
             color: #8A2BE2;
-            box-shadow: 0 0 18px rgba(138, 43, 226, 0.25);
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.25);
         }
         .feature-card.comparison .feature-card-title { color: #A855F7; }
 
@@ -571,7 +692,7 @@
             background: rgba(0, 136, 255, 0.12);
             border: 1.5px solid rgba(0, 136, 255, 0.4);
             color: #0088FF;
-            box-shadow: 0 0 18px rgba(0, 136, 255, 0.25);
+            box-shadow: 0 0 20px rgba(0, 136, 255, 0.25);
         }
         .feature-card.predictor .feature-card-title { color: #38BDF8; }
 
@@ -580,130 +701,44 @@
             background: rgba(0, 255, 136, 0.12);
             border: 1.5px solid rgba(0, 255, 136, 0.4);
             color: #00FF88;
-            box-shadow: 0 0 18px rgba(0, 255, 136, 0.25);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.25);
         }
         .feature-card.speak-ai .feature-card-title { color: #00FF88; }
 
         .feature-card-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 900;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
             text-transform: uppercase;
         }
 
         .feature-card-desc {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.5);
-            line-height: 1.45;
-        }
-
-        /* ── Full Width About Card ──────────────────────────────── */
-        .about-attacks-bar {
-            width: 100%;
-            background: rgba(10, 12, 28, 0.65);
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 18px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 14px;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .about-attacks-bar:hover {
-            border-color: rgba(255, 100, 0, 0.4);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(255, 100, 0, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .about-bar-left {
-            display: flex;
-            gap: 14px;
-        }
-
-        .about-icon-info {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 1.5px solid var(--primary);
-            color: var(--primary);
-            font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .about-content {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .about-heading {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            color: var(--primary);
-            text-transform: uppercase;
-        }
-
-        .about-text {
-            font-size: 11px;
             color: rgba(255, 255, 255, 0.5);
             line-height: 1.5;
         }
 
-        .about-arrow-right {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 16px;
-            transition: transform 0.25s ease;
-            margin-top: 2px;
+        /* Mobile-only About Card (Hidden on Desktop) */
+        .about-attacks-bar-mobile {
+            display: none;
         }
 
-        .about-attacks-bar:hover .about-arrow-right {
-            color: var(--primary);
-            transform: translateX(4px);
-        }
-
-        /* ── Encrypted Note & Copyright ─────────────────────────── */
+        /* Footer Encrypted Note */
         .footer-encrypted-note {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 10px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 1px;
+            font-size: 11px;
+            letter-spacing: 2px;
             color: rgba(255, 255, 255, 0.35);
-            margin-bottom: 8px;
-            text-align: center;
-            max-width: 320px;
-        }
-
-        .footer-encrypted-note span:first-child {
-            color: var(--green);
-            font-size: 14px;
-        }
-
-        .copyright-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
             margin-top: 10px;
         }
 
-        /* ── Result / Scanning Modal Overlay ─────────────────────── */
+        /* ── Result & Analyzing Modal Overlay ─────────────────────── */
         .result-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -725,10 +760,10 @@
         .result-card-inner {
             background: rgba(10, 12, 28, 0.95);
             border: 1.5px solid var(--primary);
-            border-radius: 22px;
-            padding: 35px 25px;
+            border-radius: 24px;
+            padding: 40px 35px;
             width: 90%;
-            max-width: 480px;
+            max-width: 540px;
             text-align: center;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px var(--primary-glow);
             transform: scale(0.92);
@@ -744,8 +779,8 @@
 
         .radar-box {
             position: relative;
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             margin-bottom: 20px;
         }
 
@@ -755,9 +790,9 @@
             top: 50%; left: 50%; transform: translate(-50%,-50%);
         }
 
-        .radar-ring:nth-child(1) { width: 60px; height: 60px; animation: ripple 1.8s linear infinite; }
-        .radar-ring:nth-child(2) { width: 40px; height: 40px; animation: ripple 1.8s linear 0.6s infinite; }
-        .radar-ring:nth-child(3) { width: 24px; height: 24px; animation: ripple 1.8s linear 1.2s infinite; }
+        .radar-ring:nth-child(1) { width: 70px; height: 70px; animation: ripple 1.8s linear infinite; }
+        .radar-ring:nth-child(2) { width: 50px; height: 50px; animation: ripple 1.8s linear 0.6s infinite; }
+        .radar-ring:nth-child(3) { width: 30px; height: 30px; animation: ripple 1.8s linear 1.2s infinite; }
 
         @keyframes ripple {
             0% { border-color: rgba(255,100,0,0.7); transform: translate(-50%,-50%) scale(0.8); }
@@ -766,7 +801,7 @@
         }
 
         .radar-dot {
-            width: 10px; height: 10px; background: var(--primary);
+            width: 12px; height: 12px; background: var(--primary);
             border-radius: 50%; position: absolute;
             top: 50%; left: 50%; transform: translate(-50%,-50%);
             box-shadow: 0 0 15px var(--primary);
@@ -790,7 +825,7 @@
             background: transparent;
             border: 1.5px solid var(--primary);
             color: var(--primary);
-            padding: 10px 24px;
+            padding: 12px 30px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
             font-weight: 900;
@@ -799,7 +834,7 @@
             cursor: pointer;
             transition: 0.3s;
             text-transform: uppercase;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .btn-modal-close:hover {
@@ -808,31 +843,118 @@
             box-shadow: 0 0 20px var(--primary);
         }
 
-        /* ── Responsive Phone Scaling ────────────────────────────── */
-        @media (max-width: 480px) {
-            .search-input-pill {
-                padding: 14px 170px 14px 42px;
-                font-size: 12px;
+        /* ── RESPONSIVE MEDIA QUERIES (DESKTOP VS MOBILE) ────────── */
+        
+        /* Tablet scaling */
+        @media (max-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* MOBILE PHONE VIEWPORT RULES (<= 768px) */
+        @media (max-width: 768px) {
+            .btn-hamburger {
+                display: flex !important; /* Show hamburger button on mobile header */
             }
 
-            .btn-search-main {
-                padding: 0 12px;
-                font-size: 10px;
+            .desktop-sidebar {
+                display: none !important; /* Hide desktop left sidebar on mobile */
             }
 
-            .cards-grid-2x2 {
-                gap: 12px;
+            .header-right-desktop .db-status-pill {
+                display: none; /* Hide header status pill on mobile header, centered in panel */
+            }
+
+            .top-header {
+                padding: 16px 20px;
+            }
+
+            .app-wrapper {
+                grid-template-columns: 1fr;
+                max-width: 520px;
+                padding: 26px 20px;
+                margin-top: 5px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2x2 cards grid on mobile phone */
+                gap: 14px;
             }
 
             .feature-card {
-                padding: 18px 10px;
+                padding: 20px 12px;
             }
 
             .card-circle-icon {
-                width: 48px;
-                height: 48px;
-                font-size: 20px;
-                margin-bottom: 12px;
+                width: 52px;
+                height: 52px;
+                font-size: 22px;
+                margin-bottom: 14px;
+            }
+
+            .feature-card-title {
+                font-size: 11px;
+            }
+
+            .feature-card-desc {
+                font-size: 11px;
+            }
+
+            /* Mobile-only About Attacks card below 2x2 grid */
+            .about-attacks-bar-mobile {
+                display: flex;
+                width: 100%;
+                background: rgba(10, 12, 28, 0.65);
+                border: 1.5px solid rgba(255, 255, 255, 0.08);
+                border-radius: 16px;
+                padding: 18px;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 14px;
+                margin-bottom: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                color: inherit;
+            }
+
+            .about-attacks-bar-mobile:hover {
+                border-color: rgba(255, 100, 0, 0.4);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(255, 100, 0, 0.15);
+            }
+
+            .search-input-pill {
+                padding: 16px 175px 16px 45px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-container {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-input-pill {
+                padding: 16px 20px 16px 45px;
+                border-radius: 16px;
+            }
+
+            .search-actions-right {
+                position: relative;
+                right: 0;
+                top: 0;
+                transform: none;
+                justify-content: center;
+                width: 100%;
+                margin-top: 4px;
+            }
+
+            .btn-search-main {
+                flex: 1;
+                justify-content: center;
             }
         }
     </style>
@@ -845,10 +967,10 @@
     <!-- Hidden File Inputs -->
     <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 
-    <!-- Top Header -->
+    <!-- Top Header Bar -->
     <header class="top-header">
         <div class="header-brand-group">
-            <button class="btn-hamburger" onclick="toggleMobileMenu()" title="Open Menu">
+            <button class="btn-hamburger" onclick="toggleMobileMenu()" title="Open Navigation Menu">
                 <span></span><span></span><span></span>
             </button>
             <div class="header-brand">
@@ -857,10 +979,16 @@
             </div>
         </div>
 
-        <a class="btn-lobby" href="attacks_lobby.html">← LOBBY</a>
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>DATABASE ONLINE</span>
+            </div>
+            <a class="btn-lobby" href="attacks_lobby.html">← LOBBY</a>
+        </div>
     </header>
 
-    <!-- Mobile Drawer Overlay Menu -->
+    <!-- Mobile Drawer Overlay Menu (Slides out when ☰ clicked on Mobile) -->
     <div class="mobile-drawer-overlay" id="mobile-drawer" onclick="closeMobileMenu(event)">
         <div class="drawer-content">
             <div class="drawer-header">
@@ -878,104 +1006,144 @@
         </div>
     </div>
 
-    <!-- Main Phone App Frame Card -->
-    <div class="phone-app-card">
+    <!-- Main Dashboard Container -->
+    <div class="app-wrapper">
 
-        <div class="panel-tagline">VETRI STUDIOS INTELLIGENCE</div>
-        <h1 class="main-title">SQUAD ANALYZER</h1>
-        <p class="main-sub">Enter a name below and press Search to begin analysis.</p>
-
-        <div class="db-status-pill">
-            <span class="status-dot-green"></span>
-            <span>DATABASE ONLINE</span>
-        </div>
-
-        <!-- Search Input Pill Container -->
-        <div class="search-container">
-            <span class="search-icon-left">👤</span>
-            <input
-                type="text"
-                id="search-input"
-                class="search-input-pill"
-                placeholder="Enter the person to attack..."
-                autocomplete="off"
-                spellcheck="false"
-                onkeydown="if(event.key==='Enter') runSearch()"
-            >
-            <div class="search-actions-right">
-                <button class="btn-icon-action" id="btn-camera" title="Upload Photo" onclick="document.getElementById('photo-file-input').click()">📷</button>
-                <button class="btn-icon-action" id="btn-preset" title="Preset Member" onclick="selectPresetMember()">🧪</button>
-                <button class="btn-search-main" onclick="runSearch()">
-                    <span>🔍</span>
-                    <span>SEARCH</span>
-                </button>
+        <!-- Left Desktop Sidebar (Visible on Laptop / Desktop) -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item active" href="attacks_flames.html">
+                    <span class="nav-icon">🔥</span>
+                    <span>FLAMES CALCULATOR</span>
+                </a>
+                <a class="nav-item" href="attacks_comparison.html">
+                    <span class="nav-icon">⚔️</span>
+                    <span>ATTACK COMPARISON</span>
+                </a>
+                <a class="nav-item" href="single_predictor.html">
+                    <span class="nav-icon">🤖</span>
+                    <span>SINGLE PREDICTOR</span>
+                </a>
+                <a class="nav-item" href="about_yourself.html">
+                    <span class="nav-icon">👤</span>
+                    <span>ABOUT YOURSELF</span>
+                </a>
+                <a class="nav-item" href="photo_as_my_own.html">
+                    <span class="nav-icon">📷</span>
+                    <span>PHOTO "AS MY OWN"</span>
+                </a>
+                <a class="nav-item" href="speak_with_ai.html">
+                    <span class="nav-icon">🤖</span>
+                    <span>SPEAK WITH AI</span>
+                </a>
             </div>
-        </div>
 
-        <!-- Upload Preview Box -->
-        <div class="upload-preview-box" id="upload-preview">
-            <div class="upload-info">
-                <img id="upload-thumb" class="upload-thumb" src="" alt="preview">
-                <div class="upload-filename" id="upload-filename">photo.jpg</div>
+            <div class="about-card">
+                <div class="about-title">ABOUT ATTACKS</div>
+                <div class="about-desc">
+                    Your intelligence assistant to analyze, compare and predict attack patterns efficiently.
+                </div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
             </div>
-            <button class="btn-remove-file" onclick="removeUpload()">REMOVE ✕</button>
-        </div>
+        </aside>
 
-        <!-- 2x2 Feature Cards Grid -->
-        <div class="cards-grid-2x2">
+        <!-- Right Main Panel -->
+        <main class="main-panel">
 
-            <!-- Card 1: Flames Calculator -->
-            <a class="feature-card flames" href="attacks_flames.html">
-                <div class="card-circle-icon">🔥</div>
-                <div class="feature-card-title">FLAMES CALCULATOR</div>
-                <div class="feature-card-desc">Calculate relationship compatibility using the FLAMES method.</div>
-            </a>
+            <div class="panel-tagline">VETRI STUDIOS INTELLIGENCE</div>
+            <h1 class="main-title">SQUAD ANALYZER</h1>
+            <p class="main-sub">Enter a name below and press Enter or click Search to begin analysis.</p>
 
-            <!-- Card 2: Attack Comparison -->
-            <a class="feature-card comparison" href="attacks_comparison.html">
-                <div class="card-circle-icon">⚔️</div>
-                <div class="feature-card-title">ATTACK COMPARISON</div>
-                <div class="feature-card-desc">Compare multiple attack patterns and find the most effective.</div>
-            </a>
+            <div class="db-status-pill center-db-badge">
+                <span class="status-dot-green"></span>
+                <span>DATABASE ONLINE</span>
+            </div>
 
-            <!-- Card 3: Single Predictor -->
-            <a class="feature-card predictor" href="single_predictor.html">
-                <div class="card-circle-icon">🤖</div>
-                <div class="feature-card-title">SINGLE PREDICTOR</div>
-                <div class="feature-card-desc">Predict the outcome of a single attack scenario using AI.</div>
-            </a>
-
-            <!-- Card 4: Speak With AI -->
-            <a class="feature-card speak-ai" href="speak_with_ai.html">
-                <div class="card-circle-icon">🤖</div>
-                <div class="feature-card-title">SPEAK WITH AI</div>
-                <div class="feature-card-desc">Have a conversation with our AI assistant for insights.</div>
-            </a>
-
-        </div>
-
-        <!-- Full Width About Card (Card 5) -->
-        <a class="about-attacks-bar" href="about_yourself.html">
-            <div class="about-bar-left">
-                <div class="about-icon-info">ⓘ</div>
-                <div class="about-content">
-                    <div class="about-heading">ABOUT ATTACKS</div>
-                    <div class="about-text">Your intelligence assistant to analyze, compare and predict attack patterns efficiently.</div>
+            <!-- Search Input Pill Container -->
+            <div class="search-container">
+                <span class="search-icon-left">👤</span>
+                <input
+                    type="text"
+                    id="search-input"
+                    class="search-input-pill"
+                    placeholder="Enter the person to attack..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    onkeydown="if(event.key==='Enter') runSearch()"
+                >
+                <div class="search-actions-right">
+                    <button class="btn-icon-action" id="btn-camera" title="Upload Photo for Analysis" onclick="document.getElementById('photo-file-input').click()">📷</button>
+                    <button class="btn-icon-action" id="btn-preset" title="Select Preset Squad Member" onclick="selectPresetMember()">🧪</button>
+                    <button class="btn-search-main" onclick="runSearch()">
+                        <span>🔍</span>
+                        <span>SEARCH</span>
+                    </button>
                 </div>
             </div>
-            <div class="about-arrow-right">❯</div>
-        </a>
 
-        <!-- Footer Notes -->
-        <div class="footer-encrypted-note">
-            <span>🛡️</span>
-            <span>All data is encrypted and secured. For authorized use only.</span>
-        </div>
+            <!-- Upload Photo Preview Box -->
+            <div class="upload-preview-box" id="upload-preview">
+                <div class="upload-info">
+                    <img id="upload-thumb" class="upload-thumb" src="" alt="preview">
+                    <div class="upload-filename" id="upload-filename">photo.jpg</div>
+                </div>
+                <button class="btn-remove-file" onclick="removeUpload()">REMOVE ✕</button>
+            </div>
+
+            <!-- Feature Cards Grid (4 columns on Laptop, 2x2 grid on Mobile) -->
+            <div class="cards-grid">
+
+                <!-- Card 1: Flames Calculator -->
+                <a class="feature-card flames" href="attacks_flames.html">
+                    <div class="card-circle-icon">🔥</div>
+                    <div class="feature-card-title">FLAMES CALCULATOR</div>
+                    <div class="feature-card-desc">Calculate relationship compatibility using the FLAMES method.</div>
+                </a>
+
+                <!-- Card 2: Attack Comparison -->
+                <a class="feature-card comparison" href="attacks_comparison.html">
+                    <div class="card-circle-icon">⚔️</div>
+                    <div class="feature-card-title">ATTACK COMPARISON</div>
+                    <div class="feature-card-desc">Compare multiple attack patterns and find the most effective.</div>
+                </a>
+
+                <!-- Card 3: Single Predictor -->
+                <a class="feature-card predictor" href="single_predictor.html">
+                    <div class="card-circle-icon">🤖</div>
+                    <div class="feature-card-title">SINGLE PREDICTOR</div>
+                    <div class="feature-card-desc">Predict the outcome of a single attack scenario using AI.</div>
+                </a>
+
+                <!-- Card 4: Speak With AI -->
+                <a class="feature-card speak-ai" href="speak_with_ai.html">
+                    <div class="card-circle-icon">🤖</div>
+                    <div class="feature-card-title">SPEAK WITH AI</div>
+                    <div class="feature-card-desc">Have a conversation with our AI assistant for insights.</div>
+                </a>
+
+            </div>
+
+            <!-- Mobile-only About Attacks Card (Shown below 2x2 grid on Mobile Phone) -->
+            <a class="about-attacks-bar-mobile" href="about_yourself.html">
+                <div style="display: flex; gap: 12px;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--primary); color: var(--primary); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">ⓘ</div>
+                    <div style="display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900; letter-spacing: 1.5px; color: var(--primary); text-transform: uppercase;">ABOUT ATTACKS</div>
+                        <div style="font-size: 11px; color: rgba(255, 255, 255, 0.5); line-height: 1.45;">Your intelligence assistant to analyze, compare and predict attack patterns efficiently.</div>
+                    </div>
+                </div>
+                <div style="color: rgba(255, 255, 255, 0.4); font-size: 16px; margin-top: 2px;">❯</div>
+            </a>
+
+            <!-- Encrypted Security Note Footer -->
+            <div class="footer-encrypted-note">
+                <span>🛡️</span>
+                <span>All data is encrypted and secured. For authorized use only.</span>
+            </div>
+
+        </main>
 
     </div>
-
-    <!-- Copyright Tag -->
-    <div class="copyright-tag">© Vetri Studios 2025</div>
 
     <!-- Result / Scanning Modal Overlay -->
     <div class="result-modal" id="result-modal">
@@ -1105,7 +1273,7 @@
                 html += `
                     <div style="display: flex; gap: 8px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
                         <a href="about_yourself.html" style="padding: 8px 14px; border-radius: 8px; background: rgba(255,100,0,0.15); border: 1px solid var(--primary); color: #fff; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;">👤 READ STORY</a>
-                        <a href="attacks_comparison.html" style="padding: 8px 14px; border-radius: 8px; background: rgba(138,43,226,0.15); border: 1px solid #8A2BE2; color: #fff; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;">⚔️ COMPARE STATS</a>
+                        <a href="attacks_comparison.html" style="padding: 8px 14px; border-radius: 8px; background: rgba(138,43,226,0.15); border: 1.5px solid #8A2BE2; color: #fff; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;">⚔️ COMPARE STATS</a>
                     </div>
                 `;
             }
