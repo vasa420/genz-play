@@ -4,23 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ATTACKS | Search Engine v1.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #FF6400;
             --primary-glow: rgba(255, 100, 0, 0.45);
+            --cyan: #00FFFF;
+            --blue: #0088FF;
+            --purple: #8A2BE2;
             --green: #00FF88;
             --green-glow: rgba(0, 255, 136, 0.35);
             --red: #FF2244;
-            --red-glow: rgba(255, 34, 68, 0.35);
             --gold: #FFD700;
-            --bg: #04040c;
+            --bg: #030409;
+            --card-bg: rgba(8, 10, 22, 0.85);
+            --border: rgba(255, 100, 0, 0.22);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
 
         body {
-            background: var(--bg);
+            background-color: var(--bg);
             color: #fff;
             font-family: 'Outfit', sans-serif;
             min-height: 100vh;
@@ -28,1362 +37,1089 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            position: relative;
+            padding-bottom: 30px;
         }
 
-        /* ── Scanline overlay ───────────────────────────────────── */
+        /* ── Scanline & Particles ───────────────────────────────── */
         .scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
             pointer-events: none; z-index: 9999; opacity: 0.7;
         }
 
-        /* ── Ambient particles bg ────────────────────────────────── */
         #particle-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 0;
         }
 
-        /* ── Header ─────────────────────────────────────────────── */
-        .header {
-            width: 100%; padding: 22px 30px 18px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: none;
-            background: rgba(4,4,12,0.9);
-            backdrop-filter: blur(12px);
-            position: sticky; top: 0; z-index: 100;
+        /* ── Top Header ─────────────────────────────────────────── */
+        .top-header {
+            width: 100%;
+            max-width: 900px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            position: relative;
         }
 
-        .header-logo {
+        .header-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        /* Hamburger button */
+        .btn-hamburger {
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 6px;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .btn-hamburger span {
+            display: block;
+            width: 22px;
+            height: 2.5px;
+            background: #fff;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-hamburger:hover span {
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .header-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .brand-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 20px; font-weight: 900; letter-spacing: 6px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 5px;
             color: var(--primary);
-            text-shadow: 0 0 12px var(--primary-glow);
-        }
-
-        .header-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 3px; color: #555;
+            text-shadow: 0 0 15px var(--primary-glow);
             text-transform: uppercase;
         }
 
-        .btn-back {
-            background: transparent;
-            border: 1px solid rgba(255,100,0,0.3);
-            color: rgba(255,100,0,0.7);
+        .brand-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .btn-lobby {
+            background: rgba(10, 10, 24, 0.7);
+            border: 1.5px solid rgba(255, 100, 0, 0.35);
+            color: #ddd;
             padding: 8px 18px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 2px;
-            border-radius: 6px; cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-lobby:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: translateX(-2px);
+        }
+
+        /* ── Slide-Out Drawer Menu (Mobile Navigation) ─────────── */
+        .mobile-drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s ease;
+        }
+
+        .mobile-drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-content {
+            position: absolute;
+            top: 0; left: 0;
+            width: 82%;
+            max-width: 320px;
+            height: 100%;
+            background: rgba(8, 10, 22, 0.95);
+            border-right: 1.5px solid rgba(255, 100, 0, 0.3);
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 10px 0 40px rgba(0,0,0,0.9);
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mobile-drawer-overlay.active .drawer-content {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .btn-drawer-close {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 20px;
+            cursor: pointer;
             transition: 0.25s;
         }
 
-        .btn-back:hover {
-            border-color: var(--primary);
+        .btn-drawer-close:hover {
             color: var(--primary);
-            box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        /* ── Main content ────────────────────────────────────────── */
-        .main {
-            width: 100%; max-width: 720px;
-            padding: 5px 20px 40px;
-            margin-top: -10px;
-            position: relative; z-index: 1;
-            display: flex; flex-direction: column; align-items: center;
+        .drawer-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .engine-title {
+        .drawer-item {
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: #ddd;
             font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(11px, 2vw, 13px);
-            letter-spacing: 5px; color: rgba(255,100,0,0.55);
-            text-transform: uppercase; margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.25s ease;
         }
 
-        .engine-heading {
-            font-size: clamp(28px, 6vw, 48px);
-            font-weight: 900; letter-spacing: 3px;
-            background: linear-gradient(90deg, 
+        .drawer-item:hover, .drawer-item.active {
+            color: var(--primary);
+            border-color: rgba(255, 100, 0, 0.4);
+            background: rgba(255, 100, 0, 0.12);
+            box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
+        }
+
+        /* ── Main Phone App Frame / Outer Card ──────────────────── */
+        .phone-app-card {
+            width: 95%;
+            max-width: 540px;
+            background: var(--card-bg);
+            border: 1.5px solid rgba(255, 100, 0, 0.22);
+            border-radius: 24px;
+            padding: 30px 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 100, 0, 0.05);
+            backdrop-filter: blur(16px);
+            margin-top: 5px;
+        }
+
+        .panel-tagline {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3.5px;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .panel-tagline::before, .panel-tagline::after {
+            content: '';
+            width: 30px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .main-title {
+            font-size: clamp(30px, 8vw, 44px);
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, 
                 #00FFFF 0%, 
-                #0088FF 20%, 
-                #8A2BE2 40%, 
-                #FF007F 60%, 
-                #FF9900 80%, 
-                #00FFFF 100%
+                #0088FF 35%, 
+                #8A2BE2 70%, 
+                #FF007F 100%
             );
-            background-size: 300% 100%;
+            background-size: 200% 100%;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-align: center; margin-bottom: 4px;
-            animation: slowGradientWave 8s ease-in-out infinite;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-align: center;
+            animation: neonGradient 8s ease-in-out infinite;
             filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.3));
         }
 
-        @keyframes slowGradientWave {
+        @keyframes neonGradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        .engine-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 3px;
-            text-align: center; margin-bottom: 14px;
+        .main-sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.5px;
+            margin-bottom: 18px;
+            text-align: center;
+            line-height: 1.4;
+            max-width: 320px;
         }
 
-        /* ── Search bar ──────────────────────────────────────────── */
-        .search-wrapper {
-            width: 100%; position: relative; margin-bottom: 20px;
+        .db-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 255, 136, 0.06);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--green);
+            text-transform: uppercase;
+            margin-bottom: 25px;
         }
 
-        .search-bar {
-            width: 100%; padding: 18px 185px 18px 24px;
-            background: rgba(255,255,255,0.03);
-            border: 1.5px solid rgba(255,100,0,0.25);
-            border-radius: 14px;
+        .status-dot-green {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: dbPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes dbPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.8); }
+        }
+
+        /* ── Search Bar Container ───────────────────────────────── */
+        .search-container {
+            width: 100%;
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-input-pill {
+            width: 100%;
+            padding: 16px 190px 16px 46px;
+            background: rgba(4, 5, 16, 0.95);
+            border: 2px solid rgba(0, 136, 255, 0.45);
+            border-radius: 40px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 16px; letter-spacing: 2px;
-            color: #fff; outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #fff;
+            outline: none;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 0 20px rgba(0, 136, 255, 0.18), inset 0 2px 8px rgba(0,0,0,0.8);
             caret-color: var(--primary);
         }
 
-        .search-bar::placeholder {
-            color: rgba(255,255,255,0.18);
-            letter-spacing: 2px;
+        .search-input-pill::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 1px;
         }
 
-        .search-bar:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 20px rgba(255,100,0,0.2), 0 0 0 3px rgba(255,100,0,0.06);
+        .search-input-pill:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.35), inset 0 2px 8px rgba(0,0,0,0.9);
         }
 
-        .search-btns {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            display: flex; gap: 6px; align-items: center;
+        .search-icon-left {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
         }
 
-        .btn-media-toggle, .btn-mic, .btn-search {
-            height: 38px; border-radius: 10px; border: none;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 16px; transition: 0.25s;
+        .search-actions-right {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .btn-media-toggle, .btn-mic {
-            background: rgba(255,100,0,0.1);
-            border: 1.5px solid rgba(255,100,0,0.25);
-            color: var(--primary);
-            padding: 0 8px;
-            gap: 4px;
-        }
-
-        .btn-media-toggle:hover, .btn-mic:hover {
-            background: rgba(255,100,0,0.22);
-            border-color: var(--primary);
-            box-shadow: 0 0 12px var(--primary-glow);
-            transform: translateY(-1px);
-        }
-
-        .shortcut-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 9px; font-weight: 800;
-            background: rgba(255, 100, 0, 0.22);
-            color: var(--primary);
-            border: 1px solid rgba(255, 100, 0, 0.4);
-            padding: 1px 4px; border-radius: 4px; line-height: 1;
-        }
-
-        .btn-mic.listening {
-            background: rgba(255,34,68,0.2);
-            border-color: var(--red);
-            color: var(--red);
-            animation: mic-pulse 1s ease-in-out infinite;
-        }
-
-        @keyframes mic-pulse {
-            0%, 100% { box-shadow: 0 0 8px rgba(255,34,68,0.5); }
-            50% { box-shadow: 0 0 20px rgba(255,34,68,0.9); }
-        }
-
-        .btn-search {
-            background: var(--primary);
-            color: #000; font-size: 16px; font-weight: 900;
-        }
-
-        .btn-search:hover {
-            background: #ff7a1a;
-            box-shadow: 0 0 15px var(--primary);
-            transform: scale(1.05);
-        }
-
-        /* chips removed — names are hidden in localStorage only */
-
-        /* ── AI Scene Generator ──────────────────────────────────────── */
-        .scene-gen-block {
-            width: 100%; margin-top: 18px; display: flex;
-            flex-direction: column; align-items: center; gap: 16px;
-        }
-
-        .scene-divider {
-            width: 100%; display: flex; align-items: center; gap: 12px;
-            color: rgba(255,215,0,0.7);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 3px;
-        }
-
-        .scene-divider::before, .scene-divider::after {
-            content: '';
-            flex: 1; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
-        }
-
-        /* Generating spinner */
-        .scene-generating {
-            display: flex; flex-direction: column; align-items: center; gap: 12px;
-            width: 100%;
-        }
-
-        .gen-spinner {
-            width: 48px; height: 48px;
-            border: 3px solid rgba(255,215,0,0.12);
-            border-top-color: var(--gold);
+        .btn-icon-action {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-            box-shadow: 0 0 16px rgba(255,215,0,0.25);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .gen-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; letter-spacing: 4px; color: var(--gold);
-            animation: blink-text 0.7s step-end infinite;
-        }
-
-        .gen-sub {
-            font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 1px;
-        }
-
-        .gen-progress-track {
-            width: 100%; height: 3px;
-            background: rgba(255,215,0,0.08); border-radius: 4px; overflow: hidden;
-        }
-
-        .gen-progress-fill {
-            height: 100%; width: 0%;
-            background: linear-gradient(90deg, var(--gold), #ffaa00);
-            border-radius: 4px;
-            box-shadow: 0 0 8px rgba(255,215,0,0.5);
-        }
-
-        /* Image result */
-        .scene-result {
-            display: none; flex-direction: column; align-items: center; gap: 14px;
-            width: 100%;
-        }
-
-        .scene-result.active { display: flex; }
-
-        .scene-img-wrapper {
-            position: relative; width: 100%; border-radius: 16px; overflow: hidden;
-            border: 2px solid rgba(255,215,0,0.25);
-            box-shadow: 0 0 30px rgba(255,215,0,0.15), 0 8px 32px rgba(0,0,0,0.6);
-        }
-
-        .scene-img-wrapper img {
-            width: 100%; display: block;
-            border-radius: 14px;
-            transition: transform 0.4s ease;
-        }
-
-        .scene-img-wrapper:hover img { transform: scale(1.02); }
-
-        .scene-img-overlay {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.75));
-            padding: 20px 16px 12px;
-            display: flex; justify-content: flex-end;
-        }
-
-        .scene-img-badge {
-            background: rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,215,0,0.3);
-            color: var(--gold); font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 2px;
-            padding: 4px 10px; border-radius: 20px;
-        }
-
-        .scene-caption {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px;
-            color: rgba(255,255,255,0.45); text-align: center;
-        }
-
-        .scene-actions {
-            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-        }
-
-        .btn-download, .btn-regen {
-            padding: 9px 20px; border-radius: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px;
-            cursor: pointer; transition: 0.22s; text-decoration: none;
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-
-        .btn-download {
-            background: rgba(255,215,0,0.12);
-            border: 1.5px solid rgba(255,215,0,0.4);
-            color: var(--gold);
-        }
-
-        .btn-download:hover {
-            background: var(--gold); color: #000;
-            box-shadow: 0 0 14px rgba(255,215,0,0.5);
-        }
-
-        .btn-regen {
-            background: rgba(255,255,255,0.05);
-            border: 1.5px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.6);
-        }
-
-        .btn-regen:hover {
-            border-color: rgba(255,255,255,0.4);
-            color: #fff;
-        }
-
-        /* ── Upload button ───────────────────────────────────────── */
-        .btn-upload {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: rgba(255,100,0,0.1);
-            border: 1.5px solid rgba(255,100,0,0.25);
-            color: var(--primary);
-            font-size: 20px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.25s; line-height: 1;
-        }
-
-        .btn-upload:hover {
-            background: rgba(255,100,0,0.22);
+        .btn-icon-action:hover {
+            background: rgba(255, 100, 0, 0.2);
             border-color: var(--primary);
+            color: var(--primary);
             box-shadow: 0 0 12px var(--primary-glow);
             transform: scale(1.08);
         }
 
-        /* ── Image preview panel ─────────────────────────────────── */
-        .upload-preview {
-            width: 100%; display: none;
-            background: rgba(255,255,255,0.03);
-            border: 1.5px solid rgba(255,100,0,0.22);
-            border-radius: 14px; padding: 16px 18px;
-            margin-bottom: 20px;
-            flex-direction: row; align-items: center; gap: 16px;
-            animation: fadeIn 0.35s ease;
-        }
-
-        .upload-preview.active { display: flex; }
-
-        .upload-preview img {
-            width: 64px; height: 64px;
-            object-fit: cover; border-radius: 10px;
-            border: 2px solid rgba(255,100,0,0.35);
-            box-shadow: 0 0 10px rgba(255,100,0,0.2);
-        }
-
-        .upload-preview-info {
-            flex: 1; display: flex; flex-direction: column; gap: 4px;
-        }
-
-        .upload-preview-name {
+        .btn-search-main {
+            height: 38px;
+            padding: 0 16px;
+            background: var(--primary);
+            border: none;
+            border-radius: 25px;
+            color: #000;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; color: #fff; letter-spacing: 1px;
-            word-break: break-all;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 15px var(--primary-glow);
+            text-transform: uppercase;
         }
 
-        .upload-preview-size {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 1px;
+        .btn-search-main:hover {
+            background: #ff7a1a;
+            box-shadow: 0 0 25px var(--primary);
+            transform: scale(1.04);
         }
 
-        .btn-remove-upload {
-            background: rgba(255,34,68,0.1);
-            border: 1.5px solid rgba(255,34,68,0.3);
-            color: var(--red); width: 30px; height: 30px;
-            border-radius: 8px; font-size: 14px;
-            cursor: pointer; display: flex; align-items: center;
-            justify-content: center; flex-shrink: 0; transition: 0.2s;
-        }
-
-        .btn-remove-upload:hover {
-            background: var(--red); color: #fff;
-            box-shadow: 0 0 10px var(--red-glow);
-        }
-
-        /* ── Result panel ────────────────────────────────────────── */
-        .result-panel {
+        /* Upload Preview Box */
+        .upload-preview-box {
             width: 100%;
-            background: rgba(255,255,255,0.025);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 18px; padding: 35px 30px;
             display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 100, 0, 0.06);
+            border: 1.5px solid rgba(255, 100, 0, 0.3);
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .upload-preview-box.active {
+            display: flex;
+        }
+
+        .upload-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-thumb {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1.5px solid var(--primary);
+        }
+
+        .upload-filename {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #fff;
+        }
+
+        .btn-remove-file {
+            background: rgba(255,34,68,0.2);
+            border: 1px solid var(--red);
+            color: var(--red);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            cursor: pointer;
+        }
+
+        /* ── 2x2 Feature Cards Grid ─────────────────────────────── */
+        .cards-grid-2x2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .feature-card {
+            background: rgba(10, 12, 28, 0.65);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 24px 15px;
+            display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            animation: fadeIn 0.5s ease;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            backdrop-filter: blur(12px);
         }
 
-        .result-panel.visible { display: flex; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 100, 0, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 100, 0, 0.2);
+            background: rgba(15, 18, 40, 0.85);
         }
 
-        /* Analyzing spinner */
-        .analyzing-block { display: none; flex-direction: column; align-items: center; gap: 18px; }
-        .analyzing-block.active { display: flex; }
+        /* Circle Icons */
+        .card-circle-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+            transition: transform 0.3s ease;
+        }
 
-        .radar {
-            width: 70px; height: 70px; position: relative;
+        .feature-card:hover .card-circle-icon {
+            transform: scale(1.1) rotate(4deg);
+        }
+
+        /* Theme 1: Flames (Orange) */
+        .feature-card.flames .card-circle-icon {
+            background: rgba(255, 100, 0, 0.12);
+            border: 1.5px solid rgba(255, 100, 0, 0.4);
+            color: #FF6400;
+            box-shadow: 0 0 18px rgba(255, 100, 0, 0.25);
+        }
+        .feature-card.flames .feature-card-title { color: #FF6400; }
+
+        /* Theme 2: Comparison (Purple) */
+        .feature-card.comparison .card-circle-icon {
+            background: rgba(138, 43, 226, 0.12);
+            border: 1.5px solid rgba(138, 43, 226, 0.4);
+            color: #8A2BE2;
+            box-shadow: 0 0 18px rgba(138, 43, 226, 0.25);
+        }
+        .feature-card.comparison .feature-card-title { color: #A855F7; }
+
+        /* Theme 3: Single Predictor (Blue) */
+        .feature-card.predictor .card-circle-icon {
+            background: rgba(0, 136, 255, 0.12);
+            border: 1.5px solid rgba(0, 136, 255, 0.4);
+            color: #0088FF;
+            box-shadow: 0 0 18px rgba(0, 136, 255, 0.25);
+        }
+        .feature-card.predictor .feature-card-title { color: #38BDF8; }
+
+        /* Theme 4: Speak AI (Teal/Green) */
+        .feature-card.speak-ai .card-circle-icon {
+            background: rgba(0, 255, 136, 0.12);
+            border: 1.5px solid rgba(0, 255, 136, 0.4);
+            color: #00FF88;
+            box-shadow: 0 0 18px rgba(0, 255, 136, 0.25);
+        }
+        .feature-card.speak-ai .feature-card-title { color: #00FF88; }
+
+        .feature-card-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .feature-card-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.45;
+        }
+
+        /* ── Full Width About Card ──────────────────────────────── */
+        .about-attacks-bar {
+            width: 100%;
+            background: rgba(10, 12, 28, 0.65);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .about-attacks-bar:hover {
+            border-color: rgba(255, 100, 0, 0.4);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 15px rgba(255, 100, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .about-bar-left {
+            display: flex;
+            gap: 14px;
+        }
+
+        .about-icon-info {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .about-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .about-heading {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .about-text {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.5;
+        }
+
+        .about-arrow-right {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px;
+            transition: transform 0.25s ease;
+            margin-top: 2px;
+        }
+
+        .about-attacks-bar:hover .about-arrow-right {
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        /* ── Encrypted Note & Copyright ─────────────────────────── */
+        .footer-encrypted-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 8px;
+            text-align: center;
+            max-width: 320px;
+        }
+
+        .footer-encrypted-note span:first-child {
+            color: var(--green);
+            font-size: 14px;
+        }
+
+        .copyright-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 10px;
+        }
+
+        /* ── Result / Scanning Modal Overlay ─────────────────────── */
+        .result-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 3, 10, 0.88);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .result-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .result-card-inner {
+            background: rgba(10, 12, 28, 0.95);
+            border: 1.5px solid var(--primary);
+            border-radius: 22px;
+            padding: 35px 25px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px var(--primary-glow);
+            transform: scale(0.92);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .result-modal.active .result-card-inner {
+            transform: scale(1);
+        }
+
+        .radar-box {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
         }
 
         .radar-ring {
             position: absolute; border-radius: 50%;
-            border: 2px solid rgba(255,100,0,0.2);
+            border: 2px solid rgba(255,100,0,0.3);
             top: 50%; left: 50%; transform: translate(-50%,-50%);
         }
 
-        .radar-ring:nth-child(1) { width: 70px; height: 70px; animation: ripple 1.8s linear infinite; }
-        .radar-ring:nth-child(2) { width: 50px; height: 50px; animation: ripple 1.8s linear 0.6s infinite; }
-        .radar-ring:nth-child(3) { width: 30px; height: 30px; animation: ripple 1.8s linear 1.2s infinite; }
+        .radar-ring:nth-child(1) { width: 60px; height: 60px; animation: ripple 1.8s linear infinite; }
+        .radar-ring:nth-child(2) { width: 40px; height: 40px; animation: ripple 1.8s linear 0.6s infinite; }
+        .radar-ring:nth-child(3) { width: 24px; height: 24px; animation: ripple 1.8s linear 1.2s infinite; }
 
         @keyframes ripple {
-            0%   { border-color: rgba(255,100,0,0.6); transform: translate(-50%,-50%) scale(0.8); }
-            70%  { border-color: rgba(255,100,0,0.2); transform: translate(-50%,-50%) scale(1.4); }
-            100% { border-color: rgba(255,100,0,0);   transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+            0% { border-color: rgba(255,100,0,0.7); transform: translate(-50%,-50%) scale(0.8); }
+            70% { border-color: rgba(255,100,0,0.2); transform: translate(-50%,-50%) scale(1.4); }
+            100% { border-color: rgba(255,100,0,0); transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
         }
 
         .radar-dot {
             width: 10px; height: 10px; background: var(--primary);
             border-radius: 50%; position: absolute;
             top: 50%; left: 50%; transform: translate(-50%,-50%);
-            box-shadow: 0 0 10px var(--primary);
+            box-shadow: 0 0 15px var(--primary);
         }
 
-        .analyzing-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 15px; letter-spacing: 5px; color: var(--primary);
-            text-transform: uppercase;
-            animation: blink-text 0.6s step-end infinite;
-        }
-
-        @keyframes blink-text {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.3; }
-        }
-
-        .analyzing-query {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 3px; color: #555;
-        }
-
-        /* Progress bar */
         .progress-bar-track {
             width: 100%; height: 4px;
             background: rgba(255,100,0,0.1);
             border-radius: 4px; overflow: hidden;
-            margin-top: 10px;
+            margin: 15px 0 20px;
         }
 
         .progress-bar-fill {
             height: 100%; width: 0%;
             background: linear-gradient(90deg, #FF6400, #FFD700);
-            border-radius: 4px;
-            transition: width linear;
-            box-shadow: 0 0 8px var(--primary);
+            border-radius: 4px; transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--primary);
         }
 
-        /* Result states */
-        .result-block { display: none; flex-direction: column; align-items: center; gap: 14px; }
-        .result-block.active { display: flex; }
-
-        .result-icon { font-size: 48px; line-height: 1; }
-
-        .result-status {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(12px, 3vw, 16px);
-            font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
-        }
-
-        .result-status.found    { color: var(--green); text-shadow: 0 0 15px var(--green-glow); }
-        .result-status.notfound { color: var(--red);   text-shadow: 0 0 15px var(--red-glow); }
-
-        .result-query-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; color: #555; letter-spacing: 3px;
-        }
-
-        .result-query-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px; font-weight: 900; letter-spacing: 4px;
-            color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.4);
-        }
-
-        .result-badge {
-            padding: 6px 18px; border-radius: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; font-weight: 700;
-        }
-
-        .result-badge.found    { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--green); }
-        .result-badge.notfound { background: rgba(255,34,68,0.1);  border: 1px solid rgba(255,34,68,0.3);  color: var(--red); }
-
-        .result-detail {
-            font-size: 13px; color: #666; line-height: 1.6; max-width: 400px;
-        }
-
-        .btn-search-again {
-            margin-top: 8px; padding: 10px 28px;
+        .btn-modal-close {
             background: transparent;
             border: 1.5px solid var(--primary);
             color: var(--primary);
+            padding: 10px 24px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 3px;
-            border-radius: 8px; cursor: pointer;
-            transition: 0.25s;
-        }
-
-        .btn-search-again:hover {
-            background: var(--primary); color: #000;
-            box-shadow: 0 0 15px var(--primary);
-        }
-
-        .btn-flames-link:hover, .btn-comp-link:hover, .btn-pred-link:hover, .btn-about-link:hover, .btn-video-own-link:hover, .btn-photo-own-link:hover, .btn-speak-ai-link:hover {
-            background: rgba(255, 100, 0, 0.22) !important;
-            border-color: var(--primary) !important;
-            box-shadow: 0 0 20px var(--primary-glow) !important;
-            transform: translateY(-1px);
-        }
-
-        .btn-flames-link:active, .btn-comp-link:active, .btn-pred-link:active, .btn-about-link:active, .btn-video-own-link:active, .btn-photo-own-link:active, .btn-speak-ai-link:active {
-            transform: translateY(1px);
-        }
-
-        /* ── Mic status toast ────────────────────────────────────── */
-        .mic-toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(20,0,0,0.9); border: 1px solid var(--red);
-            padding: 12px 24px; border-radius: 30px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 2px; color: var(--red);
-            display: none; z-index: 9999;
-            animation: toastUp 0.3s ease;
-        }
-
-        .mic-toast.active { display: block; }
-
-        @keyframes toastUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(15px); }
-            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        /* ── Database status bar ─────────────────────────────────── */
-        .db-status {
-            width: 100%; display: flex; align-items: center; justify-content: center;
-            gap: 10px; margin-bottom: 35px;
-        }
-
-        .db-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: db-pulse 2s ease-in-out infinite; }
-
-        @keyframes db-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        .db-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.45);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
             text-transform: uppercase;
+            margin-top: 15px;
         }
 
-        .db-count {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 1px; color: var(--primary);
+        .btn-modal-close:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        /* ── Responsive Phone Scaling ────────────────────────────── */
+        @media (max-width: 480px) {
+            .search-input-pill {
+                padding: 14px 170px 14px 42px;
+                font-size: 12px;
+            }
+
+            .btn-search-main {
+                padding: 0 12px;
+                font-size: 10px;
+            }
+
+            .cards-grid-2x2 {
+                gap: 12px;
+            }
+
+            .feature-card {
+                padding: 18px 10px;
+            }
+
+            .card-circle-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="scanlines"></div>
-
-    <!-- Floating particles bg -->
     <canvas id="particle-bg"></canvas>
 
-    <!-- Header -->
-    <header class="header">
-        <div>
-            <div class="header-logo">ATTACKS</div>
-            <div class="header-tag">Search Engine v1.0</div>
-            <!-- Squad Flames Calculator Link Button -->
-            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
-                <a class="btn-flames-link" href="attacks_flames.html" style="
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 8px;
-                    background: rgba(255, 100, 0, 0.08);
-                    border: 1.5px solid rgba(255, 100, 0, 0.35);
-                    color: var(--primary);
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 9px; letter-spacing: 2px;
-                    cursor: pointer; text-decoration: none;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                ">
-                    <span>🔥</span> FLAMES CALCULATOR
-                </a>
-                <!-- Attack Comparison Link Button -->
-                <a class="btn-comp-link" href="attacks_comparison.html" style="
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 8px;
-                    background: rgba(255, 100, 0, 0.08);
-                    border: 1.5px solid rgba(255, 100, 0, 0.35);
-                    color: var(--primary);
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 9px; letter-spacing: 2px;
-                    cursor: pointer; text-decoration: none;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                ">
-                    <span>⚔️</span> ATTACK COMPARISON
-                </a>
-                <!-- Single Predictor Link Button -->
-                <a class="btn-pred-link" href="single_predictor.html" style="
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 8px;
-                    background: rgba(255, 100, 0, 0.08);
-                    border: 1.5px solid rgba(255, 100, 0, 0.35);
-                    color: var(--primary);
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 9px; letter-spacing: 2px;
-                    cursor: pointer; text-decoration: none;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                ">
-                    <span>🔮</span> SINGLE PREDICTOR
-                </a>
-                <!-- About Yourself Link Button -->
-                <a class="btn-about-link" href="about_yourself.html" style="
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 8px;
-                    background: rgba(255, 100, 0, 0.08);
-                    border: 1.5px solid rgba(255, 100, 0, 0.35);
-                    color: var(--primary);
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 9px; letter-spacing: 2px;
-                    cursor: pointer; text-decoration: none;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                ">
-                    <span>👤</span> ABOUT YOURSELF
-                </a>
-                <!-- Photo As My Own Link Button -->
-                <a class="btn-photo-own-link" href="photo_as_my_own.html" style="
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 8px;
-                    background: rgba(255, 100, 0, 0.08);
-                    border: 1.5px solid rgba(255, 100, 0, 0.35);
-                    color: var(--primary);
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 9px; letter-spacing: 2px;
-                    cursor: pointer; text-decoration: none;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                ">
-                    <span>📸</span> PHOTO "AS MY OWN"
-                </a>
-                <!-- Speak With AI Link Button -->
-                <a class="btn-speak-ai-link" href="speak_with_ai.html" style="
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 8px;
-                    background: rgba(255, 100, 0, 0.08);
-                    border: 1.5px solid rgba(255, 100, 0, 0.35);
-                    color: var(--primary);
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 9px; letter-spacing: 2px;
-                    cursor: pointer; text-decoration: none;
-                    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                ">
-                    <span>🎙️</span> SPEAK WITH AI
-                </a>
+    <!-- Hidden File Inputs -->
+    <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <button class="btn-hamburger" onclick="toggleMobileMenu()" title="Open Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="header-brand">
+                <div class="brand-title">ATTACKS</div>
+                <div class="brand-sub">SEARCH ENGINE V1.0</div>
             </div>
         </div>
-        <button class="btn-back" onclick="goBack()">← LOBBY</button>
+
+        <a class="btn-lobby" href="attacks_lobby.html">← LOBBY</a>
     </header>
 
-    <!-- Main content -->
-    <main class="main">
-        <div class="engine-title">⚔ VETRI STUDIOS INTELLIGENCE</div>
-        <h1 class="engine-heading">SQUAD ANALYZER</h1>
-        <p class="engine-sub">ENTER A NAME · PRESS ENTER OR CLICK SEARCH</p>
+    <!-- Mobile Drawer Overlay Menu -->
+    <div class="mobile-drawer-overlay" id="mobile-drawer" onclick="closeMobileMenu(event)">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <div class="brand-title">ATTACKS</div>
+                <button class="btn-drawer-close" onclick="toggleMobileMenu()">✕</button>
+            </div>
+            <div class="drawer-menu">
+                <a class="drawer-item active" href="attacks_flames.html"><span>🔥</span> FLAMES CALCULATOR</a>
+                <a class="drawer-item" href="attacks_comparison.html"><span>⚔️</span> ATTACK COMPARISON</a>
+                <a class="drawer-item" href="single_predictor.html"><span>🤖</span> SINGLE PREDICTOR</a>
+                <a class="drawer-item" href="about_yourself.html"><span>👤</span> ABOUT YOURSELF</a>
+                <a class="drawer-item" href="photo_as_my_own.html"><span>📷</span> PHOTO "AS MY OWN"</a>
+                <a class="drawer-item" href="speak_with_ai.html"><span>🤖</span> SPEAK WITH AI</a>
+            </div>
+        </div>
+    </div>
 
-        <!-- DB online status -->
-        <div class="db-status">
-            <div class="db-dot"></div>
-            <span class="db-label">DATABASE ONLINE</span>
+    <!-- Main Phone App Frame Card -->
+    <div class="phone-app-card">
+
+        <div class="panel-tagline">VETRI STUDIOS INTELLIGENCE</div>
+        <h1 class="main-title">SQUAD ANALYZER</h1>
+        <p class="main-sub">Enter a name below and press Search to begin analysis.</p>
+
+        <div class="db-status-pill">
+            <span class="status-dot-green"></span>
+            <span>DATABASE ONLINE</span>
         </div>
 
-        <!-- Hidden file inputs -->
-        <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
-        <input type="file" id="video-file-input" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
-        <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioUpload(event)">
-
-        <!-- Search bar -->
-        <div class="search-wrapper">
+        <!-- Search Input Pill Container -->
+        <div class="search-container">
+            <span class="search-icon-left">👤</span>
             <input
                 type="text"
                 id="search-input"
-                class="search-bar"
-                placeholder="ENTER THE PERSON TO ATTACK 😈"
+                class="search-input-pill"
+                placeholder="Enter the person to attack..."
                 autocomplete="off"
                 spellcheck="false"
+                onkeydown="if(event.key==='Enter') runSearch()"
             >
-            <div class="search-btns">
-                <button class="btn-media-toggle" id="media-toggle-btn" title="Mode: Photo (P). Click to switch mode" onclick="handleMediaToggleClick()">📷<span class="shortcut-tag" id="media-shortcut-tag">P</span></button>
-                <button class="btn-mic" id="mic-btn" title="Search by voice" onclick="toggleMic()">🎤</button>
-                <button class="btn-search" title="Search" onclick="runSearch()">⏎</button>
+            <div class="search-actions-right">
+                <button class="btn-icon-action" id="btn-camera" title="Upload Photo" onclick="document.getElementById('photo-file-input').click()">📷</button>
+                <button class="btn-icon-action" id="btn-preset" title="Preset Member" onclick="selectPresetMember()">🧪</button>
+                <button class="btn-search-main" onclick="runSearch()">
+                    <span>🔍</span>
+                    <span>SEARCH</span>
+                </button>
             </div>
         </div>
 
-        <!-- Upload preview -->
-        <div class="upload-preview" id="upload-preview">
-            <img id="preview-img" src="" alt="uploaded" style="display:none;">
-            <video id="preview-video" src="" style="display:none; width:64px; height:64px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,100,0,0.35); box-shadow:0 0 10px rgba(255,100,0,0.2);" controls></video>
-            <audio id="preview-audio" src="" style="display:none;" controls></audio>
-            <div class="upload-preview-info">
-                <div class="upload-preview-name" id="preview-name"></div>
-                <div class="upload-preview-size" id="preview-size"></div>
+        <!-- Upload Preview Box -->
+        <div class="upload-preview-box" id="upload-preview">
+            <div class="upload-info">
+                <img id="upload-thumb" class="upload-thumb" src="" alt="preview">
+                <div class="upload-filename" id="upload-filename">photo.jpg</div>
             </div>
-            <button class="btn-remove-upload" title="Remove" onclick="removeUpload()">✕</button>
+            <button class="btn-remove-file" onclick="removeUpload()">REMOVE ✕</button>
         </div>
 
-        <!-- names stored in localStorage only, not shown to user -->
+        <!-- 2x2 Feature Cards Grid -->
+        <div class="cards-grid-2x2">
 
-        <!-- Result panel -->
-        <div class="result-panel" id="result-panel">
+            <!-- Card 1: Flames Calculator -->
+            <a class="feature-card flames" href="attacks_flames.html">
+                <div class="card-circle-icon">🔥</div>
+                <div class="feature-card-title">FLAMES CALCULATOR</div>
+                <div class="feature-card-desc">Calculate relationship compatibility using the FLAMES method.</div>
+            </a>
 
-            <!-- Analyzing state -->
-            <div class="analyzing-block" id="analyzing-block">
-                <div class="radar">
-                    <div class="radar-ring"></div>
-                    <div class="radar-ring"></div>
-                    <div class="radar-ring"></div>
-                    <div class="radar-dot"></div>
-                </div>
-                <div class="analyzing-text" id="analyzing-label">ANALYZING</div>
-                <div class="analyzing-query" id="analyzing-query-text"></div>
-                <div class="progress-bar-track">
-                    <div class="progress-bar-fill" id="progress-fill"></div>
-                </div>
-            </div>
+            <!-- Card 2: Attack Comparison -->
+            <a class="feature-card comparison" href="attacks_comparison.html">
+                <div class="card-circle-icon">⚔️</div>
+                <div class="feature-card-title">ATTACK COMPARISON</div>
+                <div class="feature-card-desc">Compare multiple attack patterns and find the most effective.</div>
+            </a>
 
-            <!-- Found state -->
-            <div class="result-block" id="result-found">
-                <div class="result-icon">✅</div>
-                <div class="result-status found">ANALYSED — RECORD FOUND</div>
-                <div class="result-query-label">SEARCHED QUERY</div>
-                <div class="result-query-value" id="found-name"></div>
-                <div class="result-badge found">✓ PRESENT IN DATABASE</div>
-                <div class="result-detail">This squad member is an active registered record in the VETRI STUDIOS database.</div>
+            <!-- Card 3: Single Predictor -->
+            <a class="feature-card predictor" href="single_predictor.html">
+                <div class="card-circle-icon">🤖</div>
+                <div class="feature-card-title">SINGLE PREDICTOR</div>
+                <div class="feature-card-desc">Predict the outcome of a single attack scenario using AI.</div>
+            </a>
 
-                <!-- AI Scene generation block (visible only when photo uploaded) -->
-                <div class="scene-gen-block" id="scene-gen-block">
-                    <div class="scene-divider"><span>⚡ AI SCENE GENERATOR</span></div>
-
-                    <!-- Generating spinner -->
-                    <div class="scene-generating" id="scene-generating">
-                        <div class="gen-spinner"></div>
-                        <div class="gen-label" id="gen-label">GENERATING 3D SCENE...</div>
-                        <div class="gen-sub">Crafting a cinematic world for this person</div>
-                        <div class="gen-progress-track"><div class="gen-progress-fill" id="gen-progress-fill"></div></div>
-                    </div>
-
-                    <!-- Generated image display -->
-                    <div class="scene-result" id="scene-result">
-                        <div class="scene-img-wrapper">
-                            <img id="scene-img" src="" alt="AI Generated Scene">
-                            <div class="scene-img-overlay">
-                                <span class="scene-img-badge">🤖 AI GENERATED · 3D SCENE</span>
-                            </div>
-                        </div>
-                        <div class="scene-caption" id="scene-caption"></div>
-                        <div class="scene-actions">
-                            <a class="btn-download" id="btn-download" href="#" download="atc_scene.jpg" target="_blank">⬇ DOWNLOAD IMAGE</a>
-                            <button class="btn-regen" onclick="regenScene()">🔄 REGENERATE</button>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn-search-again" onclick="resetSearch()">SEARCH AGAIN</button>
-            </div>
-
-            <!-- Not Found state -->
-            <div class="result-block" id="result-notfound">
-                <div class="result-icon">❌</div>
-                <div class="result-status notfound">ANALYSED — NOT FOUND</div>
-                <div class="result-query-label">SEARCHED QUERY</div>
-                <div class="result-query-value" id="notfound-name"></div>
-                <div class="result-badge notfound">✗ SEARCHED WORD IS NOT ADDED TO DATABASE</div>
-                <div class="result-detail">No matching entry was located in the VETRI STUDIOS squad database. Verify the name and try again.</div>
-                <button class="btn-search-again" onclick="resetSearch()">SEARCH AGAIN</button>
-            </div>
+            <!-- Card 4: Speak With AI -->
+            <a class="feature-card speak-ai" href="speak_with_ai.html">
+                <div class="card-circle-icon">🤖</div>
+                <div class="feature-card-title">SPEAK WITH AI</div>
+                <div class="feature-card-desc">Have a conversation with our AI assistant for insights.</div>
+            </a>
 
         </div>
-    </main>
 
-    <!-- Mic listening toast -->
-    <div class="mic-toast" id="mic-toast">🎤 LISTENING... SPEAK NOW</div>
+        <!-- Full Width About Card (Card 5) -->
+        <a class="about-attacks-bar" href="about_yourself.html">
+            <div class="about-bar-left">
+                <div class="about-icon-info">ⓘ</div>
+                <div class="about-content">
+                    <div class="about-heading">ABOUT ATTACKS</div>
+                    <div class="about-text">Your intelligence assistant to analyze, compare and predict attack patterns efficiently.</div>
+                </div>
+            </div>
+            <div class="about-arrow-right">❯</div>
+        </a>
+
+        <!-- Footer Notes -->
+        <div class="footer-encrypted-note">
+            <span>🛡️</span>
+            <span>All data is encrypted and secured. For authorized use only.</span>
+        </div>
+
+    </div>
+
+    <!-- Copyright Tag -->
+    <div class="copyright-tag">© Vetri Studios 2025</div>
+
+    <!-- Result / Scanning Modal Overlay -->
+    <div class="result-modal" id="result-modal">
+        <div class="result-card-inner">
+            <div class="radar-box" id="modal-radar">
+                <div class="radar-ring"></div>
+                <div class="radar-ring"></div>
+                <div class="radar-ring"></div>
+                <div class="radar-dot"></div>
+            </div>
+
+            <h2 id="modal-title" style="font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--primary); letter-spacing: 2px; margin-bottom: 6px;">ANALYZING OPERATIVE...</h2>
+            <p id="modal-query" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px;"></p>
+
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="modal-progress"></div>
+            </div>
+
+            <div id="modal-content-body" style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-top: 10px; display: none;"></div>
+
+            <button class="btn-modal-close" id="btn-modal-close" style="display: none;" onclick="closeModal()">CLOSE ANALYSIS</button>
+        </div>
+    </div>
 
     <script>
-        // ── DATABASE ────────────────────────────────────────────────
-        const SQUAD_DB = [
-            'VAISAL','GIRISH','KISHOOR','GIRI','VASANTH','LOGITH',
-            'DHARNISH','SURYA','JD','NITHISH','SUDHISH','THAYA',
-            'TKG','CTD'
-        ];
+        const SQUAD_MEMBERS = ["VAISAL", "GIRISH", "NITHISH", "DHARNISH", "SURYA", "THAYA", "LOGITH", "VASANTH", "KISHOOR", "SUDHISH"];
+        let uploadedPhoto = null;
 
-        // Seed into localStorage on first load
-        if (!localStorage.getItem('atcdb_seeded')) {
-            localStorage.setItem('atcdb_records', JSON.stringify(SQUAD_DB));
-            localStorage.setItem('atcdb_seeded', '1');
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobile-drawer');
+            drawer.classList.toggle('active');
         }
 
-        function getDB() {
-            try {
-                return JSON.parse(localStorage.getItem('atcdb_records')) || SQUAD_DB;
-            } catch(e) { return SQUAD_DB; }
-        }
-
-        // Names are hidden — only stored in localStorage, not shown to user
-
-        // ── Single Media Button Mode & Upload Handler (Photo & Video Only) ──
-        let currentMediaMode = 'photo'; // 'photo' or 'video'
-
-        function setMediaMode(mode) {
-            currentMediaMode = mode;
-            const btn = document.getElementById('media-toggle-btn');
-            if (!btn) return;
-            if (mode === 'photo') {
-                btn.innerHTML = `📷<span class="shortcut-tag" id="media-shortcut-tag">P</span>`;
-                btn.title = "Mode: Photo (P). Click to switch to Video mode";
-            } else {
-                btn.innerHTML = `📹<span class="shortcut-tag" id="media-shortcut-tag">V</span>`;
-                btn.title = "Mode: Video (V). Click to switch to Photo mode";
+        function closeMobileMenu(e) {
+            if (e.target.id === 'mobile-drawer') {
+                document.getElementById('mobile-drawer').classList.remove('active');
             }
         }
 
-        // Toggles smoothly between Photo (P) and Video (V) ONLY
-        function handleMediaToggleClick() {
-            if (currentMediaMode === 'photo') {
-                setMediaMode('video');
-            } else {
-                setMediaMode('photo');
+        function selectPresetMember() {
+            const randomMember = SQUAD_MEMBERS[Math.floor(Math.random() * SQUAD_MEMBERS.length)];
+            document.getElementById('search-input').value = randomMember;
+        }
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedPhoto = file;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('upload-thumb').src = evt.target.result;
+                    document.getElementById('upload-filename').textContent = file.name;
+                    document.getElementById('upload-preview').classList.add('active');
+                };
+                reader.readAsDataURL(file);
             }
-        }
-
-        // Pressing shortcuts intentionally triggers file manager upload
-        function triggerPhotoUpload() {
-            setMediaMode('photo');
-            document.getElementById('photo-file-input').click();
-        }
-
-        function triggerVideoUpload() {
-            setMediaMode('video');
-            document.getElementById('video-file-input').click();
-        }
-
-        function triggerAudioUpload() {
-            setMediaMode('audio');
-            document.getElementById('audio-file-input').click();
-        }
-
-        function handlePhotoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imgEl = document.getElementById('preview-img');
-                const vidEl = document.getElementById('preview-video');
-                const audEl = document.getElementById('preview-audio');
-                imgEl.src = e.target.result;
-                imgEl.style.display = 'block';
-                if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause(); }
-                if (audEl) { audEl.src = ''; audEl.style.display = 'none'; audEl.pause(); }
-
-                document.getElementById('preview-name').textContent = `📷 ${file.name}`;
-                const kb = (file.size / 1024).toFixed(1);
-                document.getElementById('preview-size').textContent = `${kb} KB · PHOTO UPLOADED [KEY P]`;
-                document.getElementById('upload-preview').classList.add('active');
-            };
-            reader.readAsDataURL(file);
-            event.target.value = '';
-        }
-
-        function handleVideoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imgEl = document.getElementById('preview-img');
-                const vidEl = document.getElementById('preview-video');
-                const audEl = document.getElementById('preview-audio');
-                vidEl.src = e.target.result;
-                vidEl.style.display = 'block';
-                if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
-                if (audEl) { audEl.src = ''; audEl.style.display = 'none'; audEl.pause(); }
-
-                document.getElementById('preview-name').textContent = `📹 ${file.name}`;
-                const kb = (file.size / 1024).toFixed(1);
-                document.getElementById('preview-size').textContent = `${kb} KB · VIDEO UPLOADED [KEY V]`;
-                document.getElementById('upload-preview').classList.add('active');
-            };
-            reader.readAsDataURL(file);
-            event.target.value = '';
-        }
-
-        function handleAudioUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imgEl = document.getElementById('preview-img');
-                const vidEl = document.getElementById('preview-video');
-                const audEl = document.getElementById('preview-audio');
-                audEl.src = e.target.result;
-                audEl.style.display = 'block';
-                if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
-                if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause(); }
-
-                document.getElementById('preview-name').textContent = `🎙️ ${file.name}`;
-                const kb = (file.size / 1024).toFixed(1);
-                document.getElementById('preview-size').textContent = `${kb} KB · AUDIO UPLOADED [KEY A]`;
-                document.getElementById('upload-preview').classList.add('active');
-            };
-            reader.readAsDataURL(file);
-            event.target.value = '';
         }
 
         function removeUpload() {
-            const imgEl = document.getElementById('preview-img');
-            const vidEl = document.getElementById('preview-video');
-            const audEl = document.getElementById('preview-audio');
-            if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
-            if (vidEl) { vidEl.src = ''; vidEl.style.display = 'none'; vidEl.pause(); }
-            if (audEl) { audEl.src = ''; audEl.style.display = 'none'; audEl.pause(); }
-            document.getElementById('preview-name').textContent = '';
-            document.getElementById('preview-size').textContent = '';
+            uploadedPhoto = null;
+            document.getElementById('photo-file-input').value = '';
             document.getElementById('upload-preview').classList.remove('active');
         }
 
-        // ── Keyboard shortcuts (P for Photo, V for Video, A for Audio, Enter for Search) ─
-        document.addEventListener('keydown', e => {
-            const active = document.activeElement;
-            const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
-
-            if (e.key === 'Enter' && active && active.id === 'search-input') {
-                runSearch();
-                return;
-            }
-
-            if (!isTyping) {
-                if (e.key === 'p' || e.key === 'P') {
-                    e.preventDefault();
-                    triggerPhotoUpload();
-                } else if (e.key === 'v' || e.key === 'V') {
-                    e.preventDefault();
-                    triggerVideoUpload();
-                } else if (e.key === 'a' || e.key === 'A') {
-                    e.preventDefault();
-                    triggerAudioUpload();
-                }
-            }
-        });
-
-        // ── State ────────────────────────────────────────────────────
-        let analyzing = false;
-        let analyzeTimer = null;
-        let progressTimer = null;
-
-        // ── Main search runner ───────────────────────────────────────
         function runSearch() {
-            if (analyzing) return;
-            const raw = document.getElementById('search-input').value.trim().toUpperCase();
-            if (!raw) {
-                shakeInput(); return;
-            }
-            startAnalyzing(raw);
-        }
-
-        function shakeInput() {
-            const inp = document.getElementById('search-input');
-            inp.style.animation = 'none';
-            inp.style.borderColor = '#FF2244';
-            inp.style.boxShadow = '0 0 15px rgba(255,34,68,0.4)';
-            setTimeout(() => {
-                inp.style.borderColor = '';
-                inp.style.boxShadow = '';
-            }, 800);
-        }
-
-        function startAnalyzing(query) {
-            analyzing = true;
-            const panel = document.getElementById('result-panel');
-            const analyzeBlock = document.getElementById('analyzing-block');
-            const foundBlock = document.getElementById('result-found');
-            const notfoundBlock = document.getElementById('result-notfound');
-            const analyzeLabel = document.getElementById('analyzing-label');
-            const analyzeQueryText = document.getElementById('analyzing-query-text');
-            const progressFill = document.getElementById('progress-fill');
-
-            // Reset states
-            panel.classList.add('visible');
-            analyzeBlock.classList.add('active');
-            foundBlock.classList.remove('active');
-            notfoundBlock.classList.remove('active');
-
-            analyzeQueryText.textContent = `» ${query}`;
-            progressFill.style.transition = 'none';
-            progressFill.style.width = '0%';
-
-            // Animate label stages
-            const labels = ['ANALYZING', 'ANALYZING.', 'ANALYZING..', 'ANALYZING...'];
-            let labelIdx = 0;
-            const labelInterval = setInterval(() => {
-                analyzeLabel.textContent = labels[labelIdx % labels.length];
-                labelIdx++;
-            }, 400);
-
-            // Progress bar animation over 5 seconds
-            requestAnimationFrame(() => {
-                progressFill.style.transition = 'width 5s linear';
-                progressFill.style.width = '100%';
-            });
-
-            // After 5 seconds → show result
-            analyzeTimer = setTimeout(() => {
-                clearInterval(labelInterval);
-                analyzeLabel.textContent = 'ANALYSED';
-                analyzeBlock.classList.remove('active');
-
-                if (query === 'VAISAL') {
-                    const targetPage = currentMediaMode === 'video' ? 'vaisal_video.html' : 'vaisal.html';
-                    const dimmer = document.createElement('div');
-                    dimmer.style.cssText = `
-                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                        background: #000; z-index: 99999; opacity: 0;
-                        transition: opacity 0.8s ease;
-                    `;
-                    document.body.appendChild(dimmer);
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        dimmer.style.opacity = '1';
-                        setTimeout(() => { window.location.href = targetPage; }, 900);
-                    }));
-                    analyzing = false;
-                    return;
-                }
-
-                if (query === 'DHANISH' || query === 'DHARNISH') {
-                    const dimmer = document.createElement('div');
-                    dimmer.style.cssText = `
-                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                        background: #000; z-index: 99999; opacity: 0;
-                        transition: opacity 0.8s ease;
-                    `;
-                    document.body.appendChild(dimmer);
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        dimmer.style.opacity = '1';
-                        setTimeout(() => { window.location.href = 'dhanish.html'; }, 900);
-                    }));
-                    analyzing = false;
-                    return;
-                }
-
-                if (query === 'NITHISH') {
-                    const targetPage = currentMediaMode === 'video' ? 'nithish_video.html' : 'nithish.html';
-
-                    const dimmer = document.createElement('div');
-                    dimmer.style.cssText = `
-                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                        background: #000; z-index: 99999; opacity: 0;
-                        transition: opacity 0.8s ease;
-                    `;
-                    document.body.appendChild(dimmer);
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        dimmer.style.opacity = '1';
-                        setTimeout(() => { window.location.href = targetPage; }, 900);
-                    }));
-                    analyzing = false;
-                    return;
-                }
-
-                if (query === 'GIRISH') {
-                    const dimmer = document.createElement('div');
-                    dimmer.style.cssText = `
-                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                        background: #000; z-index: 99999; opacity: 0;
-                        transition: opacity 0.8s ease;
-                    `;
-                    document.body.appendChild(dimmer);
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        dimmer.style.opacity = '1';
-                        setTimeout(() => { window.location.href = 'girish.html'; }, 900);
-                    }));
-                    analyzing = false;
-                    return;
-                }
-
-                if (query === 'THAYA') {
-                    const dimmer = document.createElement('div');
-                    dimmer.style.cssText = `
-                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                        background: #000; z-index: 99999; opacity: 0;
-                        transition: opacity 0.8s ease;
-                    `;
-                    document.body.appendChild(dimmer);
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        dimmer.style.opacity = '1';
-                        setTimeout(() => { window.location.href = 'thaya.html'; }, 900);
-                    }));
-                    analyzing = false;
-                    return;
-                }
-
-                if (query === 'SURYA') {
-                    const dimmer = document.createElement('div');
-                    dimmer.style.cssText = `
-                        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                        background: #000; z-index: 99999; opacity: 0;
-                        transition: opacity 0.8s ease;
-                    `;
-                    document.body.appendChild(dimmer);
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        dimmer.style.opacity = '1';
-                        setTimeout(() => { window.location.href = 'surya.html'; }, 900);
-                    }));
-                    analyzing = false;
-                    return;
-                }
-
-                const db = getDB();
-                const found = db.some(n => n === query || n.includes(query) || query.includes(n));
-
-                if (found) {
-                    document.getElementById('found-name').textContent = query;
-                    foundBlock.classList.add('active');
-
-                    // If a photo or video was uploaded → trigger AI scene generation
-                    const uploadedImg = document.getElementById('preview-img').src;
-                    const uploadedVid = document.getElementById('preview-video').src;
-                    const hasMedia = (uploadedImg && uploadedImg.startsWith('data:image')) || (uploadedVid && uploadedVid.startsWith('data:video'));
-                    if (hasMedia) {
-                        triggerSceneGen(query);
-                    } else {
-                        document.getElementById('scene-gen-block').style.display = 'none';
-                    }
-                } else {
-                    document.getElementById('notfound-name').textContent = query;
-                    notfoundBlock.classList.add('active');
-                }
-                analyzing = false;
-            }, 5000);
-        }
-
-        function resetSearch() {
-            analyzing = false;
-            if (analyzeTimer) clearTimeout(analyzeTimer);
-
-            document.getElementById('result-panel').classList.remove('visible');
-            document.getElementById('analyzing-block').classList.remove('active');
-            document.getElementById('result-found').classList.remove('active');
-            document.getElementById('result-notfound').classList.remove('active');
-            document.getElementById('progress-fill').style.width = '0%';
-
-            // Reset scene generator
-            document.getElementById('scene-gen-block').style.display = '';
-            document.getElementById('scene-generating').style.display = 'flex';
-            document.getElementById('scene-result').classList.remove('active');
-            document.getElementById('scene-img').src = '';
-            document.getElementById('gen-progress-fill').style.transition = 'none';
-            document.getElementById('gen-progress-fill').style.width = '0%';
-
-            const inp = document.getElementById('search-input');
-            inp.value = '';
-            inp.focus();
-        }
-
-        // ── AI Scene Generator (Pollinations.ai) ─────────────────────
-        let currentQuery = '';
-
-        // Scene prompts cycling for variety
-        const SCENE_PROMPTS = [
-            (name) => `cinematic 3D realistic render of a young Indian man named ${name} confidently standing next to a modern city bus, golden hour lighting, photorealistic, ultra-detailed, dramatic cinematic composition, 8K`,
-            (name) => `photorealistic 3D illustration of a young man named ${name} driving a large bus on a highway, view from outside, motion blur background, dramatic sunset, cinematic, hyper-detailed`,
-            (name) => `ultra-realistic 3D scene of a young man named ${name} leaning against a red double decker bus in a city, street lights, cinematic lighting, film grain, professional photography style`,
-        ];
-
-        let scenePromptIdx = 0;
-
-        function triggerSceneGen(name) {
-            currentQuery = name;
-            scenePromptIdx = 0;
-            generateScene(name, scenePromptIdx);
-        }
-
-        function regenScene() {
-            scenePromptIdx = (scenePromptIdx + 1) % SCENE_PROMPTS.length;
-            // Reset to generating state
-            document.getElementById('scene-generating').style.display = 'flex';
-            document.getElementById('scene-result').classList.remove('active');
-            document.getElementById('gen-progress-fill').style.transition = 'none';
-            document.getElementById('gen-progress-fill').style.width = '0%';
-            generateScene(currentQuery, scenePromptIdx);
-        }
-
-        function generateScene(name, promptIdx) {
-            const genProgress = document.getElementById('gen-progress-fill');
-            const genLabel = document.getElementById('gen-label');
-            const sceneGenerating = document.getElementById('scene-generating');
-            const sceneResult = document.getElementById('scene-result');
-            const sceneImg = document.getElementById('scene-img');
-            const sceneCaption = document.getElementById('scene-caption');
-            const btnDownload = document.getElementById('btn-download');
-
-            // Animate progress bar over ~15s (image gen takes 10-20s)
-            genProgress.style.transition = 'none';
-            genProgress.style.width = '0%';
-            requestAnimationFrame(() => {
-                genProgress.style.transition = 'width 18s cubic-bezier(0.1, 0, 0.5, 1)';
-                genProgress.style.width = '92%';
-            });
-
-            // Label cycling
-            const genLabels = [
-                'GENERATING 3D SCENE...', 'BUILDING ENVIRONMENT...', 
-                'RENDERING LIGHTING...', 'APPLYING CINEMATIC FILTER...'
-            ];
-            let li = 0;
-            const labelInt = setInterval(() => {
-                genLabel.textContent = genLabels[li % genLabels.length];
-                li++;
-            }, 2200);
-
-            // Build Pollinations prompt
-            const prompt = SCENE_PROMPTS[promptIdx](name);
-            const seed = Math.floor(Math.random() * 999999);
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=500&seed=${seed}&nologo=true&enhance=true`;
-
-            // Load image
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = () => {
-                clearInterval(labelInt);
-                genProgress.style.transition = 'width 0.4s ease';
-                genProgress.style.width = '100%';
-
-                setTimeout(() => {
-                    sceneGenerating.style.display = 'none';
-                    sceneImg.src = img.src;
-                    btnDownload.href = img.src;
-                    sceneCaption.textContent = `⚡ ${name} · AI-GENERATED SCENE · BUS ENVIRONMENT`;
-                    sceneResult.classList.add('active');
-                }, 400);
-            };
-
-            img.onerror = () => {
-                clearInterval(labelInt);
-                genLabel.textContent = 'RETRYING...';
-                // Retry once with a different seed
-                const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=500&seed=${seed+1}&nologo=true`;
-                const img2 = new Image();
-                img2.onload = () => {
-                    sceneGenerating.style.display = 'none';
-                    sceneImg.src = img2.src;
-                    btnDownload.href = img2.src;
-                    sceneCaption.textContent = `⚡ ${name} · AI-GENERATED SCENE · BUS ENVIRONMENT`;
-                    sceneResult.classList.add('active');
-                };
-                img2.onerror = () => {
-                    genLabel.textContent = 'GENERATION FAILED — CHECK CONNECTION';
-                };
-                img2.src = retryUrl;
-            };
-
-            img.src = url;
-        }
-
-        // ── Microphone (Web Speech API) ──────────────────────────────
-        let recognition = null;
-        let isListening = false;
-        const micBtn = document.getElementById('mic-btn');
-        const micToast = document.getElementById('mic-toast');
-
-        function toggleMic() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert('Your browser does not support microphone input. Please use Chrome.');
+            const query = document.getElementById('search-input').value.trim();
+            if (!query && !uploadedPhoto) {
+                alert("Please enter a name to analyze or upload a photo!");
                 return;
             }
 
-            if (isListening) {
-                recognition.stop();
-                return;
-            }
+            const searchName = query || "UPLOADED TARGET";
 
-            recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.continuous = false;
-            recognition.interimResults = false;
+            const modal = document.getElementById('result-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalQuery = document.getElementById('modal-query');
+            const progress = document.getElementById('modal-progress');
+            const body = document.getElementById('modal-content-body');
+            const closeBtn = document.getElementById('btn-modal-close');
+            const radar = document.getElementById('modal-radar');
 
-            recognition.onstart = () => {
-                isListening = true;
-                micBtn.classList.add('listening');
-                micToast.classList.add('active');
-            };
+            modalTitle.textContent = "ANALYZING OPERATIVE...";
+            modalQuery.textContent = searchName.toUpperCase();
+            progress.style.width = "0%";
+            body.style.display = "none";
+            closeBtn.style.display = "none";
+            radar.style.display = "block";
+            modal.classList.add('active');
 
-            recognition.onresult = (event) => {
-                const spoken = event.results[0][0].transcript.trim().toUpperCase();
-                document.getElementById('search-input').value = spoken;
-                stopMic();
-                setTimeout(() => runSearch(), 400);
-            };
-
-            recognition.onerror = () => stopMic();
-            recognition.onend  = () => stopMic();
-            recognition.start();
+            let p = 0;
+            const interval = setInterval(() => {
+                p += 20;
+                progress.style.width = p + "%";
+                if (p >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        displaySearchResult(searchName, body, modalTitle, radar, closeBtn);
+                    }, 400);
+                }
+            }, 250);
         }
 
-        function stopMic() {
-            isListening = false;
-            micBtn.classList.remove('listening');
-            micToast.classList.remove('active');
-        }
+        function displaySearchResult(name, bodyEl, titleEl, radarEl, closeBtnEl) {
+            radarEl.style.display = "none";
+            titleEl.textContent = "✅ ANALYSIS COMPLETE";
+            titleEl.style.color = "#00FF88";
 
-        // ── Back button ──────────────────────────────────────────────
-        function goBack() {
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
+            const upper = name.toUpperCase();
+            const isSquad = SQUAD_MEMBERS.some(m => upper.includes(m));
+
+            let html = `
+                <div style="font-size: 16px; font-weight: 900; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px;">RECORD FOUND: ${upper}</div>
+                <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(0,255,136,0.12); border: 1px solid #00FF88; color: #00FF88; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1.5px; margin-bottom: 12px;">✓ REGISTERED OPERATIVE IN VETRI STUDIOS</div>
+                <p style="margin-bottom: 15px; color: #ccc;">Operative ${upper} has been analyzed. Threat spectrum and attack synergy metrics are operational.</p>
             `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { window.location.href = 'attacks_lobby.html'; }, 900);
-            }));
+
+            if (uploadedPhoto) {
+                html += `
+                    <div style="background: rgba(255,100,0,0.1); border: 1.5px solid var(--primary); border-radius: 12px; padding: 12px; margin-top: 10px;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--primary); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 4px;">⚡ AI SCENE GENERATOR READY</div>
+                        <div style="font-size: 11px; color: #eee;">Uploaded image synced with Vetri Intelligence pipeline. Photo attack profile created!</div>
+                    </div>
+                `;
+            }
+
+            if (isSquad) {
+                html += `
+                    <div style="display: flex; gap: 8px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+                        <a href="about_yourself.html" style="padding: 8px 14px; border-radius: 8px; background: rgba(255,100,0,0.15); border: 1px solid var(--primary); color: #fff; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;">👤 READ STORY</a>
+                        <a href="attacks_comparison.html" style="padding: 8px 14px; border-radius: 8px; background: rgba(138,43,226,0.15); border: 1px solid #8A2BE2; color: #fff; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;">⚔️ COMPARE STATS</a>
+                    </div>
+                `;
+            }
+
+            bodyEl.innerHTML = html;
+            bodyEl.style.display = "block";
+            closeBtnEl.style.display = "inline-block";
         }
 
-        // ── Particle canvas background ───────────────────────────────
+        function closeModal() {
+            document.getElementById('result-modal').classList.remove('active');
+        }
+
+        // Particle background canvas
         (function() {
             const canvas = document.getElementById('particle-bg');
             const ctx = canvas.getContext('2d');
@@ -1397,14 +1133,14 @@
             resize();
             window.addEventListener('resize', resize);
 
-            for (let i = 0; i < 55; i++) {
+            for (let i = 0; i < 40; i++) {
                 particles.push({
                     x: Math.random() * window.innerWidth,
                     y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.4 + 0.4,
-                    vx: (Math.random() - 0.5) * 0.35,
-                    vy: (Math.random() - 0.5) * 0.35,
-                    alpha: Math.random() * 0.35 + 0.1
+                    r: Math.random() * 1.3 + 0.3,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.3 + 0.08
                 });
             }
 
@@ -1424,13 +1160,6 @@
             }
             draw();
         })();
-
-        // ── Entrance fade-in ─────────────────────────────────────────
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity 0.8s ease';
-        window.addEventListener('load', () => {
-            requestAnimationFrame(() => { document.body.style.opacity = '1'; });
-        });
     </script>
 </body>
 </html>
