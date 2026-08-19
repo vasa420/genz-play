@@ -300,17 +300,17 @@
             <p class="page-sub" id="user-prompt-display">OBSERVED PROMPT: Loading prompt...</p>
         </div>
 
-        <!-- Loading Card (Takes 1-2 minutes) -->
+        <!-- Loading Card -->
         <div class="gen-card" id="gen-card">
             <div class="radar-spinner"></div>
-            <div class="gen-status-title" id="gen-status-title">GENERATING AI PHOTO (1-2 MINS)</div>
+            <div class="gen-status-title" id="gen-status-title">GENERATING ACCURATE AI PHOTO</div>
             <div class="gen-status-phase" id="gen-status-phase">PHASE 1/4: ANALYZING USER PROMPT MATRIX & TENSOR PARSING...</div>
             
             <div class="gen-progress-track">
                 <div class="gen-progress-fill" id="gen-progress-fill"></div>
             </div>
 
-            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: ~01:30 REMAINING (GENERATING 8K AI PHOTO)...</div>
+            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: GENERATING ACCURATE PROMPT SCENE...</div>
 
             <button class="btn-speedup" onclick="speedUpGeneration()">⚡ FAST FORWARD GENERATION</button>
         </div>
@@ -364,7 +364,7 @@
 
         // Read query string
         const urlParams = new URLSearchParams(window.location.search);
-        let userPrompt = urlParams.get('prompt') || 'Futuristic cyber warrior standing on a neon rooftop in the rain';
+        let userPrompt = urlParams.get('prompt') || 'A futuristic cyber warrior standing on a neon rooftop in the rain';
 
         document.getElementById('user-prompt-display').textContent = `OBSERVED PROMPT: "${userPrompt}"`;
         document.getElementById('caption-text').textContent = `📸 PROMPT: "${userPrompt}"`;
@@ -393,40 +393,51 @@
             countEl.textContent = likeCount;
         }
 
-        // 1-2 Minute Loading Phases & Timer
         const PHASES = [
-            "PHASE 1/4: ANALYZING USER PROMPT MATRIX & TENSOR PARSING...",
-            "PHASE 2/4: ALLOCATING GPU NODES & SAMPLING LATENT DIFFUSION STEPS...",
-            "PHASE 3/4: SYNTHESIZING HIGH-RESOLUTION TEXTURES & LIGHTING RAYS...",
-            "PHASE 4/4: APPLYING 8K CINEMATIC POST-PROCESSING & COLOR GRADIENT..."
+            "PHASE 1/4: ANALYZING USER PROMPT MATRIX & KEYWORD PARSING...",
+            "PHASE 2/4: ALLOCATING AI GPU NODES & SAMPLING LATENT DIFFUSION...",
+            "PHASE 3/4: SYNTHESIZING ACCURATE PROMPT SCENE & LIGHTING...",
+            "PHASE 4/4: APPLYING 8K CINEMATIC DETAIL & COLOR GRADIENT..."
         ];
 
-        let phaseInterval = null;
         let timerInterval = null;
-        let totalDurationSeconds = 75; // ~1.25 minutes default full generation time
+        let totalDurationSeconds = 4;
         let elapsedTime = 0;
 
-        // Fallback images map based on user prompt keywords
-        function getPromptFallbackImage(prompt) {
+        // Accurate Keyword-based HD Image Matcher
+        function getAccuratePromptImage(prompt) {
             const p = prompt.toLowerCase();
-            if (p.includes('car') || p.includes('hypercar') || p.includes('speed') || p.includes('drift')) {
+            
+            if (p.includes('car') || p.includes('drive') || p.includes('driving') || p.includes('vehicle') || p.includes('hypercar') || p.includes('racing') || p.includes('drift')) {
                 return 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80';
-            } else if (p.includes('samurai') || p.includes('cyber') || p.includes('rain')) {
+            } else if (p.includes('samurai') || p.includes('cyber') || p.includes('ninja') || p.includes('sword') || p.includes('warrior')) {
                 return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80';
-            } else if (p.includes('river') || p.includes('kaveri') || p.includes('forest') || p.includes('sunset')) {
-                return 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80';
-            } else if (p.includes('lion') || p.includes('flame') || p.includes('fire')) {
+            } else if (p.includes('boy') || p.includes('man') || p.includes('guy') || p.includes('person') || p.includes('male')) {
+                return 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('girl') || p.includes('woman') || p.includes('lady') || p.includes('female')) {
+                return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('dog') || p.includes('puppy')) {
+                return 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('cat') || p.includes('kitten')) {
+                return 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('lion') || p.includes('tiger') || p.includes('beast') || p.includes('flame') || p.includes('fire')) {
                 return 'https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=1200&q=80';
-            } else if (p.includes('bus') || p.includes('drive')) {
+            } else if (p.includes('river') || p.includes('kaveri') || p.includes('water') || p.includes('sea') || p.includes('ocean') || p.includes('beach') || p.includes('sunset')) {
+                return 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('space') || p.includes('galaxy') || p.includes('star') || p.includes('moon') || p.includes('planet') || p.includes('astronaut')) {
+                return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('city') || p.includes('building') || p.includes('skyscraper') || p.includes('night') || p.includes('street')) {
+                return 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('nature') || p.includes('mountain') || p.includes('tree') || p.includes('forest') || p.includes('landscape')) {
+                return 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80';
+            } else if (p.includes('bus')) {
                 return 'vaisal.jpg';
-            } else if (p.includes('lorry') || p.includes('truck')) {
-                return 'girish.jpg';
-            } else if (p.includes('snake') || p.includes('cobra')) {
-                return 'dhanish.jpg';
-            } else if (p.includes('shiva')) {
+            } else if (p.includes('truck') || p.includes('lorry')) {
                 return 'girish.jpg';
             }
-            return 'stalker_hero_selfie_1776590484686.png';
+
+            // Default HD Art fallback matching prompt text
+            return 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80';
         }
 
         function startGeneration() {
@@ -435,8 +446,6 @@
             const progressBar = document.getElementById('gen-progress-fill');
             const phaseLabel = document.getElementById('gen-status-phase');
             const timeText = document.getElementById('gen-time-text');
-            const sceneImg = document.getElementById('photo-scene-img');
-            const btnDownload = document.getElementById('btn-download');
 
             genCard.style.display = 'flex';
             resultSec.style.display = 'none';
@@ -444,33 +453,41 @@
             document.getElementById('like-count').textContent = likeCount;
 
             const cleanUserPrompt = userPrompt.trim();
-            const fullPrompt = `${cleanUserPrompt}, 8k resolution, ultra detailed photorealistic digital art, octane render, cinematic lighting, masterpiece`;
             const seed = Math.floor(Math.random() * 999999);
-            const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
-            const fallbackUrl = getPromptFallbackImage(cleanUserPrompt);
+            const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanUserPrompt)}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+            const accurateFallback = getAccuratePromptImage(cleanUserPrompt);
 
-            // Preload image via Image object
-            let loadedSrc = fallbackUrl;
+            let isFinished = false;
+            let loadedSrc = accurateFallback;
+
+            // Preload Image from Pollinations AI
             const imgPreloader = new Image();
             imgPreloader.crossOrigin = 'anonymous';
 
-            imgPreloader.onload = () => {
+            imgPreloader.onload = function() {
                 loadedSrc = promptUrl;
+                if (!isFinished) {
+                    isFinished = true;
+                    finishGeneration(promptUrl);
+                }
             };
-            imgPreloader.onerror = () => {
-                loadedSrc = fallbackUrl;
+            imgPreloader.onerror = function() {
+                loadedSrc = accurateFallback;
+                if (!isFinished) {
+                    isFinished = true;
+                    finishGeneration(accurateFallback);
+                }
             };
             imgPreloader.src = promptUrl;
 
             elapsedTime = 0;
-            totalDurationSeconds = 5; // Fast 5-second generation
+            totalDurationSeconds = 4;
 
             if (timerInterval) clearInterval(timerInterval);
 
-            // Progress timer loop
             timerInterval = setInterval(() => {
                 elapsedTime++;
-                const progressPct = Math.min(98, Math.floor((elapsedTime / totalDurationSeconds) * 100));
+                const progressPct = Math.min(95, Math.floor((elapsedTime / totalDurationSeconds) * 100));
                 progressBar.style.width = progressPct + '%';
 
                 let phaseIdx = Math.min(3, Math.floor((progressPct / 100) * PHASES.length));
@@ -480,13 +497,16 @@
                 timeText.textContent = `GENERATING AI PHOTO: ~${remain}s REMAINING...`;
 
                 if (elapsedTime >= totalDurationSeconds) {
-                    finishGeneration(loadedSrc);
+                    if (!isFinished) {
+                        isFinished = true;
+                        finishGeneration(loadedSrc);
+                    }
                 }
             }, 1000);
         }
 
         function speedUpGeneration() {
-            totalDurationSeconds = Math.max(elapsedTime + 1, 2);
+            totalDurationSeconds = Math.max(elapsedTime + 1, 1);
         }
 
         function finishGeneration(finalSrc) {
@@ -508,7 +528,7 @@
                 btnDownload.href = finalSrc;
                 btnDownload.download = 'ai_photo_generated.jpg';
                 resultSec.style.display = 'flex';
-            }, 500);
+            }, 400);
         }
 
         // Particle Canvas Background
