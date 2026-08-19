@@ -1230,7 +1230,8 @@
         }
 
         function runSearch() {
-            const query = document.getElementById('search-input').value.trim();
+            const rawQuery = document.getElementById('search-input').value.trim();
+            const query = window.VetriSecurity ? window.VetriSecurity.sanitizeInput(rawQuery) : rawQuery;
             if (!query && !uploadedPhoto) {
                 alert("Please enter a name to analyze or upload a photo!");
                 return;
@@ -1350,5 +1351,6 @@
             draw();
         })();
     </script>
+    <script src="security_guard.js"></script>
 </body>
 </html>

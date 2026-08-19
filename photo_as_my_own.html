@@ -280,7 +280,8 @@
         }
 
         function startPhotoGeneration() {
-            const promptText = document.getElementById('prompt-input').value.trim();
+            const rawPrompt = document.getElementById('prompt-input').value.trim();
+            const promptText = window.VetriSecurity ? window.VetriSecurity.sanitizeInput(rawPrompt) : rawPrompt;
             if (!promptText) {
                 alert('Please type a prompt first before clicking START GENERATE PHOTO!');
                 return;
@@ -345,5 +346,6 @@
             draw();
         })();
     </script>
+    <script src="security_guard.js"></script>
 </body>
 </html>
