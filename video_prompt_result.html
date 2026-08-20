@@ -384,6 +384,89 @@
         document.getElementById('user-prompt-display').textContent = `OBSERVED PROMPT: "${userPrompt}"`;
         document.getElementById('caption-text').textContent = `🎬 PROMPT: "${userPrompt}"`;
 
+        function generateProceduralArtDataUrl(promptText) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+            const p = (promptText || '').toLowerCase();
+
+            let bgGrad = ctx.createLinearGradient(0, 0, 1024, 600);
+            bgGrad.addColorStop(0, '#07051a');
+            bgGrad.addColorStop(0.5, '#190a38');
+            bgGrad.addColorStop(1, '#05020f');
+
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 1024, 600);
+
+            for (let i = 0; i < 4; i++) {
+                const cx = (i * 280 + 120) % 1024;
+                const cy = (i * 150 + 100) % 600;
+                const radGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 220);
+                radGrad.addColorStop(0, 'rgba(255, 100, 0, 0.35)');
+                radGrad.addColorStop(0.5, 'rgba(153, 51, 255, 0.2)');
+                radGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = radGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 220, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.save();
+            ctx.translate(512, 270);
+            ctx.strokeStyle = '#FF6400';
+            ctx.lineWidth = 3.5;
+            ctx.shadowColor = '#FF6400';
+            ctx.shadowBlur = 25;
+            ctx.beginPath();
+            ctx.arc(0, 0, 105, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(10, 12, 30, 0.82)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 92, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = '64px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🎬', 0, -4);
+            ctx.restore();
+
+            ctx.save();
+            ctx.font = 'bold 15px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#FF6400';
+            ctx.shadowColor = '#FF6400';
+            ctx.shadowBlur = 10;
+            ctx.fillText('✦ ATTACKS // AI VIDEO SYNTHESIS v1.0', 40, 48);
+
+            ctx.fillStyle = 'rgba(4, 5, 16, 0.9)';
+            ctx.strokeStyle = '#FF640088';
+            ctx.lineWidth = 1.5;
+            const boxW = 800;
+            const boxH = 65;
+            const boxX = (1024 - boxW) / 2;
+            const boxY = 490;
+
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(boxX, boxY, boxW, boxH, 14);
+            else ctx.rect(boxX, boxY, boxW, boxH);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.font = 'bold 11px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText('VIDEO PROMPT MATRIX:', boxX + 20, boxY + 25);
+
+            ctx.font = '13px "Outfit", sans-serif';
+            ctx.fillStyle = '#FFFFFF';
+            const displayPrompt = promptText.length > 80 ? promptText.substring(0, 77) + '...' : promptText;
+            ctx.fillText(`"${displayPrompt}"`, boxX + 20, boxY + 47);
+            ctx.restore();
+
+            return canvas.toDataURL('image/jpeg', 0.92);
+        }
+
         // Loading Phases
         const PHASES = [
             "PHASE 1/4: OBSERVING USER PROMPT MATRIX...",
@@ -454,10 +537,15 @@
             const seed = Math.floor(Math.random() * 999999);
             const promptText = encodeURIComponent(fullPrompt);
             const imageUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+            const proceduralFallback = (typeof generateProceduralArtDataUrl === 'function') 
+                ? generateProceduralArtDataUrl(userPrompt) 
+                : 'vaisal.jpg';
 
             // Prepare AI image preloader
+            let loadedImageSrc = proceduralFallback;
             const imgLoader = new Image();
-            imgLoader.crossOrigin = 'anonymous';
+            imgLoader.onload = function() { loadedImageSrc = imageUrl; };
+            imgLoader.onerror = function() { loadedImageSrc = proceduralFallback; };
             imgLoader.src = imageUrl;
 
             // Guaranteed finish after 5 seconds
@@ -478,10 +566,15 @@
                         btnDownload.href = videoSourceUrl;
                         btnDownload.download = 'ai_video_generated.mp4';
                     } else {
-                        sceneImg.src = imgLoader.complete ? imageUrl : 'vaisal.jpg';
+                        sceneImg.onerror = function() {
+                            this.onerror = null;
+                            this.src = proceduralFallback;
+                            if (btnDownload) btnDownload.href = proceduralFallback;
+                        };
+                        sceneImg.src = loadedImageSrc;
                         sceneImg.style.display = 'block';
                         videoPlayer.style.display = 'none';
-                        btnDownload.href = sceneImg.src;
+                        btnDownload.href = loadedImageSrc;
                         btnDownload.download = 'ai_video_scene.jpg';
                     }
 
