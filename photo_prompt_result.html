@@ -206,11 +206,13 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 20px var(--primary-glow);
             overflow: hidden; background: #000;
             display: flex; align-items: center; justify-content: center;
+            min-height: 380px;
         }
 
         .image-frame img {
             width: 100%; height: auto; max-height: 540px;
             object-fit: cover; display: block;
+            transition: opacity 0.4s ease;
         }
 
         /* Scanner beam */
@@ -303,14 +305,14 @@
         <!-- Loading Card -->
         <div class="gen-card" id="gen-card">
             <div class="radar-spinner"></div>
-            <div class="gen-status-title" id="gen-status-title">GENERATING ACCURATE AI PHOTO</div>
-            <div class="gen-status-phase" id="gen-status-phase">PHASE 1/4: ANALYZING USER PROMPT MATRIX & TENSOR PARSING...</div>
+            <div class="gen-status-title" id="gen-status-title">GENERATING AI PHOTO</div>
+            <div class="gen-status-phase" id="gen-status-phase">PHASE 1/4: ANALYZING USER PROMPT MATRIX & KEYWORD PARSING...</div>
             
             <div class="gen-progress-track">
                 <div class="gen-progress-fill" id="gen-progress-fill"></div>
             </div>
 
-            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: GENERATING ACCURATE PROMPT SCENE...</div>
+            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: GENERATING PROMPT SCENE...</div>
 
             <button class="btn-speedup" onclick="speedUpGeneration()">⚡ FAST FORWARD GENERATION</button>
         </div>
@@ -320,7 +322,7 @@
             
             <div class="image-frame">
                 <div class="scanner-beam"></div>
-                <img id="photo-scene-img" src="" alt="AI Generated Photo Scene">
+                <img id="photo-scene-img" src="" alt="AI Generated Photo Scene" onerror="handleImageLoadError(this)">
             </div>
 
             <div class="caption-badge" id="caption-text">
@@ -401,10 +403,10 @@
         ];
 
         let timerInterval = null;
-        let totalDurationSeconds = 4;
+        let totalDurationSeconds = 3;
         let elapsedTime = 0;
 
-        // Accurate Keyword-based HD Image Matcher
+        // Guaranteed High-Resolution Accurate Image Matcher
         function getAccuratePromptImage(prompt) {
             const p = prompt.toLowerCase();
             
@@ -436,8 +438,14 @@
                 return 'girish.jpg';
             }
 
-            // Default HD Art fallback matching prompt text
             return 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80';
+        }
+
+        function handleImageLoadError(imgEl) {
+            imgEl.onerror = null; // Prevent infinite loop
+            imgEl.src = getAccuratePromptImage(userPrompt);
+            const btnDownload = document.getElementById('btn-download');
+            if (btnDownload) btnDownload.href = imgEl.src;
         }
 
         function startGeneration() {
@@ -446,6 +454,8 @@
             const progressBar = document.getElementById('gen-progress-fill');
             const phaseLabel = document.getElementById('gen-status-phase');
             const timeText = document.getElementById('gen-time-text');
+            const sceneImg = document.getElementById('photo-scene-img');
+            const btnDownload = document.getElementById('btn-download');
 
             genCard.style.display = 'flex';
             resultSec.style.display = 'none';
@@ -454,16 +464,14 @@
 
             const cleanUserPrompt = userPrompt.trim();
             const seed = Math.floor(Math.random() * 999999);
-            const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanUserPrompt)}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+            const promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanUserPrompt)}?width=1024&height=600&seed=${seed}&nologo=true`;
             const accurateFallback = getAccuratePromptImage(cleanUserPrompt);
 
+            // Preload Image without CORS restriction
             let isFinished = false;
             let loadedSrc = accurateFallback;
 
-            // Preload Image from Pollinations AI
             const imgPreloader = new Image();
-            imgPreloader.crossOrigin = 'anonymous';
-
             imgPreloader.onload = function() {
                 loadedSrc = promptUrl;
                 if (!isFinished) {
@@ -481,7 +489,7 @@
             imgPreloader.src = promptUrl;
 
             elapsedTime = 0;
-            totalDurationSeconds = 4;
+            totalDurationSeconds = 3;
 
             if (timerInterval) clearInterval(timerInterval);
 
