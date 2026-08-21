@@ -634,6 +634,35 @@
                     </div>
                 </div>
 
+            <!-- Downside Bar for Generating Different AI Operative Scene -->
+            <div class="ai-gen-downside-bar" style="margin-top: 30px; width: 100%; display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                <button class="btn-gen-ai-scene" id="btn-gen-ai-scene" onclick="generateDifferentAIScene()" style="width: 100%; max-width: 480px; padding: 16px 28px; background: #2563eb; color: #ffffff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span>🤖</span>
+                    <span id="btn-gen-ai-text">GENERATE DIFFERENT AI SCENE FOR VAISAL</span>
+                </button>
+
+                <!-- AI Scene Loader Box -->
+                <div class="ai-scene-loader" id="ai-scene-loader" style="display: none; flex-direction: column; align-items: center; padding: 30px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; width: 100%;">
+                    <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;"></div>
+                    <div style="font-size: 14px; font-weight: 700; color: #2563eb; margin-bottom: 8px;" id="ai-loader-text">GENERATING AI SCENE...</div>
+                    <div style="width: 100%; max-width: 400px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                        <div id="ai-loader-bar" style="width: 0%; height: 100%; background: #2563eb; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- AI Scene Display Card -->
+                <div class="ai-scene-card" id="ai-scene-card" style="display: none; flex-direction: column; gap: 15px; width: 100%; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div style="font-size: 16px; font-weight: 700; color: #0f172a; text-align: left;" id="ai-scene-card-title">✨ GENERATED REAL-TIME AI SCENE</div>
+                    <div style="width: 100%; height: 360px; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; background: #ffffff;">
+                        <img id="generated-ai-img" src="" alt="AI Generated Scene" style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <span style="font-size: 12px; font-weight: 600; color: #2563eb;" id="generated-ai-badge">⚡ VAISAL BUS AI SCENE GENERATED</span>
+                        <a id="btn-download-generated" href="#" download="ai_scene.jpg" style="padding: 10px 20px; background: #2563eb; color: #ffffff; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>⬇</span> DOWNLOAD AI SCENE
+                        </a>
+                    </div>
+                </div>
             </div>
 
         </main>
@@ -764,6 +793,78 @@
 
         // Populate AI Funny Story
         document.getElementById('op-story-body').textContent = profile.story;
+
+        // Update Downside Button Text
+        document.getElementById('btn-gen-ai-text').textContent = `GENERATE DIFFERENT AI SCENE FOR ${profile.name}`;
+
+        const AI_PROMPTS = {
+            'VAISAL': { prompt: 'photorealistic 3D cinematic render of a large modern passenger bus driving fast along a scenic highway road at sunset, motion blur, 8K resolution, octane render', title: '🚌 VAISAL BUS AI SCENE' },
+            'GIRISH': { prompt: 'photorealistic 3D cinematic render of a heavy industrial 18-wheeler Ashok Leyland lorry truck driving on a mountain highway at sunset, 8K resolution', title: '🚚 GIRISH 18-WHEELER LORRY SCENE' },
+            'DHARNISH': { prompt: 'photorealistic 3D cinematic render of green king cobra snakes slithering everywhere through a dense Amazon rainforest near a bakery, 8K resolution', title: '🐍 DHARNISH COBRA BAKERY SCENE' },
+            'NITHISH': { prompt: 'photorealistic 3D render of a shiny golden brass temple bell and bus conductor ticket machine, high detail 8K resolution', title: '🔔 NITHISH TEMPLE BELL SCENE' },
+            'SURYA': { prompt: 'photorealistic 3D scenic photo of Kaveri river flowing smoothly through a green tropical forest jungle, rocks, sunlight rays, 8K resolution', title: '🌊 SURYA KAVERI RIVER SCENE' },
+            'THAYA': { prompt: 'photorealistic 3D scene of building a concrete brick wall with cement mortar and trowels at a construction building site, 8K resolution', title: '🧱 THAYA CONCRETE BRICK SCENE' },
+            'LOGITH': { prompt: 'photorealistic 3D cinematic shot of a giant sharp steel knife blade with dark blood stains on a metallic butcher table, 8K resolution', title: '🔪 LOGITH BUTCHER KATANA SCENE' },
+            'VASANTH': { prompt: 'photorealistic 3D cinematic render of a massive glowing sharp metal hook object hanging from ceiling, 8K resolution', title: '🪝 VASANTH CYBER HOOK SCENE' },
+            'KISHOOR': { prompt: 'photorealistic 3D majestic artistic portrait of Lord Shiva with glowing third eye and trident in divine mountain landscape, 8K resolution', title: '🔱 KISHOOR ROYAL TRIDENT SCENE' },
+            'SUDHISH': { prompt: 'photorealistic 3D cosmic illustration of the Sun and the Moon side by side in space, glowing solar flare and lunar surface, 8K resolution', title: '☀️🌙 SUDHISH SUN & MOON SCENE' }
+        };
+
+        function generateDifferentAIScene() {
+            const aiData = AI_PROMPTS[selectedName] || AI_PROMPTS['VAISAL'];
+            const btn = document.getElementById('btn-gen-ai-scene');
+            const loader = document.getElementById('ai-scene-loader');
+            const card = document.getElementById('ai-scene-card');
+            const loaderTxt = document.getElementById('ai-loader-text');
+            const loaderBar = document.getElementById('ai-loader-bar');
+            const img = document.getElementById('generated-ai-img');
+            const badge = document.getElementById('generated-ai-badge');
+            const downloadBtn = document.getElementById('btn-download-generated');
+
+            btn.style.display = 'none';
+            card.style.display = 'none';
+            loader.style.display = 'flex';
+            loaderBar.style.width = '0%';
+
+            const phases = [
+                { text: `FUSING AI PROMPT FOR ${selectedName}...`, progress: 30 },
+                { text: "RENDERING HIGH-OCTANE 8K AI SCENE...", progress: 70 },
+                { text: "ENHANCING DETAIL & LIGHTING FILTERS...", progress: 100 }
+            ];
+
+            let idx = 0;
+            function step() {
+                if (idx < phases.length) {
+                    loaderTxt.textContent = phases[idx].text;
+                    loaderBar.style.width = phases[idx].progress + '%';
+                    idx++;
+                    setTimeout(step, 600);
+                } else {
+                    const seed = Math.floor(Math.random() * 999999);
+                    const promptText = encodeURIComponent(aiData.prompt);
+                    const imageUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
+
+                    const testImg = new Image();
+                    testImg.crossOrigin = 'anonymous';
+
+                    const finishDisplay = (src) => {
+                        loader.style.display = 'none';
+                        img.src = src;
+                        badge.textContent = `⚡ REAL-TIME AI GENERATED: ${aiData.title}`;
+                        downloadBtn.href = src;
+                        downloadBtn.download = `${selectedName.toLowerCase()}_ai_scene.jpg`;
+                        card.style.display = 'flex';
+                        btn.style.display = 'flex';
+                        btn.querySelector('span:last-child').textContent = `RE-GENERATE AI SCENE FOR ${selectedName}`;
+                    };
+
+                    testImg.onload = () => finishDisplay(testImg.src);
+                    testImg.onerror = () => finishDisplay(profile.img);
+                    testImg.src = imageUrl;
+                }
+            }
+            step();
+        }
     </script>
 </body>
 </html>
