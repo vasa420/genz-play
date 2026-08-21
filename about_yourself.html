@@ -8,14 +8,19 @@
     <style>
         :root {
             --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
             background-color: var(--bg);
-            color: #0f172a;
+            color: var(--text-dark);
             font-family: 'Outfit', sans-serif;
             height: 100vh;
             width: 100vw;
@@ -28,6 +33,7 @@
             padding: 10px 14px;
         }
 
+        /* ── Top Header Bar ─────────────────────────────────────────── */
         .top-header {
             width: 100%;
             max-width: 100%;
@@ -44,6 +50,9 @@
         }
 
         .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .btn-hamburger { display: none; background: transparent; border: none; color: #0f172a; cursor: pointer; flex-direction: column; gap: 4px; padding: 6px; }
+        .btn-hamburger span { display: block; width: 20px; height: 2px; background: #0f172a; border-radius: 2px; }
+
         .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
         .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
         .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
@@ -59,6 +68,7 @@
         }
         .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
 
+        /* ── Main App Container ─────────────────────────────────── */
         .app-wrapper {
             width: 100%;
             max-width: 100%;
@@ -74,65 +84,266 @@
             min-height: 0;
         }
 
-        .desktop-sidebar { background: #1e293b; padding: 24px 18px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
-        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
-        .nav-item {
-            width: 100%; padding: 12px 16px; background: transparent; border-radius: 10px;
-            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
-            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        /* ── Left Desktop Sidebar (Light background matching Image 6) ─ */
+        .desktop-sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
         }
-        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
-        .nav-item.active { color: #ffffff; background: #334155; font-weight: 700; }
+
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+
+        .nav-item {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border-radius: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        .nav-item.active {
+            color: #2563eb;
+            background: #eff6ff;
+            font-weight: 700;
+        }
+
         .nav-icon { font-size: 16px; }
 
-        .about-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
-        .about-title { font-size: 13px; font-weight: 700; color: #ffffff; }
-        .about-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
-        .about-copyright { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .about-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
+        .about-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .about-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+        /* ── Right Main Content Panel (Matching Image 6 Layout) ────── */
         .main-panel {
-            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
+            padding: 40px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background: #ffffff;
+            height: 100%;
+            overflow-y: auto;
         }
 
-        .panel-header { margin-bottom: 25px; }
-        .panel-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-        .panel-header p { font-size: 14px; color: #64748b; }
-
-        .calc-box {
-            width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #e2e8f0;
-            border-radius: 16px; padding: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align: left;
+        .panel-top-bar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .form-group label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
+        .panel-header-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .main-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .main-sub {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Language Selector Pill (Top Right in Panel) */
+        .lang-picker-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .lang-picker-box span { font-size: 15px; }
+
+        .lang-select-dropdown {
+            background: transparent;
+            border: none;
+            color: #0f172a;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .panel-divider {
+            width: 100%;
+            height: 1px;
+            background: #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        /* Form Area */
+        .form-section {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+        }
+
         .select-input {
-            width: 100%; padding: 14px 18px; background: #ffffff; border: 1px solid #cbd5e1;
-            border-radius: 10px; color: #0f172a; font-family: 'Outfit', sans-serif; font-size: 15px; outline: none; transition: all 0.2s ease;
+            width: 100%;
+            padding: 14px 18px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            color: #0f172a;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
-        .select-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 
-        .btn-analyze {
-            width: 100%; background: #2563eb; color: #ffffff; border: none; padding: 14px;
-            font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 10px;
+        .select-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
-        .btn-analyze:hover { background: #1d4ed8; }
 
-        .lang-select-box { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
-        .lang-select-dropdown { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; outline: none; cursor: pointer; }
+        /* Large Centered Blue Button */
+        .btn-analyze-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 340px;
+            margin: 25px auto 0;
+            padding: 14px 30px;
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
 
-        .story-container { width: 100%; margin-top: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: left; }
-        .story-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-        .story-body { font-size: 14px; line-height: 1.7; color: #334155; white-space: pre-line; min-height: 100px; }
+        .btn-analyze-center:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+        }
 
-        .loader-block { display: none; flex-direction: column; align-items: center; padding: 30px 10px; }
-        .loader-circle { width: 44px; height: 44px; border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+        /* Cyber / Story Loader */
+        .loader-block {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 10px;
+            width: 100%;
+        }
+
+        .loader-circle {
+            width: 44px;
+            height: 44px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .loader-txt { font-size: 13px; font-weight: 700; color: #2563eb; margin-bottom: 8px; }
-        .loader-bar-bg { width: 100%; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .loader-bar-bg { width: 100%; max-width: 400px; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
         .loader-bar-fill { width: 0%; height: 100%; background: #2563eb; transition: width 0.3s ease; }
 
-        .btn-retry { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 12px; font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 20px; }
+        /* Story Display Container */
+        .story-display-box {
+            width: 100%;
+            margin-top: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: left;
+        }
+
+        .story-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 14px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .story-body {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #334155;
+            white-space: pre-line;
+            min-height: 120px;
+        }
+
+        .btn-retry {
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 28px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
         .btn-retry:hover { background: #f1f5f9; color: #0f172a; }
     </style>
 </head>
@@ -149,22 +360,22 @@
                 <span class="status-dot-green"></span>
                 <span>Database Online</span>
             </div>
-            <a class="btn-lobby" href="attacks_game.html">← Dashboard</a>
+            <a class="btn-lobby" href="attacks_game.html">← Lobby</a>
         </div>
     </header>
 
     <!-- Main Dashboard Container -->
     <div class="app-wrapper">
 
-        <!-- Left Desktop Sidebar -->
+        <!-- Left Desktop Sidebar (Light Theme matching Image 6) -->
         <aside class="desktop-sidebar">
             <div class="sidebar-menu">
                 <a class="nav-item" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
                 <a class="nav-item" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
                 <a class="nav-item" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
-                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">🤖</span> Speak with AI</a>
                 <a class="nav-item active" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
                 <a class="nav-item" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">💬</span> Speak with AI</a>
             </div>
 
             <div class="about-card">
@@ -174,62 +385,69 @@
             </div>
         </aside>
 
-        <!-- Right Main Panel -->
+        <!-- Right Main Panel (Matching Image 6) -->
         <main class="main-panel">
-            <div class="panel-header">
-                <h1>👤 About Yourself</h1>
-                <p>Select your operative name and generate your funny AI story lore.</p>
+            <div class="panel-top-bar">
+                <div class="panel-header-titles">
+                    <h1 class="main-title">About Yourself</h1>
+                    <p class="main-sub">Select your operative name & generate your AI story.</p>
+                </div>
+
+                <div class="lang-picker-box" title="Select Language">
+                    <span>🌐</span>
+                    <select id="lang-select" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
+                        <option value="en" selected>English</option>
+                        <option value="ta">தமிழ் (Tamil)</option>
+                        <option value="hi">हिंदी (Hindi)</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="calc-box">
-                <div class="lang-select-box">
-                    <span style="font-size:12px; font-weight:600; color:#64748b;">Language:</span>
-                    <select id="lang-select" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
-                        <option value="en" selected>ENGLISH 🇬🇧</option>
-                        <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
-                        <option value="hi">हिंदी (HINDI) 🇮🇳</option>
+            <div class="panel-divider"></div>
+
+            <div id="form-card" class="form-section">
+                <div>
+                    <label class="form-label" for="user-name-select">Select Operative Name</label>
+                    <select id="user-name-select" class="select-input">
+                        <option value="VAISAL" selected>Vaisal</option>
+                        <option value="NITHISH">Nithish</option>
+                        <option value="GIRISH">Girish</option>
+                        <option value="DHARNISH">Dharnish</option>
+                        <option value="SURYA">Surya</option>
+                        <option value="THAYA">Thaya</option>
+                        <option value="LOGITH">Logith</option>
+                        <option value="VASANTH">Vasanth</option>
+                        <option value="KISHOOR">Kishoor</option>
+                        <option value="SUDHISH">Sudhish</option>
                     </select>
                 </div>
 
-                <div id="form-card">
-                    <div class="form-group">
-                        <label for="user-name-select">SELECT OPERATIVE NAME</label>
-                        <select id="user-name-select" class="select-input">
-                            <option value="VAISAL" selected>VAISAL</option>
-                            <option value="NITHISH">NITHISH</option>
-                            <option value="GIRISH">GIRISH</option>
-                            <option value="DHARNISH">DHARNISH</option>
-                            <option value="THAYA">THAYA</option>
-                            <option value="SUDHISH">SUDHISH</option>
-                            <option value="SURYA">SURYA</option>
-                            <option value="KISHOOR">KISHOOR</option>
-                            <option value="VASANTH">VASANTH</option>
-                            <option value="LOGITH">LOGITH</option>
-                        </select>
-                    </div>
+                <button class="btn-analyze-center" onclick="startStoryGeneration()">
+                    <span>🤖</span>
+                    <span>Run AI Story Generator</span>
+                </button>
+            </div>
 
-                    <button class="btn-analyze" onclick="startStoryGeneration()">GENERATE AI STORY</button>
+            <!-- Loader Block -->
+            <div class="loader-block" id="loader-block">
+                <div class="loader-circle"></div>
+                <div class="loader-txt" id="loader-txt">BOOTING AI STORY GENERATOR...</div>
+                <div class="loader-bar-bg">
+                    <div class="loader-bar-fill" id="loader-bar"></div>
                 </div>
+            </div>
 
-                <div class="loader-block" id="loader-block">
-                    <div class="loader-circle"></div>
-                    <div class="loader-txt" id="loader-txt">BOOTING AI STORY GENERATOR...</div>
-                    <div class="loader-bar-bg">
-                        <div class="loader-bar-fill" id="loader-bar"></div>
+            <!-- Result Story Area -->
+            <div id="result-panel" style="display:none; flex-direction:column; gap:15px; width:100%; max-width:700px;">
+                <div style="font-size:24px; font-weight:800; color:#0f172a; text-align:left;" id="res-user-name">Vaisal</div>
+                <div class="story-display-box">
+                    <div class="story-header">
+                        <span>🤖 AI GENERATED LORE STORY</span>
+                        <span id="typing-status" style="color:#2563eb; font-size:11px;">TYPING STORY...</span>
                     </div>
+                    <div class="story-body" id="story-body"></div>
                 </div>
-
-                <div id="result-panel" style="display:none; flex-direction:column; gap:15px;">
-                    <div style="font-size:22px; font-weight:800; color:#0f172a; text-align:center;" id="res-user-name">VAISAL</div>
-                    <div class="story-container">
-                        <div class="story-header">
-                            <span>🤖 AI GENERATED LORE</span>
-                            <span id="typing-status" style="color:#2563eb; font-size:11px;">TYPING STORY...</span>
-                        </div>
-                        <div class="story-body" id="story-body"></div>
-                    </div>
-                    <button class="btn-retry" onclick="resetPage()">Generate Another Story</button>
-                </div>
+                <button class="btn-retry" onclick="resetPage()">Generate Another Story</button>
             </div>
         </main>
 
@@ -237,16 +455,56 @@
 
     <script>
         const SQUAD_STORIES = {
-            'LOGITH': { 'en': ["Logith is the ultimate master butcher who can chop meat faster than a ninja katana blade!", "Customers come just to watch him slice mutton with 360-degree surgical precision.", "Legend says even the meat shop scales get nervous when Operative Logith picks up the cleaver!"] },
-            'VASANTH': { 'en': ["Vasanth loves hanging upside down from iron ceiling hooks like a supreme cyber bat!", "Claims hanging on a meat hook boosts his brain's coding speed by 500%!", "Once wrote 10,000 lines of bug-free code while suspended by one foot."] },
-            'KISHOOR': { 'en': ["Kishoor is the legendary Son of Durai, born with pure royal squad dominance!", "When Kishoor announces 'I am Durai's Son!', the entire battlefield stops and bows!"] },
-            'DHARNISH': { 'en': ["Dharnish works at the local bakery where even cobras line up to buy hot egg puffs!", "Once charmed a 10-foot king cobra using a freshly baked cream bun as a flute."] },
-            'THAYA': { 'en': ["Thaya is the supreme civil engineer who builds entire concrete bunkers using raw cement!", "Can mix Ultratech cement with bare hands and lay 500 bricks in 30 seconds."] },
-            'SUDHISH': { 'en': ["Sudhish controls the cosmic orbits of the Sun and Moon with just a wave of his hand!", "Once made the Sun and Moon appear together to light up the squad cricket match!"] },
-            'SURYA': { 'en': ["Surya goes to Kaveri River every morning for a mass bath that warms up the entire river water!", "Dives into Kaveri River with 360-degree heroic flips while shampooing."] },
-            'GIRISH': { 'en': ["Girish is the legendary heavy lorry driver operating a massive 18-wheeler Ashok Leyland!", "Drives his Leyland lorry at F1 speeds while playing loud mass songs."] },
-            'VAISAL': { 'en': ["Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!", "Known to drift a 40-ton government bus around tight city turns."] },
-            'NITHISH': { 'en': ["Nithish ringed the temple bell with such holy force that the entire colony thought a thunderstorm landed!", "Master of tactical mantras and high-vibration priest frequency attacks."] }
+            'LOGITH': {
+                'en': ["Logith is the ultimate master butcher who can chop meat faster than a ninja katana blade!", "Customers come just to watch him slice mutton with 360-degree surgical precision.", "Legend says even the meat shop scales get nervous when Operative Logith picks up the cleaver!"],
+                'ta': ["லோகித் கறிக்கடையில கத்தியை சுழற்றி கறி வெட்டுற வேகத்தை பார்த்தா நிஞ்ஜாவே பயந்துடுவான்!", "கடையில இவர் 360 டிகிரி ஸ்டைல்ல மட்டன் கொத்துறதை பார்க்கவே தனியா கூட்டமே கூடும்!", "லோகித் கறி வெட்டுற கத்தியை கையில் எடுத்தாலே தராசே பயந்து நடுங்கும்னு சொல்வாங்க!"],
+                'hi': ["लोगिथ मीट की दुकान का वो उस्ताद है जो निन्जा कटार से भी तेज़ गति से मटन काटता है!", "ग्राहक उसकी दुकान पर सिर्फ 360-डिग्री सर्जिकल स्टाइल में गोश्त कटते देखने आते हैं!", "लेजेंड कहते हैं कि जब लोगिथ छुरा उठाता है, तो तराजू भी थर-थर कांपने लगता है!"]
+            },
+            'VASANTH': {
+                'en': ["Vasanth loves hanging upside down from iron ceiling hooks like a supreme cyber bat!", "Claims hanging on a meat hook boosts his brain's coding speed by 500%!", "Once wrote 10,000 lines of bug-free code while suspended by one foot."],
+                'ta': ["வசந்த் சீலிங் இரும்பு கொக்கியில தலைகீழா தொங்கிக்கிட்டு கோட் பண்ற சூப்பர் சைபர் வௌவால்!", "கொக்கியில தொங்கும் போது தான் பிரைன் 500% வேகத்துல ஒர்க் ஆகும்னு சொல்ற ஒரே ஆளு!", "ஒரு காலால் கொக்கியில தொங்கிக்கிட்டே 10,000 வரிகள் பிழையில்லாத கோட் எழுதி சாதனை படைத்தவர்!"],
+                'hi': ["वसंत लोहे के हुक से उल्टा लटककर कोडिंग करने वाला असली साइबर बैट है!", "उसका दावा है कि हुक पर लटकने से दिमाग की कोडिंग स्पीड 500% बढ़ जाती है!", "एक पैर से हुक पर लटकते हुए 10,000 पंक्तियों का त्रुटिहीन कोड लिखने का रिकॉर्ड!"]
+            },
+            'KISHOOR': {
+                'en': ["Kishoor is the legendary Son of Durai, born with pure royal squad dominance!", "When Kishoor announces 'I am Durai's Son!', the entire battlefield stops and bows!"],
+                'ta': ["கிஷோர் துரையின் மகன்! பிறப்பிலேயே ராஜ வம்சத்து கெத்தையும் மாஸ் கெத்தையும் கொண்டவர்!", "'நான் துரையின் மகன்டா!'னு கிஷோர் கெத்தா சொன்னாலே போர்க்களமே ஸ்தம்பிச்சு நிற்கும்!"],
+                'hi': ["किशोर महान दुरई का बेटा है, जिसका जन्म ही शाही रोब और दबदबे के साथ हुआ है!", "जब किशोर बोलता है 'मैं दुरई का बेटा हूँ!', तो पूरा युद्ध मैदान थमकर नमन करता है!"]
+            },
+            'DHARNISH': {
+                'en': ["Dharnish works at the local bakery where even cobras line up to buy hot egg puffs!", "Once charmed a 10-foot king cobra using a freshly baked cream bun as a flute."],
+                'ta': ["தர்னிஷ் பேக்கரில சூடான எக் பஃப்ஸ் வாங்க நல்ல பாம்புகளே க்யூவில் வந்து நிற்குமாம்!", "10 அடி ராஜநாகத்தை ஃபிரெஷ் கிரீம் பன் வச்சே பாம்பு மகுடி ஊதி வசப்படுத்திய விசித்திரமான ஆளு!"],
+                'hi': ["धरनीश की बेकरी पर गरम एग पफ खरीदने के लिए कोबरा सांप भी लाइन में खड़े होते हैं!", "10-फीट लंबे किंग कोबरा को ताज़ा क्रीम बन दिखाकर सपेरे की तरह वश में करने का रिकॉर्ड!"]
+            },
+            'THAYA': {
+                'en': ["Thaya is the supreme civil engineer who builds entire concrete bunkers using raw cement!", "Can mix Ultratech cement with bare hands and lay 500 bricks in 30 seconds."],
+                'ta': ["தாயா சிமெண்ட் மற்றும் செங்கற்களால் கான்கிரீட் கோட்டைகளையே கட்டும் மாஸ் சிவில் இன்ஜினியர்!", "அல்ட்ராடெக் சிமெண்ட்டை வெறும் கையாலேயே கலக்கி 30 செகண்ட்ல 500 செங்கல் வைப்பவர்!"],
+                'hi': ["थाया वो सिविल इंजीनियर है जो सीमेंट और ईंटों से पलक झपकते ही कंक्रीट का किला बना देता है!", "अल्ट्राटेक सीमेंट को नंगे हाथों से मिलाकर 30 सेकंड में 500 ईंटें चिनने का हुनर!"]
+            },
+            'SUDHISH': {
+                'en': ["Sudhish controls the cosmic orbits of the Sun and Moon with just a wave of his hand!", "Once made the Sun and Moon appear together to light up the squad cricket match!"],
+                'ta': ["சுதீஷ் சூரியனையும் சந்திரனையும் ஒரே சைகையில தனக்கு ஏத்த மாதிரி சுழற்றக்கூடிய காஸ்மிக் ஹீரோ!", "டீம் கிரிக்கெட் மேட்சுக்காக சூரியனையும் நிலவையும் ஒரே நேரத்துல வானத்துல வரவச்ச லெஜண்ட்!"],
+                'hi': ["सुधीश एक इशारे से सूर्य और चंद्रमा की कक्षाओं को नियंत्रित करने वाला कॉस्मिक स्टार है!", "टीम के क्रिकेट मैच के लिए सूरज और चांद को एक साथ आसमान में चमका दिया था!"]
+            },
+            'SURYA': {
+                'en': ["Surya goes to Kaveri River every morning for a mass bath that warms up the entire river water!", "Dives into Kaveri River with 360-degree heroic flips while shampooing."],
+                'ta': ["சூர்யா தினமும் காலையில காவிரி ஆத்துல இறங்கி மாஸா குளிச்சு ஆற்றுத் தண்ணீரையே சூடேத்துவார்!", "சோப்பு நுரையை தலையில போட்டுக்கிட்டு 360 டிகிரி ஸ்டைல்ல காவிரி ஆத்துல டைவ் அடிச்சு குளிப்பவர்!"],
+                'hi': ["सूर्या हर सुबह कावेरी नदी में नहाने उतरता है और पूरे नदी के पानी को गरम कर देता है!", "साबुन के झाग के साथ कावेरी नदी में 360-डिग्री हीरो स्टाइल में डुबकी लगाने वाला लेजेंड!"]
+            },
+            'GIRISH': {
+                'en': ["Girish is the legendary heavy lorry driver operating a massive 18-wheeler Ashok Leyland!", "Drives his Leyland lorry at F1 speeds while playing loud mass songs."],
+                'ta': ["கிரிஷ் 18 சக்கரங்கள் கொண்ட மாஸான 'அசோக் லேலேண்ட்' லாரியை ஓட்டும் லெஜண்டரி டிரைவர்!", "தன்னோட அசோக் லேலேண்ட் லாரியை F1 ரேஸ் கார் மாதிரி மாஸ் பாட்டு போட்டுக்கிட்டே பறக்க விடுவாரு!"],
+                'hi': ["गिरिश 18 पहियों वाली विशाल 'अशोक लेलैंड' लारी चलाने वाला लेजेंडरी ड्राइवर है!", "अपनी अशोक लेलैंड लारी को डीजे गानों के साथ F1 रेसिंग कार की तरह भगाता है!"]
+            },
+            'VAISAL': {
+                'en': ["Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!", "Known to drift a 40-ton government bus around tight city turns."],
+                'ta': ["வைசல் பஸ் ஓட்டுவதில்லை; பஸ்ஸே வைசலிடம் அனுமதி கேட்ட பிறகே ஸ்டார்ட் ஆகும்!", "40 டன் அரசு பஸ்ஸை வளைவுகளில் கெத்தாக டிராஃப்ட் செய்து டிக்கெட் கிழிக்கும் ஒரே மாஸ் டிரைவர்!"],
+                'hi': ["वैसल बस नहीं चलाता; बस खुद वैसल से इजाजत लेकर स्टार्ट होती है!", "40 टन की सरकारी बस को तीखे मोड़ों पर ड्राफ्ट करते हुए टिकट काटने वाला इकलौता लेजेंड!"]
+            },
+            'NITHISH': {
+                'en': ["Nithish ringed the temple bell with such holy force that the entire colony thought a thunderstorm landed!", "Master of tactical mantras and high-vibration priest frequency attacks."],
+                'ta': ["நிதிஷ் கோவில் மணியை எந்த அளவுக்கு பலமா அடிச்சார்னா, ஊரே இடி விழுதுனு நினைச்சு பயந்திடுச்சு!", "புனித மந்திரங்கள் மற்றும் ஆன்மீக அலைவரிசை தாக்குதல்களின் தலைசிறந்த மாஸ்டர்."],
+                'hi': ["नितीश ने मंदिर का घंटा इतनी जोर से बजाया कि पूरा इलाका समझा कि बिजली गिरी है!", "पवित्र मंत्रों और उच्च-आवृत्ति वाले आध्यात्मिक हमलों के माहिर उस्ताद।"]
+            }
         };
 
         let currentActiveName = 'VAISAL';
@@ -282,7 +540,7 @@
                     txt.textContent = stages[idx].text;
                     bar.style.width = stages[idx].progress + '%';
                     idx++;
-                    setTimeout(step, 600);
+                    setTimeout(step, 500);
                 } else {
                     document.getElementById('loader-block').style.display = 'none';
                     showProfileAndTypeStory(name);
@@ -293,11 +551,12 @@
 
         function showProfileAndTypeStory(name) {
             currentActiveName = name;
-            document.getElementById('res-user-name').textContent = name;
+            const displayName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+            document.getElementById('res-user-name').textContent = displayName;
             document.getElementById('result-panel').style.display = 'flex';
 
             const squadData = SQUAD_STORIES[name] || SQUAD_STORIES['VAISAL'];
-            const lines = squadData['en'];
+            const lines = squadData[currentLang] || squadData['en'];
             const fullStoryText = lines.map((line, i) => `${i + 1}. ${line}`).join('\n\n');
 
             const storyBody = document.getElementById('story-body');
@@ -317,13 +576,13 @@
                     typingStatus.textContent = '✅ COMPLETE';
                     typingStatus.style.color = '#16a34a';
                 }
-            }, 25);
+            }, 20);
         }
 
         function resetPage() {
             if (typingInterval) clearInterval(typingInterval);
             document.getElementById('result-panel').style.display = 'none';
-            document.getElementById('form-card').style.display = 'block';
+            document.getElementById('form-card').style.display = 'flex';
             document.getElementById('loader-bar').style.width = '0%';
         }
     </script>
