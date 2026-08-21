@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | Upload Photo</title>
+    <title>ATTACKS | Upload Photo & Facial Scanner</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -134,12 +134,18 @@
 
         .about-title { font-size: 13px; font-weight: 700; color: #0f172a; }
         .about-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
-        .about-copyright { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 
         /* ── Right Main Panel ────────────────────────────────────── */
         .main-panel {
-            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
+            padding: 40px 45px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: #ffffff;
+            height: 100%;
+            overflow-y: auto;
+            text-align: center;
         }
 
         .panel-header { margin-bottom: 25px; }
@@ -149,7 +155,7 @@
         /* Upload Card Box */
         .calc-box {
             width: 100%;
-            max-width: 550px;
+            max-width: 580px;
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
@@ -172,7 +178,7 @@
         .dropzone {
             border: 2px dashed #cbd5e1;
             border-radius: 12px;
-            padding: 35px 20px;
+            padding: 30px 20px;
             text-align: center;
             background: #f8fafc;
             cursor: pointer;
@@ -182,39 +188,38 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
+            min-height: 180px;
         }
 
-        .dropzone:hover, .dropzone.dragover {
+        .dropzone:hover {
             border-color: #2563eb;
             background: #eff6ff;
         }
 
         .dropzone-icon {
-            width: 56px;
-            height: 56px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             background: #eff6ff;
             color: #2563eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 24px;
         }
 
         .dropzone-title { font-size: 15px; font-weight: 700; color: #0f172a; }
         .dropzone-sub { font-size: 12px; color: #64748b; }
 
-        /* Sample Images Chips */
-        .samples-label { font-size: 12px; font-weight: 700; color: #64748b; margin-top: 20px; margin-bottom: 10px; }
-        .sample-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-        .sample-chip {
-            padding: 6px 12px; background: #f1f5f9; border: 1px solid #cbd5e1;
-            border-radius: 6px; font-size: 12px; font-weight: 600; color: #334155;
-            cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        .uploaded-preview-img {
+            max-width: 100%;
+            max-height: 170px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            object-fit: cover;
+            display: none;
         }
-        .sample-chip:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
 
-        /* Action Buttons */
         .btn-action-primary {
             width: 100%;
             background: #2563eb;
@@ -235,6 +240,103 @@
         }
 
         .btn-action-primary:hover { background: #1d4ed8; }
+
+        /* Loader Box */
+        .scan-loader-box {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 35px 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .spin-ring {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loader-status-txt { font-size: 13px; font-weight: 700; color: #2563eb; margin-bottom: 10px; }
+        .loader-bar-bg { width: 100%; max-width: 380px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .loader-bar-fill { width: 0%; height: 100%; background: #2563eb; transition: width 0.3s ease; }
+
+        /* Result Card */
+        .result-card {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 620px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 26px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            text-align: left;
+        }
+
+        .match-badge-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .side-by-side-photos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .photo-frame-box { display: flex; flex-direction: column; gap: 8px; }
+        .photo-frame-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; }
+        .photo-frame-img {
+            width: 100%; height: 180px; border-radius: 10px; border: 1px solid #cbd5e1; object-fit: cover; background: #f8fafc;
+        }
+
+        .result-meta-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%;
+        }
+
+        .meta-card-mini {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; text-align: center;
+        }
+        .mini-label { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px; }
+        .mini-val { font-size: 18px; font-weight: 800; color: #2563eb; }
+
+        .lore-box {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 1.65; color: #334155; white-space: pre-line;
+        }
+
+        .result-actions { display: flex; gap: 12px; width: 100%; flex-wrap: wrap; }
+
+        .btn-sec-act {
+            flex: 1; min-width: 140px; padding: 12px; background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; text-decoration: none; text-align: center; transition: all 0.2s ease;
+        }
+        .btn-sec-act:hover { background: #f1f5f9; color: #0f172a; }
+
+        .btn-pri-act {
+            flex: 1; min-width: 140px; padding: 12px; background: #2563eb; color: #ffffff;
+            font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; text-decoration: none; text-align: center; transition: all 0.2s ease;
+        }
+        .btn-pri-act:hover { background: #1d4ed8; }
+
+        .error-toast {
+            display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 10px 20px;
+            border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 100;
+        }
+        .error-toast.show { display: block; }
     </style>
 </head>
 <body>
@@ -280,10 +382,11 @@
         <main class="main-panel">
             <div class="panel-header">
                 <h1>📤 Upload Photo</h1>
-                <p>Upload high-resolution operative photos for tactical scanning & AI analysis.</p>
+                <p>Upload high-resolution operative photos for tactical scanning & facial matching.</p>
             </div>
 
-            <div class="calc-box">
+            <!-- Upload Card -->
+            <div class="calc-box" id="upload-box">
                 <div class="card-header-title">
                     <span>📷 Target Image Upload</span>
                     <span style="font-size: 11px; color: #16a34a; font-weight: 700;">LIVE SCANNER</span>
@@ -292,30 +395,294 @@
                 <input type="file" id="photo-file-input" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
                 
                 <div class="dropzone" id="dropzone" onclick="document.getElementById('photo-file-input').click()">
-                    <div class="dropzone-icon">📤</div>
-                    <div class="dropzone-title" id="dropzone-text">Click or Drag & Drop Photo Here</div>
-                    <div class="dropzone-sub">Supports PNG, JPG, WEBP • Max file size 25MB</div>
+                    <div id="dropzone-default-content" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                        <div class="dropzone-icon">📤</div>
+                        <div class="dropzone-title" id="dropzone-text">Click or Drag & Drop Photo Here</div>
+                        <div class="dropzone-sub">Supports PNG, JPG, WEBP • Max file size 25MB</div>
+                    </div>
+                    <img id="uploaded-preview-img" class="uploaded-preview-img" alt="Selected Photo Preview">
                 </div>
 
-                <button class="btn-action-primary" onclick="analyzePhoto()">
+                <button class="btn-action-primary" id="btn-scan" onclick="analyzePhoto()">
                     <span>⚡</span>
                     <span>ANALYZE & SCAN PHOTO</span>
                 </button>
+            </div>
+
+            <!-- Scanning Loader Box -->
+            <div class="calc-box scan-loader-box" id="scan-loader-box">
+                <div class="spin-ring"></div>
+                <div class="loader-status-txt" id="loader-status-txt">EXTRACTING FACIAL FEATURES & IMAGE EMBEDDINGS...</div>
+                <div class="loader-bar-bg">
+                    <div class="loader-bar-fill" id="loader-bar-fill"></div>
+                </div>
+            </div>
+
+            <!-- Match Result Card -->
+            <div class="result-card" id="scan-result-card">
+                <div class="match-badge-bar">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #16a34a; letter-spacing: 1.5px;">MATCH VERIFIED</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #0f172a;" id="res-op-name">VAISAL</div>
+                    </div>
+                    <div style="padding: 6px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; border-radius: 20px; font-size: 12px; font-weight: 700;" id="res-match-percentage">
+                        ✅ 99.4% CONFIRMED MATCH
+                    </div>
+                </div>
+
+                <!-- Side-by-Side Photo Comparison -->
+                <div class="side-by-side-photos">
+                    <div class="photo-frame-box">
+                        <div class="photo-frame-label">📷 UPLOADED TARGET PHOTO</div>
+                        <img id="res-uploaded-img" class="photo-frame-img" src="" alt="Uploaded Photo">
+                    </div>
+
+                    <div class="photo-frame-box">
+                        <div class="photo-frame-label">📁 DATABASE RECORD MATCH</div>
+                        <img id="res-db-img" class="photo-frame-img" src="vaisal.jpg" alt="Database Operative Match">
+                    </div>
+                </div>
+
+                <!-- Role Badge -->
+                <div style="padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; border-radius: 8px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡ SPECIALTY ROLE:</span>
+                    <span id="res-role-badge">🚌 HIGH-SPEED BUS OPERATIVE</span>
+                </div>
+
+                <!-- Meta Scores Grid -->
+                <div class="result-meta-grid">
+                    <div class="meta-card-mini">
+                        <div class="mini-label">ATTACK POWER</div>
+                        <div class="mini-val" id="res-atk-score">78</div>
+                    </div>
+                    <div class="meta-card-mini">
+                        <div class="mini-label">THREAT LEVEL</div>
+                        <div class="mini-val" style="color:#ea580c;" id="res-thr-score">72</div>
+                    </div>
+                    <div class="meta-card-mini">
+                        <div class="mini-label">STEALTH LEVEL</div>
+                        <div class="mini-val" style="color:#16a34a;" id="res-stl-score">64</div>
+                    </div>
+                    <div class="meta-card-mini">
+                        <div class="mini-label">SUCCESS RATE</div>
+                        <div class="mini-val" style="color:#9333ea;" id="res-suc-score">81%</div>
+                    </div>
+                </div>
+
+                <!-- Operative Lore Story -->
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px;">🤖 OPERATIVE LORE RECORD</div>
+                    <div class="lore-box" id="res-lore-story"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="result-actions">
+                    <button class="btn-sec-act" onclick="resetPage()">🔄 Scan Another Photo</button>
+                    <a class="btn-pri-act" id="res-link-predict" href="single_predictor_result.html?name=VAISAL">📊 View Single Predictor Result</a>
+                </div>
             </div>
         </main>
 
     </div>
 
+    <div class="error-toast" id="error-toast">⚠️ Please upload or select a photo first to scan!</div>
+
     <script>
+        const OPERATIVE_PROFILES = {
+            'VAISAL': {
+                name: 'VAISAL',
+                atk: 78, thr: 72, stl: 64, suc: 81,
+                img: 'vaisal.jpg',
+                roleBadge: '🚌 HIGH-SPEED BUS OPERATIVE',
+                story: "1. Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!\n2. Known to drift a 40-ton government bus around tight city turns at full speed!\n3. Passengers never need tickets because Vaisal's aura alone pays for the entire trip!"
+            },
+            'GIRISH': {
+                name: 'GIRISH',
+                atk: 82, thr: 75, stl: 58, suc: 85,
+                img: 'girish.jpg',
+                roleBadge: '🚚 18-WHEELER LORRY TRUCK OPERATIVE',
+                story: "1. Girish drives a massive 18-wheeler Ashok Leyland lorry like an F1 supercar!\n2. Blasts heavy mass songs so loud that road traffic clears automatically 5 km ahead!\n3. Can parallel park an 18-wheel lorry into a narrow tea shop parking slot in 3 seconds!"
+            },
+            'DHARNISH': {
+                name: 'DHARNISH',
+                atk: 76, thr: 70, stl: 72, suc: 79,
+                img: 'dhanish.jpg',
+                roleBadge: '🐍 KING COBRA BAKERY OPERATIVE',
+                story: "1. Dharnish works at a local bakery where even king cobras line up to buy hot egg puffs!\n2. Once charmed a 10-foot king cobra using a freshly baked cream bun as a flute!\n3. Snakes in the Amazon forest take baking tips directly from Operative Dharnish."
+            },
+            'NITHISH': {
+                name: 'NITHISH',
+                atk: 85, thr: 78, stl: 66, suc: 88,
+                img: 'nithish.png',
+                roleBadge: '🔔 SACRED BELL & CONDUCTOR OPERATIVE',
+                story: "1. Nithish rang the temple bell with such holy force that the entire colony thought lightning struck!\n2. Works as bus conductor issuing tickets at supersonic speed using holy mantras!\n3. High frequency bell ringing generates tactical shockwaves across the squad area."
+            },
+            'SURYA': {
+                name: 'SURYA',
+                atk: 80, thr: 74, stl: 70, suc: 83,
+                img: 'surya.jpg',
+                roleBadge: '🌊 KAVERI RIVER MASS BATH OPERATIVE',
+                story: "1. Surya dives into Kaveri River every morning for a mass bath that warms up the entire river water!\n2. Performs 360-degree heroic flip dives while shampooing his hair mid-air!\n3. Kaveri river fishes applaud whenever Surya enters the water."
+            },
+            'THAYA': {
+                name: 'THAYA',
+                atk: 75, thr: 68, stl: 60, suc: 77,
+                img: 'thaya.jpg',
+                roleBadge: '🧱 CONCRETE WALL CONSTRUCTION OPERATIVE',
+                story: "1. Thaya mixes Ultratech cement with bare hands and lays 500 bricks in 30 seconds!\n2. Builds entire concrete bunkers on the fly whenever squad attacks begin.\n3. Civil engineers call Thaya for advice when building skyscraper foundations!"
+            },
+            'LOGITH': {
+                name: 'LOGITH',
+                atk: 74, thr: 69, stl: 62, suc: 76,
+                img: 'girish.jpg',
+                roleBadge: '🔪 MASTER BUTCHER KATANA OPERATIVE',
+                story: "1. Logith chops meat faster than a ninja katana blade with surgical precision!\n2. Customers gather just to watch him slice mutton in 360-degree lightning speed.\n3. Legend says even meat shop weighing scales get nervous when Logith picks up the cleaver!"
+            },
+            'VASANTH': {
+                name: 'VASANTH',
+                atk: 88, thr: 84, stl: 75, suc: 91,
+                img: 'vaisal.jpg',
+                roleBadge: '🪝 CYBER CEILING HOOK OPERATIVE',
+                story: "1. Vasanth loves hanging upside down from iron ceiling hooks like a supreme cyber bat!\n2. Claims hanging on a hook boosts his brain's coding speed by 500%!\n3. Once wrote 10,000 lines of bug-free code while suspended by one foot."
+            },
+            'KISHOOR': {
+                name: 'KISHOOR',
+                atk: 73, thr: 67, stl: 65, suc: 75,
+                img: 'girish.jpg',
+                roleBadge: '🔱 SON OF DURAI ROYAL OPERATIVE',
+                story: "1. Kishoor is the legendary Son of Durai, born with pure royal squad dominance!\n2. When Kishoor announces 'I am Durai's Son!', the entire battlefield stops and bows!\n3. Wields royal authority and tactical power in every single battle."
+            },
+            'SUDHISH': {
+                name: 'SUDHISH',
+                atk: 79, thr: 73, stl: 68, suc: 80,
+                img: 'vaisal.jpg',
+                roleBadge: '☀️🌙 COSMIC SUN & MOON ORBIT OPERATIVE',
+                story: "1. Sudhish controls cosmic orbits of the Sun and Moon with just a wave of his hand!\n2. Made the Sun and Moon appear together to light up a squad night cricket match!\n3. Astronomers sync their telescopes with Sudhish's daily schedule."
+            }
+        };
+
+        let selectedFile = null;
+        let selectedDataUrl = null;
+
+        function showToast(msg) {
+            const toast = document.getElementById('error-toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
         function handlePhotoUpload(event) {
             const file = event.target.files[0];
             if (file) {
-                document.getElementById('dropzone-text').textContent = `Loaded: ${file.name}`;
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedDataUrl = e.target.result;
+                    const previewImg = document.getElementById('uploaded-preview-img');
+                    previewImg.src = selectedDataUrl;
+                    previewImg.style.display = 'block';
+
+                    document.getElementById('dropzone-default-content').style.display = 'none';
+                    document.getElementById('dropzone-text').textContent = `Selected: ${file.name}`;
+                };
+                reader.readAsDataURL(file);
             }
         }
 
+        function detectOperativeFromFilename(filename) {
+            const fn = (filename || '').toLowerCase();
+            if (fn.includes('girish') || fn.includes('lorry')) return 'GIRISH';
+            if (fn.includes('dhanish') || fn.includes('dharnish') || fn.includes('cobra') || fn.includes('bakery')) return 'DHARNISH';
+            if (fn.includes('nithish') || fn.includes('bell') || fn.includes('conductor')) return 'NITHISH';
+            if (fn.includes('surya') || fn.includes('kaveri') || fn.includes('river')) return 'SURYA';
+            if (fn.includes('thaya') || fn.includes('cement') || fn.includes('brick')) return 'THAYA';
+            if (fn.includes('logith') || fn.includes('butcher') || fn.includes('katana')) return 'LOGITH';
+            if (fn.includes('vasanth') || fn.includes('hook') || fn.includes('bat')) return 'VASANTH';
+            if (fn.includes('kishoor') || fn.includes('durai') || fn.includes('trident')) return 'KISHOOR';
+            if (fn.includes('sudhish') || fn.includes('sun') || fn.includes('moon')) return 'SUDHISH';
+            if (fn.includes('vaisal') || fn.includes('bus')) return 'VAISAL';
+
+            // Check localStorage
+            const savedLast = localStorage.getItem('last_scanned_operative');
+            if (savedLast && OPERATIVE_PROFILES[savedLast]) return savedLast;
+
+            // Default fallback match
+            return 'VAISAL';
+        }
+
         function analyzePhoto() {
-            alert('⚡ Tactical AI Photo Scan Complete! Image features extracted successfully.');
+            if (!selectedFile && !selectedDataUrl) {
+                showToast("⚠️ Please upload or select a photo first to scan!");
+                return;
+            }
+
+            document.getElementById('upload-box').style.display = 'none';
+            document.getElementById('scan-loader-box').style.display = 'flex';
+
+            const loaderBar = document.getElementById('loader-bar-fill');
+            const loaderTxt = document.getElementById('loader-status-txt');
+
+            const phases = [
+                { text: "🔍 EXTRACTING FACIAL FEATURES & IMAGE EMBEDDINGS...", progress: 35 },
+                { text: "⚡ SEARCHING OPERATIVE DATABASE & LOCALSTORAGE MATCHES...", progress: 70 },
+                { text: "✅ FACIAL MATCH DECODED! RETRIEVING OPERATIVE DOSSIER...", progress: 100 }
+            ];
+
+            let idx = 0;
+            function step() {
+                if (idx < phases.length) {
+                    loaderTxt.textContent = phases[idx].text;
+                    loaderBar.style.width = phases[idx].progress + '%';
+                    idx++;
+                    setTimeout(step, 600);
+                } else {
+                    document.getElementById('scan-loader-box').style.display = 'none';
+                    renderMatchResults();
+                }
+            }
+            step();
+        }
+
+        function renderMatchResults() {
+            const fileName = selectedFile ? selectedFile.name : 'uploaded_photo.jpg';
+            const matchedKey = detectOperativeFromFilename(fileName);
+            const profile = OPERATIVE_PROFILES[matchedKey];
+
+            // Store match result in localStorage
+            localStorage.setItem('last_scanned_operative', matchedKey);
+            localStorage.setItem('last_scanned_photo', selectedDataUrl || profile.img);
+
+            document.getElementById('res-op-name').textContent = profile.name;
+            const matchScore = (Math.random() * 2 + 97.8).toFixed(1);
+            document.getElementById('res-match-percentage').textContent = `✅ ${matchScore}% CONFIRMED MATCH`;
+
+            document.getElementById('res-uploaded-img').src = selectedDataUrl || profile.img;
+            document.getElementById('res-db-img').src = profile.img;
+
+            document.getElementById('res-role-badge').textContent = profile.roleBadge;
+            document.getElementById('res-atk-score').textContent = profile.atk;
+            document.getElementById('res-thr-score').textContent = profile.thr;
+            document.getElementById('res-stl-score').textContent = profile.stl;
+            document.getElementById('res-suc-score').textContent = profile.suc + '%';
+
+            document.getElementById('res-lore-story').textContent = profile.story;
+            document.getElementById('res-link-predict').href = `single_predictor_result.html?name=${matchedKey}`;
+
+            document.getElementById('scan-result-card').style.display = 'flex';
+        }
+
+        function resetPage() {
+            selectedFile = null;
+            selectedDataUrl = null;
+
+            document.getElementById('uploaded-preview-img').style.display = 'none';
+            document.getElementById('dropzone-default-content').style.display = 'flex';
+            document.getElementById('dropzone-text').textContent = 'Click or Drag & Drop Photo Here';
+            document.getElementById('loader-bar-fill').style.width = '0%';
+
+            document.getElementById('scan-result-card').style.display = 'none';
+            document.getElementById('scan-loader-box').style.display = 'none';
+            document.getElementById('upload-box').style.display = 'block';
         }
     </script>
 </body>
