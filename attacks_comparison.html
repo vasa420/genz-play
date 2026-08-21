@@ -1,358 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ATTACKS | Attack Comparison</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6400;
-            --primary-glow: rgba(255, 100, 0, 0.45);
-            --gold: #FFD700;
-            --gold-glow: rgba(255, 215, 0, 0.35);
-            --red: #FF2244;
-            --green: #00FF88;
-            --bg: #04040c;
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --purple: #9333ea;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
-            background: var(--bg);
-            color: #fff;
+            background-color: var(--bg);
+            color: #0f172a;
             font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            overflow-x: hidden;
+            justify-content: flex-start;
             position: relative;
-            padding: 40px 20px;
+            padding: 12px 24px;
         }
 
-        /* Scanlines and particles */
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.14) 1.5px, transparent 1.5px, transparent 3px);
-            pointer-events: none; z-index: 9999; opacity: 0.7;
+        .top-header {
+            width: 100%; max-width: 1320px;
+            padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); flex-shrink: 0;
         }
 
-        #particle-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 2;
+        .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
+        .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
+        .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
+        .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+
+        .btn-lobby {
+            background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
+
+        .app-wrapper {
+            width: 100%; max-width: 1320px; flex: 1; height: calc(100vh - 90px);
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+            display: grid; grid-template-columns: 260px 1fr;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); overflow: hidden; min-height: 0;
         }
 
-        /* Return cross button */
-        .btn-close {
-            position: absolute; top: 30px; right: 30px;
-            width: 48px; height: 48px; border-radius: 50%;
-            background: rgba(255, 100, 0, 0.1); border: 1.5px solid rgba(255, 100, 0, 0.35);
-            color: var(--primary); font-size: 20px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 20;
-            backdrop-filter: blur(8px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        .desktop-sidebar { background: #1e293b; padding: 24px 18px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+        .nav-item {
+            width: 100%; padding: 12px 16px; background: transparent; border-radius: 10px;
+            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+        .nav-item.active { color: #ffffff; background: #334155; font-weight: 700; }
+        .nav-icon { font-size: 16px; }
+
+        .about-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .about-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .about-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+        .main-panel {
+            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
         }
 
-        .btn-close:hover {
-            background: var(--primary); color: #000; border-color: var(--primary);
-            box-shadow: 0 0 20px var(--primary-glow); transform: rotate(90deg) scale(1.05);
+        .panel-header { margin-bottom: 30px; }
+        .panel-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .panel-header p { font-size: 14px; color: #64748b; }
+
+        .calc-box {
+            width: 100%; max-width: 640px; background: #ffffff; border: 1px solid #e2e8f0;
+            border-radius: 16px; padding: 35px 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align: left;
         }
 
-        /* Main Panel container */
-        .calc-panel {
-            position: relative; z-index: 10; width: 100%; max-width: 680px;
-            background: rgba(10, 10, 22, 0.75); border: 1.5px solid rgba(255, 100, 0, 0.25);
-            border-radius: 18px; padding: 35px 30px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 100, 0, 0.08);
-            backdrop-filter: blur(16px); transition: all 0.5s ease;
-        }
-
-        .panel-header { text-align: center; margin-bottom: 30px; }
-        .panel-header h1 {
-            font-size: 28px; font-weight: 900; letter-spacing: 3px;
-            background: linear-gradient(90deg, 
-                #00FFFF 0%, 
-                #0088FF 20%, 
-                #8A2BE2 40%, 
-                #FF007F 60%, 
-                #FF9900 80%, 
-                #00FFFF 100%
-            );
-            background-size: 300% 100%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-            animation: slowGradientWave 8s ease-in-out infinite;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.3));
-        }
-
-        @keyframes slowGradientWave {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .panel-header p {
-            font-size: 13px; color: rgba(255, 255, 255, 0.5);
-            font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
-        }
-
-        .input-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;
-        }
-
-        @media (max-width: 600px) {
-            .input-row { grid-template-columns: 1fr; }
-        }
-
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label {
-            font-family: 'JetBrains Mono', monospace; font-size: 11px;
-            letter-spacing: 2px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase;
+        .input-group label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
+        .input-group select {
+            background: #ffffff; border: 1px solid #cbd5e1; padding: 14px 18px; border-radius: 10px;
+            color: #0f172a; font-family: 'Outfit', sans-serif; font-size: 15px; outline: none; transition: all 0.2s ease; width: 100%;
         }
-
-        .input-group select, .input-group input {
-            background: rgba(255, 100, 0, 0.04); border: 1.5px solid rgba(255, 100, 0, 0.2);
-            padding: 14px 18px; border-radius: 10px; color: #fff;
-            font-family: 'Outfit', sans-serif; font-size: 15px; letter-spacing: 1px; outline: none;
-            transition: all 0.3s ease; width: 100%;
-        }
-
-        .input-group select option {
-            background: #0b0b14; color: #fff;
-        }
-
-        .input-group select:focus, .input-group input:focus {
-            border-color: var(--primary); background: rgba(255, 100, 0, 0.08);
-            box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
-        }
+        .input-group select:focus { border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12); }
 
         .btn-calc {
-            width: 100%; background: var(--primary); color: #000; border: none;
-            padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px;
-            font-weight: 900; letter-spacing: 3px; border-radius: 10px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 100, 0, 0.2); transition: all 0.3s ease;
+            width: 100%; background: #9333ea; color: #ffffff; border: none; padding: 14px;
+            font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 10px;
         }
+        .btn-calc:hover { background: #7e22ce; }
 
-        .btn-calc:hover {
-            box-shadow: 0 0 25px var(--primary-glow); transform: translateY(-2px);
-        }
-
-        /* Comparison Display Grid */
-        .comparison-grid {
-            display: none; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px;
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @media (max-width: 600px) {
-            .comparison-grid { grid-template-columns: 1fr; }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .comp-card {
-            background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,100,0,0.25);
-            border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px;
-            position: relative; overflow: hidden;
-        }
-
-        .comp-card.winner {
-            border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.25);
-        }
-
-        .winner-badge {
-            position: absolute; top: 12px; right: 12px;
-            background: rgba(255,215,0,0.15); border: 1px solid var(--gold);
-            color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 9px;
-            letter-spacing: 1.5px; padding: 2px 8px; border-radius: 4px; font-weight: 700;
-        }
-
-        .comp-name {
-            font-size: 20px; font-weight: 900; letter-spacing: 2px; color: var(--primary);
-        }
+        .comparison-grid { display: none; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .comp-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+        .comp-card.winner { border-color: #eab308; background: #fefce8; }
+        .winner-badge { position: absolute; top: 12px; right: 12px; background: #fef08a; border: 1px solid #ca8a04; color: #854d0e; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+        .comp-name { font-size: 18px; font-weight: 800; color: #0f172a; }
 
         .stat-line { display: flex; flex-direction: column; gap: 4px; }
-        .stat-header { display: flex; justify-content: space-between; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.5); }
-        .stat-track { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
-        .stat-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--gold)); border-radius: 3px; }
+        .stat-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #64748b; }
+        .stat-track { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .stat-fill { height: 100%; background: #9333ea; border-radius: 3px; }
 
         .btn-retry {
-            width: 100%; background: transparent; border: 1.5px solid var(--primary);
-            color: var(--primary); padding: 14px; font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; font-weight: 700; letter-spacing: 3px; border-radius: 10px;
-            cursor: pointer; transition: all 0.3s ease; margin-top: 25px; display: none;
+            width: 100%; background: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 12px;
+            font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 20px; display: none;
         }
+        .btn-retry:hover { background: #f1f5f9; color: #0f172a; }
 
-        .btn-retry:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
-
-        /* Error notification toast */
-        .error-toast {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(50px);
-            opacity: 0;
-            background: rgba(20, 0, 0, 0.95);
-            border: 1.5px solid var(--red);
-            padding: 12px 24px;
-            border-radius: 10px;
-            color: #FF4466;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 1px;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(255, 34, 68, 0.4);
-            width: 85%;
-            max-width: 450px;
-            text-align: center;
-            font-weight: 700;
-        }
-
-        .error-toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        .error-toast { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 100; }
+        .error-toast.show { display: block; }
     </style>
 </head>
-
 <body>
 
-    <div class="scanlines"></div>
-    <canvas id="particle-bg"></canvas>
-
-    <button class="btn-close" onclick="goBack()" title="Return to Analyzer">✕</button>
-
-    <div class="calc-panel">
-        <header class="panel-header">
-            <h1>⚔ ATTACK COMPARISON</h1>
-            <p>COMPARE SPECTRUMS & ATTACK STATS OF TWO OPERATIVES</p>
-        </header>
-
-        <div id="form-section">
-            <div class="input-row">
-                <div class="input-group">
-                    <label for="op1">OPERATIVE 1</label>
-                    <select id="op1">
-                        <option value="VAISAL">VAISAL</option>
-                        <option value="NITHISH">NITHISH</option>
-                        <option value="GIRISH">GIRISH</option>
-                        <option value="DHARNISH">DHARNISH</option>
-                        <option value="SURYA">SURYA</option>
-                        <option value="THAYA">THAYA</option>
-                        <option value="KISHOOR">KISHOOR</option>
-                        <option value="VASANTH">VASANTH</option>
-                        <option value="LOGITH">LOGITH</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="op2">OPERATIVE 2</label>
-                    <select id="op2">
-                        <option value="NITHISH">NITHISH</option>
-                        <option value="VAISAL" selected>VAISAL</option>
-                        <option value="GIRISH">GIRISH</option>
-                        <option value="DHARNISH">DHARNISH</option>
-                        <option value="SURYA">SURYA</option>
-                        <option value="THAYA">THAYA</option>
-                        <option value="KISHOOR">KISHOOR</option>
-                        <option value="VASANTH">VASANTH</option>
-                        <option value="LOGITH">LOGITH</option>
-                    </select>
-                </div>
-            </div>
-            <button class="btn-calc" onclick="runComparison()">RUN BATTLE COMPARISON</button>
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <div class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></div>
         </div>
 
-        <div class="comparison-grid" id="comp-grid">
-            <div class="comp-card" id="card1">
-                <div class="winner-badge" id="badge1" style="display:none;">🏆 HIGHER POWER</div>
-                <div class="comp-name" id="name1">VAISAL</div>
-                
-                <div class="stat-line">
-                    <div class="stat-header"><span>ATTACK POWER</span><span id="atk1">92%</span></div>
-                    <div class="stat-track"><div class="stat-fill" id="atk1-fill" style="width: 92%;"></div></div>
-                </div>
-
-                <div class="stat-line">
-                    <div class="stat-header"><span>TACTICAL SPEED</span><span id="spd1">88%</span></div>
-                    <div class="stat-track"><div class="stat-fill" id="spd1-fill" style="width: 88%;"></div></div>
-                </div>
-
-                <div class="stat-line">
-                    <div class="stat-header"><span>SQUAD SYNERGY</span><span id="syn1">95%</span></div>
-                    <div class="stat-track"><div class="stat-fill" id="syn1-fill" style="width: 95%;"></div></div>
-                </div>
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>Database Online</span>
             </div>
-
-            <div class="comp-card" id="card2">
-                <div class="winner-badge" id="badge2" style="display:none;">🏆 HIGHER POWER</div>
-                <div class="comp-name" id="name2">NITHISH</div>
-
-                <div class="stat-line">
-                    <div class="stat-header"><span>ATTACK POWER</span><span id="atk2">90%</span></div>
-                    <div class="stat-track"><div class="stat-fill" id="atk2-fill" style="width: 90%;"></div></div>
-                </div>
-
-                <div class="stat-line">
-                    <div class="stat-header"><span>TACTICAL SPEED</span><span id="spd2">94%</span></div>
-                    <div class="stat-track"><div class="stat-fill" id="spd2-fill" style="width: 94%;"></div></div>
-                </div>
-
-                <div class="stat-line">
-                    <div class="stat-header"><span>SQUAD SYNERGY</span><span id="syn2">91%</span></div>
-                    <div class="stat-track"><div class="stat-fill" id="syn2-fill" style="width: 91%;"></div></div>
-                </div>
-            </div>
+            <a class="btn-lobby" href="attacks_game.html">← Dashboard</a>
         </div>
+    </header>
 
-        <button class="btn-retry" id="btn-retry" onclick="resetComparison()">COMPARE AGAIN</button>
+    <!-- Main Dashboard Container -->
+    <div class="app-wrapper">
+
+        <!-- Left Desktop Sidebar -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
+                <a class="nav-item active" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
+                <a class="nav-item" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">🤖</span> Speak with AI</a>
+                <a class="nav-item" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
+                <a class="nav-item" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
+            </div>
+
+            <div class="about-card">
+                <div class="about-title">About Attacks</div>
+                <div class="about-desc">Your intelligent assistant to analyze, compare and predict attack patterns efficiently.</div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
+            </div>
+        </aside>
+
+        <!-- Right Main Panel -->
+        <main class="main-panel">
+            <div class="panel-header">
+                <h1>⚔️ Attack Comparison</h1>
+                <p>Compare spectrums & attack stats of two operatives side-by-side.</p>
+            </div>
+
+            <div class="calc-box">
+                <div id="form-section">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="op1">OPERATIVE 1</label>
+                            <select id="op1">
+                                <option value="VAISAL">VAISAL</option>
+                                <option value="NITHISH">NITHISH</option>
+                                <option value="GIRISH">GIRISH</option>
+                                <option value="DHARNISH">DHARNISH</option>
+                                <option value="SURYA">SURYA</option>
+                                <option value="THAYA">THAYA</option>
+                                <option value="KISHOOR">KISHOOR</option>
+                                <option value="VASANTH">VASANTH</option>
+                                <option value="LOGITH">LOGITH</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="op2">OPERATIVE 2</label>
+                            <select id="op2">
+                                <option value="NITHISH">NITHISH</option>
+                                <option value="VAISAL" selected>VAISAL</option>
+                                <option value="GIRISH">GIRISH</option>
+                                <option value="DHARNISH">DHARNISH</option>
+                                <option value="SURYA">SURYA</option>
+                                <option value="THAYA">THAYA</option>
+                                <option value="KISHOOR">KISHOOR</option>
+                                <option value="VASANTH">VASANTH</option>
+                                <option value="LOGITH">LOGITH</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-calc" onclick="runComparison()">RUN COMPARISON</button>
+                </div>
+
+                <div class="comparison-grid" id="comp-grid">
+                    <div class="comp-card" id="card1">
+                        <div class="winner-badge" id="badge1" style="display:none;">🏆 HIGHER POWER</div>
+                        <div class="comp-name" id="name1">VAISAL</div>
+                        <div class="stat-line">
+                            <div class="stat-header"><span>ATTACK POWER</span><span id="atk1">92%</span></div>
+                            <div class="stat-track"><div class="stat-fill" id="atk1-fill" style="width: 92%;"></div></div>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-header"><span>TACTICAL SPEED</span><span id="spd1">88%</span></div>
+                            <div class="stat-track"><div class="stat-fill" id="spd1-fill" style="width: 88%;"></div></div>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-header"><span>SQUAD SYNERGY</span><span id="syn1">95%</span></div>
+                            <div class="stat-track"><div class="stat-fill" id="syn1-fill" style="width: 95%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="comp-card" id="card2">
+                        <div class="winner-badge" id="badge2" style="display:none;">🏆 HIGHER POWER</div>
+                        <div class="comp-name" id="name2">NITHISH</div>
+                        <div class="stat-line">
+                            <div class="stat-header"><span>ATTACK POWER</span><span id="atk2">90%</span></div>
+                            <div class="stat-track"><div class="stat-fill" id="atk2-fill" style="width: 90%;"></div></div>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-header"><span>TACTICAL SPEED</span><span id="spd2">94%</span></div>
+                            <div class="stat-track"><div class="stat-fill" id="spd2-fill" style="width: 94%;"></div></div>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-header"><span>SQUAD SYNERGY</span><span id="syn2">91%</span></div>
+                            <div class="stat-track"><div class="stat-fill" id="syn2-fill" style="width: 91%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-retry" id="btn-retry" onclick="resetComparison()">Compare Again</button>
+            </div>
+        </main>
+
     </div>
 
-    <!-- Alert Toast Dialog -->
-    <div class="error-toast" id="error-toast">⚠️ TWO NAMES ARE THE SAME! PLEASE SELECT A DIFFERENT NAME.</div>
+    <div class="error-toast" id="error-toast">⚠️ Please select two different operatives!</div>
 
     <script>
-        function showToast(message) {
+        function showToast(msg) {
             const toast = document.getElementById('error-toast');
-            toast.textContent = message;
+            toast.textContent = msg;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3200);
-        }
-
-        function goBack() {
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
-            `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
-            }));
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         const OPERATIVE_STATS = {
             'VAISAL':   { atk: 95, spd: 88, syn: 96 },
             'NITHISH':  { atk: 94, spd: 95, syn: 92 },
             'GIRISH':   { atk: 90, spd: 91, syn: 94 },
-            'DHARNISH': { atk: 92, spd: 89, syn: 90 },
+            'DHARNISH': { atk: 92, spd: 90, syn: 90 },
             'SURYA':    { atk: 93, spd: 90, syn: 95 },
             'THAYA':    { atk: 89, spd: 92, syn: 93 },
             'KISHOOR':  { atk: 88, spd: 87, syn: 91 },
@@ -365,146 +273,13 @@
             const op2 = document.getElementById('op2').value;
 
             if (op1 === op2) {
-                showToast("⚠️ BOTH OPERATIVE NAMES ARE THE SAME! PLEASE CHANGE TO A DIFFERENT NAME.");
+                showToast("⚠️ Operative names are identical! Please select a different operative.");
                 return;
             }
 
-            if ((op1 === 'VAISAL' && op2 === 'NITHISH') || (op1 === 'NITHISH' && op2 === 'VAISAL')) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'vaisal_nithish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((op1 === 'VAISAL' && op2 === 'GIRISH') || (op1 === 'GIRISH' && op2 === 'VAISAL')) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'vaisal_girish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            const isDhanish1 = (op1 === 'DHARNISH' || op1 === 'DHANISH');
-            const isDhanish2 = (op2 === 'DHARNISH' || op2 === 'DHANISH');
-            if ((isDhanish1 && op2 === 'VAISAL') || (op1 === 'VAISAL' && isDhanish2)) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'vaisal_dhanish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((isDhanish1 && op2 === 'GIRISH') || (op1 === 'GIRISH' && isDhanish2)) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'girish_dhanish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((isDhanish1 && op2 === 'NITHISH') || (op1 === 'NITHISH' && isDhanish2)) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'nithish_dhanish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((op1 === 'LOGITH' && op2 === 'NITHISH') || (op1 === 'NITHISH' && op2 === 'LOGITH')) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'logith_nithish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((op1 === 'LOGITH' && op2 === 'GIRISH') || (op1 === 'GIRISH' && op2 === 'LOGITH')) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'logith_girish_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((op1 === 'LOGITH' && op2 === 'VAISAL') || (op1 === 'VAISAL' && op2 === 'LOGITH')) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'logith_vaisal_battle.html'; }, 900);
-                }));
-                return;
-            }
-
-            if ((op1 === 'LOGITH' && op2 === 'THAYA') || (op1 === 'THAYA' && op2 === 'LOGITH')) {
-                const dimmer = document.createElement('div');
-                dimmer.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000; z-index: 99999; opacity: 0;
-                    transition: opacity 0.8s ease;
-                `;
-                document.body.appendChild(dimmer);
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    dimmer.style.opacity = '1';
-                    setTimeout(() => { window.location.href = 'logith_thaya_battle.html'; }, 900);
-                }));
-                return;
-            }
+            // Check special battle redirects
+            if ((op1 === 'VAISAL' && op2 === 'NITHISH') || (op1 === 'NITHISH' && op2 === 'VAISAL')) { window.location.href = 'vaisal_nithish_battle.html'; return; }
+            if ((op1 === 'VAISAL' && op2 === 'GIRISH') || (op1 === 'GIRISH' && op2 === 'VAISAL')) { window.location.href = 'vaisal_girish_battle.html'; return; }
 
             const st1 = OPERATIVE_STATS[op1] || { atk: 88, spd: 88, syn: 88 };
             const st2 = OPERATIVE_STATS[op2] || { atk: 88, spd: 88, syn: 88 };
@@ -556,50 +331,6 @@
             document.getElementById('btn-retry').style.display = 'none';
             document.getElementById('form-section').style.display = 'block';
         }
-
-        // Particle background canvas
-        (function() {
-            const canvas = document.getElementById('particle-bg');
-            const ctx = canvas.getContext('2d');
-            let W, H, particles = [];
-
-            function resize() {
-                W = canvas.width  = window.innerWidth;
-                H = canvas.height = window.innerHeight;
-            }
-
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < 45; i++) {
-                particles.push({
-                    x: Math.random() * window.innerWidth,
-                    y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.3 + 0.3,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    alpha: Math.random() * 0.3 + 0.08
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > W) p.vx *= -1;
-                    if (p.y < 0 || p.y > H) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
     </script>
-    <script src="security_guard.js"></script>
 </body>
-
 </html>

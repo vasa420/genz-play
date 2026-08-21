@@ -1,525 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | FLAMES</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+    <title>ATTACKS | Flames Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6400;
-            --primary-glow: rgba(255, 100, 0, 0.45);
-            --gold: #FFD700;
-            --gold-glow: rgba(255, 215, 0, 0.35);
-            --red: #FF2244;
-            --green: #00FF88;
-            --bg: #04040c;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --sidebar-bg: #1e293b;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --orange: #ea580c;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
-            background: var(--bg);
-            color: #fff;
+            background-color: var(--bg);
+            color: var(--text-dark);
             font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
             overflow: hidden;
-            position: relative;
-        }
-
-        /* Scanlines and particles */
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.14) 1.5px, transparent 1.5px, transparent 3px);
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.7;
-        }
-
-        #particle-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        /* Return cross button */
-        .btn-close {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: rgba(255, 100, 0, 0.1);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            color: var(--primary);
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 20;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-
-        .btn-close:hover {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-            box-shadow: 0 0 20px var(--primary-glow);
-            transform: rotate(90deg) scale(1.05);
-        }
-
-        /* Main Panel container */
-        .calc-panel {
-            position: relative;
-            z-index: 10;
-            width: 90%;
-            max-width: 480px;
-            background: rgba(10, 10, 22, 0.65);
-            border: 1.5px solid rgba(255, 100, 0, 0.2);
-            border-radius: 16px;
-            padding: 35px 30px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 100, 0, 0.05);
-            backdrop-filter: blur(16px);
-            transition: all 0.5s ease;
-        }
-
-        /* Header layout */
-        .panel-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .panel-header h1 {
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            color: var(--primary);
-            text-shadow: 0 0 15px var(--primary-glow);
-            margin-bottom: 8px;
-        }
-
-        .panel-header p {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.5);
-            line-height: 1.5;
-        }
-
-        /* Form elements arranged vertically */
-        .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-bottom: 24px;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            padding: 12px 24px;
         }
 
-        .input-group label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.4);
-            text-transform: uppercase;
+        /* ── Top Header ─────────────────────────────────────────── */
+        .top-header {
+            width: 100%; max-width: 1320px;
+            padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); flex-shrink: 0;
         }
 
+        .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .btn-hamburger { display: none; background: transparent; border: none; color: #0f172a; cursor: pointer; flex-direction: column; gap: 4px; padding: 6px; }
+        .btn-hamburger span { display: block; width: 20px; height: 2px; background: #0f172a; border-radius: 2px; }
+
+        .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
+        .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
+        .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
+        .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+
+        .btn-lobby {
+            background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; border-color: #94a3b8; }
+
+        /* Mobile Drawer */
+        .mobile-drawer-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 2000;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .mobile-drawer-overlay.active { opacity: 1; visibility: visible; }
+        .drawer-content {
+            position: absolute; top: 0; left: 0; width: 80%; max-width: 300px; height: 100%;
+            background: #1e293b; padding: 25px 20px; display: flex; flex-direction: column; gap: 20px;
+            transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mobile-drawer-overlay.active .drawer-content { transform: translateX(0); }
+
+        /* ── Main App Container ─────────────────────────────────── */
+        .app-wrapper {
+            width: 100%; max-width: 1320px; flex: 1; height: calc(100vh - 90px);
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+            display: grid; grid-template-columns: 260px 1fr;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); overflow: hidden; min-height: 0;
+        }
+
+        .desktop-sidebar {
+            background: #1e293b; padding: 24px 18px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;
+        }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+        .nav-item {
+            width: 100%; padding: 12px 16px; background: transparent; border-radius: 10px;
+            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+        .nav-item.active { color: #ffffff; background: #334155; font-weight: 700; }
+        .nav-icon { font-size: 16px; }
+
+        .about-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .about-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .about-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+        /* ── Main Panel Content ─────────────────────────────────── */
+        .main-panel {
+            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
+        }
+
+        .panel-header { margin-bottom: 30px; }
+        .panel-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .panel-header p { font-size: 14px; color: #64748b; }
+
+        .calc-box {
+            width: 100%; max-width: 520px; background: #ffffff; border: 1px solid #e2e8f0;
+            border-radius: 16px; padding: 35px 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align: left;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .input-group label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
         .input-group input {
-            background: rgba(255, 100, 0, 0.04);
-            border: 1.5px solid rgba(255, 100, 0, 0.2);
-            padding: 14px 18px;
-            border-radius: 10px;
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-            font-size: 15px;
-            letter-spacing: 1px;
-            outline: none;
-            transition: all 0.3s ease;
+            background: #ffffff; border: 1px solid #cbd5e1; padding: 14px 18px; border-radius: 10px;
+            color: #0f172a; font-family: 'Outfit', sans-serif; font-size: 15px; outline: none; transition: all 0.2s ease;
         }
+        .input-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 
-        .input-group input:focus {
-            border-color: var(--primary);
-            background: rgba(255, 100, 0, 0.08);
-            box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
-        }
-
-        /* Calculate button styling */
         .btn-calc {
-            width: 100%;
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 100, 0, 0.2);
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            width: 100%; background: #ea580c; color: #ffffff; border: none; padding: 14px;
+            font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 10px;
         }
+        .btn-calc:hover { background: #c2410c; }
 
-        .btn-calc:hover {
-            box-shadow: 0 0 25px var(--primary-glow);
-            transform: translateY(-2px);
-        }
+        /* Loader */
+        .loader-block { display: none; flex-direction: column; align-items: center; padding: 30px 10px; }
+        .loader-circle { width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top: 4px solid #ea580c; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader-status { font-size: 13px; font-weight: 700; color: #ea580c; margin-bottom: 10px; }
+        .loader-bar-bg { width: 100%; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+        .loader-bar-fill { width: 0%; height: 100%; background: #ea580c; transition: width 0.3s ease; }
 
-        .btn-calc:active {
-            transform: translateY(1px);
-        }
-
-        /* Progress Loading Screen styling */
-        .loader-block {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 10px;
-            text-align: center;
-        }
-
-        .loader-circle {
-            width: 70px;
-            height: 70px;
-            border: 4px solid rgba(255, 100, 0, 0.1);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 25px;
-            box-shadow: 0 0 15px rgba(255, 100, 0, 0.15);
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loader-status {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 2px;
-            color: var(--primary);
-            margin-bottom: 12px;
-            height: 18px;
-        }
-
-        .loader-bar-bg {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .loader-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: var(--primary);
-            box-shadow: 0 0 10px var(--primary);
-            transition: width 0.3s ease;
-        }
-
-        /* Result Panel styling */
-        .result-block {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-orb-ring {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 100, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 25px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-        }
-
+        /* Result */
+        .result-block { display: none; flex-direction: column; align-items: center; text-align: center; }
         .result-orb {
-            width: 96px;
-            height: 96px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 100, 0, 0.15), rgba(0, 0, 0, 0.9));
-            border: 2px solid var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 46px;
-            font-weight: 900;
-            color: var(--primary);
-            text-shadow: 0 0 20px var(--primary-glow);
-            box-shadow: 0 0 30px var(--primary-glow);
-            animation: pulseOrb 2s infinite ease-in-out;
+            width: 80px; height: 80px; border-radius: 50%; background: #fff7ed; border: 2px solid #ea580c;
+            display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 900; color: #ea580c; margin-bottom: 18px;
         }
-
-        @keyframes pulseOrb {
-
-            0%,
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 30px var(--primary-glow);
-            }
-
-            50% {
-                transform: scale(1.03);
-                box-shadow: 0 0 45px var(--primary-glow);
-            }
-        }
-
-        .result-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 3px;
-            padding: 6px 16px;
-            border-radius: 4px;
-            background: rgba(255, 100, 0, 0.1);
-            border: 1px solid rgba(255, 100, 0, 0.3);
-            color: var(--primary);
-            text-transform: uppercase;
-            margin-bottom: 15px;
-        }
-
-        .result-label {
-            font-size: clamp(24px, 4vw, 32px);
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #fff;
-            margin-bottom: 12px;
-        }
-
-        .result-detail {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.6;
-            margin-bottom: 30px;
-            max-width: 360px;
-        }
+        .result-badge { font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 20px; background: #fff7ed; color: #ea580c; margin-bottom: 12px; }
+        .result-label { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+        .result-detail { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 25px; max-width: 380px; }
 
         .btn-retry {
-            width: 100%;
-            background: transparent;
-            border: 1.5px solid var(--primary);
-            color: var(--primary);
-            padding: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            width: 100%; background: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 12px;
+            font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
         }
+        .btn-retry:hover { background: #f1f5f9; color: #0f172a; }
 
-        .btn-retry:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        /* Error notification */
         .error-toast {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(50px);
-            opacity: 0;
-            background: rgba(20, 0, 0, 0.95);
-            border: 1px solid var(--red);
-            padding: 10px 20px;
-            border-radius: 8px;
-            color: var(--red);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 1px;
-            pointer-events: none;
-            transition: all 0.4s ease;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            width: 80%;
-            text-align: center;
+            display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 10px 20px;
+            border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 100;
         }
-
-        .error-toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        .error-toast.show { display: block; }
     </style>
 </head>
-
 <body>
 
-    <div class="scanlines"></div>
-
-    <!-- Background particles -->
-    <canvas id="particle-bg"></canvas>
-
-    <!-- Return button -->
-    <button class="btn-close" onclick="goBack()" title="Return to Analyzer">✕</button>
-
-    <!-- Main Panel -->
-    <div class="calc-panel" id="main-panel">
-
-        <!-- State 1: Input Form -->
-        <div id="form-state">
-            <header class="panel-header">
-                <h1>FLAMES</h1>
-                <p>type your name and partner name to calculate flames</p>
-            </header>
-
-            <div class="input-group">
-                <label for="name1">YOUR NAME</label>
-                <input type="text" id="name1" autocomplete="off" placeholder="Enter your name...">
-            </div>
-
-            <div class="input-group">
-                <label for="name2">PARTNER NAME</label>
-                <input type="text" id="name2" autocomplete="off" placeholder="Enter second name...">
-            </div>
-
-            <button class="btn-calc" onclick="startCalculation()">RUN ANOMALY CALCULATION</button>
-        </div>
-
-        <!-- State 2: Cyber Loader -->
-        <div class="loader-block" id="loader-state">
-            <div class="loader-circle"></div>
-            <div class="loader-status" id="loader-txt">BOOTING CALCULATOR...</div>
-            <div class="loader-bar-bg">
-                <div class="loader-bar-fill" id="loader-bar"></div>
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <button class="btn-hamburger" onclick="toggleMobileMenu()" title="Open Navigation Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="header-brand">
+                <span class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></span>
             </div>
         </div>
 
-        <!-- State 3: Final Compatibility Result -->
-        <div class="result-block" id="result-state">
-            <div class="result-orb-ring">
-                <div class="result-orb" id="result-char">F</div>
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>Database Online</span>
             </div>
-            <div class="result-badge" id="result-category">STATUS DETERMINED</div>
-            <h2 class="result-label" id="result-name">FRIENDS</h2>
-            <p class="result-detail" id="result-desc"></p>
-            <button class="btn-retry" onclick="resetCalculator()">CALCULATE AGAIN</button>
+            <a class="btn-lobby" href="attacks_game.html">← Dashboard</a>
         </div>
+    </header>
+
+    <!-- Mobile Drawer Overlay Menu -->
+    <div class="mobile-drawer-overlay" id="mobile-drawer" onclick="closeMobileMenu(event)">
+        <div class="drawer-content">
+            <div style="display:flex; justify-content:space-between; color:#fff; font-size:18px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+                <span>ATTACKS</span>
+                <button style="background:none; border:none; color:#fff; cursor:pointer;" onclick="toggleMobileMenu()">✕</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <a class="nav-item active" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
+                <a class="nav-item" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
+                <a class="nav-item" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">🤖</span> Speak with AI</a>
+                <a class="nav-item" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
+                <a class="nav-item" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <div class="app-wrapper">
+
+        <!-- Left Desktop Sidebar -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item active" href="attacks_flames.html">
+                    <span class="nav-icon">🔥</span>
+                    <span>Flames Calculator</span>
+                </a>
+                <a class="nav-item" href="attacks_comparison.html">
+                    <span class="nav-icon">⚔️</span>
+                    <span>Attack Comparison</span>
+                </a>
+                <a class="nav-item" href="single_predictor.html">
+                    <span class="nav-icon">📊</span>
+                    <span>Single Predictor</span>
+                </a>
+                <a class="nav-item" href="speak_with_ai.html">
+                    <span class="nav-icon">🤖</span>
+                    <span>Speak with AI</span>
+                </a>
+                <a class="nav-item" href="about_yourself.html">
+                    <span class="nav-icon">👤</span>
+                    <span>About Yourself</span>
+                </a>
+                <a class="nav-item" href="photo_as_my_own.html">
+                    <span class="nav-icon">📷</span>
+                    <span>Photo "As My Own"</span>
+                </a>
+            </div>
+
+            <div class="about-card">
+                <div class="about-title">About Attacks</div>
+                <div class="about-desc">
+                    Your intelligent assistant to analyze, compare and predict attack patterns efficiently.
+                </div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
+            </div>
+        </aside>
+
+        <!-- Right Main Panel -->
+        <main class="main-panel">
+            <div class="panel-header">
+                <h1>🔥 Flames Calculator</h1>
+                <p>Type your name and partner name to calculate relationship compatibility.</p>
+            </div>
+
+            <div class="calc-box">
+                <!-- State 1: Input Form -->
+                <div id="form-state">
+                    <div class="input-group">
+                        <label for="name1">YOUR NAME</label>
+                        <input type="text" id="name1" autocomplete="off" placeholder="Enter your name...">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="name2">PARTNER NAME</label>
+                        <input type="text" id="name2" autocomplete="off" placeholder="Enter second name...">
+                    </div>
+
+                    <button class="btn-calc" onclick="startCalculation()">CALCULATE FLAMES</button>
+                </div>
+
+                <!-- State 2: Loader -->
+                <div class="loader-block" id="loader-state">
+                    <div class="loader-circle"></div>
+                    <div class="loader-status" id="loader-txt">CALCULATING...</div>
+                    <div class="loader-bar-bg">
+                        <div class="loader-bar-fill" id="loader-bar"></div>
+                    </div>
+                </div>
+
+                <!-- State 3: Result -->
+                <div class="result-block" id="result-state">
+                    <div class="result-orb" id="result-char">F</div>
+                    <div class="result-badge" id="result-category">STATUS DETERMINED</div>
+                    <h2 class="result-label" id="result-name">FRIENDS</h2>
+                    <p class="result-detail" id="result-desc"></p>
+                    <button class="btn-retry" onclick="resetCalculator()">Calculate Again</button>
+                </div>
+            </div>
+        </main>
 
     </div>
 
-    <!-- Alert Dialog -->
-    <div class="error-toast" id="error-toast">ERROR: INPUT FIELDS CANNOT BE EMPTY</div>
+    <div class="error-toast" id="error-toast">Error: Please enter both names!</div>
 
     <script>
-        // Smooth return transitions
-        function goBack() {
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
-            `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
-            }));
-        }
+        function toggleMobileMenu() { document.getElementById('mobile-drawer').classList.toggle('active'); }
+        function closeMobileMenu(e) { if(e.target.id==='mobile-drawer') document.getElementById('mobile-drawer').classList.remove('active'); }
 
-        // Show validation warning
-        function showToast(message) {
+        function showToast(msg) {
             const toast = document.getElementById('error-toast');
-            toast.textContent = message;
+            toast.textContent = msg;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // Flame calculation controller
         function startCalculation() {
             const n1 = document.getElementById('name1').value.trim();
             const n2 = document.getElementById('name2').value.trim();
 
             if (!n1 || !n2) {
-                showToast("ERROR: BOTH SQUAD MEMBER NAMES REQUIRED");
+                showToast("Please enter both names to calculate!");
                 return;
             }
 
-            // Hide form, show loader
             document.getElementById('form-state').style.display = 'none';
             document.getElementById('loader-state').style.display = 'flex';
 
-            const statusStages = [
-                { text: "CROSS-EXAMINING SQUAD CHARACTERS...", progress: 20 },
-                { text: "CANCELLING IDENTICAL SPECTRUMS...", progress: 50 },
-                { text: "RESOLVING FLAMES ALGORITHM...", progress: 80 },
-                { text: "CALCULATING COMPATIBILITY STATUS...", progress: 100 }
+            const stages = [
+                { text: "ANALYZING NAME CHARACTER SPECTRUM...", progress: 30 },
+                { text: "CANCELLING MATCHING LETTERS...", progress: 65 },
+                { text: "RUNNING FLAMES ALGORITHM...", progress: 100 }
             ];
 
             const bar = document.getElementById('loader-bar');
             const label = document.getElementById('loader-txt');
 
-            let stageIdx = 0;
+            let idx = 0;
             function runLoader() {
-                if (stageIdx < statusStages.length) {
-                    label.textContent = statusStages[stageIdx].text;
-                    bar.style.width = statusStages[stageIdx].progress + '%';
-                    stageIdx++;
-                    setTimeout(runLoader, 650);
+                if (idx < stages.length) {
+                    label.textContent = stages[idx].text;
+                    bar.style.width = stages[idx].progress + '%';
+                    idx++;
+                    setTimeout(runLoader, 600);
                 } else {
-                    // Show final calculations
                     showResults(n1, n2);
                 }
             }
             runLoader();
         }
 
-        // Compute Flames Algorithm
         function showResults(name1, name2) {
             let n1 = name1.toLowerCase().replace(/[^a-z]/g, '').split('');
             let n2 = name2.toLowerCase().replace(/[^a-z]/g, '').split('');
 
-            // Cancel out common elements
             for (let i = 0; i < n1.length; i++) {
                 let idx = n2.indexOf(n1[i]);
                 if (idx !== -1) {
@@ -530,7 +350,6 @@
             }
 
             const remainingCount = n1.length + n2.length;
-
             let flames = ['F', 'L', 'A', 'M', 'E', 'S'];
             if (remainingCount > 0) {
                 let index = 0;
@@ -542,27 +361,24 @@
 
             const letter = flames[0];
             const resultData = {
-                'F': { title: 'FRIENDS', emoji: '🤝', msg: 'You share an unbreakable squad bond. Pure brotherhood and synergy on the battlefield!' },
-                'L': { title: 'LOVERS', emoji: '❤️', msg: 'Dangerous levels of synchronization. Vetri Studios detects a perfect match!' },
-                'A': { title: 'AFFECTION', emoji: '🥰', msg: 'Genuine fondness and respect. Positive energy fields detected between you two.' },
-                'M': { title: 'MARRIAGE', emoji: '💍', msg: 'The ultimate pairing. Destined to conquer challenges together as partners-in-crime!' },
-                'E': { title: 'ENEMIES', emoji: '⚡', msg: 'WARNING: Extreme squad dissonance. Keep distance to avoid head-on collision!' },
-                'S': { title: 'SIBLINGS', emoji: '👥', msg: 'A family-like connection. Always looking out for each other like siblings-in-arms.' }
+                'F': { title: 'FRIENDS', emoji: '🤝', msg: 'You share an unbreakable bond and pure brotherhood!' },
+                'L': { title: 'LOVERS', emoji: '❤️', msg: 'A perfect romantic match! Dangerous levels of chemistry.' },
+                'A': { title: 'AFFECTION', emoji: '🥰', msg: 'Genuine fondness, warmth and deep mutual respect.' },
+                'M': { title: 'MARRIAGE', emoji: '💍', msg: 'The ultimate lifelong pairing. Destined to stay together!' },
+                'E': { title: 'ENEMIES', emoji: '⚡', msg: 'High friction! Keep distance to avoid friendly fire.' },
+                'S': { title: 'SIBLINGS', emoji: '👥', msg: 'A caring, protective sibling-like bond.' }
             };
 
             const data = resultData[letter];
-
             document.getElementById('result-char').textContent = letter;
-            document.getElementById('result-category').textContent = `REMAINING SPECTRA COUNT: ${remainingCount}`;
+            document.getElementById('result-category').textContent = `REMAINING LETTERS: ${remainingCount}`;
             document.getElementById('result-name').textContent = `${data.emoji} ${data.title}`;
             document.getElementById('result-desc').textContent = data.msg;
 
-            // Transition states
             document.getElementById('loader-state').style.display = 'none';
             document.getElementById('result-state').style.display = 'flex';
         }
 
-        // Reset to initial screen
         function resetCalculator() {
             document.getElementById('name1').value = '';
             document.getElementById('name2').value = '';
@@ -570,57 +386,6 @@
             document.getElementById('result-state').style.display = 'none';
             document.getElementById('form-state').style.display = 'block';
         }
-
-        // Particle background canvas animations
-        (function () {
-            const canvas = document.getElementById('particle-bg');
-            const ctx = canvas.getContext('2d');
-            let W, H, particles = [];
-
-            function resize() {
-                W = canvas.width = window.innerWidth;
-                H = canvas.height = window.innerHeight;
-            }
-
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < 45; i++) {
-                particles.push({
-                    x: Math.random() * window.innerWidth,
-                    y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.3 + 0.3,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    alpha: Math.random() * 0.3 + 0.08
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > W) p.vx *= -1;
-                    if (p.y < 0 || p.y > H) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
-
-        // Body fade entrance transition
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity 0.8s ease';
-        window.addEventListener('load', () => {
-            requestAnimationFrame(() => { document.body.style.opacity = '1'; });
-        });
     </script>
-    <script src="security_guard.js"></script>
 </body>
-
 </html>

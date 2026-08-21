@@ -3,740 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | Photo As My Own v1.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>ATTACKS | Photo As My Own</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6400;
-            --primary-glow: rgba(255, 100, 0, 0.4);
-            --purple: #9933FF;
-            --purple-glow: rgba(153, 51, 255, 0.4);
-            --blue: #0088FF;
-            --cyan: #00FFFF;
-            --green: #00FF88;
-            --bg: #03040b;
-            --card-bg: rgba(9, 11, 25, 0.88);
-            --border: rgba(153, 51, 255, 0.25);
+            --primary: #2563eb;
+            --bg: #f8fafc;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
-        /* Full Page Cover & Scroll Lock on Laptop */
         body {
             background-color: var(--bg);
-            color: #fff;
+            color: #0f172a;
             font-family: 'Outfit', sans-serif;
             height: 100vh;
-            overflow: hidden; /* Scroll lock */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             position: relative;
-            padding: 10px 20px 8px;
+            padding: 12px 24px;
         }
 
-        /* ── Scanlines & Particle Background ─────────────────────── */
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12) 1.5px, transparent 1.5px, transparent 3px);
-            pointer-events: none; z-index: 9999; opacity: 0.6;
+        .top-header {
+            width: 100%; max-width: 1320px;
+            padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); flex-shrink: 0;
         }
 
-        #particle-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 0;
+        .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
+        .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
+        .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
+        .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+
+        .btn-lobby {
+            background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
+
+        .app-wrapper {
+            width: 100%; max-width: 1320px; flex: 1; height: calc(100vh - 90px);
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+            display: grid; grid-template-columns: 260px 1fr;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); overflow: hidden; min-height: 0;
         }
 
-        /* ── Top Header ─────────────────────────────────────────── */
-        .header {
-            width: 100%;
-            max-width: 1100px;
-            padding: 4px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 100;
-            position: relative;
-            flex-shrink: 0;
+        .desktop-sidebar { background: #1e293b; padding: 24px 18px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+        .nav-item {
+            width: 100%; padding: 12px 16px; background: transparent; border-radius: 10px;
+            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+        .nav-item.active { color: #ffffff; background: #334155; font-weight: 700; }
+        .nav-icon { font-size: 16px; }
+
+        .about-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .about-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .about-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+        .main-panel {
+            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .panel-header { margin-bottom: 25px; }
+        .panel-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .panel-header p { font-size: 14px; color: #64748b; }
+
+        .calc-box {
+            width: 100%; max-width: 550px; background: #ffffff; border: 1px solid #e2e8f0;
+            border-radius: 16px; padding: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align: left;
         }
 
-        .logo-box {
-            width: 38px;
-            height: 38px;
-            background: rgba(255, 100, 0, 0.12);
-            border: 1.5px solid var(--primary);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 0 12px var(--primary-glow);
+        .upload-area {
+            border: 2px dashed #cbd5e1; border-radius: 12px; padding: 30px; text-align: center;
+            cursor: pointer; transition: all 0.2s ease; background: #f8fafc; margin-bottom: 20px;
         }
+        .upload-area:hover { border-color: #2563eb; background: #eff6ff; }
 
-        .brand-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
+        .btn-generate {
+            width: 100%; background: #2563eb; color: #ffffff; border: none; padding: 14px;
+            font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
         }
-
-        .brand-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: 5px;
-            color: var(--primary);
-            text-shadow: 0 0 12px var(--primary-glow);
-            text-transform: uppercase;
-        }
-
-        .brand-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.45);
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-pill-nav {
-            background: rgba(12, 14, 30, 0.7);
-            border: 1.5px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.8);
-            padding: 7px 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            backdrop-filter: blur(10px);
-            text-transform: uppercase;
-        }
-
-        .btn-pill-nav:hover {
-            border-color: var(--purple);
-            color: #fff;
-            box-shadow: 0 0 15px var(--purple-glow);
-            transform: translateY(-2px);
-        }
-
-        .btn-pill-nav.primary {
-            border-color: rgba(255, 100, 0, 0.4);
-            color: var(--primary);
-        }
-
-        .btn-pill-nav.primary:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 18px var(--primary-glow);
-        }
-
-        /* ── Main Glass Card Container (Full Screen Cover) ──────── */
-        .main-card {
-            width: 100%;
-            max-width: 900px;
-            flex: 1;
-            background: var(--card-bg);
-            border: 1.5px solid rgba(153, 51, 255, 0.3);
-            border-radius: 22px;
-            padding: 16px 35px 18px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(153, 51, 255, 0.12);
-            backdrop-filter: blur(16px);
-            margin: 4px 0;
-            min-height: 0;
-        }
-
-        /* Camera Glow Avatar */
-        .camera-avatar-box {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 4px;
-        }
-
-        .sparkle {
-            color: rgba(153, 51, 255, 0.7);
-            font-size: 14px;
-        }
-
-        .camera-glow-circle {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: rgba(12, 14, 32, 0.9);
-            border: 2px solid transparent;
-            background-image: linear-gradient(rgba(12, 14, 32, 0.9), rgba(12, 14, 32, 0.9)), 
-                              linear-gradient(135deg, #0088FF, #9933FF, #FF6400);
-            background-origin: border-box;
-            background-clip: padding-box, border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0 0 20px rgba(153, 51, 255, 0.4), inset 0 0 12px rgba(0, 136, 255, 0.3);
-        }
-
-        .main-card-title {
-            font-size: clamp(24px, 3.5vw, 36px);
-            font-weight: 900;
-            letter-spacing: 3px;
-            color: #fff;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-            text-align: center;
-        }
-
-        .highlight-orange {
-            color: var(--primary);
-            text-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        .highlight-purple {
-            background: linear-gradient(135deg, #A855F7, #EC4899);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .main-card-sub {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-
-        .badge-unlimited {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255, 100, 0, 0.08);
-            border: 1px solid rgba(255, 100, 0, 0.25);
-            padding: 4px 18px;
-            border-radius: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            color: var(--primary);
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            font-weight: 700;
-        }
-
-        /* ── Input Section ──────────────────────────────────────── */
-        .input-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-
-        .input-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.55);
-            text-transform: uppercase;
-        }
-
-        .textarea-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .prompt-textarea {
-            width: 100%;
-            height: 90px;
-            padding: 14px 18px;
-            background: rgba(4, 5, 16, 0.95);
-            border: 1.5px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-            font-size: 13px;
-            line-height: 1.5;
-            outline: none;
-            resize: none;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
-        }
-
-        .prompt-textarea:focus {
-            border-color: var(--purple);
-            box-shadow: 0 0 20px var(--purple-glow), inset 0 2px 8px rgba(0,0,0,0.9);
-        }
-
-        .prompt-textarea::placeholder {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .char-count {
-            position: absolute;
-            right: 16px;
-            bottom: 10px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.35);
-            pointer-events: none;
-        }
-
-        /* ── Presets Grid ───────────────────────────────────────── */
-        .presets-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .presets-pills {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .preset-pill {
-            background: rgba(12, 14, 32, 0.6);
-            border: 1.5px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.85);
-            padding: 7px 15px;
-            border-radius: 20px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .preset-pill:hover {
-            border-color: var(--purple);
-            color: #fff;
-            background: rgba(153, 51, 255, 0.12);
-            box-shadow: 0 0 12px rgba(153, 51, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        /* ── Start Generate Button ──────────────────────────────── */
-        .btn-generate-gradient {
-            width: 100%;
-            padding: 13px;
-            background: linear-gradient(90deg, #FF5500 0%, #9933FF 100%);
-            border: none;
-            border-radius: 14px;
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 0 25px rgba(153, 51, 255, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-transform: uppercase;
-        }
-
-        .btn-generate-gradient:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 0 40px rgba(153, 51, 255, 0.6), 0 0 20px rgba(255, 100, 0, 0.5);
-            background: linear-gradient(90deg, #FF6600 0%, #AA44FF 100%);
-        }
-
-        /* ── Bottom Feature Cards Bar (3 Columns) ───────────────── */
-        .bottom-features-bar {
-            width: 100%;
-            max-width: 900px;
-            background: rgba(8, 10, 24, 0.7);
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 10px 24px;
-            display: grid;
-            grid-template-columns: 1fr auto 1fr auto 1fr;
-            align-items: center;
-            gap: 15px;
-            backdrop-filter: blur(12px);
-            flex-shrink: 0;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .feature-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-
-        .feature-icon.purple {
-            background: rgba(153, 51, 255, 0.12);
-            border: 1px solid rgba(153, 51, 255, 0.35);
-            color: #A855F7;
-        }
-
-        .feature-icon.blue {
-            background: rgba(0, 136, 255, 0.12);
-            border: 1px solid rgba(0, 136, 255, 0.35);
-            color: #38BDF8;
-        }
-
-        .feature-icon.gold {
-            background: rgba(255, 215, 0, 0.12);
-            border: 1px solid rgba(255, 215, 0, 0.35);
-            color: #FFD700;
-        }
-
-        .feature-text {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        .feature-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            color: #fff;
-            text-transform: uppercase;
-        }
-
-        .feature-desc {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            line-height: 1.3;
-        }
-
-        .feature-divider {
-            width: 1px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        /* ── Copyright Footer ───────────────────────────────────── */
-        .footer {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            padding: 4px 0 2px;
-            flex-shrink: 0;
-        }
-
-        .footer .orange {
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        /* ── Responsive Mobile Alignment ─────────────────────────── */
-        @media (max-width: 768px) {
-            body {
-                height: auto;
-                min-height: 100vh;
-                overflow-y: auto; /* Vertical scroll on mobile phone screens */
-                padding: 12px 14px 20px;
-                justify-content: flex-start;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 12px;
-                align-items: center;
-            }
-
-            .header-actions {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .main-card {
-                padding: 24px 18px;
-                height: auto;
-                flex: initial;
-            }
-
-            .prompt-textarea {
-                height: 110px;
-            }
-
-            .presets-pills {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-
-            .preset-pill {
-                font-size: 11px;
-                padding: 8px 10px;
-                justify-content: center;
-            }
-
-            .bottom-features-bar {
-                grid-template-columns: 1fr;
-                gap: 14px;
-                padding: 16px;
-            }
-
-            .feature-divider {
-                display: none;
-            }
-        }
+        .btn-generate:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
 
-    <div class="scanlines"></div>
-    <canvas id="particle-bg"></canvas>
-
-    <!-- Top Header -->
-    <header class="header">
-        <div class="header-left">
-            <div class="logo-box">📷</div>
-            <div class="brand-group">
-                <div class="brand-title">ATTACKS</div>
-                <div class="brand-sub">PHOTO AS MY OWN V1.0</div>
-            </div>
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <div class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></div>
         </div>
 
-        <div class="header-actions">
-            <a class="btn-pill-nav" href="speak_with_ai.html"><span>🎙️</span> SPEAK WITH AI</a>
-            <a class="btn-pill-nav" href="video_as_my_own.html"><span>🎥</span> VIDEO AS MY OWN</a>
-            <button class="btn-pill-nav primary" onclick="goBack()">← SEARCH ENGINE</button>
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>Database Online</span>
+            </div>
+            <a class="btn-lobby" href="attacks_game.html">← Dashboard</a>
         </div>
     </header>
 
-    <!-- Main Glass Card Container (Full Screen Cover on Desktop) -->
-    <main class="main-card">
+    <div class="app-wrapper">
 
-        <!-- Camera Glow Avatar Header -->
-        <div class="camera-avatar-box">
-            <span class="sparkle">✦</span>
-            <div class="camera-glow-circle">📷</div>
-            <span class="sparkle">✦</span>
-        </div>
-
-        <h1 class="main-card-title">
-            PHOTO AS <span class="highlight-orange">MY</span> <span class="highlight-purple">OWN</span>
-        </h1>
-        <p class="main-card-sub">Describe your imagination. Our AI will bring it to life.</p>
-
-        <div class="badge-unlimited">
-            <span>⚡</span> UNLIMITED AI PHOTO GENERATIONS
-        </div>
-
-        <!-- Input Section -->
-        <div class="input-group">
-            <div class="input-label">YOUR PHOTO PROMPT</div>
-            <div class="textarea-wrapper">
-                <textarea
-                    id="prompt-input"
-                    class="prompt-textarea"
-                    maxlength="1000"
-                    oninput="updateCharCount(this)"
-                    placeholder="Describe the photo scene you want to generate...&#10;e.g. A futuristic cyber samurai standing on a neon rooftop in the rain,&#10;or a majestic golden lion with glowing flame eyes..."
-                ></textarea>
-                <div class="char-count" id="char-count">0/1000</div>
+        <!-- Left Desktop Sidebar -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
+                <a class="nav-item" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
+                <a class="nav-item" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">🤖</span> Speak with AI</a>
+                <a class="nav-item" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
+                <a class="nav-item active" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
             </div>
-        </div>
 
-        <!-- Quick Prompt Presets -->
-        <div class="presets-group">
-            <div class="input-label">QUICK PROMPT PRESETS</div>
-            <div class="presets-pills">
-                <button class="preset-pill" onclick="usePreset('Futuristic cyber samurai standing on a neon illuminated skyscraper rooftop in heavy rain, cinematic lighting, 8k')">
-                    <span>⚔️</span> Cyber Samurai Rain
-                </button>
-                <button class="preset-pill" onclick="usePreset('Scenic Kaveri river flowing through lush tropical rainforest under a golden sunset sky with dramatic god rays')">
-                    <span>🌲</span> Kaveri Sunset Forest
-                </button>
-                <button class="preset-pill" onclick="usePreset('Majestic golden lion king with glowing burning flame eyes and ethereal aura portrait')">
-                    <span>🔥</span> Flame Crown Lion
-                </button>
-                <button class="preset-pill" onclick="usePreset('Hypercar supercar drifting at high speed on a dark highway at night with blue light trails')">
-                    <span>🏎️</span> Night Highway Hypercar
-                </button>
+            <div class="about-card">
+                <div class="about-title">About Attacks</div>
+                <div class="about-desc">Your intelligent assistant to analyze, compare and predict attack patterns efficiently.</div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Start Generate Photo Button -->
-        <button class="btn-generate-gradient" onclick="startPhotoGeneration()">
-            <span>✨</span> START GENERATE PHOTO
-        </button>
-
-    </main>
-
-    <!-- Bottom Feature Cards Bar (3 Columns) -->
-    <div class="bottom-features-bar">
-        <div class="feature-item">
-            <div class="feature-icon purple">⚡</div>
-            <div class="feature-text">
-                <div class="feature-title">AI POWERED</div>
-                <div class="feature-desc">Advanced AI models for realistic & stunning results.</div>
+        <!-- Right Main Panel -->
+        <main class="main-panel">
+            <div class="panel-header">
+                <h1>📷 Photo "As My Own"</h1>
+                <p>Upload a target photo to generate custom AI attack scene profiles.</p>
             </div>
-        </div>
 
-        <div class="feature-divider"></div>
+            <div class="calc-box">
+                <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFile(event)">
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <div style="font-size:36px; margin-bottom:10px;">📸</div>
+                    <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:4px;" id="upload-label">Click to Upload Photo</div>
+                    <div style="font-size:12px; color:#64748b;">Supports PNG, JPG, WEBP</div>
+                </div>
 
-        <div class="feature-item">
-            <div class="feature-icon blue">🛡️</div>
-            <div class="feature-text">
-                <div class="feature-title">100% PRIVATE</div>
-                <div class="feature-desc">Your data is secure. We respect your privacy.</div>
+                <button class="btn-generate" onclick="processPhoto()">GENERATE AI ATTACK SCENE</button>
             </div>
-        </div>
+        </main>
 
-        <div class="feature-divider"></div>
-
-        <div class="feature-item">
-            <div class="feature-icon gold">🖼️</div>
-            <div class="feature-text">
-                <div class="feature-title">HIGH QUALITY</div>
-                <div class="feature-desc">Get high-resolution images with perfect details.</div>
-            </div>
-        </div>
     </div>
 
-    <!-- Copyright Footer -->
-    <footer class="footer">
-        © 2025 <span class="orange">ATTACKS</span>. All Rights Reserved.
-    </footer>
-
     <script>
-        function updateCharCount(el) {
-            const count = el.value.length;
-            document.getElementById('char-count').textContent = `${count}/1000`;
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('upload-label').textContent = file.name;
+            }
         }
 
-        function goBack() {
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
-            `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
-            }));
+        function processPhoto() {
+            alert("Photo loaded into Vetri Intelligence pipeline!");
         }
-
-        function usePreset(text) {
-            const input = document.getElementById('prompt-input');
-            input.value = text;
-            updateCharCount(input);
-        }
-
-        function startPhotoGeneration() {
-            const rawPrompt = document.getElementById('prompt-input').value.trim();
-            const promptText = window.VetriSecurity ? window.VetriSecurity.sanitizeInput(rawPrompt) : rawPrompt;
-            if (!promptText) {
-                alert('Please type a photo prompt first before clicking START GENERATE PHOTO!');
-                return;
-            }
-
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
-            `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { 
-                    window.location.href = 'photo_prompt_result.html?prompt=' + encodeURIComponent(promptText); 
-                }, 900);
-            }));
-        }
-
-        // Particle Canvas Background
-        (function() {
-            const canvas = document.getElementById('particle-bg');
-            const ctx = canvas.getContext('2d');
-            let W, H, particles = [];
-
-            function resize() {
-                W = canvas.width  = window.innerWidth;
-                H = canvas.height = window.innerHeight;
-            }
-
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < 45; i++) {
-                particles.push({
-                    x: Math.random() * window.innerWidth,
-                    y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.3 + 0.3,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    alpha: Math.random() * 0.3 + 0.08
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > W) p.vx *= -1;
-                    if (p.y < 0 || p.y > H) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(153,51,255,${p.alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
     </script>
-    <script src="security_guard.js"></script>
 </body>
 </html>

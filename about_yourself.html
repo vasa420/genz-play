@@ -4,634 +4,232 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ATTACKS | About Yourself</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6400;
-            --primary-glow: rgba(255, 100, 0, 0.45);
-            --green: #00FF88;
-            --green-glow: rgba(0, 255, 136, 0.35);
-            --gold: #FFD700;
-            --gold-glow: rgba(255, 215, 0, 0.35);
-            --red: #FF2244;
-            --bg: #04040c;
+            --primary: #2563eb;
+            --bg: #f8fafc;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
-            background: var(--bg);
-            color: #fff;
+            background-color: var(--bg);
+            color: #0f172a;
             font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow-x: hidden;
+            justify-content: flex-start;
             position: relative;
+            padding: 12px 24px;
         }
 
-        /* Scanlines overlay */
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
-            pointer-events: none; z-index: 9999; opacity: 0.7;
+        .top-header {
+            width: 100%; max-width: 1320px;
+            padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); flex-shrink: 0;
         }
 
-        /* Ambient particles bg */
-        #particle-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 0;
+        .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
+        .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
+        .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
+        .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+
+        .btn-lobby {
+            background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
+
+        .app-wrapper {
+            width: 100%; max-width: 1320px; flex: 1; height: calc(100vh - 90px);
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+            display: grid; grid-template-columns: 260px 1fr;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); overflow: hidden; min-height: 0;
         }
 
-        /* Header */
-        .header {
-            width: 100%; padding: 18px 30px 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 100, 0, 0.12);
-            background: rgba(4,4,12,0.9);
-            backdrop-filter: blur(12px);
-            position: sticky; top: 0; z-index: 100;
+        .desktop-sidebar { background: #1e293b; padding: 24px 18px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+        .nav-item {
+            width: 100%; padding: 12px 16px; background: transparent; border-radius: 10px;
+            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+        .nav-item.active { color: #ffffff; background: #334155; font-weight: 700; }
+        .nav-icon { font-size: 16px; }
+
+        .about-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .about-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .about-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+        .main-panel {
+            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
         }
 
-        .header-logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px; font-weight: 900; letter-spacing: 6px;
-            color: var(--primary);
-            text-shadow: 0 0 12px var(--primary-glow);
+        .panel-header { margin-bottom: 25px; }
+        .panel-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .panel-header p { font-size: 14px; color: #64748b; }
+
+        .calc-box {
+            width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #e2e8f0;
+            border-radius: 16px; padding: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align: left;
         }
 
-        .header-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 3px; color: #555;
-            text-transform: uppercase;
-        }
-
-        .btn-back {
-            background: transparent;
-            border: 1px solid rgba(255,100,0,0.3);
-            color: rgba(255,100,0,0.7);
-            padding: 8px 18px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; letter-spacing: 2px;
-            border-radius: 6px; cursor: pointer;
-            transition: 0.25s;
-        }
-
-        .btn-back:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            box-shadow: 0 0 10px var(--primary-glow);
-        }
-
-        /* Main Container */
-        .main-container {
-            width: 100%; max-width: 680px;
-            padding: 40px 20px 80px;
-            position: relative; z-index: 1;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
-        /* Form Card */
-        .card {
-            position: relative;
-            width: 100%; background: rgba(10, 10, 24, 0.75);
-            border: 1.5px solid rgba(255, 100, 0, 0.3);
-            border-radius: 18px; padding: 35px 30px;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
-            margin-bottom: 30px; text-align: center;
-        }
-
-        /* Language Selector Box - Positioned inside top right upside */
-        .lang-select-box {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(255, 100, 0, 0.12);
-            border: 1.5px solid rgba(255, 100, 0, 0.4);
-            padding: 5px 10px; border-radius: 8px;
-            box-shadow: 0 0 12px rgba(255, 100, 0, 0.15);
-            transition: all 0.3s ease;
-        }
-
-        .card-lang-pos {
-            position: absolute; top: 18px; right: 18px; z-index: 10;
-        }
-
-        @media (max-width: 480px) {
-            .card-lang-pos {
-                position: static; margin: 0 auto 15px auto; width: fit-content;
-            }
-        }
-
-        .lang-select-box:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 18px var(--primary-glow);
-        }
-
-        .lang-select-box label { font-size: 12px; }
-
-        .lang-select-dropdown {
-            background: transparent; border: none; color: #fff;
-            font-family: 'JetBrains Mono', monospace; font-size: 11px;
-            letter-spacing: 1px; outline: none; cursor: pointer;
-            font-weight: 700;
-        }
-
-        .lang-select-dropdown option {
-            background: #0b0b14; color: #fff; padding: 6px;
-        }
-
-        .card-icon {
-            font-size: 38px; color: var(--primary);
-            text-shadow: 0 0 15px var(--primary-glow); margin-bottom: 10px;
-        }
-
-        .card-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 22px; font-weight: 900; letter-spacing: 4px;
-            color: var(--primary); margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-
-        .card-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; color: rgba(255,255,255,0.45);
-            letter-spacing: 2px; margin-bottom: 25px;
-        }
-
-        .form-group {
-            display: flex; flex-direction: column; gap: 8px;
-            margin-bottom: 24px; text-align: left;
-        }
-
-        .form-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.5);
-            text-transform: uppercase;
-        }
-
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .form-group label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
         .select-input {
-            width: 100%; padding: 14px 18px;
-            background: rgba(4, 4, 12, 0.85);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            border-radius: 10px; color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 15px; letter-spacing: 2px;
-            outline: none; transition: all 0.3s ease;
+            width: 100%; padding: 14px 18px; background: #ffffff; border: 1px solid #cbd5e1;
+            border-radius: 10px; color: #0f172a; font-family: 'Outfit', sans-serif; font-size: 15px; outline: none; transition: all 0.2s ease;
         }
-
-        .select-input option {
-            background: #0b0b14; color: #fff;
-        }
-
-        .select-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
+        .select-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 
         .btn-analyze {
-            width: 100%; padding: 16px; margin-top: 10px;
-            background: linear-gradient(135deg, #FF6400, #FF9D00);
-            border: none; border-radius: 12px;
-            color: #000; font-family: 'JetBrains Mono', monospace;
-            font-size: 14px; font-weight: 900; letter-spacing: 3px;
-            cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 0 20px var(--primary-glow);
+            width: 100%; background: #2563eb; color: #ffffff; border: none; padding: 14px;
+            font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 10px;
         }
+        .btn-analyze:hover { background: #1d4ed8; }
 
-        .btn-analyze:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 30px var(--primary);
-        }
+        .lang-select-box { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
+        .lang-select-dropdown { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; outline: none; cursor: pointer; }
 
-        /* Cyber Loader */
-        .loader-block {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px 10px;
-            text-align: center;
-            width: 100%;
-        }
+        .story-container { width: 100%; margin-top: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: left; }
+        .story-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+        .story-body { font-size: 14px; line-height: 1.7; color: #334155; white-space: pre-line; min-height: 100px; }
 
-        .loader-circle {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 100, 0, 0.15);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 20px;
-            box-shadow: 0 0 15px rgba(255, 100, 0, 0.2);
-        }
-
+        .loader-block { display: none; flex-direction: column; align-items: center; padding: 30px 10px; }
+        .loader-circle { width: 44px; height: 44px; border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader-txt { font-size: 13px; font-weight: 700; color: #2563eb; margin-bottom: 8px; }
+        .loader-bar-bg { width: 100%; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .loader-bar-fill { width: 0%; height: 100%; background: #2563eb; transition: width 0.3s ease; }
 
-        .loader-txt {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 2px; color: var(--primary);
-            margin-bottom: 12px;
-        }
-
-        .loader-bar-bg {
-            width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05);
-            border-radius: 2px; overflow: hidden;
-        }
-
-        .loader-bar-fill {
-            width: 0%; height: 100%; background: var(--primary);
-            box-shadow: 0 0 10px var(--primary); transition: width 0.3s ease;
-        }
-
-        /* Profile Result & Story Card */
-        .result-panel {
-            width: 100%; display: none;
-            flex-direction: column; align-items: center; gap: 24px;
-            animation: fadeIn 0.6s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .result-card {
-            position: relative;
-            width: 100%; background: rgba(10, 10, 24, 0.85);
-            border: 1.5px solid rgba(255, 100, 0, 0.4);
-            border-radius: 18px; padding: 30px;
-            backdrop-filter: blur(12px); box-shadow: 0 0 35px rgba(0,0,0,0.8);
-        }
-
-        .user-name {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 28px; font-weight: 900; letter-spacing: 4px;
-            color: var(--gold); text-shadow: 0 0 15px rgba(255,215,0,0.4);
-            margin-bottom: 6px; text-transform: uppercase; text-align: center;
-        }
-
-        .user-title-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 2px; color: var(--green);
-            text-align: center; margin-bottom: 25px;
-            text-shadow: 0 0 10px rgba(0,255,136,0.3);
-        }
-
-        /* Typing Story Box at Down Side */
-        .story-container {
-            width: 100%; margin-top: 20px;
-            background: rgba(4, 4, 12, 0.9);
-            border: 1.5px solid rgba(255, 100, 0, 0.35);
-            border-radius: 14px; padding: 22px;
-            box-shadow: 0 0 20px rgba(255, 100, 0, 0.15);
-        }
-
-        .story-header {
-            display: flex; align-items: center; justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: var(--primary);
-            margin-bottom: 14px; border-bottom: 1px dashed rgba(255,100,0,0.25);
-            padding-bottom: 10px; flex-wrap: wrap; gap: 10px;
-        }
-
-        .story-body {
-            font-family: 'Outfit', 'JetBrains Mono', sans-serif;
-            font-size: 14px; line-height: 1.8; color: #fff;
-            letter-spacing: 0.5px; white-space: pre-line;
-            min-height: 120px;
-        }
-
-        .typing-cursor {
-            display: inline-block; width: 8px; height: 16px;
-            background: var(--primary); margin-left: 3px;
-            animation: blink 0.7s infinite; vertical-align: middle;
-        }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        .btn-retry {
-            width: 100%; background: transparent; border: 1.5px solid var(--primary);
-            color: var(--primary); padding: 14px; font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; font-weight: 700; letter-spacing: 3px; border-radius: 10px;
-            cursor: pointer; transition: all 0.3s ease; margin-top: 20px;
-        }
-
-        .btn-retry:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
+        .btn-retry { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 12px; font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; margin-top: 20px; }
+        .btn-retry:hover { background: #f1f5f9; color: #0f172a; }
     </style>
 </head>
 <body>
 
-    <div class="scanlines"></div>
-    <canvas id="particle-bg"></canvas>
-
-    <header class="header">
-        <div>
-            <div class="header-logo">ATTACKS</div>
-            <div class="header-tag">ABOUT YOURSELF v1.0</div>
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <div class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></div>
         </div>
 
-        <button class="btn-back" onclick="goBack()">← SEARCH ENGINE</button>
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>Database Online</span>
+            </div>
+            <a class="btn-lobby" href="attacks_game.html">← Dashboard</a>
+        </div>
     </header>
 
-    <main class="main-container">
-        
-        <!-- Input Card (Only Name Asked) -->
-        <div class="card" id="form-card">
-            <!-- Language Selector Shifted Inside Card Right Side Corner Upside -->
-            <div class="lang-select-box card-lang-pos" title="Select Language">
-                <label for="lang-select">🌐</label>
-                <select id="lang-select" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
-                    <option value="en" selected>ENGLISH 🇬🇧</option>
-                    <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
-                    <option value="hi">हिंदी (HINDI) 🇮🇳</option>
-                </select>
+    <!-- Main Dashboard Container -->
+    <div class="app-wrapper">
+
+        <!-- Left Desktop Sidebar -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
+                <a class="nav-item" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
+                <a class="nav-item" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">🤖</span> Speak with AI</a>
+                <a class="nav-item active" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
+                <a class="nav-item" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
             </div>
 
-            <div class="card-icon">👤</div>
-            <h1 class="card-title">ABOUT YOURSELF</h1>
-            <p class="card-sub">SELECT YOUR OPERATIVE NAME & GENERATE YOUR FUNNY AI STORY</p>
+            <div class="about-card">
+                <div class="about-title">About Attacks</div>
+                <div class="about-desc">Your intelligent assistant to analyze, compare and predict attack patterns efficiently.</div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
+            </div>
+        </aside>
 
-            <div class="form-group">
-                <label class="form-label" for="user-name-select">SELECT OPERATIVE NAME</label>
-                <select id="user-name-select" class="select-input">
-                    <option value="VAISAL" selected>VAISAL</option>
-                    <option value="NITHISH">NITHISH</option>
-                    <option value="GIRISH">GIRISH</option>
-                    <option value="DHARNISH">DHARNISH</option>
-                    <option value="THAYA">THAYA</option>
-                    <option value="SUDHISH">SUDHISH</option>
-                    <option value="SURYA">SURYA</option>
-                    <option value="KISHOOR">KISHOOR</option>
-                    <option value="VASANTH">VASANTH</option>
-                    <option value="LOGITH">LOGITH</option>
-                </select>
+        <!-- Right Main Panel -->
+        <main class="main-panel">
+            <div class="panel-header">
+                <h1>👤 About Yourself</h1>
+                <p>Select your operative name and generate your funny AI story lore.</p>
             </div>
 
-            <button class="btn-analyze" onclick="startStoryGeneration()">RUN AI STORY GENERATOR</button>
-        </div>
-
-        <!-- Cyber Loader -->
-        <div class="loader-block" id="loader-block">
-            <div class="loader-circle"></div>
-            <div class="loader-txt" id="loader-txt">BOOTING AI STORY GENERATOR...</div>
-            <div class="loader-bar-bg">
-                <div class="loader-bar-fill" id="loader-bar"></div>
-            </div>
-        </div>
-
-        <!-- Profile Result & AI Story Card (Typed at down side) -->
-        <div class="result-panel" id="result-panel">
-            <div class="result-card">
-                <div class="user-name" id="res-user-name">VAISAL</div>
-                <div class="user-title-badge" id="res-user-role">OPERATIVE THREAT PROFILE DETECTED</div>
-
-                <!-- Story box typed at the down side -->
-                <div class="story-container">
-                    <div class="story-header">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span>🤖 AI GENERATED STORY LORE</span>
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <!-- Language Selector inside Story Box Top Right Corner Upside -->
-                            <div class="lang-select-box" style="padding: 3px 8px;" title="Switch Language">
-                                <label for="lang-select-story">🌐</label>
-                                <select id="lang-select-story" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
-                                    <option value="en">ENGLISH 🇬🇧</option>
-                                    <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
-                                    <option value="hi">हिंदी (HINDI) 🇮🇳</option>
-                                </select>
-                            </div>
-                            <span id="typing-status" style="color: var(--primary); font-size: 10px;">TYPING STORY...</span>
-                        </div>
-                    </div>
-                    <div class="story-body" id="story-body"></div>
+            <div class="calc-box">
+                <div class="lang-select-box">
+                    <span style="font-size:12px; font-weight:600; color:#64748b;">Language:</span>
+                    <select id="lang-select" class="lang-select-dropdown" onchange="handleLanguageChange(this.value)">
+                        <option value="en" selected>ENGLISH 🇬🇧</option>
+                        <option value="ta">தமிழ் (TAMIL) 🇮🇳</option>
+                        <option value="hi">हिंदी (HINDI) 🇮🇳</option>
+                    </select>
                 </div>
 
-                <button class="btn-retry" onclick="resetPage()">GENERATE ANOTHER STORY</button>
-            </div>
-        </div>
+                <div id="form-card">
+                    <div class="form-group">
+                        <label for="user-name-select">SELECT OPERATIVE NAME</label>
+                        <select id="user-name-select" class="select-input">
+                            <option value="VAISAL" selected>VAISAL</option>
+                            <option value="NITHISH">NITHISH</option>
+                            <option value="GIRISH">GIRISH</option>
+                            <option value="DHARNISH">DHARNISH</option>
+                            <option value="THAYA">THAYA</option>
+                            <option value="SUDHISH">SUDHISH</option>
+                            <option value="SURYA">SURYA</option>
+                            <option value="KISHOOR">KISHOOR</option>
+                            <option value="VASANTH">VASANTH</option>
+                            <option value="LOGITH">LOGITH</option>
+                        </select>
+                    </div>
 
-    </main>
+                    <button class="btn-analyze" onclick="startStoryGeneration()">GENERATE AI STORY</button>
+                </div>
+
+                <div class="loader-block" id="loader-block">
+                    <div class="loader-circle"></div>
+                    <div class="loader-txt" id="loader-txt">BOOTING AI STORY GENERATOR...</div>
+                    <div class="loader-bar-bg">
+                        <div class="loader-bar-fill" id="loader-bar"></div>
+                    </div>
+                </div>
+
+                <div id="result-panel" style="display:none; flex-direction:column; gap:15px;">
+                    <div style="font-size:22px; font-weight:800; color:#0f172a; text-align:center;" id="res-user-name">VAISAL</div>
+                    <div class="story-container">
+                        <div class="story-header">
+                            <span>🤖 AI GENERATED LORE</span>
+                            <span id="typing-status" style="color:#2563eb; font-size:11px;">TYPING STORY...</span>
+                        </div>
+                        <div class="story-body" id="story-body"></div>
+                    </div>
+                    <button class="btn-retry" onclick="resetPage()">Generate Another Story</button>
+                </div>
+            </div>
+        </main>
+
+    </div>
 
     <script>
-        function goBack() {
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
-            `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { window.location.href = 'attacks_game.html'; }, 900);
-            }));
-        }
-
-        // Multilingual Funny Custom Themes Database (English, Tamil, Hindi)
         const SQUAD_STORIES = {
-            'LOGITH': {
-                'en': [
-                    "Logith is the ultimate master butcher who can chop meat faster than a ninja katana blade!",
-                    "Customers come to his meat shop just to watch him slice mutton with 360-degree surgical precision.",
-                    "Once chopped chicken so fast that the meat automatically cooked itself from friction heat!",
-                    "Legend says even the meat shop scales get nervous when Operative Logith picks up the cleaver!"
-                ],
-                'ta': [
-                    "லோகித் கறிக்கடையில கத்தியை சுழற்றி கறி வெட்டுற வேகத்தை பார்த்தா நிஞ்ஜாவே பயந்துடுவான்!",
-                    "கடையில இவர் 360 டிகிரி ஸ்டைல்ல மட்டன் கொத்துறதை பார்க்கவே தனியா கூட்டமே கூடும்!",
-                    "ஒரு தடவை இவரு கோழியை வெட்டுன வேகத்துல, உராய்வு சூட்டுலயே கறி ஆட்டோமேட்டிக்கா வெந்துடுச்சு!",
-                    "லோகித் கறி வெட்டுற கத்தியை கையில் எடுத்தாலே தராசே பயந்து நடுங்கும்னு சொல்வாங்க!"
-                ],
-                'hi': [
-                    "लोगिथ मीट की दुकान का वो उस्ताद है जो निन्जा कटार से भी तेज़ गति से मटन काटता है!",
-                    "ग्राहक उसकी दुकान पर सिर्फ 360-डिग्री सर्जिकल स्टाइल में गोश्त कटते देखने आते हैं!",
-                    "एक बार मुर्गा इतनी तेजी से काटा कि घर्षण की गर्मी से मीट अपने आप पक गया!",
-                    "लेजेंड कहते हैं कि जब लोगिथ छुरा उठाता है, तो तराजू भी थर-थर कांपने लगता है!"
-                ]
-            },
-            'VASANTH': {
-                'en': [
-                    "Vasanth loves hanging upside down from iron ceiling hooks like a supreme cyber bat!",
-                    "Claims that hanging on a meat hook boosts his brain's coding speed by 500%!",
-                    "Once wrote 10,000 lines of bug-free code while casually suspended by one foot from a ceiling hook.",
-                    "When asked why he hangs on hooks, Vasanth says: 'It keeps my squad ideas crystal clear!'"
-                ],
-                'ta': [
-                    "வசந்த் சீலிங் இரும்பு கொக்கியில தலைகீழா தொங்கிக்கிட்டு கோட் பண்ற சூப்பர் சைபர் வௌவால்!",
-                    "கொக்கியில தொங்கும் போது தான் பிரைன் 500% வேகத்துல ஒர்க் ஆகும்னு சொல்ற ஒரே ஆளு!",
-                    "ஒரு காலால் கொக்கியில தொங்கிக்கிட்டே 10,000 வரிகள் பிழையில்லாத கோட் எழுதி சாதனை படைத்தவர்!",
-                    "ஏன் கொக்கியில தொங்குறீங்கனு கேட்டா, 'அப்பதான் என் ஐடியாக்கள் ஷார்ப்பா இருக்கும்'னு சொல்வாரு!"
-                ],
-                'hi': [
-                    "वसंत लोहे के हुक से उल्टा लटककर कोडिंग करने वाला असली साइबर बैट है!",
-                    "उसका दावा है कि हुक पर लटकने से दिमाग की कोडिंग स्पीड 500% बढ़ जाती है!",
-                    "एक पैर से हुक पर लटकते हुए 10,000 पंक्तियों का त्रुटिहीन कोड लिखने का रिकॉर्ड!",
-                    "जब पूछो कि हुक पर क्यों लटकते हो, तो कहता है: 'इससे मेरे विचार एकदम शार्प रहते हैं!'"
-                ]
-            },
-            'KISHOOR': {
-                'en': [
-                    "Kishoor is the legendary Son of Durai, born with pure royal squad dominance!",
-                    "Inherited Durai's legendary aura that makes enemy boss targets surrender instantly.",
-                    "When Kishoor announces 'I am Durai's Son!', the entire battlefield stops and bows!",
-                    "Combines Durai's fearless energy with 100% precision sharp shooting tactics!"
-                ],
-                'ta': [
-                    "கிஷோர் துரையின் மகன்! பிறப்பிலேயே ராஜ வம்சத்து கெத்தையும் மாஸ் கெத்தையும் கொண்டவர்!",
-                    "துரையின் கம்பீரமான ரத்தமும் கெத்தும் இருப்பதால் எதிரிகள் இவரை பார்த்தாலே சரணடைவாங்க!",
-                    "'நான் துரையின் மகன்டா!'னு கிஷோர் கெத்தா சொன்னாலே போர்க்களமே ஸ்தம்பிச்சு நிற்கும்!",
-                    "துரையின் பயமில்லாத சிங்க குணத்தையும் ஷார்ப்ஷூட்டர் துல்லியத்தையும் ஒன்றாகக் கொண்ட மாவீரன்!"
-                ],
-                'hi': [
-                    "किशोर महान दुरई का बेटा है, जिसका जन्म ही शाही रोब और दबदबे के साथ हुआ है!",
-                    "दुरई का खतरनाक और राजसी औरा ऐसा है कि दुश्मन बॉस तुरंत घुटने टेक देता है!",
-                    "जब किशोर बोलता है 'मैं दुरई का बेटा हूँ!', तो पूरा युद्ध मैदान थमकर नमन करता है!",
-                    "दुरई का बेखौफ अंदाज़ और 100% सटीक निशानेबाज़ी का अनोखा मेल!"
-                ]
-            },
-            'DHARNISH': {
-                'en': [
-                    "Dharnish works at the local bakery where even cobras line up to buy hot egg puffs!",
-                    "Once charmed a 10-foot king cobra using a freshly baked cream bun as a snake flute.",
-                    "Legend says snakes guard his bakery at night while Dharnish bakes 500 samosas!",
-                    "If a snake enters his shop, Dharnish feeds it a sweet cake and makes it a bakery assistant!"
-                ],
-                'ta': [
-                    "தர்னிஷ் பேக்கரில சூடான எக் பஃப்ஸ் வாங்க நல்ல பாம்புகளே க்யூவில் வந்து நிற்குமாம்!",
-                    "10 அடி ராஜநாகத்தை ஃபிரெஷ் கிரீம் பன் வச்சே பாம்பு மகுடி ஊதி வசப்படுத்திய விசித்திரமான ஆளு!",
-                    "ராத்திரியில தர்னிஷ் சமோசா சுடும்போது பாம்புகள் தான் அவரோட பேக்கரியை காவல் காக்குமாம்!",
-                    "பேக்கரிக்குள்ள பாம்பு வந்தா கூட, தர்னிஷ் அதுக்கு கேக் ஊட்டிவிட்டு பேக்கரி ஹெல்பரா மாத்திடுவாரு!"
-                ],
-                'hi': [
-                    "धरनीश की बेकरी पर गरम एग पफ खरीदने के लिए कोबरा सांप भी लाइन में खड़े होते हैं!",
-                    "10-फीट लंबे किंग कोबरा को ताज़ा क्रीम बन दिखाकर सपेरे की तरह वश में करने का रिकॉर्ड!",
-                    "रात में जब धरनीश समोसे बनाता है, तो सांप उसकी बेकरी का पहरा देते हैं!",
-                    "दुकान में सांप आ जाए तो धरनीश उसे केक खिलाकर बेकरी का हेल्पर बना लेता है!"
-                ]
-            },
-            'THAYA': {
-                'en': [
-                    "Thaya is the supreme civil engineer who builds entire concrete bunkers using raw cement & bricks!",
-                    "Can mix Ultratech cement with his bare hands and lay 500 bricks in 30 seconds.",
-                    "Test-checks brick quality by punching solid red bricks with his iron fist!",
-                    "When Thaya builds a cement wall, not even a tank missile can put a scratch on it!"
-                ],
-                'ta': [
-                    "தாயா சிமெண்ட் மற்றும் செங்கற்களால் கான்கிரீட் கோட்டைகளையே கட்டும் மாஸ் சிவில் இன்ஜினியர்!",
-                    "அல்ட்ராடெக் சிமெண்ட்டை வெறும் கையாலேயே கலக்கி 30 செகண்ட்ல 500 செங்கல் வைப்பவர்!",
-                    "செங்கல்லோட குவாலிட்டியை செக் பண்ண தன்னோட இரும்பு கையால செங்கல்லை குத்தி பார்ப்பாராம்!",
-                    "தாயா கட்டுன சிமெண்ட் சுவரை டாங்க் மிஸைல் வச்சு அடிச்சாலும் ஒரு கீறல் கூட விழாது!"
-                ],
-                'hi': [
-                    "थाया वो सिविल इंजीनियर है जो सीमेंट और ईंटों से पलक झपकते ही कंक्रीट का किला बना देता है!",
-                    "अल्ट्राटेक सीमेंट को नंगे हाथों से मिलाकर 30 सेकंड में 500 ईंटें चिनने का हुनर!",
-                    "ईंट की मजबूती चेक करने के लिए उस पर लोहे की मुक्की मारकर टेस्ट करता है!",
-                    "थाया की बनाई सीमेंट की दीवार पर टैंक का मिसाइल भी खरोंच नहीं लगा सकता!"
-                ]
-            },
-            'SUDHISH': {
-                'en': [
-                    "Sudhish controls the cosmic orbits of the Sun and Moon with just a wave of his hand!",
-                    "Can pull down the Sun for extra morning heat and summon the Moon for cool night stealth mode.",
-                    "Once made the Sun and Moon appear together in the sky just to light up the squad cricket match!",
-                    "When Sudhish looks up at the sky, even the eclipse asks him: 'Boss, should I happen now?'"
-                ],
-                'ta': [
-                    "சுதீஷ் சூரியனையும் சந்திரனையும் ஒரே சைகையில தனக்கு ஏத்த மாதிரி சுழற்றக்கூடிய காஸ்மிக் ஹீரோ!",
-                    "காலையில வெயிலுக்காக சூரியனையும், ராத்திரியில கூல் மிஷனுக்காக சந்திரனையும் வரவழைப்பவர்!",
-                    "டீம் கிரிக்கெட் மேட்சுக்காக சூரியனையும் நிலவையும் ஒரே நேரத்துல வானத்துல வரவச்ச லெஜண்ட்!",
-                    "சுதீஷ் வானத்தை பார்த்தாலே, கிரகணம் கூட 'பாஸ்... நான் இப்போ வரலாமா?'னு கேட்டுட்டு தான் வரும்!"
-                ],
-                'hi': [
-                    "सुधीश एक इशारे से सूर्य और चंद्रमा की कक्षाओं को नियंत्रित करने वाला कॉस्मिक स्टार है!",
-                    "सुबह की धूप के लिए सूरज और रात के गुप्त मिशन के लिए चांद को बुलाने की ताकत!",
-                    "टीम के क्रिकेट मैच के लिए सूरज और चांद को एक साथ आसमान में चमका दिया था!",
-                    "सुधीश जब आसमान की तरफ देखता है, तो ग्रहण भी पूछता है: 'बॉस, क्या मैं अभी लगूं?'"
-                ]
-            },
-            'SURYA': {
-                'en': [
-                    "Surya goes to the Kaveri River every morning for a mass bath that warms up the entire river water!",
-                    "Dives into Kaveri River with 360-degree heroic flips while shampooing his hair with soap bubbles.",
-                    "Once bathed so fast that Kaveri River water level rose by 3 feet and fishes started applauding!",
-                    "Legend says even Kaveri River flow slows down just to let Operative Surya finish his royal morning bath!"
-                ],
-                'ta': [
-                    "சூர்யா தினமும் காலையில காவிரி ஆத்துல இறங்கி மாஸா குளிச்சு ஆற்றுத் தண்ணீரையே சூடேத்துவார்!",
-                    "சோப்பு நுரையை தலையில போட்டுக்கிட்டு 360 டிகிரி ஸ்டைல்ல காவிரி ஆத்துல டைவ் அடிச்சு குளிப்பவர்!",
-                    "ஒரு தடவை இவரு குளிச்ச வேகத்துல காவிரி ஆத்து நீர்மட்டம் 3 அடி உயர்ந்து மீன்கள் எல்லாம் கைதட்டுச்சாம்!",
-                    "சூர்யா தன்னோட ராஜ குளியலை முடிக்கும் வரை காவிரி ஆற்று வெள்ளமே மெதுவா தான் ஓடும்னு சொல்வாங்க!"
-                ],
-                'hi': [
-                    "सूर्या हर सुबह कावेरी नदी में नहाने उतरता है और पूरे नदी के पानी को गरम कर देता है!",
-                    "साबुन के झाग के साथ कावेरी नदी में 360-डिग्री हीरो स्टाइल में डुबकी लगाने वाला लेजेंड!",
-                    "एक बार इतनी तेजी से नहाया कि कावेरी नदी का जलस्तर 3 फीट बढ़ गया और मछलियाँ ताली बजाने लगीं!",
-                    "कहते हैं कि जब तक सूर्या अपनी शाही डुबकी पूरी नहीं कर लेता, कावेरी नदी भी धीरे बहती है!"
-                ]
-            },
-            'GIRISH': {
-                'en': [
-                    "Girish is the legendary heavy lorry driver operating a massive 18-wheeler Ashok Leyland!",
-                    "Drives his Ashok Leyland lorry at F1 racing speeds while playing loud mass songs on the horn speakers.",
-                    "Can reverse-park a giant Ashok Leyland lorry into a tight bicycle parking spot with zero damage!",
-                    "Legend says his Ashok Leyland lorry doesn't run on diesel; it runs on Girish's pure mass attitude!"
-                ],
-                'ta': [
-                    "கிரிஷ் 18 சக்கரங்கள் கொண்ட மாஸான 'அசோக் லேலேண்ட்' லாரியை ஓட்டும் லெஜண்டரி டிரைவர்!",
-                    "தன்னோட அசோக் லேலேண்ட் லாரியை F1 ரேஸ் கார் மாதிரி மாஸ் பாட்டு போட்டுக்கிட்டே பறக்க விடுவாரு!",
-                    "அவ்வளவு பெரிய அசோக் லேலேண்ட் லாரியை ஒரு சைக்கிள் ஸ்டாண்ட்ல ரிவர்ஸ் பார்க் பண்ற ஒரே டிரைவர்!",
-                    "கிரிஷோட அசோக் லேலேண்ட் லாரி டீசல்ல ஓடலை; கிரிஷோட கெத்துல தான் ஓடுதுனு சொல்வாங்க!"
-                ],
-                'hi': [
-                    "गिरिश 18 पहियों वाली विशाल 'अशोक लेलैंड' लारी चलाने वाला लेजेंडरी ड्राइवर है!",
-                    "अपनी अशोक लेलैंड लारी को डीजे गानों के साथ F1 रेसिंग कार की तरह भगाता है!",
-                    "इतनी बड़ी अशोक लेलैंड लारी को साइकिल पार्किंग में बिना खरोंच रिवर्स पार्क करने का उस्ताद!",
-                    "लेजेंड कहते हैं कि गिरिश की अशोक लेलैंड लारी डीजल से नहीं, गिरिश के रौब से चलती है!"
-                ]
-            },
-            'VAISAL': {
-                'en': [
-                    "Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!",
-                    "Known to drift a 40-ton government bus around tight city sharp turns while casually conducting tickets.",
-                    "Once shifted into 6th gear so fast that passengers accidentally travelled through a space-time continuum!",
-                    "Legend says he once overtook a fighter jet on the highway while calling out 'RIGHT... RIGHT... HOLD ON!'"
-                ],
-                'ta': [
-                    "வைசல் பஸ் ஓட்டுவதில்லை; பஸ்ஸே வைசலிடம் அனுமதி கேட்ட பிறகே ஸ்டார்ட் ஆகும்!",
-                    "40 டன் அரசு பஸ்ஸை வளைவுகளில் கெத்தாக டிராஃப்ட் செய்து டிக்கெட் கிழிக்கும் ஒரே மாஸ் டிரைவர்!",
-                    "6வது கியருக்கு மாத்திய ஸ்பீட்ல பயணிகள் எல்லாரும் காலப்பயணம் பண்ணி பின்னாடி போயிட்டாங்க!",
-                    "'ரைட்... ரைட்... பிடிச்சுக்கோங்க!'னு சொல்லிக்கிட்டே ஹைவேல ஜெட் விமானத்தையே ஓவர்டேக் பண்ணிய லெஜண்ட்!"
-                ],
-                'hi': [
-                    "वैसल बस नहीं चलाता; बस खुद वैसल से इजाजत लेकर स्टार्ट होती है!",
-                    "40 टन की सरकारी बस को तीखे मोड़ों पर ड्राफ्ट करते हुए टिकट काटने वाला इकलौता लेजेंड!",
-                    "छठा गियर इतनी तेजी से बदला कि यात्री सीधे टाइम ट्रैवल करके आगे निकल गए!",
-                    "'राइट... राइट... पकड़ के बैठो!' बोलते हुए हाईवे पर फाइटर जेट को ओवरटेक करने का रिकॉर्ड!"
-                ]
-            },
-            'NITHISH': {
-                'en': [
-                    "Nithish ringed the temple bell with such holy force that the entire colony thought a thunderstorm landed!",
-                    "Master of tactical mantras and high-vibration sacred priest frequency attacks.",
-                    "Can perform a 360-degree bell strike while blessing squad mates with infinite armor boost.",
-                    "Enemy threats automatically surrender the moment they hear his sacred battle roar!"
-                ],
-                'ta': [
-                    "நிதிஷ் கோவில் மணியை எந்த அளவுக்கு பலமா அடிச்சார்னா, ஊரே இடி விழுதுனு நினைச்சு பயந்திடுச்சு!",
-                    "புனித மந்திரங்கள் மற்றும் ஆன்மீக அலைவரிசை தாக்குதல்களின் தலைசிறந்த மாஸ்டர்.",
-                    "360 டிகிரி மணி அடிச்சுகிட்டே டீம்மேட்ஸுக்கு அன்லிமிடெட் ஆசிர்வாதம் கொடுக்கக்கூடியவர்!",
-                    "நிதிஷோட மாஸ் ஆன்மீக கர்ஜனையை கேட்டாலே எதிரிகள் பயந்து சரணடைஞ்சிடுவாங்க!"
-                ],
-                'hi': [
-                    "नितीश ने मंदिर का घंटा इतनी जोर से बजाया कि पूरा इलाका समझा कि बिजली गिरी है!",
-                    "पवित्र मंत्रों और उच्च-आवृत्ति वाले आध्यात्मिक हमलों के माहिर उस्ताद।",
-                    "360-डिग्री घंटा प्रहार करते हुए टीम को असीमित सुरक्षा आशीर्वाद देने की कला!",
-                    "नितीश की गर्जना सुनते ही दुश्मन बिना लड़े आत्मसमर्पण कर देते हैं!"
-                ]
-            }
+            'LOGITH': { 'en': ["Logith is the ultimate master butcher who can chop meat faster than a ninja katana blade!", "Customers come just to watch him slice mutton with 360-degree surgical precision.", "Legend says even the meat shop scales get nervous when Operative Logith picks up the cleaver!"] },
+            'VASANTH': { 'en': ["Vasanth loves hanging upside down from iron ceiling hooks like a supreme cyber bat!", "Claims hanging on a meat hook boosts his brain's coding speed by 500%!", "Once wrote 10,000 lines of bug-free code while suspended by one foot."] },
+            'KISHOOR': { 'en': ["Kishoor is the legendary Son of Durai, born with pure royal squad dominance!", "When Kishoor announces 'I am Durai's Son!', the entire battlefield stops and bows!"] },
+            'DHARNISH': { 'en': ["Dharnish works at the local bakery where even cobras line up to buy hot egg puffs!", "Once charmed a 10-foot king cobra using a freshly baked cream bun as a flute."] },
+            'THAYA': { 'en': ["Thaya is the supreme civil engineer who builds entire concrete bunkers using raw cement!", "Can mix Ultratech cement with bare hands and lay 500 bricks in 30 seconds."] },
+            'SUDHISH': { 'en': ["Sudhish controls the cosmic orbits of the Sun and Moon with just a wave of his hand!", "Once made the Sun and Moon appear together to light up the squad cricket match!"] },
+            'SURYA': { 'en': ["Surya goes to Kaveri River every morning for a mass bath that warms up the entire river water!", "Dives into Kaveri River with 360-degree heroic flips while shampooing."] },
+            'GIRISH': { 'en': ["Girish is the legendary heavy lorry driver operating a massive 18-wheeler Ashok Leyland!", "Drives his Leyland lorry at F1 speeds while playing loud mass songs."] },
+            'VAISAL': { 'en': ["Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!", "Known to drift a 40-ton government bus around tight city turns."] },
+            'NITHISH': { 'en': ["Nithish ringed the temple bell with such holy force that the entire colony thought a thunderstorm landed!", "Master of tactical mantras and high-vibration priest frequency attacks."] }
         };
 
         let currentActiveName = 'VAISAL';
@@ -640,15 +238,7 @@
 
         function handleLanguageChange(newLang) {
             currentLang = newLang;
-            // Sync both language select elements
-            const sel1 = document.getElementById('lang-select');
-            const sel2 = document.getElementById('lang-select-story');
-            if (sel1) sel1.value = newLang;
-            if (sel2) sel2.value = newLang;
-
-            // If story is currently visible, re-type it in the new language immediately!
-            const resPanel = document.getElementById('result-panel');
-            if (resPanel && resPanel.style.display === 'flex') {
+            if (document.getElementById('result-panel').style.display === 'flex') {
                 showProfileAndTypeStory(currentActiveName);
             }
         }
@@ -657,32 +247,25 @@
             const name = document.getElementById('user-name-select').value;
             currentActiveName = name;
 
-            // Show loader state
             document.getElementById('form-card').style.display = 'none';
             document.getElementById('loader-block').style.display = 'flex';
 
-            const lang = currentLang;
-            let statusText = "GENERATING FUNNY AI STORY...";
-            if (lang === 'ta') statusText = "தமிழ் கதையை உருவாக்குகிறது...";
-            if (lang === 'hi') statusText = "हिंदी कहानी तैयार की जा रही है...";
-
             const stages = [
-                { text: "SCANNING BIOGRAPHY DATABASE...", progress: 25 },
-                { text: "RETRIEVING OPERATIVE LORE RECORD...", progress: 55 },
-                { text: statusText, progress: 85 },
-                { text: "STORY READY FOR TYPING...", progress: 100 }
+                { text: "SCANNING DATABASE...", progress: 35 },
+                { text: "RETRIEVING LORE RECORD...", progress: 70 },
+                { text: "STORY READY...", progress: 100 }
             ];
 
             const bar = document.getElementById('loader-bar');
             const txt = document.getElementById('loader-txt');
-
             let idx = 0;
+
             function step() {
                 if (idx < stages.length) {
                     txt.textContent = stages[idx].text;
                     bar.style.width = stages[idx].progress + '%';
                     idx++;
-                    setTimeout(step, 650);
+                    setTimeout(step, 600);
                 } else {
                     document.getElementById('loader-block').style.display = 'none';
                     showProfileAndTypeStory(name);
@@ -696,92 +279,36 @@
             document.getElementById('res-user-name').textContent = name;
             document.getElementById('result-panel').style.display = 'flex';
 
-            const lang = currentLang || 'en';
             const squadData = SQUAD_STORIES[name] || SQUAD_STORIES['VAISAL'];
-            const lines = squadData[lang] || squadData['en'];
-
+            const lines = squadData['en'];
             const fullStoryText = lines.map((line, i) => `${i + 1}. ${line}`).join('\n\n');
 
             const storyBody = document.getElementById('story-body');
             const typingStatus = document.getElementById('typing-status');
             storyBody.innerHTML = '';
+            typingStatus.textContent = 'TYPING STORY...';
 
-            if (lang === 'ta') typingStatus.textContent = 'கதை தட்டச்சு செய்யப்படுகிறது...';
-            else if (lang === 'hi') typingStatus.textContent = 'कहानी टाइप हो रही है...';
-            else typingStatus.textContent = 'TYPING STORY...';
-
-            let charIdx = 0;
+            let charIndex = 0;
             if (typingInterval) clearInterval(typingInterval);
 
-            // Typing effect letter by letter (~25-30ms per character, taking under 1 minute)
             typingInterval = setInterval(() => {
-                if (charIdx < fullStoryText.length) {
-                    const currentText = fullStoryText.substring(0, charIdx + 1);
-                    storyBody.innerHTML = currentText.replace(/\n/g, '<br>') + '<span class="typing-cursor"></span>';
-                    charIdx++;
+                if (charIndex < fullStoryText.length) {
+                    storyBody.textContent += fullStoryText.charAt(charIndex);
+                    charIndex++;
                 } else {
                     clearInterval(typingInterval);
-                    storyBody.innerHTML = fullStoryText.replace(/\n/g, '<br>');
-                    
-                    if (lang === 'ta') typingStatus.textContent = '✅ கதை உருவாக்கப்பட்டது';
-                    else if (lang === 'hi') typingStatus.textContent = '✅ कहानी तैयार हो गई';
-                    else typingStatus.textContent = '✅ STORY GENERATED';
-
-                    typingStatus.style.color = 'var(--green)';
+                    typingStatus.textContent = '✅ COMPLETE';
+                    typingStatus.style.color = '#16a34a';
                 }
-            }, 30);
+            }, 25);
         }
 
         function resetPage() {
             if (typingInterval) clearInterval(typingInterval);
             document.getElementById('result-panel').style.display = 'none';
-            document.getElementById('loader-block').style.display = 'none';
-            document.getElementById('loader-bar').style.width = '0%';
             document.getElementById('form-card').style.display = 'block';
+            document.getElementById('loader-bar').style.width = '0%';
         }
-
-        // Particle canvas background
-        (function() {
-            const canvas = document.getElementById('particle-bg');
-            const ctx = canvas.getContext('2d');
-            let W, H, particles = [];
-
-            function resize() {
-                W = canvas.width  = window.innerWidth;
-                H = canvas.height = window.innerHeight;
-            }
-
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < 45; i++) {
-                particles.push({
-                    x: Math.random() * window.innerWidth,
-                    y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.3 + 0.3,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    alpha: Math.random() * 0.3 + 0.08
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > W) p.vx *= -1;
-                    if (p.y < 0 || p.y > H) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
     </script>
-    <script src="security_guard.js"></script>
 </body>
 </html>
