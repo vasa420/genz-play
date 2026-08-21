@@ -418,7 +418,7 @@
                 </div>
             </div>
 
-            <!-- Match Result Card -->
+            <!-- Match Result Card (VERIFIED MATCH) -->
             <div class="result-card" id="scan-result-card">
                 <div class="match-badge-bar">
                     <div>
@@ -481,6 +481,59 @@
                     <a class="btn-pri-act" id="res-link-predict" href="single_predictor_result.html?name=VAISAL">📊 View Single Predictor Result</a>
                 </div>
             </div>
+
+            <!-- No Match Result Card (NOT MATCHED) -->
+            <div class="result-card" id="scan-no-match-card" style="display: none; border-color: #fca5a5;">
+                <div class="match-badge-bar" style="border-bottom-color: #fee2e2;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #dc2626; letter-spacing: 1.5px;">SEARCH COMPLETE</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #dc2626;">NOT MATCHED</div>
+                    </div>
+                    <div style="padding: 6px 14px; background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                        ❌ 0% MATCH - UNKNOWN TARGET
+                    </div>
+                </div>
+
+                <!-- Side-by-Side Photo Comparison -->
+                <div class="side-by-side-photos">
+                    <div class="photo-frame-box">
+                        <div class="photo-frame-label">📷 UPLOADED TARGET PHOTO</div>
+                        <img id="res-no-match-uploaded-img" class="photo-frame-img" src="" alt="Uploaded Target Photo">
+                    </div>
+
+                    <div class="photo-frame-box">
+                        <div class="photo-frame-label">📁 DATABASE SEARCH RESULT</div>
+                        <div style="width: 100%; height: 180px; border-radius: 10px; border: 2px dashed #fca5a5; background: #fff5f5; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #dc2626; gap: 8px;">
+                            <span style="font-size: 34px;">👤❓</span>
+                            <span style="font-size: 13px; font-weight: 800;">NO OPERATIVE MATCH</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Badge -->
+                <div style="padding: 10px 14px; background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; border-radius: 8px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <span>⚠️ STATUS:</span>
+                    <span>UNIDENTIFIED TARGET - NOT REGISTERED IN SQUAD DATABASE</span>
+                </div>
+
+                <!-- Lore / Diagnostic Analysis Box -->
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px;">🔍 SCAN DIAGNOSTIC ANALYSIS</div>
+                    <div class="lore-box" style="background: #fff5f5; border-color: #fee2e2; color: #991b1b;">
+                        Facial features and image signatures were extracted and compared against all registered squad operative profiles in Vetri Intelligence database and LocalStorage.
+                        
+                        ❌ Result: NOT MATCHED. This uploaded photo does not match Vaisal, Girish, Dharnish, Nithish, Surya, Thaya, Logith, Vasanth, Kishoor, or Sudhish.
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="result-actions">
+                    <button class="btn-sec-act" onclick="resetPage()">🔄 Try Scanning Another Photo</button>
+                    <a class="btn-sec-act" href="photo_as_my_own.html">📷 Photo "As My Own"</a>
+                    <a class="btn-pri-act" href="single_predictor.html">📊 Go to Single Predictor</a>
+                </div>
+            </div>
+
         </main>
 
     </div>
@@ -602,12 +655,8 @@
             if (fn.includes('sudhish') || fn.includes('sun') || fn.includes('moon')) return 'SUDHISH';
             if (fn.includes('vaisal') || fn.includes('bus')) return 'VAISAL';
 
-            // Check localStorage
-            const savedLast = localStorage.getItem('last_scanned_operative');
-            if (savedLast && OPERATIVE_PROFILES[savedLast]) return savedLast;
-
-            // Default fallback match
-            return 'VAISAL';
+            // Return null if photo does NOT match any registered squad operative
+            return null;
         }
 
         function analyzePhoto() {
@@ -625,7 +674,7 @@
             const phases = [
                 { text: "🔍 EXTRACTING FACIAL FEATURES & IMAGE EMBEDDINGS...", progress: 35 },
                 { text: "⚡ SEARCHING OPERATIVE DATABASE & LOCALSTORAGE MATCHES...", progress: 70 },
-                { text: "✅ FACIAL MATCH DECODED! RETRIEVING OPERATIVE DOSSIER...", progress: 100 }
+                { text: "PROCESSING MATCH SCAN RESULTS...", progress: 100 }
             ];
 
             let idx = 0;
@@ -646,9 +695,17 @@
         function renderMatchResults() {
             const fileName = selectedFile ? selectedFile.name : 'uploaded_photo.jpg';
             const matchedKey = detectOperativeFromFilename(fileName);
-            const profile = OPERATIVE_PROFILES[matchedKey];
 
-            // Store match result in localStorage
+            if (!matchedKey) {
+                // RENDER NOT MATCHED CARD
+                document.getElementById('res-no-match-uploaded-img').src = selectedDataUrl;
+                document.getElementById('scan-result-card').style.display = 'none';
+                document.getElementById('scan-no-match-card').style.display = 'flex';
+                return;
+            }
+
+            // RENDER MATCH VERIFIED CARD
+            const profile = OPERATIVE_PROFILES[matchedKey];
             localStorage.setItem('last_scanned_operative', matchedKey);
             localStorage.setItem('last_scanned_photo', selectedDataUrl || profile.img);
 
@@ -668,6 +725,7 @@
             document.getElementById('res-lore-story').textContent = profile.story;
             document.getElementById('res-link-predict').href = `single_predictor_result.html?name=${matchedKey}`;
 
+            document.getElementById('scan-no-match-card').style.display = 'none';
             document.getElementById('scan-result-card').style.display = 'flex';
         }
 
@@ -681,6 +739,7 @@
             document.getElementById('loader-bar-fill').style.width = '0%';
 
             document.getElementById('scan-result-card').style.display = 'none';
+            document.getElementById('scan-no-match-card').style.display = 'none';
             document.getElementById('scan-loader-box').style.display = 'none';
             document.getElementById('upload-box').style.display = 'block';
         }
