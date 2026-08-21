@@ -1290,10 +1290,116 @@
             0% { transform: scale(0.9); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        /* ORBIS Animated Intro Splash Screen */
+        #orbis-splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #030305;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            overflow: hidden;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        #orbis-splash-screen.fade-out {
+            opacity: 0;
+            filter: blur(20px);
+            pointer-events: none;
+        }
+
+        .orbis-bg-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            animation: orbisPulseGlow 3s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        .orbis-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .orbis-title {
+            font-size: clamp(42px, 8vw, 76px);
+            font-weight: 900;
+            letter-spacing: 20px;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: 0 0 35px rgba(255, 255, 255, 0.8), 0 0 70px rgba(255, 255, 255, 0.4);
+            animation: orbisTitleAnim 2.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .orbis-subtitle {
+            font-size: clamp(12px, 2.5vw, 18px);
+            font-weight: 800;
+            letter-spacing: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 15px;
+            text-transform: uppercase;
+            animation: orbisSubtitleAnim 2.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .orbis-hint {
+            position: absolute;
+            bottom: 40px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+            animation: fadeIn 1s 1s forwards;
+            opacity: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        @keyframes orbisTitleAnim {
+            0%   { opacity: 0; transform: scale(0.8) translateY(10px); filter: blur(16px); letter-spacing: 32px; }
+            40%  { opacity: 1; transform: scale(1.02) translateY(0); filter: blur(0px); letter-spacing: 20px; }
+            75%  { opacity: 1; transform: scale(1.0) translateY(0); filter: blur(0px); letter-spacing: 20px; }
+            100% { opacity: 0.9; transform: scale(1.04); filter: blur(1px); }
+        }
+
+        @keyframes orbisSubtitleAnim {
+            0%   { opacity: 0; filter: blur(12px); transform: translateY(15px); }
+            45%  { opacity: 1; filter: blur(0px); transform: translateY(0); }
+            75%  { opacity: 1; filter: blur(0px); transform: translateY(0); }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes orbisPulseGlow {
+            0% { transform: scale(0.9); opacity: 0.4; }
+            100% { transform: scale(1.3); opacity: 0.9; }
+        }
     </style>
 </head>
 
 <body id="arena-body">
+    <!-- ORBIS Animated Intro Splash Screen -->
+    <div id="orbis-splash-screen" onclick="dismissOrbisSplash()">
+        <div class="orbis-bg-glow"></div>
+        <div class="orbis-content">
+            <div class="orbis-title">ORBIS</div>
+            <div class="orbis-subtitle">MADE BY ORBIS</div>
+        </div>
+        <div class="orbis-hint">CLICK ANYWHERE TO ENTER</div>
+    </div>
+
     <div id="arena-bg"></div>
 
     <div id="page-container">
@@ -3009,6 +3115,42 @@
         window.addEventListener('message', (event) => {
             if (event.data === 'closePortal') closeArenaPortal();
         });
+
+        // ORBIS Splash Screen Controller
+        function dismissOrbisSplash() {
+            const splash = document.getElementById('orbis-splash-screen');
+            if (splash && !splash.classList.contains('fade-out')) {
+                splash.classList.add('fade-out');
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 850);
+            }
+        }
+
+        function playOrbisAudioSynth() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(65, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(130, ctx.currentTime + 1.2);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.6);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 1.65);
+            } catch(e) {}
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            playOrbisAudioSynth();
+            setTimeout(dismissOrbisSplash, 2800);
+        });
+        window.addEventListener('keydown', dismissOrbisSplash, { once: true });
     </script>
 </body>
 
