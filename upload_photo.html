@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATTACKS | Upload Photo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            position: relative;
+            padding: 10px 14px;
+        }
+
+        /* ── Top Header Bar ──────────────────────────────────────── */
+        .top-header {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            flex-shrink: 0;
+        }
+
+        .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
+        .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
+        .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
+        .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+
+        .btn-lobby {
+            background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
+
+        /* ── Main App Wrapper ────────────────────────────────────── */
+        .app-wrapper {
+            width: 100%;
+            max-width: 100%;
+            flex: 1;
+            height: calc(100vh - 80px);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* ── Left Sidebar Navigation ─────────────────────────────── */
+        .desktop-sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+
+        .nav-item {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border-radius: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover { color: #0f172a; background: #f1f5f9; }
+
+        .nav-item.active {
+            color: #2563eb;
+            background: #eff6ff;
+            font-weight: 700;
+        }
+
+        .nav-icon { font-size: 16px; }
+
+        .about-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 20px;
+        }
+
+        .about-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .about-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+        /* ── Right Main Panel ────────────────────────────────────── */
+        .main-panel {
+            padding: 35px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background: #ffffff;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .panel-header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .main-title { font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin-bottom: 4px; }
+        .main-sub { font-size: 14px; color: #64748b; }
+
+        /* 2-Column Grid Layout for Upload & Analysis */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .grid-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: left;
+            box-shadow: 0 2px 8px -2px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .grid-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Drag & Drop Upload Zone */
+        .dropzone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 35px 20px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.25 ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .dropzone-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .dropzone-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+        .dropzone-sub { font-size: 12px; color: #64748b; }
+
+        /* Sample Images Chips */
+        .samples-label { font-size: 12px; font-weight: 700; color: #64748b; margin-top: 15px; margin-bottom: 8px; }
+        .sample-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .sample-chip {
+            padding: 6px 12px; background: #f1f5f9; border: 1px solid #cbd5e1;
+            border-radius: 6px; font-size: 12px; font-weight: 600; color: #334155;
+            cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .sample-chip:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+
+        /* Image Preview Box */
+        .preview-box {
+            width: 100%;
+            height: 280px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.3s ease;
+        }
+
+        .preview-empty-text { font-size: 13px; color: #94a3b8; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+        /* Filter Presets Toolbar */
+        .filter-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
+
+        /* Action Buttons */
+        .btn-action-primary {
+            width: 100%;
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-action-primary:hover { background: #1d4ed8; }
+
+        /* Metadata & AI Result Details */
+        .meta-list { display: flex; flex-direction: column; gap: 10px; }
+        .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+        .meta-key { font-weight: 600; color: #64748b; }
+        .meta-val { font-weight: 700; color: #0f172a; font-family: 'JetBrains Mono', monospace; }
+
+        .tags-group { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .tag-pill { padding: 4px 10px; background: #eff6ff; color: #2563eb; border-radius: 6px; font-size: 11px; font-weight: 700; }
+
+        @media (max-width: 1024px) {
+            .upload-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <div class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></div>
+        </div>
+
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>Database Online</span>
+            </div>
+            <a class="btn-lobby" href="attacks_game.html">← Lobby</a>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <div class="app-wrapper">
+
+        <!-- Left Desktop Sidebar (Light Theme) -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
+                <a class="nav-item" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
+                <a class="nav-item" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">💬</span> Speak with AI</a>
+                <a class="nav-item" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
+                <a class="nav-item" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
+                <a class="nav-item active" href="upload_photo.html"><span class="nav-icon">📤</span> Upload Photo</a>
+            </div>
+
+            <div class="about-card">
+                <div class="about-title">About Attacks</div>
+                <div class="about-desc">Your intelligent assistant to analyze, compare and predict attack patterns efficiently.</div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
+            </div>
+        </aside>
+
+        <!-- Right Main Panel -->
+        <main class="main-panel">
+
+            <!-- Panel Header -->
+            <div class="panel-header-top">
+                <div>
+                    <h1 class="main-title">📤 Upload Photo & AI Analysis</h1>
+                    <p class="main-sub">Upload high-res operative photos for tactical scanning, filter enhancement, and AI scene generation.</p>
+                </div>
+            </div>
+
+            <!-- Upload Grid -->
+            <div class="upload-grid">
+
+                <!-- Left Card: Upload & Filter Controls -->
+                <div class="grid-card">
+                    <div>
+                        <div class="grid-card-title">
+                            <span>📷 Target Image Upload</span>
+                            <span style="font-size: 11px; color: #16a34a; font-weight: 700;">LIVE SCANNER</span>
+                        </div>
+
+                        <input type="file" id="photo-file-input" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+                        
+                        <div class="dropzone" id="dropzone" onclick="document.getElementById('photo-file-input').click()">
+                            <div class="dropzone-icon">📤</div>
+                            <div class="dropzone-title" id="dropzone-text">Click or Drag & Drop Photo Here</div>
+                            <div class="dropzone-sub">Supports PNG, JPG, WEBP • Max file size 25MB</div>
+                        </div>
+
+                        <div class="samples-label">TRY SAMPLE OPERATIVE PHOTOS</div>
+                        <div class="sample-chips">
+                            <div class="sample-chip" onclick="loadSample('vaisal.jpg', 'Vaisal Bus Operative')">🚌 Vaisal Bus</div>
+                            <div class="sample-chip" onclick="loadSample('girish.jpg', 'Girish Heavy Lorry')">🚚 Girish Lorry</div>
+                            <div class="sample-chip" onclick="loadSample('dhanish.jpg', 'Dharnish Cobra Bakery')">🐍 Dharnish Bakery</div>
+                            <div class="sample-chip" onclick="loadSample('surya.jpg', 'Surya Kaveri River')">🌊 Surya River</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button class="btn-action-primary" onclick="analyzePhoto()">
+                            <span>⚡</span>
+                            <span>ANALYZE & SCAN PHOTO</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Card: Live Preview & AI Filters -->
+                <div class="grid-card">
+                    <div>
+                        <div class="grid-card-title">
+                            <span>✨ Live Image Preview & Filters</span>
+                            <span id="scan-badge" style="font-size: 11px; color: #2563eb; font-weight: 700;">NORMAL MODE</span>
+                        </div>
+
+                        <!-- Image Preview Box -->
+                        <div class="preview-box">
+                            <img id="preview-img" src="vaisal.jpg" alt="Uploaded Photo Preview">
+                            <div id="preview-placeholder" class="preview-empty-text" style="display: none;">
+                                <span style="font-size: 32px;">🖼️</span>
+                                <span>No Photo Uploaded Yet</span>
+                            </div>
+                        </div>
+
+                        <!-- Filter Options Toolbar -->
+                        <div class="filter-toolbar">
+                            <button class="filter-btn active" onclick="applyFilter('none', this)">Normal</button>
+                            <button class="filter-btn" onclick="applyFilter('contrast(130%) brightness(110%) saturate(140%)', this)">AI Vivid</button>
+                            <button class="filter-btn" onclick="applyFilter('hue-rotate(90deg) contrast(150%)', this)">Cyberpunk</button>
+                            <button class="filter-btn" onclick="applyFilter('invert(100%) hue-rotate(180deg)', this)">Thermal Scan</button>
+                            <button class="filter-btn" onclick="applyFilter('grayscale(100%) contrast(150%)', this)">Tactical B&W</button>
+                        </div>
+
+                        <!-- Metadata Specs -->
+                        <div class="meta-list">
+                            <div class="meta-row">
+                                <span class="meta-key">Selected File</span>
+                                <span class="meta-val" id="meta-file-name">vaisal.jpg</span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="meta-key">Resolution</span>
+                                <span class="meta-val" id="meta-res">1920 x 1080 px</span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="meta-key">Threat Signature Score</span>
+                                <span class="meta-val" style="color: #2563eb;" id="meta-score">84 / 100</span>
+                            </div>
+                        </div>
+
+                        <div class="tags-group" id="tags-group">
+                            <span class="tag-pill">#OPERATIVE_DETECTED</span>
+                            <span class="tag-pill">#HIGH_VELOCITY</span>
+                            <span class="tag-pill">#AI_VERIFIED</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script>
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgEl = document.getElementById('preview-img');
+                    const placeholder = document.getElementById('preview-placeholder');
+                    imgEl.src = e.target.result;
+                    imgEl.style.display = 'block';
+                    placeholder.style.display = 'none';
+
+                    document.getElementById('dropzone-text').textContent = `Loaded: ${file.name}`;
+                    document.getElementById('meta-file-name').textContent = file.name;
+                    document.getElementById('meta-res').textContent = `${Math.floor(Math.random() * 800 + 1200)} x ${Math.floor(Math.random() * 600 + 800)} px`;
+                    document.getElementById('meta-score').textContent = `${Math.floor(Math.random() * 20 + 78)} / 100`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadSample(imgSrc, sampleName) {
+            const imgEl = document.getElementById('preview-img');
+            const placeholder = document.getElementById('preview-placeholder');
+            imgEl.src = imgSrc;
+            imgEl.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            document.getElementById('dropzone-text').textContent = `Sample: ${sampleName}`;
+            document.getElementById('meta-file-name').textContent = imgSrc;
+            document.getElementById('meta-res').textContent = '1920 x 1080 px';
+        }
+
+        function applyFilter(filterCss, btnEl) {
+            const imgEl = document.getElementById('preview-img');
+            imgEl.style.filter = filterCss;
+
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const badge = document.getElementById('scan-badge');
+            if (filterCss === 'none') badge.textContent = 'NORMAL MODE';
+            else badge.textContent = 'FILTER ENHANCED';
+        }
+
+        function analyzePhoto() {
+            alert('⚡ Tactical AI Photo Scan Complete! Image features extracted successfully.');
+        }
+    </script>
+</body>
+</html>
