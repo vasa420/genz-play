@@ -4,622 +4,781 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ATTACKS | Single Predictor Result</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6400;
-            --primary-glow: rgba(255, 100, 0, 0.45);
-            --green: #00FF88;
-            --red: #FF2244;
-            --gold: #FFD700;
-            --gold-glow: rgba(255, 215, 0, 0.35);
-            --bg: #04040c;
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
-            background: var(--bg);
-            color: #fff;
+            background-color: var(--bg);
+            color: var(--text-dark);
             font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
+            align-items: stretch;
+            justify-content: flex-start;
             position: relative;
+            padding: 10px 14px;
         }
 
-        /* Scanline overlay */
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14), rgba(0,0,0,0.14) 1.5px, transparent 1.5px, transparent 3px);
-            pointer-events: none; z-index: 9999; opacity: 0.7;
+        /* ── Top Header Bar ─────────────────────────────────────────── */
+        .top-header {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            flex-shrink: 0;
         }
 
-        /* Ambient particles bg */
-        #particle-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 0;
+        .header-brand-group { display: flex; align-items: center; gap: 14px; }
+        .brand-title { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 8px; }
+        .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
+        .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
+        .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+
+        .btn-lobby {
+            background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
+
+        /* ── Main App Container ─────────────────────────────────── */
+        .app-wrapper {
+            width: 100%;
+            max-width: 100%;
+            flex: 1;
+            height: calc(100vh - 80px);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            min-height: 0;
         }
 
-        /* Header */
-        .header {
-            width: 100%; padding: 20px 30px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 100, 0, 0.15);
-            background: rgba(4,4,12,0.92);
-            backdrop-filter: blur(12px);
-            position: sticky; top: 0; z-index: 100;
+        /* ── Left Desktop Sidebar (Light Theme) ────────────────── */
+        .desktop-sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
         }
 
-        .header-logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 18px; font-weight: 900; letter-spacing: 5px;
-            color: var(--primary);
-            text-shadow: 0 0 12px var(--primary-glow);
-        }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
 
-        .btn-back {
+        .nav-item {
+            width: 100%;
+            padding: 12px 16px;
             background: transparent;
-            border: 1px solid rgba(255,100,0,0.35);
-            color: var(--primary);
-            padding: 8px 18px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px;
-            border-radius: 6px; cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
         }
 
-        .btn-back:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 15px var(--primary-glow);
+        .nav-item:hover { color: #0f172a; background: #f1f5f9; }
+
+        .nav-item.active {
+            color: #2563eb;
+            background: #eff6ff;
+            font-weight: 700;
         }
 
-        /* Main Container */
-        .main-container {
-            width: 100%; max-width: 860px;
-            padding: 40px 20px 80px;
-            position: relative; z-index: 5;
-            display: flex; flex-direction: column; align-items: center;
+        .nav-icon { font-size: 16px; }
+
+        .about-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        /* Title Header */
-        .page-header {
-            text-align: center; margin-bottom: 30px;
+        .about-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .about-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+        .about-copyright { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+        /* ── Right Main Content Panel (Image 7 Layout) ──────────── */
+        .main-panel {
+            padding: 35px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background: #ffffff;
+            height: 100%;
+            overflow-y: auto;
         }
 
-        .page-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 4px; color: var(--gold);
-            text-transform: uppercase; margin-bottom: 8px;
-            display: inline-block;
-            padding: 4px 14px; background: rgba(255,215,0,0.08);
-            border: 1px solid rgba(255,215,0,0.25); border-radius: 20px;
-        }
-
-        .page-title {
-            font-size: clamp(24px, 5vw, 42px);
-            font-weight: 900; letter-spacing: 3px;
-            background: linear-gradient(135deg, #FF6400, #FFD700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-        }
-
-        .page-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; color: rgba(255,255,255,0.45);
-            letter-spacing: 2px; margin-top: 6px;
-        }
-
-        /* Loading / Generating State Card */
-        .gen-card {
-            width: 100%; background: rgba(10, 10, 24, 0.75);
-            border: 1.5px solid rgba(255, 100, 0, 0.3);
-            border-radius: 16px; padding: 45px 30px;
-            display: flex; flex-direction: column; align-items: center;
-            text-align: center; backdrop-filter: blur(14px);
-            box-shadow: 0 0 30px rgba(0,0,0,0.6);
-            position: relative; overflow: hidden;
-        }
-
-        .radar-spinner {
-            width: 80px; height: 80px;
-            border: 3px solid rgba(255, 100, 0, 0.15);
-            border-top-color: var(--primary);
-            border-right-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
-            box-shadow: 0 0 25px var(--primary-glow);
+        .panel-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
             margin-bottom: 25px;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .gen-status-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 16px; font-weight: 700; letter-spacing: 4px;
-            color: var(--primary); text-shadow: 0 0 10px var(--primary-glow);
-            margin-bottom: 10px; text-transform: uppercase;
+        .panel-header-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
         }
 
-        .gen-status-phase {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.6);
-            margin-bottom: 25px; min-height: 20px;
+        .main-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
         }
 
-        .gen-progress-track {
-            width: 100%; max-width: 500px; height: 8px;
-            background: rgba(255,255,255,0.06); border-radius: 10px;
-            overflow: hidden; border: 1px solid rgba(255,100,0,0.2);
-            margin-bottom: 12px;
+        .main-sub {
+            font-size: 14px;
+            color: #64748b;
         }
 
-        .gen-progress-fill {
-            height: 100%; width: 0%;
-            background: linear-gradient(90deg, #FF6400, #FFD700);
-            border-radius: 10px;
-            box-shadow: 0 0 12px var(--primary-glow);
-            transition: width 0.3s ease;
+        .btn-new-pred {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 9px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
 
-        .gen-time-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.35);
+        .btn-new-pred:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #94a3b8;
         }
 
-        /* Result Section */
-        .result-section {
-            width: 100%; display: none;
-            flex-direction: column; align-items: center; gap: 30px;
-            animation: fadeIn 0.8s ease forwards;
+        /* Selected Operative Card */
+        .selected-op-card {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        .op-card-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        /* Image Frame */
-        .image-frame {
-            position: relative;
-            width: 100%; max-width: 760px;
-            border-radius: 16px;
-            border: 2px solid rgba(255, 100, 0, 0.4);
-            box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 20px var(--primary-glow);
-            overflow: hidden; background: #000;
-            display: flex; align-items: center; justify-content: center;
+        .op-avatar-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
         }
 
-        .image-frame img {
-            width: 100%; height: auto; max-height: 520px;
-            object-fit: cover; display: block;
+        .op-card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
         }
 
-        /* Scanner beam */
-        .scanner-beam {
-            position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            box-shadow: 0 0 15px var(--primary);
-            animation: scan 4s ease-in-out infinite; z-index: 10;
+        .op-meta-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
         }
 
-        @keyframes scan {
-            0%, 100% { top: 0%; opacity: 0; }
-            50% { top: 98%; opacity: 0.8; }
+        .op-meta-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563eb;
+            letter-spacing: 0.5px;
         }
 
-        .caption-badge {
-            background: rgba(4, 4, 12, 0.85);
-            border: 1px solid rgba(255, 100, 0, 0.3);
-            border-radius: 30px; padding: 10px 24px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; letter-spacing: 2px; color: var(--gold);
-            backdrop-filter: blur(10px); text-align: center;
+        .op-card-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
-        /* Buttons Container */
-        .action-btns {
-            display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+        .op-time-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
         }
 
-        .btn-action {
-            display: inline-flex; align-items: center; gap: 10px;
-            padding: 14px 28px; border-radius: 30px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px; font-weight: 700; letter-spacing: 2px;
-            cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+        .op-time-val {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
         }
 
-        .btn-download {
-            background: var(--primary); color: #000; border: none;
-            box-shadow: 0 0 20px var(--primary-glow);
+        /* Overview Section Title */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+            text-align: left;
         }
 
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 30px var(--primary);
+        /* 4 Overview Cards Grid */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            width: 100%;
+            margin-bottom: 30px;
         }
 
-        .btn-regen {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(255, 215, 0, 0.4);
-            color: var(--gold);
+        .overview-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
 
-        .btn-regen:hover {
-            background: rgba(255, 215, 0, 0.15);
-            transform: translateY(-2px);
+        .ov-card-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 10px;
         }
 
-        /* Stats Card */
-        .stat-card {
-            width: 100%; max-width: 760px;
-            background: rgba(10, 10, 24, 0.7);
-            border: 1px solid rgba(255, 100, 0, 0.25);
-            border-radius: 14px; padding: 25px;
-            backdrop-filter: blur(10px); margin-top: 10px;
-        }
-
-        .stat-card-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 16px; font-weight: 700; letter-spacing: 3px;
-            color: var(--primary); margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .stat-row { margin-bottom: 12px; }
-
-        .stat-row-label {
-            display: flex; justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.5);
+        .ov-card-val-row {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
             margin-bottom: 4px;
         }
 
-        .stat-bar-track {
-            height: 6px; background: rgba(255,255,255,0.06);
-            border-radius: 5px; overflow: hidden;
+        .ov-card-score {
+            font-size: 28px;
+            font-weight: 800;
         }
 
-        .stat-bar-fill {
-            height: 100%; border-radius: 5px; background: var(--primary);
+        .ov-card-denom {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .ov-card-tag {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .ov-bar-track {
+            width: 100%;
+            height: 5px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .ov-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Card Color Themes */
+        .ov-blue .ov-card-score, .ov-blue .ov-card-tag { color: #2563eb; }
+        .ov-blue .ov-bar-fill { background: #2563eb; }
+
+        .ov-orange .ov-card-score, .ov-orange .ov-card-tag { color: #ea580c; }
+        .ov-orange .ov-bar-fill { background: #ea580c; }
+
+        .ov-green .ov-card-score, .ov-green .ov-card-tag { color: #16a34a; }
+        .ov-green .ov-bar-fill { background: #16a34a; }
+
+        .ov-purple .ov-card-score, .ov-purple .ov-card-tag { color: #9333ea; }
+        .ov-purple .ov-bar-fill { background: #9333ea; }
+
+        /* Bottom 2-Column Grid (Replacing Threat Spectrum with Bus/Vehicle Photo Card) */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 22px;
+            width: 100%;
+        }
+
+        .grid-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: left;
+            box-shadow: 0 2px 8px -2px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .grid-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        /* Vehicle / Bus Photo Frame Container */
+        .vehicle-photo-frame {
+            width: 100%;
+            height: 240px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            background: #0f172a;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 12px;
+        }
+
+        .vehicle-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .vehicle-photo-badge {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Detailed Analysis List Items */
+        .analysis-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .analysis-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .analysis-icon-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .analysis-icon-circle.blue { background: #eff6ff; color: #2563eb; }
+        .analysis-icon-circle.yellow { background: #fefce8; color: #ca8a04; }
+        .analysis-icon-circle.green { background: #f0fdf4; color: #16a34a; }
+        .analysis-icon-circle.purple { background: #faf5ff; color: #9333ea; }
+        .analysis-icon-circle.teal { background: #f0fdf4; color: #0d9488; }
+
+        .analysis-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .analysis-item-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .analysis-item-desc {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 1024px) {
+            .overview-grid { grid-template-columns: repeat(2, 1fr); }
+            .bottom-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <div class="scanlines"></div>
-    <canvas id="particle-bg"></canvas>
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-brand-group">
+            <div class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></div>
+        </div>
 
-    <header class="header">
-        <div class="header-logo">ATTACKS // PREDICTOR</div>
-        <button class="btn-back" onclick="goBack()">✕ PREDICTOR</button>
+        <div class="header-right-desktop">
+            <div class="db-status-pill">
+                <span class="status-dot-green"></span>
+                <span>Database Online</span>
+            </div>
+            <a class="btn-lobby" href="attacks_game.html">← Lobby</a>
+        </div>
     </header>
 
-    <main class="main-container">
+    <!-- Main Dashboard Container -->
+    <div class="app-wrapper">
 
-        <div class="page-header">
-            <span class="page-tag">🔮 AI SINGLE OPERATIVE PREDICTOR</span>
-            <h1 class="page-title" id="display-name">OPERATIVE PREDICTION</h1>
-            <p class="page-sub" id="display-sub">GENERATING THREAT ARTWORK & POWER SPECTRUM</p>
-        </div>
-
-        <!-- Loading Card -->
-        <div class="gen-card" id="gen-card">
-            <div class="radar-spinner"></div>
-            <div class="gen-status-title" id="gen-status-title">GENERATING SINGLE OPERATIVE ARTWORK</div>
-            <div class="gen-status-phase" id="gen-status-phase">PHASE 1/4: ANALYZING OPERATIVE THREAT MATRIX...</div>
-            
-            <div class="gen-progress-track">
-                <div class="gen-progress-fill" id="gen-progress-fill"></div>
+        <!-- Left Desktop Sidebar (Light Theme) -->
+        <aside class="desktop-sidebar">
+            <div class="sidebar-menu">
+                <a class="nav-item" href="attacks_flames.html"><span class="nav-icon">🔥</span> Flames Calculator</a>
+                <a class="nav-item" href="attacks_comparison.html"><span class="nav-icon">⚔️</span> Attack Comparison</a>
+                <a class="nav-item active" href="single_predictor.html"><span class="nav-icon">📊</span> Single Predictor</a>
+                <a class="nav-item" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
+                <a class="nav-item" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
+                <a class="nav-item" href="speak_with_ai.html"><span class="nav-icon">💬</span> Speak with AI</a>
             </div>
 
-            <div class="gen-time-text" id="gen-time-text">ESTIMATED TIME: ~1 MINUTE (GENERATING REALISTIC AI SCENE)</div>
-        </div>
-
-        <!-- Result Section -->
-        <div class="result-section" id="result-section">
-            
-            <div class="image-frame">
-                <div class="scanner-beam"></div>
-                <img id="prediction-img" src="" alt="AI Operative Single Prediction Scene">
+            <div class="about-card">
+                <div class="about-title">About Attacks</div>
+                <div class="about-desc">Your intelligent assistant to analyze, compare and predict attack patterns efficiently.</div>
+                <div class="about-copyright">© Vetri Studios 2025</div>
             </div>
+        </aside>
 
-            <div class="caption-badge" id="caption-text">
-                ⚡ OPERATIVE SINGLE PREDICTION ARTWORK
-            </div>
+        <!-- Right Main Panel (Matching Image 7 Layout with Bus/Vehicle Photo) -->
+        <main class="main-panel">
 
-            <div class="action-btns">
-                <a class="btn-action btn-download" id="btn-download" href="#" download="single_prediction_image.jpg">
-                    <span>⬇</span> DOWNLOAD PREDICTION IMAGE
+            <!-- Top Title & New Prediction Button -->
+            <div class="panel-top-bar">
+                <div class="panel-header-titles">
+                    <h1 class="main-title">Single Predictor</h1>
+                    <p class="main-sub">Predict attack power & threat spectrum of an operative.</p>
+                </div>
+
+                <a class="btn-new-pred" href="single_predictor.html">
+                    <span>🔄</span>
+                    <span>New Prediction</span>
                 </a>
-                <button class="btn-action btn-regen" onclick="startGeneration()">
-                    <span>⚡</span> REGENERATE PREDICTION IMAGE
-                </button>
             </div>
 
-            <!-- Stats Card -->
-            <div class="stat-card">
-                <div class="stat-card-title">
-                    <span id="stat-name-label">🔮 OPERATIVE THREAT MATRIX</span>
-                    <span style="color: var(--gold);" id="stat-score-label">95% POWER</span>
+            <!-- Selected Operative Card -->
+            <div class="selected-op-card">
+                <div class="op-card-left">
+                    <div class="op-avatar-icon">👤</div>
+                    <div class="op-card-meta">
+                        <div class="op-meta-label">SELECTED OPERATIVE</div>
+                        <div class="op-meta-name" id="op-name-val">VAISAL</div>
+                    </div>
                 </div>
-                <div class="stat-row">
-                    <div class="stat-row-label"><span>ATTACK POTENTIAL</span><span id="st-atk-val">95%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-atk-bar" style="width: 95%;"></div></div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-row-label"><span>AGILITY & SPEED</span><span id="st-spd-val">88%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-spd-bar" style="width: 88%;"></div></div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-row-label"><span>TACTICAL SYNCHRONY</span><span id="st-syn-val">96%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-syn-bar" style="width: 96%;"></div></div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-row-label"><span>VICTORY PROBABILITY</span><span id="st-vic-val">94%</span></div>
-                    <div class="stat-bar-track"><div class="stat-bar-fill" id="st-vic-bar" style="width: 94%;"></div></div>
+
+                <div class="op-card-right">
+                    <div class="op-time-label">PREDICTION TIME</div>
+                    <div class="op-time-val" id="op-time-val">May 23, 2025 • 10:24 AM</div>
                 </div>
             </div>
 
-        </div>
+            <!-- Prediction Overview Section -->
+            <div class="section-title">Prediction Overview</div>
 
-    </main>
+            <div class="overview-grid">
+                <!-- Card 1: Attack Power -->
+                <div class="overview-card ov-blue">
+                    <div class="ov-card-label">Attack Power</div>
+                    <div class="ov-card-val-row">
+                        <span class="ov-card-score" id="ov-atk-score">78</span>
+                        <span class="ov-card-denom">/100</span>
+                    </div>
+                    <div class="ov-card-tag" id="ov-atk-tag">High</div>
+                    <div class="ov-bar-track">
+                        <div class="ov-bar-fill" id="ov-atk-bar" style="width: 78%;"></div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Threat Level -->
+                <div class="overview-card ov-orange">
+                    <div class="ov-card-label">Threat Level</div>
+                    <div class="ov-card-val-row">
+                        <span class="ov-card-score" id="ov-thr-score">72</span>
+                        <span class="ov-card-denom">/100</span>
+                    </div>
+                    <div class="ov-card-tag" id="ov-thr-tag">High</div>
+                    <div class="ov-bar-track">
+                        <div class="ov-bar-fill" id="ov-thr-bar" style="width: 72%;"></div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Stealth Level -->
+                <div class="overview-card ov-green">
+                    <div class="ov-card-label">Stealth Level</div>
+                    <div class="ov-card-val-row">
+                        <span class="ov-card-score" id="ov-stl-score">64</span>
+                        <span class="ov-card-denom">/100</span>
+                    </div>
+                    <div class="ov-card-tag" id="ov-stl-tag">Medium</div>
+                    <div class="ov-bar-track">
+                        <div class="ov-bar-fill" id="ov-stl-bar" style="width: 64%;"></div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Success Probability -->
+                <div class="overview-card ov-purple">
+                    <div class="ov-card-label">Success Probability</div>
+                    <div class="ov-card-val-row">
+                        <span class="ov-card-score" id="ov-suc-score">81</span>
+                        <span class="ov-card-denom">%</span>
+                    </div>
+                    <div class="ov-card-tag" id="ov-suc-tag">High</div>
+                    <div class="ov-bar-track">
+                        <div class="ov-bar-fill" id="ov-suc-bar" style="width: 81%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom 2-Column Grid: Replaced Threat Spectrum Radar Chart with Bus/Vehicle Photo Card! -->
+            <div class="bottom-grid">
+                
+                <!-- Left Box: Operative Bus / Vehicle Action Photo Card -->
+                <div class="grid-card">
+                    <div>
+                        <div class="grid-card-title" id="photo-card-title">Operative Vehicle Profile</div>
+                        <div class="vehicle-photo-frame">
+                            <img id="vehicle-img" src="vaisal.jpg" alt="Operative Bus & Action Scene">
+                        </div>
+                    </div>
+
+                    <div class="vehicle-photo-badge" id="vehicle-badge">
+                        <span>🚌</span>
+                        <span id="vehicle-badge-text">VAISAL HIGH-SPEED BUS OPERATIVE SCENE</span>
+                    </div>
+                </div>
+
+                <!-- Right Box: Detailed Analysis -->
+                <div class="grid-card">
+                    <div class="grid-card-title">Detailed Analysis</div>
+
+                    <div class="analysis-list">
+                        <div class="analysis-item">
+                            <div class="analysis-icon-circle blue">👊</div>
+                            <div class="analysis-content">
+                                <div class="analysis-item-title">Physical Attack</div>
+                                <div class="analysis-item-desc">Strong physical damage dealing capability.</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-item">
+                            <div class="analysis-icon-circle yellow">⚡</div>
+                            <div class="analysis-content">
+                                <div class="analysis-item-title">Energy Manipulation</div>
+                                <div class="analysis-item-desc">High level of energy control and offensive skills.</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-item">
+                            <div class="analysis-icon-circle green">🧠</div>
+                            <div class="analysis-content">
+                                <div class="analysis-item-title">Intelligence & Strategy</div>
+                                <div class="analysis-item-desc">Good tactical skills and decision making.</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-item">
+                            <div class="analysis-icon-circle purple">🏃</div>
+                            <div class="analysis-content">
+                                <div class="analysis-item-title">Speed & Mobility</div>
+                                <div class="analysis-item-desc">Moderate speed and movement adaptability.</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-item">
+                            <div class="analysis-icon-circle teal">🛡️</div>
+                            <div class="analysis-content">
+                                <div class="analysis-item-title">Defense Capability</div>
+                                <div class="analysis-item-desc">Above average defense and resistance.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
 
     <script>
-        function goBack() {
-            const dimmer = document.createElement('div');
-            dimmer.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 99999; opacity: 0;
-                transition: opacity 0.8s ease;
-            `;
-            document.body.appendChild(dimmer);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                dimmer.style.opacity = '1';
-                setTimeout(() => { window.location.href = 'single_predictor.html'; }, 900);
-            }));
-        }
-
-        // Particle Canvas Background
-        (function() {
-            const canvas = document.getElementById('particle-bg');
-            const ctx = canvas.getContext('2d');
-            let W, H, particles = [];
-
-            function resize() {
-                W = canvas.width  = window.innerWidth;
-                H = canvas.height = window.innerHeight;
-            }
-
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < 50; i++) {
-                particles.push({
-                    x: Math.random() * window.innerWidth,
-                    y: Math.random() * window.innerHeight,
-                    r: Math.random() * 1.4 + 0.4,
-                    vx: (Math.random() - 0.5) * 0.35,
-                    vy: (Math.random() - 0.5) * 0.35,
-                    alpha: Math.random() * 0.35 + 0.1
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > W) p.vx *= -1;
-                    if (p.y < 0 || p.y > H) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,100,0,${p.alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
-
-        // Operative Prompts & Stats mapping
-        const OPERATIVES = {
-            'LOGITH': {
-                title: 'LOGITH',
-                sub: 'WIELDING BIG KNIFE WITH BLOOD STAINS 🔪',
-                prompt: 'photorealistic 3D cinematic shot of a giant sharp steel knife blade with dark blood stains on a metallic surface, sharp razor edge, dark cinematic lighting, 8K resolution, octane render',
-                atk: 87, spd: 89, syn: 90, vic: 88,
-                fallbackImg: 'girish.jpg'
-            },
-            'DHARNISH': {
-                title: 'DHARNISH',
-                sub: 'AMAZON FOREST SNAKES MOVING 🐍',
-                prompt: 'photorealistic 3D cinematic render of green king cobra snakes slithering everywhere through a dense lush Amazon rainforest, dark jungle environment, 8K resolution, ultra-detailed photorealistic render',
-                atk: 92, spd: 90, syn: 90, vic: 91,
-                fallbackImg: 'dhanish.jpg'
-            },
+        const OPERATIVE_PROFILES = {
             'VAISAL': {
-                title: 'VAISAL',
-                sub: 'DRIVING BUS ON ROAD 🚌',
-                prompt: 'photorealistic 3D cinematic render of a large modern passenger bus driving fast along a open scenic highway road at sunset, motion blur, 8K resolution, octane render',
-                atk: 95, spd: 88, syn: 96, vic: 94,
-                fallbackImg: 'vaisal.jpg'
-            },
-            'VASANTH': {
-                title: 'VASANTH',
-                sub: 'HOOK OBJECT OPERATIVE 🪝',
-                prompt: 'photorealistic 3D cinematic render of a massive glowing sharp metal hook object, metallic steel grappling hook, dramatic dark cinematic lighting, 8K resolution, unreal engine 5 render',
-                atk: 96, spd: 94, syn: 98, vic: 97,
-                fallbackImg: 'vaisal.jpg'
-            },
-            'SURYA': {
-                title: 'SURYA',
-                sub: 'KAVERI RIVER RUNNING IN FOREST 🌊',
-                prompt: 'photorealistic 3D scenic photo of Kaveri river flowing smoothly through a green tropical forest jungle, rocks, sunlight rays filtering through trees, 8K resolution, photorealistic render',
-                atk: 93, spd: 90, syn: 95, vic: 92,
-                fallbackImg: 'surya.jpg'
-            },
-            'THAYA': {
-                title: 'THAYA',
-                sub: 'BUILDING A BRICK WALL WITH CEMENT 🧱',
-                prompt: 'photorealistic 3D scene of construction workers building a brick wall with cement mortar and trowels at a building site, detailed bricks and cement texture, 8K resolution render',
-                atk: 89, spd: 92, syn: 93, vic: 89,
-                fallbackImg: 'thaya.jpg'
-            },
-            'KISHOOR': {
-                title: 'KISHOOR',
-                sub: 'DIVINE LORD SHIVA 🔱',
-                prompt: 'photorealistic 3D majestic artistic portrait of Lord Shiva with glowing third eye and trident in divine mountain landscape, cosmic lighting, 8K resolution, ultra-detailed render',
-                atk: 88, spd: 87, syn: 91, vic: 87,
-                fallbackImg: 'girish.jpg'
-            },
-            'SUDHISH': {
-                title: 'SUDHISH',
-                sub: 'SUN AND MOON ALIGNMENT ☀️🌙',
-                prompt: 'photorealistic 3D cosmic illustration of the Sun and the Moon side by side in space, glowing solar flare and glowing lunar surface, celestial eclipse alignment, 8K resolution render',
-                atk: 91, spd: 91, syn: 92, vic: 90,
-                fallbackImg: 'vaisal.jpg'
+                name: 'VAISAL',
+                atk: 78, thr: 72, stl: 64, suc: 81,
+                img: 'vaisal.jpg',
+                vehicleTitle: 'Operative Bus Profile',
+                badge: '🚌 VAISAL HIGH-SPEED BUS OPERATIVE SCENE'
             },
             'GIRISH': {
-                title: 'GIRISH',
-                sub: 'HEAVY LORRY TRUCK 🚚',
-                prompt: 'photorealistic 3D cinematic render of a heavy industrial cargo lorry truck driving on a mountain highway at sunset, 8K resolution, photorealistic render',
-                atk: 90, spd: 91, syn: 94, vic: 90,
-                fallbackImg: 'girish.jpg'
+                name: 'GIRISH',
+                atk: 82, thr: 75, stl: 58, suc: 85,
+                img: 'girish.jpg',
+                vehicleTitle: 'Operative Heavy Lorry Profile',
+                badge: '🚚 GIRISH 18-WHEELER LORRY TRUCK SCENE'
+            },
+            'DHARNISH': {
+                name: 'DHARNISH',
+                atk: 76, thr: 70, stl: 72, suc: 79,
+                img: 'dhanish.jpg',
+                vehicleTitle: 'Operative Cobra Bakery Profile',
+                badge: '🐍 DHARNISH KING COBRA BAKERY SCENE'
             },
             'NITHISH': {
-                title: 'NITHISH',
-                sub: 'BUS BELL CONDUCTOR 🔔',
-                prompt: 'photorealistic 3D render of a shiny golden brass bus conductor bell, high detail, 8K resolution render',
-                atk: 94, spd: 95, syn: 92, vic: 93,
-                fallbackImg: 'nithish.png'
+                name: 'NITHISH',
+                atk: 85, thr: 78, stl: 66, suc: 88,
+                img: 'nithish.png',
+                vehicleTitle: 'Operative Temple Bell & Conductor Profile',
+                badge: '🔔 NITHISH SACRED BELL & CONDUCTOR SCENE'
+            },
+            'SURYA': {
+                name: 'SURYA',
+                atk: 80, thr: 74, stl: 70, suc: 83,
+                img: 'surya.jpg',
+                vehicleTitle: 'Operative River Bath Profile',
+                badge: '🌊 SURYA KAVERI RIVER MASS BATH SCENE'
+            },
+            'THAYA': {
+                name: 'THAYA',
+                atk: 75, thr: 68, stl: 60, suc: 77,
+                img: 'thaya.jpg',
+                vehicleTitle: 'Operative Cement & Brick Profile',
+                badge: '🧱 THAYA CONCRETE WALL CONSTRUCTION SCENE'
+            },
+            'LOGITH': {
+                name: 'LOGITH',
+                atk: 74, thr: 69, stl: 62, suc: 76,
+                img: 'girish.jpg',
+                vehicleTitle: 'Operative Butcher Katana Profile',
+                badge: '🔪 LOGITH MASTER BUTCHER KNIFE SCENE'
+            },
+            'VASANTH': {
+                name: 'VASANTH',
+                atk: 88, thr: 84, stl: 75, suc: 91,
+                img: 'vaisal.jpg',
+                vehicleTitle: 'Operative Grappling Hook Profile',
+                badge: '🪝 VASANTH CYBER CEILING HOOK SCENE'
+            },
+            'KISHOOR': {
+                name: 'KISHOOR',
+                atk: 73, thr: 67, stl: 65, suc: 75,
+                img: 'girish.jpg',
+                vehicleTitle: 'Operative Royal Trident Profile',
+                badge: '🔱 KISHOOR SON OF DURAI TRIDENT SCENE'
+            },
+            'SUDHISH': {
+                name: 'SUDHISH',
+                atk: 79, thr: 73, stl: 68, suc: 80,
+                img: 'vaisal.jpg',
+                vehicleTitle: 'Operative Cosmic Sun & Moon Profile',
+                badge: '☀️🌙 SUDHISH SUN & MOON ORBIT SCENE'
             }
         };
 
-        // Read query string
+        // Read query parameters
         const urlParams = new URLSearchParams(window.location.search);
-        let selectedOp = (urlParams.get('name') || 'LOGITH').toUpperCase();
-        if (!OPERATIVES[selectedOp]) selectedOp = 'LOGITH';
+        let selectedName = (urlParams.get('name') || 'VAISAL').toUpperCase();
+        if (!OPERATIVE_PROFILES[selectedName]) selectedName = 'VAISAL';
 
-        const opData = OPERATIVES[selectedOp];
+        const profile = OPERATIVE_PROFILES[selectedName];
 
-        // Populate header & stats
-        document.getElementById('display-name').textContent = opData.title;
-        document.getElementById('display-sub').textContent = opData.sub;
-        document.getElementById('stat-name-label').textContent = `🔮 ${opData.title} THREAT SPECTRUM`;
-        document.getElementById('stat-score-label').textContent = `${opData.vic}% POWER`;
+        // Populate Operative Data
+        document.getElementById('op-name-val').textContent = profile.name;
 
-        document.getElementById('st-atk-val').textContent = opData.atk + '%';
-        document.getElementById('st-atk-bar').style.width = opData.atk + '%';
+        // Set Live Timestamp
+        const now = new Date();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const formattedTime = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} • ${hours}:${minutes} ${ampm}`;
+        document.getElementById('op-time-val').textContent = formattedTime;
 
-        document.getElementById('st-spd-val').textContent = opData.spd + '%';
-        document.getElementById('st-spd-bar').style.width = opData.spd + '%';
+        // Overview Scores
+        document.getElementById('ov-atk-score').textContent = profile.atk;
+        document.getElementById('ov-atk-bar').style.width = profile.atk + '%';
 
-        document.getElementById('st-syn-val').textContent = opData.syn + '%';
-        document.getElementById('st-syn-bar').style.width = opData.syn + '%';
+        document.getElementById('ov-thr-score').textContent = profile.thr;
+        document.getElementById('ov-thr-bar').style.width = profile.thr + '%';
 
-        document.getElementById('st-vic-val').textContent = opData.vic + '%';
-        document.getElementById('st-vic-bar').style.width = opData.vic + '%';
+        document.getElementById('ov-stl-score').textContent = profile.stl;
+        document.getElementById('ov-stl-bar').style.width = profile.stl + '%';
 
-        document.getElementById('caption-text').textContent = `⚡ ${opData.title} · ${opData.sub}`;
+        document.getElementById('ov-suc-score').textContent = profile.suc;
+        document.getElementById('ov-suc-bar').style.width = profile.suc + '%';
 
-        // Loading Phases
-        const PHASES = [
-            "PHASE 1/4: ANALYZING OPERATIVE THREAT MATRIX...",
-            "PHASE 2/4: FUSING AI IMAGE PROMPT...",
-            "PHASE 3/4: RENDERING HIGH-OCTANE AI SCENE...",
-            "PHASE 4/4: ENHANCING DETAIL & 8K LIGHTING FILTERS..."
-        ];
-
-        let phaseInterval = null;
-        let progressInterval = null;
-
-        function startGeneration() {
-            const genCard = document.getElementById('gen-card');
-            const resultSec = document.getElementById('result-section');
-            const progressBar = document.getElementById('gen-progress-fill');
-            const phaseLabel = document.getElementById('gen-status-phase');
-            const timeText = document.getElementById('gen-time-text');
-            const predImg = document.getElementById('prediction-img');
-            const btnDownload = document.getElementById('btn-download');
-
-            genCard.style.display = 'flex';
-            resultSec.style.display = 'none';
-            progressBar.style.width = '0%';
-
-            let currentProgress = 0;
-            let currentPhase = 0;
-            let totalTimeSeconds = 60; // 60 seconds simulated progress for ~1-2 min realistic feel
-            let elapsedTime = 0;
-
-            phaseLabel.textContent = PHASES[0];
-
-            if (phaseInterval) clearInterval(phaseInterval);
-            if (progressInterval) clearInterval(progressInterval);
-
-            // Phase cycling
-            phaseInterval = setInterval(() => {
-                currentPhase = (currentPhase + 1) % PHASES.length;
-                phaseLabel.textContent = PHASES[currentPhase];
-            }, 12000);
-
-            // Progress tracking over ~60s
-            progressInterval = setInterval(() => {
-                elapsedTime++;
-                currentProgress = Math.min(95, Math.floor((elapsedTime / totalTimeSeconds) * 100));
-                progressBar.style.width = currentProgress + '%';
-
-                let remain = Math.max(0, totalTimeSeconds - elapsedTime);
-                timeText.textContent = `ESTIMATED TIME: ~${remain}s REMAINING (GENERATING PREDICTION ARTWORK)`;
-            }, 1000);
-
-            // Build Pollinations URL
-            const seed = Math.floor(Math.random() * 999999);
-            const promptText = encodeURIComponent(opData.prompt);
-            const imageUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed}&nologo=true&enhance=true`;
-
-            const imgLoader = new Image();
-            imgLoader.crossOrigin = 'anonymous';
-
-            const handleSuccess = (src) => {
-                clearInterval(phaseInterval);
-                clearInterval(progressInterval);
-                progressBar.style.width = '100%';
-                phaseLabel.textContent = "GENERATION COMPLETE! PREPARING DISPLAY...";
-
-                setTimeout(() => {
-                    genCard.style.display = 'none';
-                    predImg.src = src;
-                    btnDownload.href = src;
-                    btnDownload.download = `${opData.title.toLowerCase()}_single_prediction.jpg`;
-                    resultSec.style.display = 'flex';
-                }, 800);
-            };
-
-            imgLoader.onload = () => handleSuccess(imgLoader.src);
-            imgLoader.onerror = () => {
-                // Retry with secondary seed
-                const retryUrl = `https://image.pollinations.ai/prompt/${promptText}?width=1024&height=600&seed=${seed + 1}&nologo=true`;
-                const imgLoader2 = new Image();
-                imgLoader2.onload = () => handleSuccess(imgLoader2.src);
-                imgLoader2.onerror = () => {
-                    handleSuccess(opData.fallbackImg);
-                };
-                imgLoader2.src = retryUrl;
-            };
-
-            imgLoader.src = imageUrl;
-        }
-
-        // Start generation on load
-        window.addEventListener('load', () => {
-            startGeneration();
-        });
+        // Vehicle Photo & Title (Replacing Threat Spectrum Radar Chart)
+        document.getElementById('photo-card-title').textContent = profile.vehicleTitle;
+        document.getElementById('vehicle-img').src = profile.img;
+        document.getElementById('vehicle-badge-text').textContent = profile.badge;
     </script>
 </body>
 </html>
