@@ -1465,10 +1465,14 @@
     <!-- Difficulty Selection Modal -->
     <div id="difficulty-modal-overlay">
         <div class="difficulty-modal">
-            <h3 style="margin-top:0; letter-spacing: 2px; color: #888;"> SETTINGS</h3>
+            <h3 style="margin-top:0; letter-spacing: 2px; color: #888;"> AI DIFFICULTY & SETTINGS</h3>
+
+            <div class="diff-option" onclick="selectDifficulty('DAYDREAMING', this)">DAYDREAMING (EASY)</div>
+            <div class="diff-option selected" onclick="selectDifficulty('INTERMEDIATE', this)">INTERMEDIATE (BALANCED)</div>
+            <div class="diff-option" onclick="selectDifficulty('DEEP MEDITATION', this)">DEEP MEDITATION (HARD)</div>
 
             <!-- Integrated Music Toggle -->
-            <div style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;"
+            <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;"
                 onclick="toggleArenaMusic()">
                 <div style="font-size: 10px; letter-spacing: 2px; font-weight: 800; color: #888;"
                     id="music-status-arena">ATMOSPHERIC AUDIO: OFF</div>
@@ -2028,6 +2032,13 @@
         function isInside(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
         function updateTurnDisplay() { turnDisplay.className = `status-box turn-indicator turn-${currentPlayer}`; turnText.textContent = `${currentPlayer.toUpperCase()}'S TURN`; }
         function openDifficultyModal() {
+            document.querySelectorAll('.diff-option').forEach(el => {
+                if (el.textContent.includes(currentDifficulty)) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
             document.getElementById('difficulty-modal-overlay').style.display = 'flex';
         }
 
@@ -2046,6 +2057,9 @@
 
         function selectDifficulty(level, btn) {
             currentDifficulty = level;
+            document.querySelectorAll('.diff-option').forEach(el => el.classList.remove('selected'));
+            if (btn) btn.classList.add('selected');
+            showToast(`AI DIFFICULTY SET TO: ${level}`);
         }
         function closeDifficultyModal() {
             document.getElementById('difficulty-modal-overlay').style.display = 'none';
@@ -2327,19 +2341,12 @@
         function lockSidebar(lock) {
             const ls = document.getElementById('left-sidebar');
             const rs = document.getElementById('right-sidebar');
-            const resetBtn = ls.querySelector('button[onclick="resetGame()"]');
 
-            if (lock) {
-                ls.style.pointerEvents = 'none';
-                ls.style.opacity = '0.6';
-                rs.style.pointerEvents = 'none';
-                rs.style.opacity = '0.6';
-                // Keep RESET button clickable
-                resetBtn.style.pointerEvents = 'all';
-                resetBtn.style.opacity = '1';
-            } else {
+            if (ls) {
                 ls.style.pointerEvents = 'all';
                 ls.style.opacity = '1';
+            }
+            if (rs) {
                 rs.style.pointerEvents = 'all';
                 rs.style.opacity = '1';
             }
@@ -2347,10 +2354,7 @@
 
         function lockAIControls(lock) {
             const panel = document.getElementById('ai-control-panel');
-            if (lock) {
-                panel.style.pointerEvents = 'none';
-                panel.style.opacity = '0.5';
-            } else {
+            if (panel) {
                 panel.style.pointerEvents = 'all';
                 panel.style.opacity = '1';
             }
@@ -2495,6 +2499,9 @@
             if (el.checked) {
                 btn.style.display = 'block';
                 showToast("ARENA AI: ONLINE");
+                if (gameActive && currentPlayer === 'black') {
+                    setTimeout(makeAIMove, 400);
+                }
             } else {
                 btn.style.display = 'none';
                 showToast("ARENA AI: OFFLINE (HUMAN MODE)");
@@ -2708,72 +2715,77 @@
 
         function makeAIMove() {
             const aiToggle = document.getElementById('ai-toggle-arena');
-            if (!gameActive || currentPlayer !== 'black' || !aiToggle.checked) return;
+            if (!gameActive || currentPlayer !== 'black' || (aiToggle && !aiToggle.checked)) return;
             showToast("COMPUTER IS THINKING...");
 
             const metrics = document.getElementById('ai-metrics');
             const tvContent = document.getElementById('tv-content');
+            const tvStatic = document.querySelector('.tv-static');
             if (metrics && currentDifficulty === 'DEEP MEDITATION') {
                 metrics.style.display = 'block';
                 tvContent.style.display = 'none';
-                document.querySelector('.tv-static').classList.add('signal-on');
+                if (tvStatic) tvStatic.classList.add('signal-on');
             }
 
-            if (currentDifficulty === 'DAYDREAMING' && Math.random() < 0.7) {
-                let allMoves = [];
+            setTimeout(() => {
+                if (!gameActive || currentPlayer !== 'black') return;
+
+                if (currentDifficulty === 'DAYDREAMING' && Math.random() < 0.7) {
+                    let allMoves = [];
+                    for (let r = 0; r < 8; r++) {
+                        for (let c = 0; c < 8; c++) {
+                            const p = board[r][c];
+                            if (p && p.color === 'black') {
+                                const moves = getLegalMoves(r, c, p);
+                                moves.forEach(m => allMoves.push({ from: { r, c }, p, to: m }));
+                            }
+                        }
+                    }
+                    if (allMoves.length > 0) {
+                        const chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+                        executeMove(chosen.from.r, chosen.from.c, chosen.to.r, chosen.to.c, chosen.to);
+                    }
+                    return;
+                }
+
+                const depth = currentDifficulty === 'DEEP MEDITATION' ? 4 : 2;
+                let bestMove = null;
+                let bestValue = -Infinity;
+
+                let moves = [];
                 for (let r = 0; r < 8; r++) {
                     for (let c = 0; c < 8; c++) {
                         const p = board[r][c];
                         if (p && p.color === 'black') {
-                            const moves = getLegalMoves(r, c, p);
-                            moves.forEach(m => allMoves.push({ from: { r, c }, p, to: m }));
+                            const mvs = getLegalMoves(r, c, p);
+                            mvs.forEach(m => moves.push({ from: { r, c }, to: m, p }));
                         }
                     }
                 }
-                if (allMoves.length > 0) {
-                    const chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
-                    executeMove(chosen.from.r, chosen.from.c, chosen.to.r, chosen.to.c, chosen.to);
-                }
-                return;
-            }
 
-            const depth = currentDifficulty === 'DEEP MEDITATION' ? 4 : 2;
-            let bestMove = null;
-            let bestValue = -Infinity;
+                moves = orderMoves(moves, board);
 
-            let moves = [];
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const p = board[r][c];
-                    if (p && p.color === 'black') {
-                        const mvs = getLegalMoves(r, c, p);
-                        mvs.forEach(m => moves.push({ from: { r, c }, to: m, p }));
+                for (let move of moves) {
+                    const nextBoard = JSON.parse(JSON.stringify(board));
+                    nextBoard[move.to.r][move.to.c] = nextBoard[move.from.r][move.from.c];
+                    nextBoard[move.from.r][move.from.c] = null;
+                    const boardValue = minimax(nextBoard, depth - 1, -Infinity, Infinity, false);
+                    if (boardValue > bestValue) {
+                        bestValue = boardValue;
+                        bestMove = move;
                     }
                 }
-            }
 
-            moves = orderMoves(moves, board);
-
-            for (let move of moves) {
-                const nextBoard = JSON.parse(JSON.stringify(board));
-                nextBoard[move.to.r][move.to.c] = nextBoard[move.from.r][move.from.c];
-                nextBoard[move.from.r][move.from.c] = null;
-                const boardValue = minimax(nextBoard, depth - 1, -Infinity, Infinity, false);
-                if (boardValue > bestValue) {
-                    bestValue = boardValue;
-                    bestMove = move;
+                if (bestMove) {
+                    executeMove(bestMove.from.r, bestMove.from.c, bestMove.to.r, bestMove.to.c, bestMove.to);
                 }
-            }
 
-            if (bestMove) {
-                executeMove(bestMove.from.r, bestMove.from.c, bestMove.to.r, bestMove.to.c, bestMove.to);
-            }
-
-            if (metrics) {
-                metrics.style.display = 'none';
-                tvContent.style.display = 'block';
-                document.querySelector('.tv-static').classList.remove('signal-on');
-            }
+                if (metrics) {
+                    metrics.style.display = 'none';
+                    tvContent.style.display = 'block';
+                    if (tvStatic) tvStatic.classList.remove('signal-on');
+                }
+            }, 50);
         }
 
         // --- MULTIPLAYER CORE ---
