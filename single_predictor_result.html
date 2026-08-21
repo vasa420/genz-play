@@ -619,11 +619,17 @@
                     </div>
                 </div>
 
-                <!-- Right Box: AI Generated Funny Story Card -->
+                <!-- Right Box: AI Generated Operative Story Card with Corner Generator Button -->
                 <div class="grid-card">
-                    <div class="grid-card-title" id="story-card-title">🤖 AI Generated Operative Story</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                        <div class="grid-card-title" id="story-card-title" style="margin-bottom: 0;">🤖 AI Generated Operative Story</div>
+                        <button id="btn-gen-ai-scene" onclick="generateDifferentAIScene()" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>🤖</span>
+                            <span id="btn-gen-ai-text">Generate AI Scene</span>
+                        </button>
+                    </div>
 
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: left; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: left; height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 15px;">
                         <div>
                             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
                                 <span>⚡ OPERATIVE LORE STORY</span>
@@ -631,38 +637,31 @@
                             </div>
                             <div id="op-story-body" style="font-size: 14px; line-height: 1.7; color: #334155; white-space: pre-line;"></div>
                         </div>
+
+                        <!-- AI Scene Loader Box inside Story Card -->
+                        <div class="ai-scene-loader" id="ai-scene-loader" style="display: none; flex-direction: column; align-items: center; padding: 18px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; width: 100%;">
+                            <div style="width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px;"></div>
+                            <div style="font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 6px;" id="ai-loader-text">GENERATING AI SCENE...</div>
+                            <div style="width: 100%; max-width: 280px; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                                <div id="ai-loader-bar" style="width: 0%; height: 100%; background: #2563eb; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+
+                        <!-- AI Scene Display Card inside Story Card -->
+                        <div class="ai-scene-card" id="ai-scene-card" style="display: none; flex-direction: column; gap: 10px; width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                            <div style="width: 100%; height: 220px; border-radius: 8px; overflow: hidden; background: #ffffff;">
+                                <img id="generated-ai-img" src="" alt="AI Generated Scene" style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%;">
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #2563eb;" id="generated-ai-badge">⚡ AI SCENE GENERATED</span>
+                                <a id="btn-download-generated" href="#" download="ai_scene.jpg" style="padding: 6px 14px; background: #2563eb; color: #ffffff; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span>⬇</span> DOWNLOAD
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-            <!-- Downside Bar for Generating Different AI Operative Scene -->
-            <div class="ai-gen-downside-bar" style="margin-top: 30px; width: 100%; display: flex; flex-direction: column; gap: 20px; align-items: center;">
-                <button class="btn-gen-ai-scene" id="btn-gen-ai-scene" onclick="generateDifferentAIScene()" style="width: 100%; max-width: 480px; padding: 16px 28px; background: #2563eb; color: #ffffff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25); display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <span>🤖</span>
-                    <span id="btn-gen-ai-text">GENERATE DIFFERENT AI SCENE FOR VAISAL</span>
-                </button>
-
-                <!-- AI Scene Loader Box -->
-                <div class="ai-scene-loader" id="ai-scene-loader" style="display: none; flex-direction: column; align-items: center; padding: 30px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; width: 100%;">
-                    <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;"></div>
-                    <div style="font-size: 14px; font-weight: 700; color: #2563eb; margin-bottom: 8px;" id="ai-loader-text">GENERATING AI SCENE...</div>
-                    <div style="width: 100%; max-width: 400px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                        <div id="ai-loader-bar" style="width: 0%; height: 100%; background: #2563eb; transition: width 0.3s ease;"></div>
-                    </div>
-                </div>
-
-                <!-- AI Scene Display Card -->
-                <div class="ai-scene-card" id="ai-scene-card" style="display: none; flex-direction: column; gap: 15px; width: 100%; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                    <div style="font-size: 16px; font-weight: 700; color: #0f172a; text-align: left;" id="ai-scene-card-title">✨ GENERATED REAL-TIME AI SCENE</div>
-                    <div style="width: 100%; height: 360px; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; background: #ffffff;">
-                        <img id="generated-ai-img" src="" alt="AI Generated Scene" style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%;">
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                        <span style="font-size: 12px; font-weight: 600; color: #2563eb;" id="generated-ai-badge">⚡ VAISAL BUS AI SCENE GENERATED</span>
-                        <a id="btn-download-generated" href="#" download="ai_scene.jpg" style="padding: 10px 20px; background: #2563eb; color: #ffffff; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>⬇</span> DOWNLOAD AI SCENE
-                        </a>
-                    </div>
-                </div>
             </div>
 
         </main>
@@ -794,8 +793,8 @@
         // Populate AI Funny Story
         document.getElementById('op-story-body').textContent = profile.story;
 
-        // Update Downside Button Text
-        document.getElementById('btn-gen-ai-text').textContent = `GENERATE DIFFERENT AI SCENE FOR ${profile.name}`;
+        // Update Corner Button Text
+        document.getElementById('btn-gen-ai-text').textContent = 'Generate AI Scene';
 
         const AI_PROMPTS = {
             'VAISAL': { prompt: 'photorealistic 3D cinematic render of a large modern passenger bus driving fast along a scenic highway road at sunset, motion blur, 8K resolution, octane render', title: '🚌 VAISAL BUS AI SCENE' },
@@ -850,12 +849,12 @@
                     const finishDisplay = (src) => {
                         loader.style.display = 'none';
                         img.src = src;
-                        badge.textContent = `⚡ REAL-TIME AI GENERATED: ${aiData.title}`;
+                        badge.textContent = `⚡ AI GENERATED: ${aiData.title}`;
                         downloadBtn.href = src;
                         downloadBtn.download = `${selectedName.toLowerCase()}_ai_scene.jpg`;
                         card.style.display = 'flex';
-                        btn.style.display = 'flex';
-                        btn.querySelector('span:last-child').textContent = `RE-GENERATE AI SCENE FOR ${selectedName}`;
+                        btn.style.display = 'inline-flex';
+                        btn.querySelector('span:last-child').textContent = 'Re-generate Scene';
                     };
 
                     testImg.onload = () => finishDisplay(testImg.src);
