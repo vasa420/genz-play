@@ -403,7 +403,7 @@
             <div class="calc-box" id="upload-box">
                 <div class="card-header-title">
                     <span>📷 Target Image Upload</span>
-                    <span style="font-size: 11px; color: #16a34a; font-weight: 700;">FACE MATCHING ENGINE</span>
+                    <span style="font-size: 11px; color: #16a34a; font-weight: 700;">PERCEPTUAL FACE SCANNER</span>
                 </div>
 
                 <input type="file" id="photo-file-input" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
@@ -437,7 +437,7 @@
             <!-- Scanning Loader Box -->
             <div class="calc-box scan-loader-box" id="scan-loader-box">
                 <div class="spin-ring"></div>
-                <div class="loader-status-txt" id="loader-status-txt">EXTRACTING FACIAL FEATURES & CANVAS EMBEDDINGS...</div>
+                <div class="loader-status-txt" id="loader-status-txt">EXTRACTING FACIAL FEATURES & PERCEPTUAL EMBEDDINGS...</div>
                 <div class="loader-bar-bg">
                     <div class="loader-bar-fill" id="loader-bar-fill"></div>
                 </div>
@@ -601,18 +601,72 @@
                 img: 'vaisal.jpg',
                 roleBadge: '🚌 HIGH-SPEED BUS OPERATIVE',
                 story: "1. Vaisal doesn't just drive the bus; the bus asks Vaisal for permission to start its engine!\n2. Known to drift a 40-ton government bus around tight city turns at full speed!\n3. Passengers never need tickets because Vaisal's aura alone pays for the entire trip!"
-            },
-            'GIRISH': {
-                name: 'GIRISH',
-                atk: 82, thr: 75, stl: 58, suc: 85,
-                img: 'girish.jpg',
-                roleBadge: '🚚 18-WHEELER LORRY TRUCK OPERATIVE',
-                story: "1. Girish drives a massive 18-wheeler Ashok Leyland lorry like an F1 supercar!\n2. Blasts heavy mass songs so loud that road traffic clears automatically 5 km ahead!\n3. Can parallel park an 18-wheel lorry into a narrow tea shop parking slot in 3 seconds!"
             }
         };
 
+        const SAVED_OPERATIVE_REFS = [
+            { key: 'SURYA', file: 'surya.jpg', hash: null },
+            { key: 'NITHISH', file: 'nithish.png', hash: null },
+            { key: 'JD', file: 'jd.jpg', hash: null },
+            { key: 'DHARNISH', file: 'dhanish.jpg', hash: null },
+            { key: 'VAISAL', file: 'vaisal.jpg', hash: null }
+        ];
+
         let selectedFile = null;
         let selectedDataUrl = null;
+
+        // Compute 16x16 perceptual dHash (difference hash) for any image source
+        function getPerceptualHash(imgSrc, callback) {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 17;
+                canvas.height = 16;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 17, 16);
+
+                const imgData = ctx.getImageData(0, 0, 17, 16).data;
+                const grayVals = [];
+                for (let i = 0; i < imgData.length; i += 4) {
+                    const gray = Math.round(0.299 * imgData[i] + 0.587 * imgData[i+1] + 0.114 * imgData[i+2]);
+                    grayVals.push(gray);
+                }
+
+                let hash = "";
+                for (let y = 0; y < 16; y++) {
+                    for (let x = 0; x < 16; x++) {
+                        const left = grayVals[y * 17 + x];
+                        const right = grayVals[y * 17 + x + 1];
+                        hash += (left > right ? "1" : "0");
+                    }
+                }
+                callback(hash);
+            };
+            img.onerror = function() {
+                callback(null);
+            };
+            img.src = imgSrc;
+        }
+
+        // Calculate Hamming Distance between two hashes
+        function getHammingDistance(hash1, hash2) {
+            if (!hash1 || !hash2 || hash1.length !== hash2.length) return 999;
+            let dist = 0;
+            for (let i = 0; i < hash1.length; i++) {
+                if (hash1[i] !== hash2[i]) dist++;
+            }
+            return dist;
+        }
+
+        // Precompute hashes for the 5 saved reference photos on load
+        window.addEventListener('DOMContentLoaded', () => {
+            SAVED_OPERATIVE_REFS.forEach(ref => {
+                getPerceptualHash(ref.file, hash => {
+                    ref.hash = hash;
+                });
+            });
+        });
 
         function showToast(msg) {
             const toast = document.getElementById('error-toast');
@@ -651,58 +705,30 @@
 
             if (!dataUrl) return callback(null);
 
-            // Canvas-based facial/visual signature extraction
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = 8;
-                canvas.height = 8;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, 8, 8);
-
-                const imgData = ctx.getImageData(0, 0, 8, 8).data;
-                let rTotal = 0, gTotal = 0, bTotal = 0;
-                for (let i = 0; i < imgData.length; i += 4) {
-                    rTotal += imgData[i];
-                    gTotal += imgData[i+1];
-                    bTotal += imgData[i+2];
-                }
-                const avgR = rTotal / 64;
-                const avgG = gTotal / 64;
-                const avgB = bTotal / 64;
-                const aspect = (img.width / img.height).toFixed(2);
-
-                // Reference signatures derived from the 5 saved photos (Surya, Nithish, JD, Dharnish, Vaisal)
-                const refSignatures = [
-                    { key: 'SURYA', r: 120, g: 145, b: 160, aspect: 1.8 },
-                    { key: 'NITHISH', r: 100, g: 110, b: 90, aspect: 0.8 },
-                    { key: 'JD', r: 85, g: 105, b: 70, aspect: 0.75 },
-                    { key: 'DHARNISH', r: 95, g: 100, b: 85, aspect: 0.75 },
-                    { key: 'VAISAL', r: 140, g: 165, b: 180, aspect: 2.0 }
-                ];
+            // Extract perceptual hash of uploaded image and calculate Hamming distance against saved photos
+            getPerceptualHash(dataUrl, uploadedHash => {
+                if (!uploadedHash) return callback(null);
 
                 let bestMatch = null;
-                let minDiff = 999999;
+                let minDistance = 999;
 
-                refSignatures.forEach(ref => {
-                    const diff = Math.abs(avgR - ref.r) + Math.abs(avgG - ref.g) + Math.abs(avgB - ref.b) + Math.abs(aspect - ref.aspect) * 40;
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        bestMatch = ref.key;
+                SAVED_OPERATIVE_REFS.forEach(ref => {
+                    if (ref.hash) {
+                        const dist = getHammingDistance(uploadedHash, ref.hash);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            bestMatch = ref.key;
+                        }
                     }
                 });
 
-                if (minDiff < 85) {
+                // Perceptual similarity threshold: Hamming distance <= 42 means high visual match
+                if (minDistance <= 42) {
                     callback(bestMatch);
                 } else {
-                    callback(null);
+                    callback(null); // NOT MATCHED!
                 }
-            };
-            img.onerror = function() {
-                callback(null);
-            };
-            img.src = dataUrl;
+            });
         }
 
         function analyzePhoto() {
@@ -718,7 +744,7 @@
             const loaderTxt = document.getElementById('loader-status-txt');
 
             const phases = [
-                { text: "🔍 EXTRACTING FACIAL FEATURES & CANVAS EMBEDDINGS...", progress: 35 },
+                { text: "🔍 EXTRACTING PERCEPTUAL FACIAL SIGNATURE & EMBEDDINGS...", progress: 35 },
                 { text: "⚡ SCANNING AGAINST SAVED OPERATIVE PHOTOS (SURYA, NITHISH, JD, DHARNISH, VAISAL)...", progress: 70 },
                 { text: "PROCESSING MATCH RESULTS...", progress: 100 }
             ];
