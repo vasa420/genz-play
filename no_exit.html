@@ -6249,154 +6249,174 @@
             dustGeometry.attributes.position.needsUpdate = true;
         }
 
+        function createTatteredGhostDressTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Base off-white/light-grey worn gown fabric
+            ctx.fillStyle = '#c8c5c0';
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Dark mud & grime stains around lower hem
+            for (let i = 0; i < 45; i++) {
+                const x = Math.random() * 512;
+                const y = 200 + Math.random() * 312;
+                const r = Math.random() * 45 + 15;
+                ctx.fillStyle = `rgba(32, 26, 22, ${Math.random() * 0.55 + 0.25})`;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Old dried blood streaks & stains
+            for (let i = 0; i < 30; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 512;
+                ctx.fillStyle = `rgba(65, 10, 10, ${Math.random() * 0.6 + 0.2})`;
+                ctx.beginPath();
+                ctx.arc(x, y, Math.random() * 14 + 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Drips
+                ctx.fillRect(x - 1, y, 2.5, Math.random() * 45 + 10);
+            }
+
+            // Vertical fabric folds & shadow lines
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.18)';
+            ctx.lineWidth = 3;
+            for (let x = 12; x < 512; x += 22) {
+                ctx.beginPath();
+                ctx.moveTo(x + (Math.random() - 0.5) * 8, 0);
+                ctx.lineTo(x + (Math.random() - 0.5) * 12, 512);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
         function createGhost() {
-            // Rebuild createGhost to build a highly detailed, realistic 3D lady ghost model using THREE.Group
+            // Rebuild createGhost to build realistic Sadako/Onryo Japanese horror ghost
             ghostMesh = new THREE.Group();
 
-            // 1. Semi-transparent glowing white dress/body
-            const dressGeo = new THREE.CylinderGeometry(0.2, 0.45, 1.4, 16);
+            const dressTex = createTatteredGhostDressTexture();
             const dressMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.7,
-                emissive: 0xcccccc,
-                emissiveIntensity: 0.4,
-                roughness: 0.5,
-                metalness: 0.1
+                map: dressTex,
+                roughness: 0.88,
+                metalness: 0.05,
+                side: THREE.DoubleSide
             });
-            const dress = new THREE.Mesh(dressGeo, dressMat);
-            dress.position.y = 1.1; // dress from y=0.4 to y=1.8
-            ghostMesh.add(dress);
 
-            // Detailed layered shroud (back veil)
-            const veilGeo = new THREE.CylinderGeometry(0.15, 0.55, 1.5, 12, 1, true, 0, Math.PI);
-            const veilMat = new THREE.MeshStandardMaterial({
-                color: 0xdddddd,
-                transparent: true,
-                opacity: 0.5,
-                side: THREE.DoubleSide,
-                emissive: 0x888888,
-                emissiveIntensity: 0.2
-            });
-            const veil = new THREE.Mesh(veilGeo, veilMat);
-            veil.position.set(0, 1.1, -0.05);
-            veil.rotation.y = Math.PI; // cover the back
-            ghostMesh.add(veil);
+            // 1. Long Tattered Flowing Gown (extending down past ankles)
+            const gownGeo = new THREE.CylinderGeometry(0.22, 0.55, 1.55, 16, 1, true);
+            const gown = new THREE.Mesh(gownGeo, dressMat);
+            gown.position.y = 0.95;
+            ghostMesh.add(gown);
 
-            // Detailed tattered dress strips dangling at the bottom
-            const stripGeo = new THREE.BoxGeometry(0.06, 0.4, 0.01);
-            for (let i = 0; i < 6; i++) {
+            // Upper Torso Gown
+            const torsoGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.6, 12);
+            const torso = new THREE.Mesh(torsoGeo, dressMat);
+            torso.position.y = 1.55;
+            ghostMesh.add(torso);
+
+            // Lower Tattered Hem Shreds (14 shredded dangling fabric strips)
+            const stripGeo = new THREE.BoxGeometry(0.08, 0.48, 0.01);
+            for (let i = 0; i < 14; i++) {
                 const strip = new THREE.Mesh(stripGeo, dressMat);
-                const angle = (i / 6) * Math.PI * 2;
-                strip.position.set(Math.cos(angle) * 0.43, 0.3, Math.sin(angle) * 0.43);
+                const angle = (i / 14) * Math.PI * 2;
+                const radius = 0.52 + (Math.random() - 0.5) * 0.04;
+                strip.position.set(Math.cos(angle) * radius, 0.2, Math.sin(angle) * radius);
                 strip.rotation.y = -angle;
-                strip.rotation.z = (Math.random() - 0.5) * 0.2;
+                strip.rotation.z = (Math.random() - 0.5) * 0.35;
+                strip.rotation.x = (Math.random() - 0.5) * 0.25;
                 ghostMesh.add(strip);
             }
 
-            // 2. Head (grey skin)
-            const headGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            // 2. Head (Pitch Black Shadow Void completely covered by hair)
+            const headGeo = new THREE.SphereGeometry(0.18, 16, 16);
             const headMat = new THREE.MeshStandardMaterial({
-                color: 0x999999,
-                roughness: 0.9,
-                metalness: 0.1
+                color: 0x030303,
+                roughness: 0.95
             });
             const head = new THREE.Mesh(headGeo, headMat);
-            head.position.y = 1.95;
+            head.position.y = 1.92;
+            head.rotation.x = 0.15; // Slouched forward creepy head posture
             ghostMesh.add(head);
 
-            // 3. Hair (messy and layered black hair)
+            // 3. Dense Long Wet Black Hair (Completely covering face and cascading past waist)
             const hairMat = new THREE.MeshStandardMaterial({
-                color: 0x050505,
-                roughness: 0.9
+                color: 0x020202,
+                roughness: 0.35,
+                metalness: 0.15
             });
-            // Back hair draping down
-            const backHairGeo = new THREE.BoxGeometry(0.35, 1.1, 0.1);
+
+            // Full Front Hair Veil (Completely covering front face down past chest)
+            const frontHairGeo = new THREE.BoxGeometry(0.42, 1.3, 0.09);
+            const frontHair = new THREE.Mesh(frontHairGeo, hairMat);
+            frontHair.position.set(0, 1.38, 0.14);
+            frontHair.rotation.x = 0.08;
+            ghostMesh.add(frontHair);
+
+            // Back Hair Curtain
+            const backHairGeo = new THREE.BoxGeometry(0.44, 1.4, 0.1);
             const backHair = new THREE.Mesh(backHairGeo, hairMat);
-            backHair.position.set(0, 1.45, -0.15);
+            backHair.position.set(0, 1.32, -0.12);
             ghostMesh.add(backHair);
 
-            // Left/right side hair
-            const sideHairGeo = new THREE.BoxGeometry(0.08, 0.8, 0.08);
-            const leftHair = new THREE.Mesh(sideHairGeo, hairMat);
-            leftHair.position.set(-0.16, 1.55, 0.12);
-            ghostMesh.add(leftHair);
+            // Side Hair Strands
+            const sideHairGeo = new THREE.BoxGeometry(0.13, 1.25, 0.14);
+            const leftSideHair = new THREE.Mesh(sideHairGeo, hairMat);
+            leftSideHair.position.set(-0.21, 1.38, 0.02);
+            leftSideHair.rotation.z = 0.06;
+            ghostMesh.add(leftSideHair);
 
-            const rightHair = new THREE.Mesh(sideHairGeo, hairMat);
-            rightHair.position.set(0.16, 1.55, 0.12);
-            ghostMesh.add(rightHair);
+            const rightSideHair = new THREE.Mesh(sideHairGeo, hairMat);
+            rightSideHair.position.set(0.21, 1.38, 0.02);
+            rightSideHair.rotation.z = -0.06;
+            ghostMesh.add(rightSideHair);
 
-            // More messy front strands
-            const strandGeo = new THREE.BoxGeometry(0.04, 0.9, 0.04);
-            const strand1 = new THREE.Mesh(strandGeo, hairMat);
-            strand1.position.set(-0.12, 1.5, 0.16);
-            strand1.rotation.z = 0.1;
-            strand1.rotation.y = 0.2;
-            ghostMesh.add(strand1);
+            // Individual Wet Stringy Hair Strands Draping Down
+            const strandGeo = new THREE.CylinderGeometry(0.012, 0.007, 1.15, 4);
+            for (let i = 0; i < 16; i++) {
+                const strand = new THREE.Mesh(strandGeo, hairMat);
+                const angle = (i / 16) * Math.PI * 2;
+                const r = 0.17 + (Math.random() - 0.5) * 0.04;
+                strand.position.set(Math.cos(angle) * r, 1.35, Math.sin(angle) * r + 0.04);
+                strand.rotation.z = (Math.random() - 0.5) * 0.22;
+                strand.rotation.x = (Math.random() - 0.5) * 0.22;
+                ghostMesh.add(strand);
+            }
 
-            const strand2 = new THREE.Mesh(strandGeo, hairMat);
-            strand2.position.set(0.12, 1.5, 0.16);
-            strand2.rotation.z = -0.1;
-            strand2.rotation.y = -0.2;
-            ghostMesh.add(strand2);
-
-            // Bangs peeking over the eyes
-            const bangsGeo = new THREE.BoxGeometry(0.08, 0.5, 0.03);
-            const bangs = new THREE.Mesh(bangsGeo, hairMat);
-            bangs.position.set(0, 1.8, 0.2);
-            bangs.rotation.x = 0.1;
-            ghostMesh.add(bangs);
-
-            // 4. Glowing Red Eyes & Screaming Mouth
-            const eyeGeo = new THREE.SphereGeometry(0.03, 8, 8);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-            leftEye.position.set(-0.08, 1.95, 0.18);
-            ghostMesh.add(leftEye);
-
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-            rightEye.position.set(0.08, 1.95, 0.18);
-            ghostMesh.add(rightEye);
-
-            // Hollow black screaming mouth
-            const mouthGeo = new THREE.SphereGeometry(0.04, 8, 8);
-            const mouthMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const mouth = new THREE.Mesh(mouthGeo, mouthMat);
-            mouth.scale.set(1, 1.8, 0.5); // elongated mouth
-            mouth.position.set(0, 1.84, 0.18);
-            ghostMesh.add(mouth);
-
-            // 5. Arms with Flowing Sleeves and Claws
-            const armGeo = new THREE.CylinderGeometry(0.035, 0.03, 0.7, 8);
+            // 4. Slender Pale/Dirty Arms & Hanging Hands
             const armMat = new THREE.MeshStandardMaterial({
-                color: 0x999999,
-                roughness: 0.9,
-                metalness: 0.1
+                color: 0x82807d, // pale grey blood-stained skin
+                roughness: 0.82
             });
-            const sleeveGeo = new THREE.CylinderGeometry(0.06, 0.09, 0.6, 8);
-            const handGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
-            const fingerGeo = new THREE.BoxGeometry(0.015, 0.12, 0.015);
+            const sleeveGeo = new THREE.CylinderGeometry(0.07, 0.13, 0.65, 8, 1, true);
 
             // Left Arm Group
             const leftArmGroup = new THREE.Group();
-            leftArmGroup.position.set(-0.3, 1.7, 0);
-            
-            const leftArmMesh = new THREE.Mesh(armGeo, armMat);
-            leftArmMesh.position.y = -0.35;
-            leftArmGroup.add(leftArmMesh);
+            leftArmGroup.position.set(-0.26, 1.7, 0);
             
             const leftSleeve = new THREE.Mesh(sleeveGeo, dressMat);
-            leftSleeve.position.y = -0.25;
+            leftSleeve.position.y = -0.3;
             leftArmGroup.add(leftSleeve);
-            
-            const leftHand = new THREE.Mesh(handGeo, armMat);
-            leftHand.position.y = -0.7;
-            leftArmGroup.add(leftHand);
 
-            for (let f = 0; f < 3; f++) {
+            const armGeo = new THREE.CylinderGeometry(0.03, 0.022, 0.78, 8);
+            const leftArmMesh = new THREE.Mesh(armGeo, armMat);
+            leftArmMesh.position.y = -0.38;
+            leftArmGroup.add(leftArmMesh);
+
+            // Slender Pale Fingers hanging down
+            const fingerGeo = new THREE.CylinderGeometry(0.006, 0.004, 0.15, 4);
+            for (let f = 0; f < 5; f++) {
                 const finger = new THREE.Mesh(fingerGeo, armMat);
-                finger.position.set((f - 1) * 0.025, -0.78, 0.01);
-                finger.rotation.x = 0.2;
+                finger.position.set((f - 2) * 0.016, -0.84, (Math.random() - 0.5) * 0.01);
+                finger.rotation.x = 0.12 + Math.random() * 0.1;
                 leftArmGroup.add(finger);
             }
             ghostMesh.add(leftArmGroup);
@@ -6404,118 +6424,34 @@
 
             // Right Arm Group
             const rightArmGroup = new THREE.Group();
-            rightArmGroup.position.set(0.3, 1.7, 0);
-            
-            const rightArmMesh = new THREE.Mesh(armGeo, armMat);
-            rightArmMesh.position.y = -0.35;
-            rightArmGroup.add(rightArmMesh);
-            
-            const rightSleeve = new THREE.Mesh(sleeveGeo, dressMat);
-            rightSleeve.position.y = -0.25;
-            rightArmGroup.add(rightSleeve);
-            
-            const rightHand = new THREE.Mesh(handGeo, armMat);
-            rightHand.position.y = -0.7;
-            rightArmGroup.add(rightHand);
+            rightArmGroup.position.set(0.26, 1.7, 0);
 
-            for (let f = 0; f < 3; f++) {
+            const rightSleeve = new THREE.Mesh(sleeveGeo, dressMat);
+            rightSleeve.position.y = -0.3;
+            rightArmGroup.add(rightSleeve);
+
+            const rightArmMesh = new THREE.Mesh(armGeo, armMat);
+            rightArmMesh.position.y = -0.38;
+            rightArmGroup.add(rightArmMesh);
+
+            for (let f = 0; f < 5; f++) {
                 const finger = new THREE.Mesh(fingerGeo, armMat);
-                finger.position.set((f - 1) * 0.025, -0.78, 0.01);
-                finger.rotation.x = 0.2;
+                finger.position.set((f - 2) * 0.016, -0.84, (Math.random() - 0.5) * 0.01);
+                finger.rotation.x = 0.12 + Math.random() * 0.1;
                 rightArmGroup.add(finger);
             }
-
-            // Big Realistic Blood-stained Rusty Meat Knife / Machete in Right Hand
-            const knifeGroup = new THREE.Group();
-            knifeGroup.position.set(0, -0.72, 0.05); // Positioned at the hand
-            knifeGroup.rotation.x = Math.PI / 3; // Angle the knife forward menacingly
-            
-            // Handle (dark wood)
-            const handleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.15, 8);
-            const handleMat = new THREE.MeshStandardMaterial({
-                color: 0x221105,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-            const handle = new THREE.Mesh(handleGeo, handleMat);
-            handle.position.y = -0.075;
-            knifeGroup.add(handle);
-
-            // Guard / Hilt (dark metallic iron)
-            const guardGeo = new THREE.BoxGeometry(0.08, 0.02, 0.03);
-            const guardMat = new THREE.MeshStandardMaterial({
-                color: 0x333333,
-                roughness: 0.6,
-                metalness: 0.8
-            });
-            const guard = new THREE.Mesh(guardGeo, guardMat);
-            guard.position.y = -0.15;
-            knifeGroup.add(guard);
-
-            // Heavy Cleaver/Machete Blade (metal steel with emissive sheen)
-            const bladeGeo = new THREE.BoxGeometry(0.06, 0.45, 0.012);
-            const bladeMat = new THREE.MeshStandardMaterial({
-                color: 0x888888,
-                roughness: 0.15,
-                metalness: 0.95,
-                emissive: 0x111111,
-                emissiveIntensity: 0.2
-            });
-            const blade = new THREE.Mesh(bladeGeo, bladeMat);
-            blade.position.y = -0.375;
-            knifeGroup.add(blade);
-
-            // Crimson Blood Splatter Stains on the Blade
-            const bloodGeo = new THREE.BoxGeometry(0.062, 0.18, 0.014);
-            const bloodMat = new THREE.MeshBasicMaterial({ color: 0x550000 }); // Deep crimson blood
-            const bloodStain = new THREE.Mesh(bloodGeo, bloodMat);
-            bloodStain.position.set(0.001, -0.45, 0); // Staining the tip of the blade
-            knifeGroup.add(bloodStain);
-
-            rightArmGroup.add(knifeGroup);
-
             ghostMesh.add(rightArmGroup);
             ghostMesh.rightArm = rightArmGroup;
-            ghostMesh.knifeMesh = knifeGroup; // Store handle for throwing animation
 
-            // 6. Legs with Creepy Leg Shackle
-            const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
-            const legMat = new THREE.MeshStandardMaterial({
-                color: 0x999999,
-                roughness: 0.9,
-                metalness: 0.1
-            });
-            const shackleGeo = new THREE.TorusGeometry(0.05, 0.015, 6, 12);
-            const shackleMat = new THREE.MeshStandardMaterial({
-                color: 0x222222,
-                roughness: 0.9,
-                metalness: 0.8
-            });
+            // 5. Pale Bare Feet
+            const footGeo = new THREE.BoxGeometry(0.07, 0.04, 0.16);
+            const leftFoot = new THREE.Mesh(footGeo, armMat);
+            leftFoot.position.set(-0.12, 0.02, 0.04);
+            ghostMesh.add(leftFoot);
 
-            // Left Leg
-            const leftLegGroup = new THREE.Group();
-            leftLegGroup.position.set(-0.2, 0.7, 0);
-            const leftLegMesh = new THREE.Mesh(legGeo, legMat);
-            leftLegMesh.position.y = -0.35;
-            leftLegGroup.add(leftLegMesh);
-            
-            const leftShackle = new THREE.Mesh(shackleGeo, shackleMat);
-            leftShackle.rotation.x = Math.PI / 2;
-            leftShackle.position.y = -0.2;
-            leftLegGroup.add(leftShackle);
-            
-            ghostMesh.add(leftLegGroup);
-            ghostMesh.leftLeg = leftLegGroup;
-
-            // Right Leg
-            const rightLegGroup = new THREE.Group();
-            rightLegGroup.position.set(0.2, 0.7, 0);
-            const rightLegMesh = new THREE.Mesh(legGeo, legMat);
-            rightLegMesh.position.y = -0.35;
-            rightLegGroup.add(rightLegMesh);
-            
-            ghostMesh.add(rightLegGroup);
-            ghostMesh.rightLeg = rightLegGroup;
+            const rightFoot = new THREE.Mesh(footGeo, armMat);
+            rightFoot.position.set(0.12, 0.02, 0.04);
+            ghostMesh.add(rightFoot);
 
             ghostPos.x = 7.5;
             ghostPos.z = 7.5;
