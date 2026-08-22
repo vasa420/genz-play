@@ -132,6 +132,8 @@
         .hero-title-main {
             font-size: clamp(38px, 6vw, 68px); font-weight: 950; letter-spacing: 6px;
             text-transform: uppercase; line-height: 1.1;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-block;
         }
 
         .title-part-choose {
@@ -327,7 +329,7 @@
         <!-- Hero Header Title Banner -->
         <div class="hero-banner">
             <span class="hero-sub-tag">VETRI ARCADE SYSTEM</span>
-            <h1 class="hero-title-main">
+            <h1 class="hero-title-main" id="hero-title-main">
                 <span class="title-part-choose">CHOOSE</span> <span class="title-part-anything">ANYTHING</span>
             </h1>
             <span class="hero-instruction">⬩ SELECT YOUR EXPERIENCE TO BEGIN ⬩</span>
@@ -483,6 +485,34 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        // 10-Second Looping Hero Title Animation (CHOOSE ANYTHING <-> WELCOME YOU)
+        let currentTitleIndex = 0;
+        const titlesList = [
+            { first: 'CHOOSE', second: 'ANYTHING' },
+            { first: 'WELCOME', second: 'YOU' }
+        ];
+
+        function rotateHeroTitle() {
+            const titleEl = document.getElementById('hero-title-main');
+            if (!titleEl) return;
+
+            titleEl.style.opacity = '0';
+            titleEl.style.transform = 'translateY(-14px) scale(0.95)';
+            titleEl.style.filter = 'blur(12px)';
+
+            setTimeout(() => {
+                currentTitleIndex = (currentTitleIndex + 1) % titlesList.length;
+                const nextItem = titlesList[currentTitleIndex];
+                titleEl.innerHTML = `<span class="title-part-choose">${nextItem.first}</span> <span class="title-part-anything">${nextItem.second}</span>`;
+
+                titleEl.style.opacity = '1';
+                titleEl.style.transform = 'translateY(0) scale(1)';
+                titleEl.style.filter = 'blur(0px)';
+            }, 600);
+        }
+
+        setInterval(rotateHeroTitle, 10000);
     </script>
 </body>
 </html>
