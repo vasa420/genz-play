@@ -3,18 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ATTACKS | Photo As My Own</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>ATTACKS | Photo As My Own - AI Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb;
-            --bg: #f8fafc;
+            --primary: #FF6400;
+            --primary-glow: rgba(255, 100, 0, 0.35);
+            --accent: #2563eb;
+            --accent-glow: rgba(37, 99, 235, 0.3);
+            --gold: #FFD700;
+            --bg-dark: #070913;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
-            background-color: var(--bg);
+            background-color: #f8fafc;
             color: #0f172a;
             font-family: 'Outfit', sans-serif;
             height: 100vh;
@@ -28,6 +34,7 @@
             padding: 10px 14px;
         }
 
+        /* Top Header Bar */
         .top-header {
             width: 100%;
             max-width: 100%;
@@ -48,17 +55,26 @@
         .brand-sub { font-size: 15px; color: #0f172a; font-weight: 700; }
         .brand-version { font-size: 12px; color: #94a3b8; font-weight: 600; }
 
-        .header-right-desktop { display: flex; align-items: center; gap: 20px; }
+        .header-right-desktop { display: flex; align-items: center; gap: 12px; }
         .db-status-pill { display: inline-flex; align-items: center; gap: 8px; color: #16a34a; font-size: 13px; font-weight: 600; }
         .status-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
 
-        .btn-lobby {
+        .btn-header-link {
             background: #ffffff; border: 1px solid #cbd5e1; color: #334155;
-            padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px;
+            padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px;
             cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
         }
-        .btn-lobby:hover { background: #f1f5f9; color: #0f172a; }
+        .btn-header-link:hover { background: #f1f5f9; color: #0f172a; }
 
+        .btn-header-primary {
+            background: linear-gradient(135deg, #FF6400, #FF9D00); border: none; color: #000;
+            padding: 8px 16px; font-size: 13px; font-weight: 800; border-radius: 8px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+            box-shadow: 0 0 12px rgba(255,100,0,0.25);
+        }
+        .btn-header-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+
+        /* Main Grid Wrapper */
         .app-wrapper {
             width: 100%;
             max-width: 100%;
@@ -74,25 +90,27 @@
             min-height: 0;
         }
 
+        /* Desktop Sidebar */
         .desktop-sidebar {
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
-            padding: 24px 16px;
+            padding: 20px 14px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             height: 100%;
+            overflow-y: auto;
         }
 
-        .sidebar-menu { display: flex; flex-direction: column; gap: 6px; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 5px; }
 
         .nav-item {
             width: 100%;
-            padding: 12px 16px;
+            padding: 11px 14px;
             background: transparent;
             border-radius: 10px;
             color: #475569;
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -108,8 +126,9 @@
         }
 
         .nav-item.active {
-            color: #2563eb;
-            background: #eff6ff;
+            color: #FF6400;
+            background: #fff4ed;
+            border: 1px solid rgba(255, 100, 0, 0.25);
             font-weight: 700;
         }
 
@@ -119,41 +138,370 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .about-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .about-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
+        .about-copyright { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+        /* Main Panel */
+        .main-panel {
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: #fafafa;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .panel-container {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .panel-header h1 {
+            font-size: 30px;
+            font-weight: 900;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .panel-header p {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Studio Mode Tabs */
+        .mode-tabs {
+            display: flex;
+            background: #e2e8f0;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .mode-tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13.5px;
+            font-weight: 700;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .mode-tab-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* Main Studio Card */
+        .studio-card {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-label {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .prompt-char-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            height: 120px;
             padding: 16px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: #0f172a;
+            line-height: 1.5;
+            outline: none;
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        .prompt-textarea:focus {
+            border-color: #FF6400;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(255, 100, 0, 0.12);
+        }
+
+        .prompt-textarea::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Preset Chips */
+        .presets-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .presets-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .preset-chip {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preset-chip:hover {
+            background: #fff4ed;
+            border-color: #FF6400;
+            color: #FF6400;
+            transform: translateY(-1px);
+        }
+
+        /* Options Row (Style & Aspect Ratio) */
+        .options-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 650px) {
+            .options-row { grid-template-columns: 1fr; }
+        }
+
+        .option-select-box {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .about-title { font-size: 13px; font-weight: 700; color: #0f172a; }
-        .about-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
-        .about-copyright { font-size: 11px; color: #94a3b8; margin-top: 4px; }
-
-        .main-panel {
-            padding: 40px 45px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            background: #ffffff; height: 100%; overflow-y: auto; text-align: center;
+        .select-input {
+            width: 100%;
+            padding: 11px 14px;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #0f172a;
+            outline: none;
+            cursor: pointer;
         }
 
-        .panel-header { margin-bottom: 25px; }
-        .panel-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-        .panel-header p { font-size: 14px; color: #64748b; }
+        .select-input:focus {
+            border-color: #FF6400;
+        }
 
-        .calc-box {
-            width: 100%; max-width: 550px; background: #ffffff; border: 1px solid #e2e8f0;
-            border-radius: 16px; padding: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align: left;
+        /* Generate Primary Action Bar */
+        .action-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        .btn-generate-main {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #FF6400, #FF8800);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 18px rgba(255, 100, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-generate-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(255, 100, 0, 0.4);
+            background: linear-gradient(135deg, #FF5500, #FF7700);
+        }
+
+        .btn-live-preview {
+            width: 100%;
+            padding: 12px 20px;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            color: #334155;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-live-preview:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        /* Upload Tab Area */
+        .upload-section {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .upload-area {
-            border: 2px dashed #cbd5e1; border-radius: 12px; padding: 30px; text-align: center;
-            cursor: pointer; transition: all 0.2s ease; background: #f8fafc; margin-bottom: 20px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 35px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8fafc;
         }
-        .upload-area:hover { border-color: #2563eb; background: #eff6ff; }
 
-        .btn-generate {
-            width: 100%; background: #2563eb; color: #ffffff; border: none; padding: 14px;
-            font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
+        .upload-area:hover {
+            border-color: #FF6400;
+            background: #fff4ed;
         }
-        .btn-generate:hover { background: #1d4ed8; }
+
+        .uploaded-preview-box {
+            display: none;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            max-height: 280px;
+            position: relative;
+        }
+
+        .uploaded-preview-box img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+        }
+
+        /* Live Preview Canvas Container */
+        .preview-card {
+            display: none;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            flex-direction: column;
+            gap: 14px;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-canvas-wrap {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-canvas-wrap canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -161,15 +509,16 @@
     <!-- Top Header Bar -->
     <header class="top-header">
         <div class="header-brand-group">
-            <div class="brand-title">ATTACKS <span class="brand-sub">Search Engine</span> <span class="brand-version">v1.0</span></div>
+            <div class="brand-title">ATTACKS <span class="brand-sub">AI Studio</span> <span class="brand-version">v1.0</span></div>
         </div>
 
         <div class="header-right-desktop">
             <div class="db-status-pill">
                 <span class="status-dot-green"></span>
-                <span>Database Online</span>
+                <span>AI Neural Engine Ready</span>
             </div>
-            <a class="btn-lobby" href="attacks_game.html">← Dashboard</a>
+            <a class="btn-header-link" href="video_as_my_own.html">🎥 Video Studio</a>
+            <a class="btn-header-primary" href="attacks_game.html">← Dashboard</a>
         </div>
     </header>
 
@@ -185,46 +534,346 @@
                 <a class="nav-item" href="about_yourself.html"><span class="nav-icon">👤</span> About Yourself</a>
                 <a class="nav-item active" href="photo_as_my_own.html"><span class="nav-icon">📷</span> Photo "As My Own"</a>
                 <a class="nav-item" href="upload_photo.html"><span class="nav-icon">📤</span> Upload Photo</a>
+                <a class="nav-item" href="video_as_my_own.html"><span class="nav-icon">🎥</span> Video "As My Own"</a>
             </div>
 
             <div class="about-card">
-                <div class="about-title">About Attacks</div>
-                <div class="about-desc">Your intelligent assistant to analyze, compare and predict attack patterns efficiently.</div>
+                <div class="about-title">About Attacks AI</div>
+                <div class="about-desc">Generate custom high-resolution photo scenes & attack profiles with latent AI diffusion.</div>
                 <div class="about-copyright">© Vetri Studios 2025</div>
             </div>
         </aside>
 
         <!-- Right Main Panel -->
         <main class="main-panel">
-            <div class="panel-header">
-                <h1>📷 Photo "As My Own"</h1>
-                <p>Upload a target photo to generate custom AI attack scene profiles.</p>
-            </div>
+            <div class="panel-container">
 
-            <div class="calc-box">
-                <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFile(event)">
-                <div class="upload-area" onclick="document.getElementById('file-input').click()">
-                    <div style="font-size:36px; margin-bottom:10px;">📸</div>
-                    <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:4px;" id="upload-label">Click to Upload Photo</div>
-                    <div style="font-size:12px; color:#64748b;">Supports PNG, JPG, WEBP</div>
+                <div class="panel-header">
+                    <h1>📷 Photo "As My Own"</h1>
+                    <p>Type your prompt or upload a photo to synthesize custom AI scene profiles.</p>
                 </div>
 
-                <button class="btn-generate" onclick="processPhoto()">GENERATE AI ATTACK SCENE</button>
+                <!-- Mode Tabs -->
+                <div class="mode-tabs">
+                    <button class="mode-tab-btn active" id="tab-prompt" onclick="switchTab('prompt')">
+                        <span>💬</span> AI Prompt Studio
+                    </button>
+                    <button class="mode-tab-btn" id="tab-upload" onclick="switchTab('upload')">
+                        <span>📸</span> Upload Photo Base
+                    </button>
+                </div>
+
+                <!-- Main AI Studio Card -->
+                <div class="studio-card">
+
+                    <!-- PROMPT SECTION -->
+                    <div id="section-prompt" style="display: flex; flex-direction: column; gap: 20px;">
+                        
+                        <div class="input-group">
+                            <div class="input-label-row">
+                                <label class="input-label" for="prompt-input">
+                                    <span>✍️</span> Describe Your AI Photo Scene
+                                </label>
+                                <span class="prompt-char-count" id="char-count">0 / 300</span>
+                            </div>
+                            <textarea 
+                                id="prompt-input" 
+                                class="prompt-textarea" 
+                                placeholder="Describe the photo scene you want to generate with AI... e.g., A futuristic cyber warrior standing on a neon rooftop in the rain, or a golden flaming lion..."
+                                oninput="updateCharCount()"
+                            ></textarea>
+                        </div>
+
+                        <!-- Presets Section -->
+                        <div>
+                            <div class="presets-label">⚡ Quick Prompt Presets</div>
+                            <div class="presets-grid">
+                                <button class="preset-chip" onclick="applyPreset('A futuristic cyber warrior standing on a neon rooftop in the rain with glowing cyan katana blade')">
+                                    ⚔️ Cyber Warrior
+                                </button>
+                                <button class="preset-chip" onclick="applyPreset('A majestic golden lion with a mane made of intense mystical fire in a dark forest')">
+                                    🦁 Flaming Lion
+                                </button>
+                                <button class="preset-chip" onclick="applyPreset('Scenic Kaveri river landscape at sunset with golden sunlight rays filtering through palm trees')">
+                                    🌅 Kaveri Sunset
+                                </button>
+                                <button class="preset-chip" onclick="applyPreset('A futuristic electric hypercar drifting through a rain-slicked Tokyo neon street at night')">
+                                    🏎️ Tokyo Hypercar
+                                </button>
+                                <button class="preset-chip" onclick="applyPreset('An astronaut standing on the surface of an alien crystal planet looking at a colorful nebula')">
+                                    🚀 Alien Galaxy
+                                </button>
+                                <button class="preset-chip" onclick="applyPreset('Massive cargo truck navigating through a misty mountain highway at dusk')">
+                                    🚛 Highway Cargo
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Options Row -->
+                        <div class="options-row">
+                            <div class="option-select-box">
+                                <label class="input-label"><span>🎨</span> Art Style</label>
+                                <select class="select-input" id="style-select">
+                                    <option value="cinematic">Cinematic 8K Realistic</option>
+                                    <option value="cyberpunk">Cyberpunk Neon</option>
+                                    <option value="anime">Anime / Manga Art</option>
+                                    <option value="fantasy">Dark Fantasy Aura</option>
+                                    <option value="photorealistic">Hyper Photorealistic</option>
+                                </select>
+                            </div>
+
+                            <div class="option-select-box">
+                                <label class="input-label"><span>📐</span> Aspect Ratio</label>
+                                <select class="select-input" id="aspect-select">
+                                    <option value="16:9">16:9 Widescreen (Landscape)</option>
+                                    <option value="1:1">1:1 Square (Instagram/Avatar)</option>
+                                    <option value="9:16">9:16 Story (Vertical)</option>
+                                    <option value="4:3">4:3 Classic Photo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Primary Action Buttons -->
+                        <div class="action-bar">
+                            <button class="btn-generate-main" onclick="submitAIGeneration()">
+                                <span>⚡</span> START AI GENERATION
+                            </button>
+                            <button class="btn-live-preview" onclick="toggleInstantPreview()">
+                                <span>👁️</span> Quick Live Canvas Preview
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- UPLOAD SECTION -->
+                    <div id="section-upload" class="upload-section">
+                        <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+                        
+                        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                            <div style="font-size:42px; margin-bottom:12px;">📸</div>
+                            <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:4px;" id="upload-label">
+                                Click or Drag Photo to Upload
+                            </div>
+                            <div style="font-size:12.5px; color:#64748b;">Supports PNG, JPG, WEBP formats up to 25MB</div>
+                        </div>
+
+                        <div class="uploaded-preview-box" id="upload-preview-box">
+                            <img id="uploaded-img" src="" alt="Uploaded Target Photo">
+                        </div>
+
+                        <button class="btn-generate-main" onclick="processUploadedPhoto()">
+                            <span>⚡</span> PROCESS PHOTO WITH AI
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Instant Live Preview Card -->
+                <div class="preview-card" id="live-preview-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 14px; font-weight: 800; color: #0f172a;">
+                            ⚡ Live Procedural Synthesis Preview
+                        </div>
+                        <button onclick="document.getElementById('live-preview-card').style.display='none'" style="background:none; border:none; color:#64748b; font-size:16px; cursor:pointer;">✕</button>
+                    </div>
+
+                    <div class="preview-canvas-wrap">
+                        <canvas id="preview-canvas" width="800" height="450"></canvas>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 12px; color: #64748b;" id="preview-caption">Generated visual canvas representation.</div>
+                        <button class="btn-generate-main" style="width: auto; padding: 8px 18px; font-size: 12px;" onclick="submitAIGeneration()">
+                            Open High-Res Render →
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </main>
 
     </div>
 
     <script>
-        function handleFile(e) {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('upload-label').textContent = file.name;
+        function updateCharCount() {
+            const val = document.getElementById('prompt-input').value;
+            document.getElementById('char-count').textContent = `${val.length} / 300`;
+        }
+
+        function applyPreset(presetText) {
+            const textarea = document.getElementById('prompt-input');
+            textarea.value = presetText;
+            updateCharCount();
+            textarea.focus();
+            renderLiveCanvasPreview(presetText);
+        }
+
+        function switchTab(mode) {
+            const tabPrompt = document.getElementById('tab-prompt');
+            const tabUpload = document.getElementById('tab-upload');
+            const secPrompt = document.getElementById('section-prompt');
+            const secUpload = document.getElementById('section-upload');
+
+            if (mode === 'prompt') {
+                tabPrompt.classList.add('active');
+                tabUpload.classList.remove('active');
+                secPrompt.style.display = 'flex';
+                secUpload.style.display = 'none';
+            } else {
+                tabUpload.classList.add('active');
+                tabPrompt.classList.remove('active');
+                secUpload.style.display = 'flex';
+                secPrompt.style.display = 'none';
             }
         }
 
-        function processPhoto() {
-            alert("Photo loaded into Vetri Intelligence pipeline!");
+        function submitAIGeneration() {
+            const promptText = document.getElementById('prompt-input').value.trim();
+            if (!promptText) {
+                alert('Please type a prompt or choose a preset before clicking START AI GENERATION!');
+                document.getElementById('prompt-input').focus();
+                return;
+            }
+
+            // Smooth transition overlay
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #04040c; z-index: 99999; opacity: 0;
+                transition: opacity 0.6s ease;
+            `;
+            document.body.appendChild(dimmer);
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => {
+                    window.location.href = 'photo_prompt_result.html?prompt=' + encodeURIComponent(promptText);
+                }, 700);
+            }));
+        }
+
+        function toggleInstantPreview() {
+            const card = document.getElementById('live-preview-card');
+            const promptText = document.getElementById('prompt-input').value.trim() || 'A futuristic cyber warrior standing on a neon rooftop';
+            
+            if (card.style.display === 'flex') {
+                card.style.display = 'none';
+            } else {
+                card.style.display = 'flex';
+                renderLiveCanvasPreview(promptText);
+            }
+        }
+
+        function renderLiveCanvasPreview(promptText) {
+            const canvas = document.getElementById('preview-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const p = (promptText || '').toLowerCase();
+
+            let bgGrad = ctx.createLinearGradient(0, 0, 800, 450);
+            let primaryColor = '#FF6400';
+            let secColor = '#FFD700';
+
+            if (p.includes('cyber') || p.includes('warrior') || p.includes('tokyo') || p.includes('neon')) {
+                primaryColor = '#00FFFF'; secColor = '#FF007F';
+                bgGrad.addColorStop(0, '#0a0314'); bgGrad.addColorStop(1, '#051829');
+            } else if (p.includes('lion') || p.includes('flame') || p.includes('fire')) {
+                primaryColor = '#FF6400'; secColor = '#FFD700';
+                bgGrad.addColorStop(0, '#1a0500'); bgGrad.addColorStop(1, '#331000');
+            } else if (p.includes('kaveri') || p.includes('sunset') || p.includes('river')) {
+                primaryColor = '#FF5500'; secColor = '#FF0099';
+                bgGrad.addColorStop(0, '#1f0033'); bgGrad.addColorStop(1, '#ff6600');
+            } else if (p.includes('space') || p.includes('galaxy') || p.includes('alien')) {
+                primaryColor = '#9933FF'; secColor = '#00FFFF';
+                bgGrad.addColorStop(0, '#030008'); bgGrad.addColorStop(1, '#12002b');
+            } else {
+                bgGrad.addColorStop(0, '#0f172a'); bgGrad.addColorStop(1, '#1e293b');
+            }
+
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 800, 450);
+
+            // Glowing Orbs
+            for (let i = 0; i < 3; i++) {
+                const cx = (i * 250 + 150) % 800;
+                const cy = (i * 120 + 80) % 450;
+                const radGrad = ctx.createRadialGradient(cx, cy, 5, cx, cy, 180);
+                radGrad.addColorStop(0, primaryColor + '44');
+                radGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = radGrad;
+                ctx.beginPath(); ctx.arc(cx, cy, 180, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Grid Lines
+            ctx.strokeStyle = primaryColor + '33';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < 800; x += 40) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 450); ctx.stroke();
+            }
+            for (let y = 0; y < 450; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(800, y); ctx.stroke();
+            }
+
+            // Central Icon
+            ctx.save();
+            ctx.translate(400, 215);
+            ctx.font = '54px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let icon = '📸';
+            if (p.includes('cyber')) icon = '⚔️';
+            else if (p.includes('lion') || p.includes('flame')) icon = '🦁';
+            else if (p.includes('sunset') || p.includes('river')) icon = '🌅';
+            else if (p.includes('car')) icon = '🏎️';
+            else if (p.includes('space') || p.includes('alien')) icon = '🚀';
+            ctx.fillText(icon, 0, 0);
+            ctx.restore();
+
+            document.getElementById('preview-caption').textContent = `Prompt: "${promptText.substring(0, 50)}${promptText.length > 50 ? '...' : ''}"`;
+        }
+
+        let uploadedFile = null;
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFile = file;
+                document.getElementById('upload-label').textContent = file.name + ` (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const previewBox = document.getElementById('upload-preview-box');
+                    const img = document.getElementById('uploaded-img');
+                    img.src = evt.target.result;
+                    previewBox.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function processUploadedPhoto() {
+            if (!uploadedFile) {
+                alert('Please upload a photo first!');
+                return;
+            }
+            const promptFallback = `AI Photo scene transformation based on target reference profile: ${uploadedFile.name}`;
+            submitAIGenerationWithPrompt(promptFallback);
+        }
+
+        function submitAIGenerationWithPrompt(promptText) {
+            const dimmer = document.createElement('div');
+            dimmer.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #04040c; z-index: 99999; opacity: 0;
+                transition: opacity 0.6s ease;
+            `;
+            document.body.appendChild(dimmer);
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dimmer.style.opacity = '1';
+                setTimeout(() => {
+                    window.location.href = 'photo_prompt_result.html?prompt=' + encodeURIComponent(promptText);
+                }, 700);
+            }));
         }
     </script>
 </body>
