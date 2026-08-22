@@ -1365,15 +1365,19 @@
         }
 
         /* Lobby Style */
+        /* Gothic Horror Lobby Style */
         .engine-lobby-bg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(
-                rgba(0, 0, 0, 0.85) 0%,
-                rgba(15, 5, 5, 0.6) 50%,
-                rgba(0, 0, 0, 0.9) 100%
-            ), url('creepy_lobby_bg.png') center/cover no-repeat;
+            background: linear-gradient(180deg, rgba(3, 6, 17, 0.4) 0%, rgba(3, 6, 17, 0.85) 100%), url('no_exit_mansion_bg.png') center/cover no-repeat;
             z-index: -1;
+            filter: contrast(1.15) brightness(0.85);
+            animation: slowMansionZoom 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes slowMansionZoom {
+            from { transform: scale(1); }
+            to { transform: scale(1.06); }
         }
 
         .engine-lobby-layout {
@@ -1382,6 +1386,8 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+            padding: 30px 50px;
+            box-sizing: border-box;
         }
 
         .engine-lobby-header {
@@ -1391,115 +1397,174 @@
             align-items: center;
         }
 
-        .engine-lobby-logo {
-            font-family: 'Creepster', cursive;
-            font-size: clamp(32px, 6vw, 48px);
-            font-weight: 900;
-            letter-spacing: 6px;
-            color: #ff3b30;
-            text-shadow: 0 0 25px rgba(255, 59, 48, 0.95), 5px 5px 0px #000;
-            animation: glitchText 4s infinite linear alternate-reverse;
+        .engine-lobby-title-box {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
         }
 
-        .engine-btn-quit {
-            background: transparent;
-            border: 1px solid rgba(255, 59, 48, 0.3);
-            color: rgba(255, 59, 48, 0.8);
-            padding: 10px 22px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 11px;
-            letter-spacing: 2px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.3s;
+        .engine-lobby-logo {
+            font-family: 'Outfit', 'Creepster', sans-serif;
+            font-size: clamp(36px, 5.5vw, 64px);
+            font-weight: 950;
+            letter-spacing: 4px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 51, 51, 0.5);
             text-transform: uppercase;
-            outline: none;
+            line-height: 1;
         }
-        .engine-btn-quit:hover {
-            border-color: #ff3b30;
-            color: #fff;
-            background: rgba(255, 59, 48, 0.1);
-            box-shadow: 0 0 15px rgba(255, 59, 48, 0.45);
-            transform: translateY(-2px);
+
+        .engine-lobby-subtag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        .engine-lobby-subtag span {
+            color: #ff3b30;
+            font-weight: 900;
+        }
+
+        .engine-header-right-btns {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .engine-badge-studio {
+            background: rgba(8, 14, 28, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .engine-btn-exit-pill {
+            background: rgba(8, 14, 28, 0.75);
+            border: 1.5px solid #ff3b30;
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ff3b30;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .engine-btn-exit-pill:hover {
+            background: rgba(255, 59, 48, 0.18);
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.5);
+            transform: scale(1.04);
+            color: #ffffff;
         }
 
         .engine-menu-container {
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 14px;
             width: 100%;
-            max-width: 360px;
-            background: rgba(10, 10, 10, 0.9);
-            border: 1px solid rgba(255, 59, 48, 0.25);
-            border-radius: 20px;
-            padding: 40px 30px;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-        }
-
-        .engine-menu-label {
-            font-size: 9px;
-            letter-spacing: 4px;
-            color: rgba(255, 59, 48, 0.6);
-            text-transform: uppercase;
-            margin-bottom: 5px;
+            max-width: 480px;
+            margin: auto 0;
         }
 
         .engine-menu-option {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(9, 14, 28, 0.75);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
-            color: #fff;
-            padding: 18px 22px;
-            font-family: 'Outfit', sans-serif;
+            color: #cbd5e1;
+            padding: 16px 24px;
+            font-family: 'Outfit', 'JetBrains Mono', sans-serif;
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 3px;
             text-align: left;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
+        .engine-menu-option.active-selected,
         .engine-menu-option:hover {
-            background: rgba(255, 59, 48, 0.1);
+            background: rgba(20, 8, 12, 0.9);
             border-color: #ff3b30;
-            box-shadow: 0 0 20px rgba(255, 59, 48, 0.2);
-            transform: translateX(10px);
+            color: #ffffff;
+            box-shadow: 0 0 25px rgba(255, 59, 48, 0.45);
+            transform: scale(1.02) translateX(4px);
         }
-        .engine-menu-option::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; height: 100%; width: 4px;
-            background: #ff3b30;
-            transform: scaleY(0);
-            transition: transform 0.3s;
-            border-radius: 14px 0 0 14px;
+
+        .engine-menu-option-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
-        .engine-menu-option:hover::before { transform: scaleY(1); }
+
+        .engine-opt-icon-circle {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: #94a3b8; transition: all 0.25s ease;
+        }
+
+        .engine-menu-option.active-selected .engine-opt-icon-circle,
+        .engine-menu-option:hover .engine-opt-icon-circle {
+            border-color: #ff3b30;
+            color: #ff3b30;
+            box-shadow: 0 0 12px rgba(255, 59, 48, 0.5);
+        }
 
         .engine-menu-arrow {
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s;
-            color: #ff3b30;
-            font-size: 18px;
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 900;
+            transition: all 0.25s ease;
         }
+
+        .engine-menu-option.active-selected .engine-menu-arrow,
         .engine-menu-option:hover .engine-menu-arrow {
-            opacity: 1;
-            transform: translateX(0);
+            color: #ff3b30;
+            transform: translateX(4px);
         }
 
         .engine-lobby-footer {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.25);
-            letter-spacing: 4px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+            letter-spacing: 3px;
             text-transform: uppercase;
         }
-        .engine-lobby-footer span { color: #ff3b30; }
+
+        .engine-lobby-footer span.red-accent {
+            color: #ff3b30;
+            font-weight: 900;
+        }
 
         /* Modals */
         .engine-modal-overlay {
@@ -1816,51 +1881,75 @@
     <!-- 3. Lobby Overlay -->
     <div id="engine-lobby-screen" class="engine-overlay-screen">
         <div class="engine-lobby-bg"></div>
-        <div class="lobby-brand-badge">
-            <span style="color: #ff3b30; animation: blink 1.5s infinite;">•</span> ATC STUDIO
-        </div>
+
         <div class="engine-lobby-layout">
+            <!-- Top Header -->
             <header class="engine-lobby-header">
-                <div class="lobby-title-wrapper" style="position: relative; display: inline-block;">
-                    <div class="engine-lobby-logo">NO EXIT</div>
-                    <div class="blood-drip" style="left: 8%; animation-delay: 0.5s; --max-len: 25px;"></div>
-                    <div class="blood-drip" style="left: 20%; animation-delay: 1.8s; --max-len: 38px;"></div>
-                    <div class="blood-drip" style="left: 33%; animation-delay: 0.2s; --max-len: 20px;"></div>
-                    <div class="blood-drip" style="left: 54%; animation-delay: 2.7s; --max-len: 35px;"></div>
-                    <div class="blood-drip" style="left: 68%; animation-delay: 1.1s; --max-len: 30px;"></div>
-                    <div class="blood-drip" style="left: 80%; animation-delay: 3.4s; --max-len: 42px;"></div>
-                    <div class="blood-drip" style="left: 92%; animation-delay: 1.5s; --max-len: 28px;"></div>
+                <div class="engine-lobby-title-box">
+                    <h1 class="engine-lobby-logo">NO EXIT</h1>
+                    <div class="engine-lobby-subtag">
+                        ESCAPE THE LOOP. <span>IF YOU CAN.</span>
+                    </div>
                 </div>
-                <button class="engine-btn-quit" onclick="engineQuitToHub()">← QUIT</button>
+
+                <div class="engine-header-right-btns">
+                    <div class="engine-badge-studio">
+                        <span style="color: #ff3b30; animation: blink 1.5s infinite;">•</span> ATC STUDIO
+                    </div>
+                    <button class="engine-btn-exit-pill" onclick="engineQuitToHub()">
+                        <span>🚪</span> EXIT
+                    </button>
+                </div>
             </header>
             
-            <div class="engine-menu-container">
-                <div class="engine-menu-label">— SELECT ACTION —</div>
-                <div class="engine-menu-option" onclick="engineStartGame()" onmouseenter="playSpookyHoverSound()">
-                    <span>1. ENTER LOOP</span>
-                    <span class="engine-menu-arrow">➔</span>
+            <!-- Center Vertical Menu Cards -->
+            <div class="engine-menu-container" id="engine-menu-list">
+                <div class="engine-menu-option active-selected" id="menu-opt-1" onclick="engineStartGame()" onmouseenter="setActiveMenuOpt(this)">
+                    <div class="engine-menu-option-left">
+                        <div class="engine-opt-icon-circle">🔄</div>
+                        <span>1. ENTER LOOP</span>
+                    </div>
+                    <span class="engine-menu-arrow">&gt;</span>
                 </div>
-                <div class="engine-menu-option" onclick="engineOpenSettings()" onmouseenter="playSpookyHoverSound()">
-                    <span>2. SETTINGS</span>
-                    <span class="engine-menu-arrow">➔</span>
+
+                <div class="engine-menu-option" id="menu-opt-2" onclick="engineOpenSettings()" onmouseenter="setActiveMenuOpt(this)">
+                    <div class="engine-menu-option-left">
+                        <div class="engine-opt-icon-circle">⚙️</div>
+                        <span>2. SETTINGS</span>
+                    </div>
+                    <span class="engine-menu-arrow">&gt;</span>
                 </div>
-                <div class="engine-menu-option" onclick="engineOpenCalibration()" onmouseenter="playSpookyHoverSound()">
-                    <span>3. CALIBRATION</span>
-                    <span class="engine-menu-arrow">➔</span>
+
+                <div class="engine-menu-option" id="menu-opt-3" onclick="engineOpenCalibration()" onmouseenter="setActiveMenuOpt(this)">
+                    <div class="engine-menu-option-left">
+                        <div class="engine-opt-icon-circle">🎯</div>
+                        <span>3. CALIBRATION</span>
+                    </div>
+                    <span class="engine-menu-arrow">&gt;</span>
                 </div>
-                <div class="engine-menu-option" onclick="engineQuitToHub()" onmouseenter="playSpookyHoverSound()">
-                    <span>4. ABORT LINK</span>
-                    <span class="engine-menu-arrow">➔</span>
+
+                <div class="engine-menu-option" id="menu-opt-4" onclick="engineQuitToHub()" onmouseenter="setActiveMenuOpt(this)">
+                    <div class="engine-menu-option-left">
+                        <div class="engine-opt-icon-circle">✕</div>
+                        <span>4. ABORT LINK</span>
+                    </div>
+                    <span class="engine-menu-arrow">&gt;</span>
                 </div>
-                <div class="engine-menu-option" onclick="triggerLobbyJumpscare()" onmouseenter="playSpookyHoverSound()">
-                    <span>5. ANOMALY TEST</span>
-                    <span class="engine-menu-arrow">➔</span>
+
+                <div class="engine-menu-option" id="menu-opt-5" onclick="triggerLobbyJumpscare()" onmouseenter="setActiveMenuOpt(this)">
+                    <div class="engine-menu-option-left">
+                        <div class="engine-opt-icon-circle">📈</div>
+                        <span>5. ANOMALY TEST</span>
+                    </div>
+                    <span class="engine-menu-arrow">&gt;</span>
                 </div>
             </div>
             
-            <div class="engine-lobby-footer">
-                NO EXIT · POWERED BY <span>ATC STUDIO</span>
-            </div>
+            <!-- Footer Bar -->
+            <footer class="engine-lobby-footer">
+                <div>SYSTEM STATUS &nbsp; <span class="red-accent" style="animation: blink 1.5s infinite;">•</span> <span class="red-accent">STANDBY</span></div>
+                <div>NO EXIT - POWERED BY <span class="red-accent">ATC STUDIO</span></div>
+            </footer>
         </div>
     </div>
 
@@ -2133,6 +2222,37 @@
         let engineTypingFinished = false;
         let engineSkipLocked = false;
         let engineAutoTimeout = null;
+
+        function setActiveMenuOpt(el) {
+            document.querySelectorAll('.engine-menu-option').forEach(opt => opt.classList.remove('active-selected'));
+            if (el) {
+                el.classList.add('active-selected');
+                playSpookyHoverSound();
+            }
+        }
+
+        // Keyboard Arrow Up / Down and Enter Navigation for Lobby Menu
+        window.addEventListener('keydown', (e) => {
+            const lobbyScreen = document.getElementById('engine-lobby-screen');
+            if (lobbyScreen && lobbyScreen.classList.contains('active')) {
+                const options = Array.from(document.querySelectorAll('.engine-menu-option'));
+                let currentIndex = options.findIndex(opt => opt.classList.contains('active-selected'));
+                if (currentIndex === -1) currentIndex = 0;
+
+                if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    let nextIndex = (currentIndex + 1) % options.length;
+                    setActiveMenuOpt(options[nextIndex]);
+                } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                    e.preventDefault();
+                    let prevIndex = (currentIndex - 1 + options.length) % options.length;
+                    setActiveMenuOpt(options[prevIndex]);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (options[currentIndex]) options[currentIndex].click();
+                }
+            }
+        });
 
         function playEngineBeep(type) {
             try {
