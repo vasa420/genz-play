@@ -6768,9 +6768,19 @@
                 } else {
                     headBobTime = 0;
                 }
+
+                // Calculate dynamic stair climbing elevation when walking in staircase cell (4, 4)
+                let stairElevation = 0;
+                const gridX = Math.floor(playerPos.x);
+                const gridZ = Math.floor(playerPos.z);
+                if (gridX === 4 && gridZ === 4) {
+                    const zProgress = Math.max(0, Math.min(1, playerPos.z - 4.0));
+                    stairElevation = zProgress * 3.6; // smoothly rise 3.6m as player walks up steps
+                }
+
                 camera.position.set(
                     playerPos.x * CELL_SIZE - MAP_OFFSET,
-                    playerHeight + bobOffset,
+                    playerHeight + stairElevation + bobOffset,
                     playerPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
@@ -6800,13 +6810,28 @@
             // Staircase is positioned at grid cell (4, 4)
             if (gridX === 4 && gridZ === 4) {
                 isNearStairs = true;
-                promptEl.style.display = 'block';
-                if (activeFloor === 0) {
-                    promptEl.textContent = "[E] ASCEND TO 2ND FLOOR";
-                } else if (activeFloor === 1) {
-                    promptEl.textContent = "[E] ASCEND TO MORTUARY FLOOR";
-                } else {
-                    promptEl.textContent = "[E] RETURN TO GROUND FLOOR";
+
+                const zProgress = playerPos.z - 4.0;
+                // Auto-join next floor when physically walking to top step (W)
+                if (zProgress >= 0.90 && keysPressed.w) {
+                    autoTransitionFloor(true);
+                    return;
+                }
+                // Auto-join lower floor when physically walking to bottom step (S)
+                else if (zProgress <= 0.10 && keysPressed.s && activeFloor > 0) {
+                    autoTransitionFloor(false);
+                    return;
+                }
+
+                if (promptEl) {
+                    promptEl.style.display = 'block';
+                    if (activeFloor === 0) {
+                        promptEl.textContent = "▲ WALK UP STAIRS → 2ND FLOOR";
+                    } else if (activeFloor === 1) {
+                        promptEl.textContent = "▲ WALK UP STAIRS → MORTUARY FLOOR";
+                    } else {
+                        promptEl.textContent = "▼ WALK DOWN STAIRS → GROUND FLOOR";
+                    }
                 }
                 currentInteractiveDoor = null;
                 return;
@@ -6832,74 +6857,70 @@
 
             if (closeDoor) {
                 currentInteractiveDoor = closeDoor;
-                promptEl.style.display = 'block';
-                if (closeDoor.isOpen) {
-                    promptEl.textContent = "[E] CLOSE DOOR";
-                } else {
-                    promptEl.textContent = "[E] OPEN DOOR";
+                if (promptEl) {
+                    promptEl.style.display = 'block';
+                    if (closeDoor.isOpen) {
+                        promptEl.textContent = "[E] CLOSE DOOR";
+                    } else {
+                        promptEl.textContent = "[E] OPEN DOOR";
+                    }
                 }
             } else {
                 currentInteractiveDoor = null;
-                promptEl.style.display = 'none';
+                if (promptEl) promptEl.style.display = 'none';
             }
         }
 
-        function transitionFloor() {
+        function autoTransitionFloor(isAscending) {
+            if (isTransitioningFloor) return;
             isTransitioningFloor = true;
             isNearStairs = false;
-            document.getElementById('staircase-prompt').style.display = 'none';
-            
+
+            const promptEl = document.getElementById('staircase-prompt');
+            if (promptEl) promptEl.style.display = 'none';
+
             const fadeEl = document.getElementById('floor-transition-fade');
-            fadeEl.style.display = 'block';
-            
-            setTimeout(() => {
-                fadeEl.style.opacity = '1';
-            }, 50);
+            if (fadeEl) {
+                fadeEl.style.display = 'block';
+                setTimeout(() => { fadeEl.style.opacity = '0.9'; }, 30);
+            }
 
             playStairsSound();
 
             setTimeout(() => {
                 try {
-                    activeFloor = activeFloor === 0 ? 1 : (activeFloor === 1 ? 2 : 0);
-                    
+                    if (isAscending) {
+                        activeFloor = activeFloor === 0 ? 1 : (activeFloor === 1 ? 2 : 0);
+                        playerPos.x = 4.5;
+                        playerPos.z = 4.08; // start at bottom of stairs on new floor
+                    } else {
+                        activeFloor = activeFloor === 2 ? 1 : (activeFloor === 1 ? 0 : 2);
+                        playerPos.x = 4.5;
+                        playerPos.z = 4.92; // start at top of stairs on lower floor
+                    }
+
                     if (groundFloorGroup) groundFloorGroup.visible = (activeFloor === 0);
                     if (secondFloorGroup) secondFloorGroup.visible = (activeFloor === 1);
                     if (mortuaryFloorGroup) mortuaryFloorGroup.visible = (activeFloor === 2);
 
-                    // Relocate player just off the stairs (cell 4, 5) to avoid infinite loop
-                    playerPos.x = 4.5;
-                    playerPos.z = 5.5;
-                    
-                    mouseYaw = 0;
-                    mousePitch = 0;
-                    if (camera) {
-                        camera.rotation.y = mouseYaw;
-                        camera.rotation.x = mousePitch;
-                    }
-                    
                     updateCameraPosition();
-
-                    // Reset ghost on new floor so they don't immediately stalk you on arrival
-                    ghostPos.x = 7.5;
-                    ghostPos.z = 7.5;
-                    ghostStalking = false;
-                    ghostAlertTimer = 0;
                     updateGhostMeshPosition();
-
-                    fadeEl.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        fadeEl.style.display = 'none';
-                        isTransitioningFloor = false;
-                    }, 800);
                 } catch (err) {
-                    console.error('Floor transition error:', err);
-                    // Safety reset so controls are never permanently locked
-                    fadeEl.style.opacity = '0';
-                    fadeEl.style.display = 'none';
-                    isTransitioningFloor = false;
+                    console.error("Floor transition error:", err);
                 }
-            }, 1200);
+
+                setTimeout(() => {
+                    if (fadeEl) {
+                        fadeEl.style.opacity = '0';
+                        setTimeout(() => { fadeEl.style.display = 'none'; }, 400);
+                    }
+                    isTransitioningFloor = false;
+                }, 400);
+            }, 800);
+        }
+
+        function transitionFloor() {
+            autoTransitionFloor(true);
         }
 
         function playStairsSound() {
