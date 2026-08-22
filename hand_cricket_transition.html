@@ -3,138 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hand Cricket | Entering Arena</title>
+    <title>Hand Cricket Pro | Arena Loading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900;950&family=JetBrains+Mono:wght@400;700;800;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
+        :root {
+            --green-glow: #00ff88;
+            --blue-glow: #00d2ff;
+            --gold-glow: #ffd700;
+            --bg-dark: #030611;
+        }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #000;
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: var(--bg-dark);
+            color: #ffffff;
             font-family: 'Outfit', sans-serif;
+            overflow: hidden;
         }
 
-        #splash-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
+        /* Fullscreen Background Action Shot */
+        #bg-image-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('cricket_action_shot.jpg') center/cover no-repeat;
+            z-index: 1; filter: brightness(0.65) contrast(1.1);
+            transform: scale(1.05);
+            animation: subtleZoom 8s ease-in-out infinite alternate;
         }
 
-        #splash-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 10s cubic-bezier(0.16, 1, 0.3, 1), opacity 9.5s ease-out, filter 10s ease-out;
-            opacity: 0;
-            animation: fadeIn 1.5s forwards;
+        @keyframes subtleZoom {
+            from { transform: scale(1.05); }
+            to { transform: scale(1.12); }
         }
 
-        @keyframes fadeIn {
-            to { opacity: 1; }
+        /* Dark Overlay with Stadium Lights Blur */
+        .overlay-mask {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 6, 17, 0.65) 0%, rgba(3, 6, 17, 0.92) 100%);
+            backdrop-filter: blur(8px);
+            z-index: 2;
         }
 
-        .zoom-out {
-            transform: scale(10);
-            opacity: 0;
-            filter: blur(50px);
+        /* Center Loading Container */
+        .loading-container {
+            position: relative; z-index: 10;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px; text-align: center;
         }
 
-        /* Progress Bar */
-        #loader-container {
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            z-index: 20;
-            backdrop-filter: blur(5px);
+        .loading-card {
+            background: rgba(8, 14, 28, 0.88);
+            border: 2px solid transparent;
+            background-image: linear-gradient(rgba(8, 14, 28, 0.88), rgba(8, 14, 28, 0.88)), linear-gradient(135deg, #00d2ff 0%, #00ff88 50%, #9933ff 100%);
+            background-origin: border-box; background-clip: padding-box, border-box;
+            border-radius: 28px; padding: 45px 36px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 0 60px rgba(0, 255, 136, 0.25), 0 25px 60px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; align-items: center; gap: 24px;
+            animation: cardPop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        #loader-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #39FF14, #00FFFF);
-            border-radius: 10px;
-            box-shadow: 0 0 15px #39FF14;
-            transition: width 10s linear;
+        @keyframes cardPop {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        #status-text {
-            position: absolute;
-            bottom: 65px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-            z-index: 20;
+        /* Glowing Spinner Ring */
+        .spinner-outer {
+            position: relative;
+            width: 110px; height: 110px;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .fade-overlay {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 100;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 1s;
+        .spinner-ring {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.08);
+            border-top: 4px solid var(--green-glow);
+            border-right: 4px solid var(--blue-glow);
+            animation: spin 1.2s linear infinite;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
         }
 
-        .active-fade {
-            opacity: 1;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-icon {
+            font-size: 42px;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.6));
+            animation: pulseIcon 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseIcon {
+            from { transform: scale(0.95); }
+            to { transform: scale(1.1); }
+        }
+
+        /* Header Title */
+        .loading-title-group { display: flex; flex-direction: column; gap: 4px; }
+        
+        .loading-title {
+            font-size: 26px; font-weight: 950; font-style: italic; letter-spacing: 2px;
+            color: #ffffff; text-transform: uppercase;
+        }
+
+        .loading-title span {
+            background: linear-gradient(90deg, #00d2ff 0%, #00ff88 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .loading-subtitle {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;
+            letter-spacing: 3px; color: #64748b; text-transform: uppercase;
+        }
+
+        /* Progress Bar Shell */
+        .progress-shell {
+            width: 100%; display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .progress-bar-bg {
+            width: 100%; height: 12px;
+            background: rgba(3, 6, 16, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; overflow: hidden; padding: 2px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+        }
+
+        .progress-bar-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #00d2ff 0%, #00ff88 50%, #ffd700 100%);
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+            transition: width 0.1s linear;
+        }
+
+        .progress-text-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
+        }
+
+        .status-msg { color: var(--blue-glow); letter-spacing: 1px; }
+        .percent-val { color: var(--gold-glow); font-size: 14px; letter-spacing: 1px; }
+
+        .footer-tag {
+            font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800;
+            color: #64748b; letter-spacing: 2px; text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <div id="splash-container">
-        <img id="splash-image" src="hand_cricket_splash.png" alt="Hand Cricket Splash">
+    <!-- Background Action Shot Layer -->
+    <div id="bg-image-layer"></div>
+    <div class="overlay-mask"></div>
+
+    <!-- Center Loading Container -->
+    <div class="loading-container">
+        <div class="loading-card">
+            
+            <!-- Glowing Animated Spinner -->
+            <div class="spinner-outer">
+                <div class="spinner-ring"></div>
+                <div class="spinner-icon">🏏</div>
+            </div>
+
+            <div class="loading-title-group">
+                <h1 class="loading-title">HAND CRICKET <span>PRO</span></h1>
+                <span class="loading-subtitle">ARENA MATCH INITIALIZATION</span>
+            </div>
+
+            <!-- Progress Bar Shell -->
+            <div class="progress-shell">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text-row">
+                    <span class="status-msg" id="status-msg">INITIALIZING ARENA SERVERS...</span>
+                    <span class="percent-val" id="percent-val">0%</span>
+                </div>
+            </div>
+
+            <div class="footer-tag">
+                ⚡ POWERED BY VETRI STUDIOS GAME ENGINE
+            </div>
+
+        </div>
     </div>
 
-    <div id="status-text">PREPARING ARENA...</div>
-    <div id="loader-container">
-        <div id="loader-fill"></div>
-    </div>
-
-    <div class="fade-overlay" id="fade"></div>
+    <!-- Gameplay Audio -->
+    <audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
 
     <script>
-        window.onload = () => {
-            const fill = document.getElementById('loader-fill');
-            const img = document.getElementById('splash-image');
-            const fade = document.getElementById('fade');
-            
-            // Start progress bar
-            setTimeout(() => {
-                fill.style.width = '100%';
-            }, 100);
+        let progress = 0;
+        const fillEl = document.getElementById('progress-fill');
+        const percentEl = document.getElementById('percent-val');
+        const statusEl = document.getElementById('status-msg');
 
-            // Trigger animation and redirect after 10 seconds
-            setTimeout(() => {
-                // Zoom animation
-                img.classList.add('zoom-out');
-                
-                setTimeout(() => {
-                    // Redirect to login page
-                    window.location.href = 'hand_cricket_login.html';
-                }, 9500); // 9.5 seconds after zoom starts (very slow motion)
-            }, 10000); // 10 seconds wait as requested
+        const statusMessages = [
+            { threshold: 0, text: 'INITIALIZING ARENA SERVERS...' },
+            { threshold: 25, text: 'PREPARING STADIUM & MATCH PITCH...' },
+            { threshold: 60, text: 'LOADING PLAYER PROFILES & SQUAD...' },
+            { threshold: 90, text: 'MATCH READY! ENTERING ARENA...' }
+        ];
+
+        function startLoading() {
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 4) + 2; // Increments of 2-5%
+                if (progress > 100) progress = 100;
+
+                fillEl.style.width = progress + '%';
+                percentEl.innerText = progress + '%';
+
+                // Update status message
+                for (let i = statusMessages.length - 1; i >= 0; i--) {
+                    if (progress >= statusMessages[i].threshold) {
+                        statusEl.innerText = statusMessages[i].text;
+                        break;
+                    }
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        // Smooth fade transition to game
+                        document.body.style.transition = 'opacity 0.6s ease';
+                        document.body.style.opacity = '0';
+                        setTimeout(() => {
+                            window.location.href = 'hand_cricket.html';
+                        }, 600);
+                    }, 400);
+                }
+            }, 80);
+        }
+
+        window.onload = () => {
+            startLoading();
         };
     </script>
+
 </body>
 </html>
