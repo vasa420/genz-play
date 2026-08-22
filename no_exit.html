@@ -2715,7 +2715,7 @@
         function engineStartGame() {
             playEngineBeep('transition');
             engineTransition(() => {
-                engineSetState('story1');
+                engineSetState('loading');
             });
         }
 
@@ -2987,8 +2987,8 @@
                 particlesIntervals.push(smokeInterval);
             }
 
-            const totalDuration = 10000; // 10 seconds compulsory
-            const updateInterval = 100; // update every 100ms
+            const totalDuration = 1500; // 1.5 seconds fast loading
+            const updateInterval = 50; // update every 50ms
             const increments = 100 / (totalDuration / updateInterval); // percentage increment per tick
 
             const statusMessages = [
@@ -3021,14 +3021,29 @@
 
                     loadingText.textContent = `SYNC COMPLETE ... 100%`;
 
-                    // Transition directly to instruction screen
+                    // Hide loading screen and all engine overlays
                     const loadingScreen = document.getElementById('loading-screen');
                     if (loadingScreen) {
-                        loadingScreen.style.display = 'none';
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 300);
                     }
 
-                    showInstructionScreen();
+                    const lobbyScreen = document.getElementById('engine-lobby-screen');
+                    if (lobbyScreen) {
+                        lobbyScreen.classList.remove('active');
+                        lobbyScreen.style.display = 'none';
+                    }
+
                     hasGameStarted = true;
+                    isLobbyScreenActive = false;
+                    stopInteractiveDripLoop();
+
+                    // Instantly launch 3D Survival Horror Gameplay
+                    setTimeout(() => {
+                        startGamePlay();
+                    }, 350);
                 } else {
                     loadingText.textContent = `${networkMsg} ... ${Math.floor(progress)}%`;
                 }
