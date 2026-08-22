@@ -3347,22 +3347,54 @@
         }
 
         function createFloorPlanesWithStairHole(group, texture, isCeiling = false, yPos = 0) {
-            const tileMat = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.75, side: THREE.DoubleSide });
-            for (let r = 0; r < MAP_SIZE; r++) {
-                for (let c = 0; c < MAP_SIZE; c++) {
-                    if (r === 4 && c === 4) continue; // Keep stairwell cell (4, 4) open!
-                    
-                    const tileGeo = new THREE.PlaneGeometry(CELL_SIZE, CELL_SIZE);
-                    const tileMesh = new THREE.Mesh(tileGeo, tileMat);
-                    tileMesh.rotation.x = isCeiling ? Math.PI / 2 : -Math.PI / 2;
-                    tileMesh.position.set(
-                        c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2,
-                        yPos,
-                        r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2
-                    );
-                    group.add(tileMesh);
-                }
+            const totalSize = MAP_SIZE * CELL_SIZE;
+            const shape = new THREE.Shape();
+            
+            shape.moveTo(0, 0);
+            shape.lineTo(totalSize, 0);
+            shape.lineTo(totalSize, totalSize);
+            shape.lineTo(0, totalSize);
+            shape.closePath();
+
+            const holeX1 = 4 * CELL_SIZE;
+            const holeZ1 = 4 * CELL_SIZE;
+            const holeX2 = 5 * CELL_SIZE;
+            const holeZ2 = 5 * CELL_SIZE;
+
+            const hole = new THREE.Path();
+            hole.moveTo(holeX1, holeZ1);
+            hole.lineTo(holeX2, holeZ1);
+            hole.lineTo(holeX2, holeZ2);
+            hole.lineTo(holeX1, holeZ2);
+            hole.closePath();
+
+            shape.holes.push(hole);
+
+            const geo = new THREE.ShapeGeometry(shape);
+            
+            const pos = geo.attributes.position;
+            const uvs = new Float32Array(pos.count * 2);
+            for (let i = 0; i < pos.count; i++) {
+                uvs[i * 2] = pos.getX(i) / CELL_SIZE;
+                uvs[i * 2 + 1] = pos.getY(i) / CELL_SIZE;
             }
+            geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
+            const mat = new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.75,
+                side: THREE.DoubleSide
+            });
+
+            const mesh = new THREE.Mesh(geo, mat);
+            if (isCeiling) {
+                mesh.rotation.x = Math.PI / 2;
+                mesh.position.set(-MAP_OFFSET, yPos, -MAP_OFFSET);
+            } else {
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.position.set(-MAP_OFFSET, yPos, MAP_OFFSET);
+            }
+            group.add(mesh);
         }
 
         function initHorror3D() {
@@ -6753,7 +6785,8 @@
             }
         }
 
-        let playerBaseY = 0.0;
+        let targetPlayerBaseY = 0.0;
+        let smoothPlayerBaseY = 0.0;
 
         function updateCameraPosition() {
             if (camera) {
@@ -6772,22 +6805,25 @@
                     // Continuous 3D step elevation calculation in stairwell cell (4, 4)
                     const zProgress = Math.max(0, Math.min(1, playerPos.z - 4.0));
                     if (activeFloor === 0) {
-                        playerBaseY = zProgress * 4.0;
+                        targetPlayerBaseY = zProgress * 4.0;
                     } else if (activeFloor === 1) {
-                        playerBaseY = 4.0 + zProgress * 4.0;
+                        targetPlayerBaseY = 4.0 + zProgress * 4.0;
                     } else {
-                        playerBaseY = 8.0 + (1 - zProgress) * 4.0;
+                        targetPlayerBaseY = 8.0 + (1 - zProgress) * 4.0;
                     }
                 } else {
                     // Lock active floor height when stepping out of stairwell
-                    if (activeFloor === 0) playerBaseY = 0.0;
-                    else if (activeFloor === 1) playerBaseY = 4.0;
-                    else if (activeFloor === 2) playerBaseY = 8.0;
+                    if (activeFloor === 0) targetPlayerBaseY = 0.0;
+                    else if (activeFloor === 1) targetPlayerBaseY = 4.0;
+                    else if (activeFloor === 2) targetPlayerBaseY = 8.0;
                 }
+
+                // Smooth camera height lerping for stutter-free 60fps movement
+                smoothPlayerBaseY += (targetPlayerBaseY - smoothPlayerBaseY) * 0.25;
 
                 camera.position.set(
                     playerPos.x * CELL_SIZE - MAP_OFFSET,
-                    playerHeight + playerBaseY + bobOffset,
+                    playerHeight + smoothPlayerBaseY + bobOffset,
                     playerPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
