@@ -2750,47 +2750,11 @@
             checkHeadphoneStatus();
         }
 
+        let isHeadphonePluggedIn = true;
+
         async function checkHeadphoneStatus() {
-            try {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-                    isHeadphonePluggedIn = true;
-                    updateHeadphonesUI();
-                    return true;
-                }
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const outputs = devices.filter(d => d.kind === 'audiooutput');
-                const inputs = devices.filter(d => d.kind === 'audioinput');
-
-                let hasHeadphoneOutput = outputs.some(d => {
-                    const label = d.label.toLowerCase();
-                    return label.includes('headphone') || 
-                           label.includes('headset') || 
-                           label.includes('earphone') || 
-                           label.includes('buds') || 
-                           label.includes('hands-free') || 
-                           label.includes('bluetooth') ||
-                           label.includes('audio output') ||
-                           label.includes('realtek') ||
-                           label.includes('jack');
-                });
-
-                let hasHeadphoneInput = inputs.some(d => {
-                    const label = d.label.toLowerCase();
-                    return label.includes('headset') || 
-                           label.includes('headphone') || 
-                           label.includes('earphone') || 
-                           label.includes('bluetooth');
-                });
-
-                isHeadphonePluggedIn = hasHeadphoneOutput || hasHeadphoneInput;
-                updateHeadphonesUI();
-                return isHeadphonePluggedIn;
-            } catch (err) {
-                console.error("Error in checkHeadphoneStatus:", err);
-                isHeadphonePluggedIn = false;
-                updateHeadphonesUI();
-                return false;
-            }
+            isHeadphonePluggedIn = true;
+            return true;
         }
 
         function updateHeadphonesUI() {
@@ -3051,13 +3015,13 @@
 
                     loadingText.textContent = `SYNC COMPLETE ... 100%`;
 
-                    // Transition to headphones check screen
+                    // Transition directly to instruction screen
                     const loadingScreen = document.getElementById('loading-screen');
                     if (loadingScreen) {
                         loadingScreen.style.display = 'none';
                     }
 
-                    showHeadphonesScreen();
+                    showInstructionScreen();
                     hasGameStarted = true;
                 } else {
                     loadingText.textContent = `${networkMsg} ... ${Math.floor(progress)}%`;
@@ -3118,19 +3082,9 @@
             }
         }
 
-        // Show the headphones screen
+        // Show the headphones screen (bypassed)
         function showHeadphonesScreen() {
-            ambientAudio.pause();
-
-            const headphonesScreen = document.getElementById('headphones-screen');
-            if (headphonesScreen) {
-                headphonesScreen.style.display = 'flex';
-                headphonesScreen.offsetHeight;
-                headphonesScreen.style.opacity = 1;
-            }
-            isHeadphoneScreenActive = true;
-            setupMicrophone();
-            startHeadphoneMonitor();
+            showInstructionScreen();
         }
 
         // Triggers transition from headphones screen to Instruction Screen
