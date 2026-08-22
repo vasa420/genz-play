@@ -47,7 +47,7 @@
         }
 
         .nav-logo-group {
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: center; gap: 12px; cursor: pointer;
         }
 
         .v-logo-icon {
@@ -64,13 +64,18 @@
         }
 
         .nav-right-group {
-            display: flex; align-items: center; gap: 20px;
+            display: flex; align-items: center; gap: 18px; position: relative;
         }
 
         .status-pill {
             display: flex; align-items: center; gap: 8px;
             font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;
-            color: #94a3b8; letter-spacing: 1.5px;
+            color: #94a3b8; letter-spacing: 1.5px; cursor: pointer;
+            padding: 6px 12px; border-radius: 20px; transition: all 0.2s ease;
+            background: rgba(255,255,255,0.02); border: 1px solid transparent;
+        }
+        .status-pill:hover {
+            background: rgba(0, 255, 136, 0.08); border-color: rgba(0, 255, 136, 0.3); color: #fff;
         }
 
         .status-dot {
@@ -82,33 +87,101 @@
 
         .lang-selector {
             font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;
-            color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 4px;
+            color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 8px; background: rgba(255,255,255,0.02);
+            border: 1px solid transparent; transition: all 0.2s ease;
+        }
+        .lang-selector:hover {
+            background: rgba(0, 210, 255, 0.08); border-color: rgba(0, 210, 255, 0.3); color: #fff;
         }
 
         .clock-box {
             background: rgba(3, 6, 16, 0.8); border: 1px solid var(--card-border);
             padding: 6px 14px; border-radius: 8px;
             font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
-            color: var(--gold-glow); letter-spacing: 1px;
+            color: var(--gold-glow); letter-spacing: 1px; cursor: pointer;
+            transition: all 0.2s ease; box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+        }
+        .clock-box:hover {
+            border-color: var(--gold-glow); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); transform: scale(1.02);
         }
 
         .user-profile-btn {
             display: flex; align-items: center; gap: 10px; cursor: pointer;
+            padding: 4px 10px 4px 4px; border-radius: 20px;
+            background: rgba(255,255,255,0.02); border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .user-profile-btn:hover {
+            background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2);
         }
 
         .avatar-circle {
-            width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 900; color: #fff;
+            width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0088ff, #00d2ff);
+            border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 900; color: #fff; box-shadow: 0 0 10px rgba(0, 136, 255, 0.4);
         }
 
         .user-meta { display: flex; flex-direction: column; text-align: left; }
         .user-meta-name { font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 1px; }
-        .user-meta-role { font-size: 9px; font-weight: 800; color: var(--text-sub); letter-spacing: 1px; }
+        .user-meta-role { font-size: 9px; font-weight: 800; color: var(--cyan-glow); letter-spacing: 1px; }
 
         .menu-dots-btn {
-            background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 4px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--card-border);
+            color: #94a3b8; font-size: 16px; cursor: pointer; width: 34px; height: 34px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
         }
+        .menu-dots-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+        /* Dropdowns Floating Styling */
+        .dropdown-menu-box {
+            position: absolute; top: 52px;
+            background: rgba(8, 14, 30, 0.95); border: 1.5px solid var(--card-border);
+            border-radius: 16px; padding: 10px; min-width: 200px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.15);
+            backdrop-filter: blur(20px); z-index: 500;
+            display: none; flex-direction: column; gap: 4px; opacity: 0;
+            transform: translateY(-8px); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dropdown-menu-box.open { display: flex; opacity: 1; transform: translateY(0); }
+
+        .dropdown-item {
+            padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 800;
+            color: #94a3b8; display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: 0.2s; font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .dropdown-item:hover { background: rgba(0, 210, 255, 0.1); color: #fff; }
+        .dropdown-item.active { color: var(--cyan-glow); background: rgba(0, 210, 255, 0.12); }
+
+        /* Modal Popups Overlay Styling */
+        .modal-overlay-shell {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 6, 17, 0.85); backdrop-filter: blur(16px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease; padding: 20px;
+        }
+        .modal-overlay-shell.open { display: flex; opacity: 1; }
+
+        .modal-card-box {
+            background: rgba(8, 14, 30, 0.96); border: 2px solid transparent;
+            background-image: linear-gradient(rgba(8, 14, 30, 0.96), rgba(8, 14, 30, 0.96)), linear-gradient(135deg, #00d2ff, #9933ff);
+            background-origin: border-box; background-clip: padding-box, border-box;
+            border-radius: 28px; padding: 32px; width: 100%; max-width: 440px; text-align: center;
+            box-shadow: 0 0 60px rgba(0, 210, 255, 0.25), 0 25px 60px rgba(0,0,0,0.8);
+            position: relative; overflow: hidden;
+            transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay-shell.open .modal-card-box { transform: scale(1); }
+
+        .modal-close-btn {
+            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; width: 32px; height: 32px;
+            border-radius: 50%; font-size: 14px; font-weight: 900; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .modal-close-btn:hover { color: #fff; background: rgba(255,51,85,0.2); border-color: var(--red-glow); }
 
         /* Main Scrollable Shell */
         .main-shell {
@@ -290,7 +363,7 @@
 
     <!-- Top Navbar Header -->
     <header class="top-navbar">
-        <div class="nav-logo-group">
+        <div class="nav-logo-group" onclick="location.reload()">
             <div class="v-logo-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                     <path d="M4 4L12 20L20 4" stroke="#ff3e3e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -301,27 +374,165 @@
         </div>
 
         <div class="nav-right-group">
-            <div class="status-pill">
+            <!-- 1. ONLINE STATUS BUTTON -->
+            <div class="status-pill" onclick="openServerModal(event)">
                 <span class="status-dot"></span>
                 <span>ONLINE</span>
             </div>
-            <div class="lang-selector">
-                <span>EN</span>
+
+            <!-- 2. LANGUAGE SELECTOR BUTTON -->
+            <div class="lang-selector" onclick="toggleLangDropdown(event)">
+                <span id="current-lang-code">EN</span>
                 <span style="font-size:10px;">˅</span>
             </div>
-            <div class="clock-box" id="live-clock">
+
+            <!-- 3. CLOCK BOX BUTTON -->
+            <div class="clock-box" id="live-clock" onclick="openTimeModal(event)">
                 12:45:24 PM
             </div>
-            <div class="user-profile-btn">
-                <div class="avatar-circle">V</div>
+
+            <!-- 4. USER PROFILE BUTTON -->
+            <div class="user-profile-btn" onclick="openProfileModal(event)">
+                <div class="avatar-circle" id="nav-avatar">V</div>
                 <div class="user-meta">
-                    <span class="user-meta-name">VETRI</span>
+                    <span class="user-meta-name" id="nav-user-name">VETRI</span>
                     <span class="user-meta-role">SPECIALZ</span>
                 </div>
             </div>
-            <button class="menu-dots-btn">⋮</button>
+
+            <!-- 5. THREE DOTS MENU BUTTON -->
+            <button class="menu-dots-btn" onclick="toggleQuickMenu(event)">⋮</button>
+
+            <!-- DROPDOWN 1: LANGUAGE SELECTOR -->
+            <div class="dropdown-menu-box" id="lang-dropdown" style="right: 180px;">
+                <div class="dropdown-item active" onclick="selectLang('EN', 'English (US)')">🇺🇸 English (EN)</div>
+                <div class="dropdown-item" onclick="selectLang('TA', 'Tamil (தமிழ்)')">🇮🇳 Tamil (TA)</div>
+                <div class="dropdown-item" onclick="selectLang('HI', 'Hindi (हिंदी)')">🇮🇳 Hindi (HI)</div>
+                <div class="dropdown-item" onclick="selectLang('ES', 'Spanish (Español)')">🇪🇸 Spanish (ES)</div>
+                <div class="dropdown-item" onclick="selectLang('JA', 'Japanese (日本語)')">🇯🇵 Japanese (JA)</div>
+            </div>
+
+            <!-- DROPDOWN 2: THREE DOTS QUICK MENU -->
+            <div class="dropdown-menu-box" id="quick-menu-dropdown" style="right: 0px; top: 52px; min-width: 220px;">
+                <div class="dropdown-item" onclick="toggleSoundFx()"><span>🔊 Sound Effects</span> <span id="sfx-toggle-status">ON</span></div>
+                <div class="dropdown-item" onclick="toggleBgMusic()"><span>🎵 Music Track</span> <span id="bgm-toggle-status">ON</span></div>
+                <div class="dropdown-item" onclick="toggleFullscreen()"><span>🖥️ Fullscreen</span> <span>[F11]</span></div>
+                <div class="dropdown-item" onclick="openProfileModal(event)"><span>👤 View Profile</span> <span>→</span></div>
+                <div class="dropdown-item" onclick="alert('VETRI ARCADE SYSTEM v2.4\nAll servers operational.')"><span>ℹ️ System Info</span> <span>v2.4</span></div>
+            </div>
         </div>
     </header>
+
+    <!-- MODAL 1: SERVER STATUS OVERLAY -->
+    <div class="modal-overlay-shell" id="server-status-modal" onclick="closeAllModalsOnBg(event)">
+        <div class="modal-card-box">
+            <button class="modal-close-btn" onclick="closeModal('server-status-modal')">✕</button>
+            
+            <div style="font-size: 36px; margin-bottom: 12px;">📡</div>
+            <h2 style="font-size: 22px; font-weight: 950; color: #fff; margin-bottom: 4px;">ARCADE SYSTEM STATUS</h2>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cyan-glow); font-weight: 800; letter-spacing: 2px; margin-bottom: 20px;">
+                SERVER INFRASTRUCTURE ONLINE
+            </p>
+
+            <div style="background: rgba(3, 6, 16, 0.6); border: 1.5px solid rgba(0, 210, 255, 0.2); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; text-align: left;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color:#64748b;">STATUS</span>
+                    <span style="color:var(--green-glow); font-weight: 900;">🟢 100% OPERATIONAL</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color:#64748b;">LATENCY / PING</span>
+                    <span style="color:#fff; font-weight: 900;">24 ms (OPTIMAL)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color:#64748b;">ACTIVE PLAYERS</span>
+                    <span style="color:var(--gold-glow); font-weight: 900;">1,428 ONLINE</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color:#64748b;">REGION</span>
+                    <span style="color:#fff; font-weight: 900;">ASIA (CHENNAI)</span>
+                </div>
+            </div>
+
+            <button onclick="closeModal('server-status-modal')" style="width: 100%; background: linear-gradient(135deg, #00d2ff, #0066ff); border: none; color: #fff; padding: 14px; border-radius: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 950; letter-spacing: 2px; cursor: pointer;">
+                CLOSE STATUS
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: TIMEZONE & SESSION OVERLAY -->
+    <div class="modal-overlay-shell" id="time-session-modal" onclick="closeAllModalsOnBg(event)">
+        <div class="modal-card-box">
+            <button class="modal-close-btn" onclick="closeModal('time-session-modal')">✕</button>
+            
+            <div style="font-size: 36px; margin-bottom: 12px;">🕒</div>
+            <h2 style="font-size: 22px; font-weight: 950; color: #fff; margin-bottom: 4px;">LOCAL TIME & SESSION</h2>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold-glow); font-weight: 800; letter-spacing: 2px; margin-bottom: 20px;">
+                SYNCHRONIZED SYSTEM CLOCK
+            </p>
+
+            <div style="background: rgba(3, 6, 16, 0.6); border: 1.5px solid rgba(255, 215, 0, 0.25); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace;">
+                <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 800; letter-spacing: 2px;">CURRENT LOCAL TIME</div>
+                    <div style="font-size: 28px; font-weight: 950; color: var(--gold-glow);" id="modal-clock-val">12:45:24 PM</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+                    <span style="color:#64748b;">TIMEZONE</span>
+                    <span style="color:#fff; font-weight: 900;">IST (GMT +5:30)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color:#64748b;">SESSION DURATION</span>
+                    <span style="color:var(--cyan-glow); font-weight: 900;" id="session-time-val">00h 42m</span>
+                </div>
+            </div>
+
+            <button onclick="closeModal('time-session-modal')" style="width: 100%; background: linear-gradient(135deg, #ffd700, #ff9900); border: none; color: #000; padding: 14px; border-radius: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 950; letter-spacing: 2px; cursor: pointer;">
+                CLOSE CLOCK
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: USER PROFILE & STATS OVERLAY -->
+    <div class="modal-overlay-shell" id="user-profile-modal" onclick="closeAllModalsOnBg(event)">
+        <div class="modal-card-box">
+            <button class="modal-close-btn" onclick="closeModal('user-profile-modal')">✕</button>
+            
+            <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: linear-gradient(135deg, #0088ff, #00d2ff); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: #fff; box-shadow: 0 0 25px rgba(0, 210, 255, 0.5);">
+                V
+            </div>
+
+            <h2 style="font-size: 24px; font-weight: 950; color: #fff; margin-bottom: 2px;" id="profile-modal-name">VETRI</h2>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cyan-glow); font-weight: 800; letter-spacing: 2px; margin-bottom: 16px;">
+                SPECIALZ / GRANDMASTER PLAYER
+            </p>
+
+            <!-- Level Progress Bar -->
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-bottom: 6px;">
+                    <span style="color:#94a3b8; font-weight:800;">LEVEL 24</span>
+                    <span style="color:var(--gold-glow); font-weight:900;">8,400 / 10,000 XP</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+                    <div style="width: 84%; height: 100%; background: linear-gradient(90deg, #00d2ff, #9933ff); border-radius: 4px;"></div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 12px;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 800;">TOTAL GAMES</div>
+                    <div style="font-size: 20px; font-weight: 950; color: #fff;">142</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 12px;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 800;">WIN RATE</div>
+                    <div style="font-size: 20px; font-weight: 950; color: var(--green-glow);">69%</div>
+                </div>
+            </div>
+
+            <button onclick="promptEditNickname()" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.15); color: #fff; padding: 14px; border-radius: 14px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900; letter-spacing: 2px; cursor: pointer;">
+                ✏️ EDIT PROFILE NICKNAME
+            </button>
+        </div>
+    </div>
 
     <!-- Main Experience Shell -->
     <main class="main-shell">
@@ -453,7 +664,126 @@
     </main>
 
     <script>
+        // Sound effects
+        function playHeaderClickSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                gain.gain.setValueAtTime(0.04, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e){}
+        }
+
+        // Header Interactive Modals & Dropdowns Logic
+        function closeAllHeaderElements() {
+            document.querySelectorAll('.dropdown-menu-box').forEach(d => d.classList.remove('open'));
+        }
+
+        function toggleLangDropdown(e) {
+            e.stopPropagation();
+            playHeaderClickSound();
+            const drop = document.getElementById('lang-dropdown');
+            const isOpen = drop.classList.contains('open');
+            closeAllHeaderElements();
+            if (!isOpen) drop.classList.add('open');
+        }
+
+        function toggleQuickMenu(e) {
+            e.stopPropagation();
+            playHeaderClickSound();
+            const drop = document.getElementById('quick-menu-dropdown');
+            const isOpen = drop.classList.contains('open');
+            closeAllHeaderElements();
+            if (!isOpen) drop.classList.add('open');
+        }
+
+        function selectLang(code, name) {
+            document.getElementById('current-lang-code').innerText = code;
+            closeAllHeaderElements();
+            playHeaderClickSound();
+        }
+
+        function openServerModal(e) {
+            if (e) e.stopPropagation();
+            closeAllHeaderElements();
+            playHeaderClickSound();
+            const modal = document.getElementById('server-status-modal');
+            modal.classList.add('open');
+        }
+
+        function openTimeModal(e) {
+            if (e) e.stopPropagation();
+            closeAllHeaderElements();
+            playHeaderClickSound();
+            const modal = document.getElementById('time-session-modal');
+            modal.classList.add('open');
+        }
+
+        function openProfileModal(e) {
+            if (e) e.stopPropagation();
+            closeAllHeaderElements();
+            playHeaderClickSound();
+            const modal = document.getElementById('user-profile-modal');
+            modal.classList.add('open');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('open');
+        }
+
+        function closeAllModalsOnBg(e) {
+            if (e.target.classList.contains('modal-overlay-shell')) {
+                document.querySelectorAll('.modal-overlay-shell').forEach(m => m.classList.remove('open'));
+            }
+        }
+
+        window.onclick = function(e) {
+            closeAllHeaderElements();
+        };
+
+        function promptEditNickname() {
+            const newName = prompt('Enter your new arcade username:', document.getElementById('nav-user-name').innerText);
+            if (newName && newName.trim()) {
+                const clean = newName.trim().toUpperCase();
+                document.getElementById('nav-user-name').innerText = clean;
+                document.getElementById('profile-modal-name').innerText = clean;
+                document.getElementById('nav-avatar').innerText = clean[0];
+                localStorage.setItem('playerName', clean);
+            }
+        }
+
+        let isSfxOn = true;
+        function toggleSoundFx() {
+            isSfxOn = !isSfxOn;
+            document.getElementById('sfx-toggle-status').innerText = isSfxOn ? 'ON' : 'OFF';
+            playHeaderClickSound();
+        }
+
+        let isBgmOn = true;
+        function toggleBgMusic() {
+            isBgmOn = !isBgmOn;
+            document.getElementById('bgm-toggle-status').innerText = isBgmOn ? 'ON' : 'OFF';
+            playHeaderClickSound();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e=>{});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
         function launchGame(url) {
+            playHeaderClickSound();
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -482,6 +812,8 @@
             hrs = hrs ? hrs : 12;
             const timeStr = `${String(hrs).padStart(2, '0')}:${mins}:${secs} ${ampm}`;
             document.getElementById('live-clock').innerText = timeStr;
+            const modalClock = document.getElementById('modal-clock-val');
+            if (modalClock) modalClock.innerText = timeStr;
         }
         setInterval(updateClock, 1000);
         updateClock();
