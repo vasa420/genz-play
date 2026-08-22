@@ -3410,6 +3410,7 @@
             // 3. Build Mesh Groups for ground floor, second floor and mortuary floor
             groundFloorGroup = new THREE.Group();
             secondFloorGroup = new THREE.Group();
+            secondFloorGroup.position.y = 4.0; // Place directly on top of Ground Floor
             scene.add(groundFloorGroup);
             scene.add(secondFloorGroup);
             
@@ -3440,20 +3441,9 @@
                 }
             }
 
-            // Ground Floor floor & ceiling planes
-            const floorGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
-            const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.7 });
-            const floorMesh = new THREE.Mesh(floorGeo, floorMat);
-            floorMesh.rotation.x = -Math.PI / 2;
-            floorMesh.position.set(0, 0, 0);
-            groundFloorGroup.add(floorMesh);
-
-            const ceilGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
-            const ceilMat = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 0.9 });
-            const ceilMesh = new THREE.Mesh(ceilGeo, ceilMat);
-            ceilMesh.rotation.x = Math.PI / 2;
-            ceilMesh.position.set(0, 4, 0);
-            groundFloorGroup.add(ceilMesh);
+            // Ground Floor floor & ceiling planes (with open stairwell at cell 4, 4)
+            createFloorPlanesWithStairHole(groundFloorGroup, floorTexture, false, 0);
+            createFloorPlanesWithStairHole(groundFloorGroup, ceilingTexture, true, 4);
 
             // Second Floor Walls
             for (let r = 0; r < MAP_SIZE; r++) {
@@ -3479,16 +3469,9 @@
                 }
             }
 
-            // Second Floor Floor & Ceiling planes
-            const floorMesh2nd = new THREE.Mesh(floorGeo, floorMat);
-            floorMesh2nd.rotation.x = -Math.PI / 2;
-            floorMesh2nd.position.set(0, 0, 0);
-            secondFloorGroup.add(floorMesh2nd);
-
-            const ceilMesh2nd = new THREE.Mesh(ceilGeo, ceilMat);
-            ceilMesh2nd.rotation.x = Math.PI / 2;
-            ceilMesh2nd.position.set(0, 4, 0);
-            secondFloorGroup.add(ceilMesh2nd);
+            // Second Floor Floor & Ceiling planes (with open stairwell at cell 4, 4)
+            createFloorPlanesWithStairHole(secondFloorGroup, floorTexture, false, 0);
+            createFloorPlanesWithStairHole(secondFloorGroup, ceilingTexture, true, 4);
 
             // Add creepy pictures on the walls
             addWallPaintings();
@@ -5374,6 +5357,7 @@
 
         function buildMortuaryFloor() {
             mortuaryFloorGroup = new THREE.Group();
+            mortuaryFloorGroup.position.y = 8.0; // Place directly on top of Second Floor
             scene.add(mortuaryFloorGroup);
             
             const wallTexture = createProceduralMorgueWallTexture();
@@ -5428,19 +5412,10 @@
                 }
             }
             
-            const floorGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
-            const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.5 });
-            const floorMesh = new THREE.Mesh(floorGeo, floorMat);
-            floorMesh.rotation.x = -Math.PI / 2;
-            floorMesh.position.set(0, 0, 0);
-            mortuaryFloorGroup.add(floorMesh);
-            
-            const ceilGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
-            const ceilMat = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 0.9 });
-            const ceilMesh = new THREE.Mesh(ceilGeo, ceilMat);
-            ceilMesh.rotation.x = Math.PI / 2;
-            ceilMesh.position.set(0, 4, 0);
-            mortuaryFloorGroup.add(ceilMesh);
+            // Mortuary Floor floor & ceiling planes (with open stairwell at cell 4, 4)
+            createFloorPlanesWithStairHole(mortuaryFloorGroup, floorTexture, false, 0);
+            createFloorPlanesWithStairHole(mortuaryFloorGroup, ceilingTexture, true, 4);
+        }
             
             const tablePositions = [
                 { cx: 2, cz: 1, rotY: 0 },
@@ -6759,6 +6734,8 @@
             }
         }
 
+        let playerBaseY = 0.0;
+
         function updateCameraPosition() {
             if (camera) {
                 let bobOffset = 0;
@@ -6769,18 +6746,29 @@
                     headBobTime = 0;
                 }
 
-                // Calculate dynamic stair climbing elevation when walking in staircase cell (4, 4)
-                let stairElevation = 0;
                 const gridX = Math.floor(playerPos.x);
                 const gridZ = Math.floor(playerPos.z);
+                
                 if (gridX === 4 && gridZ === 4) {
+                    // Continuous 3D step elevation calculation in stairwell cell (4, 4)
                     const zProgress = Math.max(0, Math.min(1, playerPos.z - 4.0));
-                    stairElevation = zProgress * 3.6; // smoothly rise 3.6m as player walks up steps
+                    if (activeFloor === 0) {
+                        playerBaseY = zProgress * 4.0;
+                    } else if (activeFloor === 1) {
+                        playerBaseY = 4.0 + zProgress * 4.0;
+                    } else {
+                        playerBaseY = 8.0 + (1 - zProgress) * 4.0;
+                    }
+                } else {
+                    // Lock active floor height when stepping out of stairwell
+                    if (activeFloor === 0) playerBaseY = 0.0;
+                    else if (activeFloor === 1) playerBaseY = 4.0;
+                    else if (activeFloor === 2) playerBaseY = 8.0;
                 }
 
                 camera.position.set(
                     playerPos.x * CELL_SIZE - MAP_OFFSET,
-                    playerHeight + stairElevation + bobOffset,
+                    playerHeight + playerBaseY + bobOffset,
                     playerPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
@@ -6801,38 +6789,28 @@
         }
 
         function checkStaircaseInteraction() {
-            if (!isGameRunning || isTransitioningFloor) return;
+            if (!isGameRunning) return;
 
             const gridX = Math.floor(playerPos.x);
             const gridZ = Math.floor(playerPos.z);
             const promptEl = document.getElementById('staircase-prompt');
 
-            // Staircase is positioned at grid cell (4, 4)
+            // Staircase cell is (4, 4)
             if (gridX === 4 && gridZ === 4) {
-                isNearStairs = true;
-
                 const zProgress = playerPos.z - 4.0;
-                // Auto-join next floor when physically walking to top step (W)
-                if (zProgress >= 0.90 && keysPressed.w) {
-                    autoTransitionFloor(true);
-                    return;
+                
+                // Stepping off top of stairs onto higher floor
+                if (zProgress >= 0.95) {
+                    if (activeFloor === 0) activeFloor = 1;
+                    else if (activeFloor === 1) activeFloor = 2;
                 }
-                // Auto-join lower floor when physically walking to bottom step (S)
-                else if (zProgress <= 0.10 && keysPressed.s && activeFloor > 0) {
-                    autoTransitionFloor(false);
-                    return;
+                // Stepping off bottom of stairs onto lower floor
+                else if (zProgress <= 0.05) {
+                    if (activeFloor === 1) activeFloor = 0;
+                    else if (activeFloor === 2) activeFloor = 1;
                 }
 
-                if (promptEl) {
-                    promptEl.style.display = 'block';
-                    if (activeFloor === 0) {
-                        promptEl.textContent = "▲ WALK UP STAIRS → 2ND FLOOR";
-                    } else if (activeFloor === 1) {
-                        promptEl.textContent = "▲ WALK UP STAIRS → MORTUARY FLOOR";
-                    } else {
-                        promptEl.textContent = "▼ WALK DOWN STAIRS → GROUND FLOOR";
-                    }
-                }
+                if (promptEl) promptEl.style.display = 'none';
                 currentInteractiveDoor = null;
                 return;
             }
