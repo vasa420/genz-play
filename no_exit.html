@@ -1871,11 +1871,12 @@
     <!-- ── Unified Game Engine Overlays ── -->
     
     <!-- 0. Orbis Splash Screen Overlay -->
-    <div id="engine-orbis-screen" class="engine-overlay-screen active">
+    <div id="engine-orbis-screen" class="engine-overlay-screen active" onclick="engineHandleInteraction()">
         <div class="engine-orbis-logo-container">
             <div class="engine-orbis-title">ORBIS</div>
             <div class="engine-orbis-subtitle">MADE BY ORBIS</div>
         </div>
+        <div class="engine-skip-hint" style="position: absolute; bottom: 30px; left: 0; width: 100%; text-align: center; color: #666; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;">CLICK ANYWHERE TO START ▶</div>
     </div>
 
     <!-- 1. Disclaimer Overlay -->
@@ -2243,7 +2244,7 @@
         let hasGameStarted = false;
 
         // ── Unified Game Engine State & Audio Management ──
-        let engineState = 'disclaimer'; // disclaimer, credits, lobby, story1, story2, story3, loading, headphones, instructions, gameplay
+        let engineState = 'orbis'; // orbis -> disclaimer -> credits -> lobby -> story -> gameplay
         let engineTypingFinished = false;
         let engineSkipLocked = false;
         let engineAutoTimeout = null;
@@ -9196,6 +9197,16 @@
                 }
             });
         });
+
+        // Initialize engine state on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            engineSetState('orbis');
+        });
+        setTimeout(() => {
+            if (typeof engineState !== 'undefined' && (engineState === 'orbis' || engineState === 'disclaimer')) {
+                engineSetState('orbis');
+            }
+        }, 100);
     </script>
 </body>
 </html>
