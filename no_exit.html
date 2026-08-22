@@ -1365,19 +1365,26 @@
         }
 
         /* Lobby Style */
-        /* Gothic Horror Lobby Style */
-        .engine-lobby-bg {
+        /* Gothic Horror Looping Video Background */
+        .engine-lobby-bg-video-wrap {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(180deg, rgba(3, 6, 17, 0.4) 0%, rgba(3, 6, 17, 0.85) 100%), url('no_exit_mansion_bg.png') center/cover no-repeat;
+            overflow: hidden;
             z-index: -1;
-            filter: contrast(1.15) brightness(0.85);
-            animation: slowMansionZoom 20s ease-in-out infinite alternate;
         }
 
-        @keyframes slowMansionZoom {
-            from { transform: scale(1); }
-            to { transform: scale(1.06); }
+        .engine-lobby-bg-video-wrap video {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: contrast(1.15) brightness(0.85);
+            transform: scale(1.02);
+        }
+
+        .video-dark-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(3, 6, 17, 0.35) 0%, rgba(3, 6, 17, 0.8) 100%);
+            pointer-events: none;
         }
 
         .engine-lobby-layout {
@@ -1880,7 +1887,13 @@
 
     <!-- 3. Lobby Overlay -->
     <div id="engine-lobby-screen" class="engine-overlay-screen">
-        <div class="engine-lobby-bg"></div>
+        <!-- Looping Background Video -->
+        <div class="engine-lobby-bg-video-wrap">
+            <video id="lobby-bg-video" autoplay loop muted playsinline poster="no_exit_mansion_bg.png">
+                <source src="ggg.mp4" type="video/mp4">
+            </video>
+            <div class="video-dark-overlay"></div>
+        </div>
 
         <div class="engine-lobby-layout">
             <!-- Top Header -->
@@ -2418,6 +2431,13 @@
             else if (state === 'lobby') {
                 const screen = document.getElementById('engine-lobby-screen');
                 screen.classList.add('active', 'engine-crt-expand');
+                
+                // Play looping video background
+                const bgVideo = document.getElementById('lobby-bg-video');
+                if (bgVideo) {
+                    bgVideo.currentTime = 0;
+                    bgVideo.play().catch(e => console.log('Video play:', e));
+                }
                 
                 // Play lobby music
                 ambientAudio.pause();
