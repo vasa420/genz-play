@@ -2,519 +2,794 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Cricket - Waiting Room</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PLAYZONE | Cricket Pro Room</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900;950&family=JetBrains+Mono:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000;
-            --accent: #fff;
-            --neon-green: #00ffaa;
-            --border: #113322;
+            --bg-dark: #030610;
+            --card-bg: rgba(11, 19, 36, 0.85);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --green-glow: #00ff88;
+            --green-border: rgba(0, 255, 136, 0.5);
+            --blue-glow: #0088ff;
+            --blue-border: rgba(0, 136, 255, 0.5);
+            --red-glow: #ff3355;
+            --gold-glow: #ffd700;
+            --text-sub: #64748b;
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: var(--bg);
-            color: var(--accent);
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            color: #ffffff;
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
+            display: flex;
+            flex-direction: column;
         }
 
-        #bg-effect {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('cricket_stadium_bg.png') no-repeat center center;
+        /* Stadium Background */
+        #bg-stadium {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 6, 16, 0.4) 0%, rgba(3, 6, 16, 0.95) 100%),
+                        url('cricket_stadium_bg.png') no-repeat center center;
             background-size: cover;
-            z-index: 1;
-            opacity: 0.35;
+            z-index: 0;
+            transition: transform 7s cubic-bezier(0.4, 0, 0.2, 1), filter 7s ease;
         }
 
-        .grand-lobby-shell {
+        .room-wrapper {
+            position: relative;
             z-index: 10;
-            width: 100vw; height: 100vh;
-            padding: 30px 50px; box-sizing: border-box;
-            display: flex; flex-direction: column; gap: 30px;
-            animation: fadeIn 1s ease-out;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* Top Header Bar */
+        .top-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(8, 14, 28, 0.85);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 14px 24px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            gap: 15px;
+        }
+
+        .header-logo-group {
+            display: flex; align-items: center; gap: 16px;
+        }
+
+        .logo-badge {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 20px; font-weight: 950; letter-spacing: 2px;
+            color: #fff; text-decoration: none;
+        }
+
+        .logo-icon-box {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #00ff88, #009955);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #000; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .room-type-pill {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 11px; font-weight: 800; color: #94a3b8;
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+
+        /* Room ID Center Box */
+        .room-id-hex-box {
+            background: rgba(3, 6, 16, 0.9);
+            border: 1.5px solid var(--green-glow);
+            clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%);
+            padding: 8px 36px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.25);
+        }
+
+        .room-id-label {
+            font-size: 10px; font-weight: 900; color: #94a3b8; letter-spacing: 2px;
+        }
+
+        .room-id-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px; font-weight: 950; color: var(--green-glow);
+            letter-spacing: 6px; text-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+        }
+
+        .header-actions {
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border);
+            width: 40px; height: 40px; border-radius: 12px; color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+            cursor: pointer; transition: all 0.2s ease; position: relative;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
+
+        .unread-dot {
+            position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
+            background: var(--green-glow); border-radius: 50%; box-shadow: 0 0 8px var(--green-glow);
+        }
+
+        .btn-leave-room {
+            background: rgba(255, 51, 85, 0.1);
+            border: 1.5px solid rgba(255, 51, 85, 0.4);
+            color: var(--red-glow);
+            padding: 10px 20px; border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 900;
+            letter-spacing: 1.5px; cursor: pointer; transition: all 0.25s ease;
+            display: flex; align-items: center; gap: 8px; text-transform: uppercase;
+        }
+
+        .btn-leave-room:hover {
+            background: rgba(255, 51, 85, 0.25); border-color: var(--red-glow);
+            box-shadow: 0 0 20px rgba(255, 51, 85, 0.4); transform: translateY(-1px);
+        }
+
+        /* Matchup Arena Grid */
+        .matchup-arena {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px 0;
+            width: 100%; max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Player Cards */
+        .player-card {
+            flex: 1;
+            max-width: 420px;
+            min-height: 330px;
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            transition: all 0.35s ease;
             position: relative;
         }
 
-        .grand-header {
-            background: rgba(10,20,15,0.8); border: 1px solid var(--border);
-            border-radius: 20px; padding: 12px 25px;
+        .player-card.host-card {
+            border-color: var(--green-border);
+            box-shadow: 0 0 35px rgba(0, 255, 136, 0.15);
+        }
+
+        .player-card.guest-card {
+            border-color: var(--blue-border);
+            box-shadow: 0 0 35px rgba(0, 136, 255, 0.15);
+        }
+
+        .player-card.waiting-card {
+            border: 1.5px dashed rgba(0, 136, 255, 0.3);
+            background: rgba(8, 14, 28, 0.65);
+        }
+
+        /* Card Shield Emblem */
+        .card-shield-emblem {
+            width: 90px; height: 100px;
+            position: relative; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .shield-bg-svg {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+        }
+
+        .card-shield-icon {
+            font-size: 40px; position: relative; z-index: 2;
+        }
+
+        .player-identity {
+            display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+        }
+
+        .player-team-label {
+            font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #94a3b8; text-transform: uppercase;
+        }
+
+        .player-team-name {
+            font-size: 26px; font-weight: 950; letter-spacing: 2px; color: #fff; text-transform: uppercase;
+        }
+
+        .host-pill-badge {
+            background: var(--green-glow); color: #000;
+            font-size: 11px; font-weight: 950; letter-spacing: 2px;
+            padding: 4px 14px; border-radius: 20px; text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.4); margin-top: 2px;
+        }
+
+        .guest-pill-badge {
+            background: var(--blue-glow); color: #fff;
+            font-size: 11px; font-weight: 950; letter-spacing: 2px;
+            padding: 4px 14px; border-radius: 20px; text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(0, 136, 255, 0.4); margin-top: 2px;
+        }
+
+        .waiting-pulse-text {
+            font-size: 20px; font-weight: 950; letter-spacing: 4px; color: #94a3b8;
+            animation: pulseText 1.5s infinite alternate; text-transform: uppercase;
+        }
+
+        @keyframes pulseText { from { opacity: 0.4; } to { opacity: 1; color: var(--blue-glow); } }
+
+        /* Card Bottom Stats Grid */
+        .card-stats-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: rgba(3, 6, 16, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px 6px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .stat-item:last-child { border-right: none; }
+
+        .stat-label {
+            font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #64748b;
+            text-transform: uppercase; display: flex; align-items: center; gap: 4px;
+        }
+
+        .stat-val {
+            font-size: 13px; font-weight: 900; color: #fff;
+        }
+
+        .form-dots {
+            display: flex; gap: 3px; font-size: 11px; font-weight: 900;
+        }
+        .form-w { color: var(--green-glow); }
+        .form-l { color: var(--red-glow); }
+
+        /* Center VS Section */
+        .vs-center-col {
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+            position: relative;
+        }
+
+        .vs-3d-text {
+            font-size: 72px; font-weight: 950; font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            letter-spacing: -2px; position: relative;
+        }
+
+        .match-type-pill {
+            background: rgba(3, 6, 16, 0.85);
+            border: 1px solid var(--card-border);
+            border-radius: 12px; padding: 8px 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .match-type-label { font-size: 9.5px; font-weight: 900; letter-spacing: 2px; color: #64748b; }
+        .match-type-val { font-size: 14px; font-weight: 950; color: var(--green-glow); letter-spacing: 2px; }
+
+        /* Bottom Controls Bar */
+        .bottom-controls-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 24px;
+            background: rgba(8, 14, 28, 0.85);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            backdrop-filter: blur(16px);
+        }
+
+        .btn-find-opp {
+            padding: 14px 28px;
+            background: rgba(0, 255, 136, 0.08);
+            border: 1.5px solid var(--green-border);
+            color: var(--green-glow);
+            border-radius: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 900;
+            letter-spacing: 2px; cursor: pointer; transition: all 0.25s ease;
+            display: flex; align-items: center; gap: 10px; text-transform: uppercase;
+        }
+
+        .btn-find-opp:hover {
+            background: rgba(0, 255, 136, 0.2); border-color: var(--green-glow);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.35); transform: translateY(-2px);
+        }
+
+        .match-config-group {
+            display: flex; align-items: center; gap: 30px;
+            background: rgba(3, 6, 16, 0.6);
+            border: 1px solid var(--card-border);
+            padding: 10px 24px; border-radius: 14px;
+        }
+
+        .config-item {
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .config-icon { font-size: 22px; color: var(--green-glow); }
+        .config-text { display: flex; flex-direction: column; }
+        .config-label { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 1.5px; }
+        .config-val { font-size: 14px; font-weight: 950; color: #fff; }
+
+        .btn-start-match {
+            padding: 16px 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            color: #64748b;
+            border-radius: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 950;
+            letter-spacing: 2px; cursor: not-allowed; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 10px; text-transform: uppercase;
+        }
+
+        .btn-start-match.ready {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            border: none; color: #030610; cursor: pointer;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
+            animation: pulseReady 1.5s infinite alternate;
+        }
+
+        .btn-start-match.ready:hover {
+            transform: translateY(-2px); box-shadow: 0 0 35px rgba(0, 255, 136, 0.6);
+        }
+
+        @keyframes pulseReady { from { opacity: 0.85; } to { opacity: 1; } }
+
+        /* Bottom Connection Status Line */
+        .bottom-status-line {
             display: flex; justify-content: space-between; align-items: center;
-            height: 70px;
+            width: 100%; padding: 4px 10px 0; font-size: 11px; color: #64748b; font-weight: 700;
         }
 
-        .header-left {
-            display: flex; align-items: center; gap: 15px; width: 33%;
-        }
+        .status-left { display: flex; align-items: center; gap: 15px; }
+        .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-glow); display: inline-block; }
 
-        .cricket-icon { font-size: 24px; filter: drop-shadow(0 0 5px var(--neon-green)); }
-        
-        .header-text-group { display: flex; flex-direction: column; }
-        .room-label { font-size: 11px; font-weight: 900; color: #aaa; letter-spacing: 1px; }
+        .status-right { display: flex; gap: 16px; font-size: 15px; }
+        .status-right span { cursor: pointer; transition: 0.2s; }
+        .status-right span:hover { color: #fff; }
 
-        .arena-id-display {
-            background: #0f1a15; border: 1px solid var(--neon-green);
-            padding: 8px 25px; border-radius: 12px;
-            font-size: 14px; font-weight: 950; color: var(--neon-green);
-            letter-spacing: 4px; text-shadow: 0 0 10px rgba(0,255,170,0.3);
-            text-align: center;
-        }
-
-        .header-controls { display: flex; gap: 10px; align-items: center; justify-content: flex-end; width: 33%; }
-
-        .exit-btn {
-            background: #111; border: 1px solid #333; border-radius: 10px;
-            padding: 8px 15px; display: flex; align-items: center; gap: 8px;
-            cursor: pointer; transition: 0.3s;
-        }
-        .exit-btn:hover { background: #500; border-color: #f00; }
-        .exit-txt { font-size: 10px; font-weight: 900; color: #fff; text-transform: uppercase; }
-
-        /* Matchup Area */
-        .arena-matchup {
-            display: flex; justify-content: space-around; align-items: center;
-            flex-grow: 1; padding: 20px 0;
-        }
-
-        .premium-card {
-            width: 350px; height: 180px;
-            background: #080d0a; border: 1px solid var(--border);
-            border-radius: 25px; padding: 25px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 40px 100px rgba(0,255,170,0.05);
-            position: relative; transition: 0.4s; gap: 15px;
-        }
-
-        .premium-card.dashed {
-            border: 2px dashed #1a3322; background: none; box-shadow: none;
-        }
-
-        .player-main .name { font-size: 24px; font-weight: 950; color: #fff; letter-spacing: 2px; }
-        .player-main .tag { font-size: 11px; color: var(--neon-green); font-weight: 900; text-transform: uppercase;}
-
-        .trophy-vs { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .trophy-top { font-size: 40px; font-weight: 950; color: #fff; text-shadow: 0 0 20px #fff; }
-
-        .waiting-slot { display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 15px;}
-        .waiting-label { font-size: 22px; font-weight: 950; letter-spacing: 5px; color: #555; }
-
-        .invite-friends-btn {
-            position: fixed; bottom: 40px; left: 50px;
-            width: fit-content; height: 50px;
-            background: #000; border: 1px solid var(--neon-green); border-radius: 15px;
-            color: var(--neon-green); display: flex; align-items: center; gap: 15px;
-            padding: 0 25px; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 30px rgba(0,255,170,0.1);
-            z-index: 100;
-        }
-        .invite-friends-btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 10px 30px rgba(0,255,170,0.4); }
-
-        .btn-lbl { text-align: left; font-size: 11px; font-weight: 950; letter-spacing: 1px; text-transform: uppercase; }
-
-        .kickstart-btn {
-            position: fixed; bottom: 40px; right: 50px;
-            width: fit-content; height: 50px; padding: 0 30px;
-            background: #252525; border: none; border-radius: 15px;
-            color: #555; display: flex; justify-content: center; align-items: center; gap: 12px;
-            font-size: 12px; font-weight: 900; letter-spacing: 2px;
-            cursor: not-allowed; z-index: 100; text-transform: uppercase;
-        }
-
+        /* Modals (Chat & Friends & Confirm) */
         .chat-modal {
-            position: fixed; bottom: 20px; right: 20px; width: 320px; height: 420px;
-            background: linear-gradient(rgba(5, 10, 8, 0.75), rgba(5, 10, 8, 0.95)), url('cricket_stadium_bg.png');
-            background-size: cover; background-position: center;
-            border: 1px solid var(--neon-green); border-radius: 15px;
-            display: flex; flex-direction: column; z-index: 200;
-            box-shadow: 0 10px 40px rgba(0, 255, 170, 0.15);
+            position: fixed; bottom: 80px; right: 30px; width: 340px; height: 440px;
+            background: rgba(8, 14, 28, 0.95); border: 1.5px solid var(--green-border);
+            border-radius: 20px; display: flex; flex-direction: column; z-index: 500;
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
             transform: translateY(120%); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            opacity: 0; pointer-events: none;
+            opacity: 0; pointer-events: none; backdrop-filter: blur(16px);
         }
+
         .chat-modal.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
         
         .chat-header {
-            padding: 15px; border-bottom: 1px solid #1a3322; display: flex; justify-content: space-between;
-            align-items: center; font-size: 12px; font-weight: 900; color: var(--neon-green); letter-spacing: 2px;
+            padding: 16px; border-bottom: 1px solid var(--card-border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; font-weight: 900; color: var(--green-glow); letter-spacing: 2px;
         }
-        .close-chat { background: none; border: none; color: #777; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .close-chat:hover { color: #f33; }
-        
-        .chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .chat-msg { font-size: 12px; padding: 10px 14px; border-radius: 12px; max-width: 85%; word-wrap: break-word; font-weight: 500;}
-        .chat-msg.system { background: rgba(255,255,255,0.05); color: #888; align-self: center; font-size: 10px; font-weight: 700; border-radius: 8px;}
-        .chat-msg.self { background: rgba(0, 255, 170, 0.1); color: #fff; align-self: flex-end; border: 1px solid rgba(0,255,170,0.2); border-bottom-right-radius: 2px; }
-        .chat-msg.other { background: rgba(255, 255, 255, 0.1); color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
-        
-        .chat-input-area { display: flex; padding: 15px; gap: 10px; border-top: 1px solid #1a3322; }
+
+        .chat-messages { flex-grow: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { font-size: 12.5px; padding: 10px 14px; border-radius: 12px; max-width: 85%; word-wrap: break-word; }
+        .chat-msg.system { background: rgba(255,255,255,0.05); color: #94a3b8; align-self: center; font-size: 10px; font-weight: 700; text-align: center; }
+        .chat-msg.self { background: rgba(0, 255, 136, 0.12); color: #fff; align-self: flex-end; border: 1px solid var(--green-border); }
+        .chat-msg.other { background: rgba(255, 255, 255, 0.08); color: #fff; align-self: flex-start; }
+
+        .chat-input-area { display: flex; padding: 12px; gap: 8px; border-top: 1px solid var(--card-border); }
         #chat-input {
-            flex-grow: 1; background: #000; border: 1px solid #333; border-radius: 8px; padding: 10px; color: #fff;
-            font-family: inherit; font-size: 12px; transition: 0.3s; outline: none;
+            flex-grow: 1; background: rgba(3, 6, 16, 0.8); border: 1px solid var(--card-border);
+            border-radius: 10px; padding: 10px 14px; color: #fff; font-family: inherit; font-size: 13px; outline: none;
         }
-        #chat-input:focus { border-color: var(--neon-green); }
-        .send-btn {
-            background: var(--neon-green); color: #000; border: none; border-radius: 8px; width: 45px; cursor: pointer;
-            font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.3s;
-        }
-        .send-btn:hover { box-shadow: 0 0 15px rgba(0,255,170,0.5); }
+        #chat-input:focus { border-color: var(--green-glow); }
 
-        /* Custom Alert Modal */
-        .custom-alert-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.9); z-index: 1000;
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .custom-alert-overlay.open { opacity: 1; pointer-events: auto; }
-        .custom-alert-box {
-            background: #050a08; border: 1px solid var(--neon-green); border-radius: 15px;
-            padding: 30px; width: 350px; text-align: center;
-            box-shadow: 0 0 50px rgba(0,255,170,0.2); transform: scale(0.8); transition: 0.3s;
-        }
-        .custom-alert-overlay.open .custom-alert-box { transform: scale(1); }
-        .alert-btn {
-            padding: 12px 25px; border: none; border-radius: 10px; font-weight: 900;
-            font-family: inherit; font-size: 11px; cursor: pointer; transition: 0.3s; letter-spacing: 2px;
-        }
-        .no-btn { background: #111; color: #888; border: 1px solid #333; }
-        .no-btn:hover { background: #331111; color: #ff3333; border-color: #ff3333; }
-        .yes-btn { background: var(--neon-green); color: #000; box-shadow: 0 0 15px rgba(0,255,170,0.3); }
-        .yes-btn:hover { box-shadow: 0 0 30px rgba(0,255,170,0.8); transform: scale(1.05); }
-
-        /* Cinematic Camera Animations */
-        .zoom-engage {
-            animation: cameraZoom 7s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-        }
-        @keyframes cameraZoom {
-            0% { transform: scale(1); filter: brightness(1) blur(0px); }
-            30% { transform: scale(2.2) translate(8%, 5%) rotate(3deg); filter: brightness(1.2); }
-            60% { transform: scale(3.5) translate(-10%, -5%) rotate(-2deg); filter: brightness(1.5); }
-            90% { transform: scale(5) translate(0%, 0%); filter: brightness(3) blur(2px); }
-            100% { transform: scale(10); filter: brightness(10) blur(10px); opacity: 0; }
-        }
-        
-        .fade-out-ui { opacity: 0; pointer-events: none; transition: 1.5s ease-out; transform: scale(1.1); }
-
-        /* Friends Overlay Modal */
         .friends-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
-            z-index: 300; display: flex; justify-content: center; align-items: center;
+            z-index: 600; display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: 0.3s;
         }
         .friends-overlay.active { opacity: 1; pointer-events: auto; }
 
         .friends-box {
-            background: #050a08; border: 1px solid var(--neon-green); border-radius: 20px;
-            width: 400px; max-height: 80vh; display: flex; flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,255,170,0.15); overflow: hidden;
-            transform: scale(0.9); transition: 0.3s;
+            background: #080e1c; border: 1.5px solid var(--green-border); border-radius: 24px;
+            width: 420px; max-height: 80vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.2); overflow: hidden;
         }
-        .friends-overlay.active .friends-box { transform: scale(1); }
 
         .friends-header {
-            padding: 20px 25px; border-bottom: 1px solid #1a3322;
+            padding: 20px 24px; border-bottom: 1px solid var(--card-border);
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 14px; font-weight: 950; color: var(--neon-green); letter-spacing: 2px;
+            font-size: 14px; font-weight: 950; color: var(--green-glow); letter-spacing: 2px;
         }
 
-        .friends-list { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        
+        .friends-list { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .friend-card {
-            background: #08120d; border: 1px solid #1a3322; border-radius: 12px;
-            padding: 15px; display: flex; justify-content: space-between; align-items: center;
-            transition: 0.3s;
-        }
-        .friend-card:hover { border-color: rgba(0,255,170,0.5); background: #0a1a12; }
-        
-        .f-info { display: flex; align-items: center; gap: 15px; }
-        .span-dot { color: #0f0; font-size: 18px; text-shadow: 0 0 10px #0f0; }
-        .f-name { font-size: 14px; font-weight: 900; color: #fff; }
-        .f-status { font-size: 10px; color: #aaa; font-weight: 700; text-transform: uppercase; }
-        
-        .invite-act-btn {
-            background: none; border: 1px solid var(--neon-green); color: var(--neon-green);
-            padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: 900;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .invite-act-btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 15px rgba(0,255,170,0.4); }
-
-        .kickstart-btn.active-ready {
-            background: var(--neon-green); color: #000; cursor: pointer;
-            border: 1px solid var(--neon-green); box-shadow: 0 0 25px rgba(0,255,170,0.4);
-            animation: pulseBtn 1.5s infinite alternate;
-        }
-        
-        @keyframes pulseBtn {
-            0% { box-shadow: 0 0 15px rgba(0,255,170,0.2); }
-            100% { box-shadow: 0 0 35px rgba(0,255,170,0.8); }
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border);
+            border-radius: 14px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+        /* Responsive Mobile Adjustments */
+        @media (max-width: 900px) {
+            body { overflow-y: auto; }
+            .room-wrapper { padding: 14px; gap: 16px; height: auto; min-height: 100vh; }
+            .top-header { flex-wrap: wrap; justify-content: center; gap: 10px; padding: 12px; }
+            .room-id-hex-box { order: 3; width: 100%; margin-top: 4px; }
+            .matchup-arena { flex-direction: column; gap: 16px; margin: 10px 0; }
+            .player-card { width: 100%; min-height: 260px; padding: 20px; }
+            .vs-3d-text { font-size: 48px; }
+            .bottom-controls-bar { flex-direction: column; gap: 12px; }
+            .btn-find-opp, .btn-start-match { width: 100%; justify-content: center; }
+            .match-config-group { width: 100%; justify-content: space-around; }
+        }
     </style>
 </head>
 <body>
-    <div id="bg-effect"></div>
 
-    <div class="grand-lobby-shell">
-        <!-- Top Bar -->
-        <div class="grand-header">
-            <div class="header-left">
-                <span class="cricket-icon">🏏</span>
-                <div class="header-text-group">
-                    <span class="room-label">ROOM: PRIVATE MATCH</span>
+    <div id="bg-stadium"></div>
+
+    <div class="room-wrapper">
+
+        <!-- Top Header Bar -->
+        <header class="top-header">
+            <div class="header-logo-group">
+                <a href="hand_cricket.html" class="logo-badge">
+                    <div class="logo-icon-box">🏏</div>
+                    <span>CRICKET PRO</span>
+                </a>
+                <div class="room-type-pill">
+                    <span>🔒</span> ROOM TYPE: PRIVATE MATCH
                 </div>
             </div>
-            
-            <div class="arena-id-display" id="room-id">------</div>
 
-            <div class="header-controls">
-                <button class="chat-btn" onclick="toggleChat()" style="background: #111; border: 1px solid #333; border-radius: 10px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: #fff; font-size: 14px; margin-right: 5px;">
-                    💬
+            <!-- Hexagonal Room ID Display -->
+            <div class="room-id-hex-box">
+                <span class="room-id-label">ROOM ID</span>
+                <span class="room-id-value" id="room-id">101913</span>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" onclick="toggleChat()" title="Lobby Chat">
+                    💬 <span class="unread-dot"></span>
                 </button>
-                <button class="exit-btn" onclick="leaveRoom()">
-                    <span class="exit-txt">LEAVE ROOM</span>
+                <button class="icon-btn" onclick="openFriendsList()" title="Settings">
+                    ⚙️
+                </button>
+                <button class="btn-leave-room" onclick="leaveRoom()">
+                    LEAVE ROOM 🚪
                 </button>
             </div>
-        </div>
+        </header>
 
-        <!-- Room Matchup -->
-        <div class="arena-matchup">
-            <!-- Player -->
-            <div class="premium-card">
-                <div class="player-main">
-                    <div class="name" id="my-name">PLAYER</div>
-                    <div class="tag">HOST</div>
+        <!-- Matchup Arena Grid -->
+        <main class="matchup-arena">
+
+            <!-- HOST CARD (LEFT) -->
+            <div class="player-card host-card">
+                <div class="card-shield-emblem">
+                    <svg class="shield-bg-svg" viewBox="0 0 100 110" fill="none">
+                        <path d="M50 0L95 20V55C95 82.5 50 110 50 110C50 110 5 82.5 5 55V20L50 0Z" fill="#00ff88" fill-opacity="0.12" stroke="#00ff88" stroke-width="2"/>
+                    </svg>
+                    <span class="card-shield-icon">🏏</span>
+                </div>
+
+                <div class="player-identity">
+                    <span class="player-team-label">TEAM</span>
+                    <span class="player-team-name" id="my-name">CRICKET PRO</span>
+                    <span class="host-pill-badge">HOST</span>
+                </div>
+
+                <!-- Bottom Stats Grid -->
+                <div class="card-stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">👥 PLAYERS</span>
+                        <span class="stat-val">1 / 11</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">🏆 RANK</span>
+                        <span class="stat-val" style="color:var(--gold-glow);">PRO</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">📊 FORM</span>
+                        <div class="form-dots">
+                            <span class="form-w">W</span>
+                            <span class="form-w">W</span>
+                            <span class="form-l">L</span>
+                            <span class="form-w">W</span>
+                            <span class="form-w">W</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="trophy-vs">
-                <div class="trophy-top">VS</div>
-            </div>
-
-            <!-- Waiting -->
-            <div class="premium-card dashed" id="opponent-card">
-                <div class="waiting-slot">
-                    <div class="waiting-label">WAITING...</div>
+            <!-- CENTER VS DIVIDER -->
+            <div class="vs-center-col">
+                <div class="vs-3d-text">Vs</div>
+                <div class="match-type-pill">
+                    <span class="match-type-label">MATCH TYPE</span>
+                    <span class="match-type-val">T20</span>
                 </div>
             </div>
-        </div>
+
+            <!-- GUEST CARD (RIGHT) -->
+            <div class="player-card waiting-card" id="opponent-card">
+                <div class="card-shield-emblem">
+                    <svg class="shield-bg-svg" viewBox="0 0 100 110" fill="none">
+                        <path d="M50 0L95 20V55C95 82.5 50 110 50 110C50 110 5 82.5 5 55V20L50 0Z" fill="#0088ff" fill-opacity="0.1" stroke="#0088ff" stroke-width="2" stroke-dasharray="4 4"/>
+                    </svg>
+                    <span class="card-shield-icon" style="color:#64748b;">❓</span>
+                </div>
+
+                <div class="player-identity">
+                    <span class="player-team-label">WAITING FOR PLAYERS</span>
+                    <span class="waiting-pulse-text" id="opp-name-text">WAITING...</span>
+                </div>
+
+                <!-- Bottom Stats Grid -->
+                <div class="card-stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">👥 PLAYERS</span>
+                        <span class="stat-val" id="opp-stat-players">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">🏆 RANK</span>
+                        <span class="stat-val" id="opp-stat-rank">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">📊 FORM</span>
+                        <span class="stat-val" id="opp-stat-form">-</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Controls Bar -->
+        <footer style="display:flex; flex-direction:column; gap:8px;">
+            <div class="bottom-controls-bar">
+                <button class="btn-find-opp" onclick="openFriendsList()">
+                    <span>🔍</span> FIND OPPONENT
+                </button>
+
+                <div class="match-config-group">
+                    <div class="config-item">
+                        <span class="config-icon">🏟️</span>
+                        <div class="config-text">
+                            <span class="config-label">OVERS</span>
+                            <span class="config-val">20</span>
+                        </div>
+                    </div>
+                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.1);"></div>
+                    <div class="config-item">
+                        <span class="config-icon">📜</span>
+                        <div class="config-text">
+                            <span class="config-label">PITCH</span>
+                            <span class="config-val" style="color:var(--green-glow);">BALANCED</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-start-match" id="start-btn" onclick="startMatch()">
+                    <span>▶</span> START MATCH
+                </button>
+            </div>
+
+            <!-- Footer Status Indicator -->
+            <div class="bottom-status-line">
+                <div class="status-left">
+                    <span><span class="conn-dot"></span> CONNECTED</span>
+                    <span>📶 45ms</span>
+                </div>
+                <div class="status-right">
+                    <span title="Audio">🔊</span>
+                    <span title="Help" onclick="alert('Cricket Pro Private Match Room: Host your match and invite opponents.')">❓</span>
+                    <span title="Fullscreen" onclick="toggleFullScreen()">⛶</span>
+                </div>
+            </div>
+        </footer>
+
     </div>
 
-    <!-- Actions -->
-    <button class="invite-friends-btn" onclick="openFriendsList()">
-        <span class="btn-lbl">FIND OPPONENT</span>
-    </button>
-    
-    <button class="kickstart-btn" id="start-btn" onclick="startMatch()">
-        <span>START MATCH</span>
-    </button>
-
-    <!-- Friends Overlay UI -->
+    <!-- Friends Invite Modal -->
     <div class="friends-overlay" id="friends-modal">
         <div class="friends-box">
             <div class="friends-header">
-                <span>ONLINE FRIENDS</span>
-                <button class="close-chat" onclick="closeFriendsList()">✖</button>
+                <span>INVITE ONLINE OPPONENT</span>
+                <button style="background:none; border:none; color:#64748b; font-size:20px; cursor:pointer;" onclick="closeFriendsList()">✕</button>
             </div>
             <div class="friends-list">
-                <!-- Friend 1 -->
                 <div class="friend-card">
-                    <div class="f-info">
-                        <span class="span-dot">•</span>
-                        <div>
-                            <div class="f-name">RAHUL_PRO</div>
-                            <div class="f-status">IDLE - LOBBY</div>
-                        </div>
+                    <div>
+                        <div style="font-size:14px; font-weight:900;">RAHUL_PRO</div>
+                        <div style="font-size:10px; color:var(--green-glow);">ONLINE - IN LOBBY</div>
                     </div>
-                    <button class="invite-act-btn" onclick="invitePlayer('Rahul_Pro')">INVITE</button>
+                    <button class="btn-find-opp" style="padding:6px 16px; font-size:11px;" onclick="invitePlayer('Rahul_Pro')">INVITE</button>
                 </div>
-                <!-- Friend 2 -->
                 <div class="friend-card">
-                    <div class="f-info">
-                        <span class="span-dot" style="color: #0f0;">•</span>
-                        <div>
-                            <div class="f-name">PRIYA_GAMER</div>
-                            <div class="f-status">ONLINE</div>
-                        </div>
+                    <div>
+                        <div style="font-size:14px; font-weight:900;">PRIYA_GAMER</div>
+                        <div style="font-size:10px; color:var(--green-glow);">ONLINE</div>
                     </div>
-                    <button class="invite-act-btn" onclick="invitePlayer('Priya_Gamer')">INVITE</button>
+                    <button class="btn-find-opp" style="padding:6px 16px; font-size:11px;" onclick="invitePlayer('Priya_Gamer')">INVITE</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Chat Modal UI -->
-    <div id="chat-modal" class="chat-modal">
+    <!-- Chat Modal -->
+    <div class="chat-modal" id="chat-modal">
         <div class="chat-header">
-            <span>LOBBY COMM-LINK</span>
-            <button class="close-chat" onclick="toggleChat()">✖</button>
+            <span>CRICKET PRO COMM-LINK</span>
+            <button style="background:none; border:none; color:#64748b; cursor:pointer;" onclick="toggleChat()">✕</button>
         </div>
         <div class="chat-messages" id="chat-messages">
-            <div class="chat-msg system">Lobby Created. Waiting for opponent...</div>
+            <div class="chat-msg system">Private Match Created. Room ID: 101913. Waiting for opponent...</div>
         </div>
         <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Enter message..." onkeypress="if(event.key === 'Enter') sendChat()">
-            <button class="send-btn" onclick="sendChat()">➤</button>
+            <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn-find-opp" style="padding:8px 14px; font-size:12px;" onclick="sendChat()">Send</button>
         </div>
     </div>
 
-    <!-- Confirm Alert UI -->
-    <div class="custom-alert-overlay" id="confirm-modal">
-        <div class="custom-alert-box">
-            <h2 style="color:var(--neon-green); margin:0 0 15px 0;">SYSTEM OVERRIDE</h2>
-            <p style="font-size:14px; color:#aaa; margin:0 0 35px 0; letter-spacing:1px;">CONFIRM WE CAN START MATCH?</p>
-            <div style="display:flex; justify-content:space-around;">
-                <button class="alert-btn no-btn" onclick="closeConfirmModal()">NO</button>
-                <button class="alert-btn yes-btn" onclick="executeZoomAndStart()">YES START</button>
-            </div>
-        </div>
-    </div>
-
-    <audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" loop preload="auto"></audio>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         let socket;
-        let isHost = localStorage.getItem('hc_isHost') === 'true';
+        let isHost = localStorage.getItem('hc_isHost') !== 'false';
 
         window.onload = () => {
-            const name = localStorage.getItem('playerName') || "PLAYER";
+            const name = localStorage.getItem('playerName') || "CRICKET PRO";
             let roomId = localStorage.getItem('hc_roomId');
-            
+
             if (isHost) {
-                // Generate random 6-digit room ID for host
-                const chars = '0123456789';
-                let id = '';
-                for(let i=0; i<6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-                roomId = id;
-                localStorage.setItem('hc_roomId', roomId);
+                if (!roomId) {
+                    const chars = '0123456789';
+                    let id = '';
+                    for (let i = 0; i < 6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+                    roomId = id;
+                    localStorage.setItem('hc_roomId', roomId);
+                }
                 document.getElementById('my-name').innerText = name.toUpperCase();
             } else {
-                // Guest setup
-                document.getElementById('room-id').innerText = roomId;
-                // Guest name goes on the right card usually, but for local feel we put self on left
+                document.getElementById('room-id').innerText = roomId || "101913";
                 document.getElementById('my-name').innerText = name.toUpperCase();
-                document.querySelector('.player-main .tag').innerText = "GUEST";
-                
-                // Guests can't start the match
+                document.querySelector('.host-pill-badge').className = "guest-pill-badge";
+                document.querySelector('.guest-pill-badge').innerText = "GUEST";
+
                 const startBtn = document.getElementById('start-btn');
                 startBtn.style.display = 'none';
-                
-                // Show a 'Waiting for Host' indicator
-                const inviteBtn = document.querySelector('.invite-friends-btn');
-                inviteBtn.style.pointerEvents = 'none';
-                inviteBtn.style.background = '#111';
-                inviteBtn.style.borderColor = '#333';
-                inviteBtn.innerHTML = `<span class="btn-lbl" style="color:#777">WAITING FOR HOST TO START...</span>`;
             }
 
-            document.getElementById('room-id').innerText = roomId;
+            document.getElementById('room-id').innerText = roomId || "101913";
 
-            // Connect to real server
+            // Socket connection logic
             try {
                 socket = io();
                 socket.on('connect', () => {
-                    socket.emit('join_room', { 
-                        roomId: roomId, 
-                        playerName: name, 
-                        isCreating: isHost 
-                    });
+                    socket.emit('join_room', { roomId, playerName: name, isCreating: isHost });
                 });
 
                 socket.on('player_joined', (data) => {
-                    // Update the matchup UI based on who is in the room
                     if (data.players.length >= 2) {
-                        const otherPlayer = data.players.find(p => p.id !== socket.id);
-                        if (otherPlayer) {
-                            updateOpponentUI(otherPlayer.name, isHost ? "GUEST" : "HOST");
-                        }
+                        const other = data.players.find(p => p.id !== socket.id);
+                        if (other) updateOpponentUI(other.name, isHost ? "GUEST" : "HOST");
                     }
                 });
 
-                socket.on('game_start', (data) => {
+                socket.on('game_start', () => {
                     startCinematicTransition();
                 });
-            } catch(e) { console.warn("Socket connection failed:", e); }
+            } catch(e) { console.warn("Socket not active:", e); }
         };
 
         function updateOpponentUI(playerName, tag) {
-            // If host, enable the start button now that someone joined
-            if (isHost) {
-                const startBtn = document.getElementById('start-btn');
-                startBtn.classList.add('active-ready');
-                startBtn.style.background = 'var(--neon-green)';
-                startBtn.style.color = '#000';
-                startBtn.style.cursor = 'pointer';
-                startBtn.innerText = 'START MATCH';
-
-                const inviteBtn = document.querySelector('.invite-friends-btn');
-                inviteBtn.style.display = 'none';
-            }
+            const card = document.getElementById('opponent-card');
+            card.className = "player-card guest-card";
             
-            const box = document.getElementById('chat-messages');
-            const el = document.createElement('div');
-            el.className = 'chat-msg system';
-            el.style.color = 'var(--neon-green)';
-            el.innerText = `${playerName.toUpperCase()} HAS JOINED THE LOBBY!`;
-            box.appendChild(el);
-            box.scrollTop = box.scrollHeight;
+            document.getElementById('opp-name-text').className = "player-team-name";
+            document.getElementById('opp-name-text').innerText = playerName.toUpperCase();
+            
+            document.getElementById('opp-stat-players').innerText = "1 / 11";
+            document.getElementById('opp-stat-rank').innerHTML = '<span style="color:var(--gold-glow);">PRO</span>';
+            document.getElementById('opp-stat-form').innerHTML = '<div class="form-dots"><span class="form-w">W</span><span class="form-w">W</span><span class="form-w">W</span></div>';
 
-            // Update opponent card UI
             localStorage.setItem('hc_opponentName', playerName);
             localStorage.setItem('hc_isBot', 'false');
-            const oppCard = document.getElementById('opponent-card');
-            oppCard.classList.remove('dashed');
-            oppCard.innerHTML = `
-                <div class="player-main" style="display:flex; flex-direction:column; align-items:center;">
-                    <div class="name" style="font-size:24px; font-weight:950; color:#fff; letter-spacing:2px;">${playerName.toUpperCase()}</div>
-                    <div class="tag" style="font-size:11px; color:${tag === 'HOST' ? '#00ffaa' : '#ffaa00'}; font-weight:900; text-transform:uppercase;">${tag}</div>
-                </div>
-            `;
+
+            if (isHost) {
+                const startBtn = document.getElementById('start-btn');
+                startBtn.classList.add('ready');
+                startBtn.innerHTML = '<span>▶</span> START MATCH';
+            }
+
+            const box = document.getElementById('chat-messages');
+            const sysMsg = document.createElement('div');
+            sysMsg.className = 'chat-msg system';
+            sysMsg.innerText = `${playerName.toUpperCase()} HAS JOINED THE ROOM!`;
+            box.appendChild(sysMsg);
         }
 
-        // Chat Scripting
+        function invitePlayer(name) {
+            closeFriendsList();
+            const sysMsg = document.createElement('div');
+            sysMsg.className = 'chat-msg system';
+            sysMsg.innerText = `Sending match invite to ${name.toUpperCase()}...`;
+            document.getElementById('chat-messages').appendChild(sysMsg);
+
+            setTimeout(() => {
+                updateOpponentUI(name, "GUEST");
+            }, 1800);
+        }
+
+        function startMatch() {
+            const startBtn = document.getElementById('start-btn');
+            if (!startBtn.classList.contains('ready')) return;
+
+            const roomId = localStorage.getItem('hc_roomId');
+            if (socket) {
+                socket.emit('player_ready', { roomId });
+            } else {
+                startCinematicTransition();
+            }
+        }
+
+        function startCinematicTransition() {
+            const bg = document.getElementById('bg-stadium');
+            bg.style.transform = 'scale(2.5)';
+            bg.style.filter = 'brightness(2) blur(4px)';
+            document.querySelector('.room-wrapper').style.opacity = '0';
+            document.querySelector('.room-wrapper').style.transition = 'opacity 1s ease';
+
+            setTimeout(() => {
+                window.location.href = 'hand_cricket_toss.html';
+            }, 2000);
+        }
+
         function toggleChat() {
             document.getElementById('chat-modal').classList.toggle('open');
-            setTimeout(() => document.getElementById('chat-input').focus(), 300);
         }
 
         function sendChat() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
-            if(!msg || !socket) return;
-
-            const name = localStorage.getItem('playerName') || 'PLAYER';
-            socket.emit('send_message', { 
-                roomId: localStorage.getItem('hc_roomId'),
-                message: msg,
-                playerName: name
-            });
+            if (!msg) return;
 
             const box = document.getElementById('chat-messages');
-            const el = document.createElement('div');
-            el.className = 'chat-msg self';
-            el.innerText = msg;
-            box.appendChild(el);
-            box.scrollTop = box.scrollHeight;
+            const chatEl = document.createElement('div');
+            chatEl.className = 'chat-msg self';
+            chatEl.innerText = msg;
+            box.appendChild(chatEl);
             input.value = '';
+            box.scrollTop = box.scrollHeight;
         }
 
-        // Listener for incoming messages
-        if (socket) {
-            socket.on('receive_message', (data) => {
-                const box = document.getElementById('chat-messages');
-                const el = document.createElement('div');
-                el.className = 'chat-msg other';
-                el.innerHTML = `<strong style="font-size:8px; color:var(--neon-green); display:block; margin-bottom:2px;">${data.playerName.toUpperCase()}</strong>${data.message}`;
-                box.appendChild(el);
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        // Friends Overlay Scripting
         function openFriendsList() {
             document.getElementById('friends-modal').classList.add('active');
         }
@@ -523,126 +798,18 @@
             document.getElementById('friends-modal').classList.remove('active');
         }
 
-        function invitePlayer(playerName) {
-            closeFriendsList();
-            
-            // Disable the find opponent button so they can't invite multiple people
-            const inviteBtn = document.querySelector('.invite-friends-btn');
-            inviteBtn.style.pointerEvents = 'none';
-            inviteBtn.style.opacity = '0.3';
-            inviteBtn.innerHTML = `<span class="btn-lbl">WAITING FOR ${playerName.toUpperCase()}...</span>`;
-
-            // Show auto system chat message
-            const box = document.getElementById('chat-messages');
-            const el1 = document.createElement('div');
-            el1.className = 'chat-msg system';
-            el1.innerText = `Invite sent to ${playerName.toUpperCase()}...`;
-            box.appendChild(el1);
-            box.scrollTop = box.scrollHeight;
-
-            if(!document.getElementById('chat-modal').classList.contains('open')){
-                toggleChat();
-            }
-
-            // Simulate opponent accepting and joining
-            setTimeout(() => {
-                inviteBtn.style.display = 'none';
-                
-                const el2 = document.createElement('div');
-                el2.className = 'chat-msg system';
-                el2.style.color = 'var(--neon-green)';
-                el2.innerText = `${playerName.toUpperCase()} HAS JOINED THE LOBBY!`;
-                box.appendChild(el2);
-                box.scrollTop = box.scrollHeight;
-
-                // Update opponent card UI
-                localStorage.setItem('hc_opponentName', playerName);
-                localStorage.setItem('hc_isBot', 'true');
-                const oppCard = document.getElementById('opponent-card');
-                oppCard.classList.remove('dashed');
-                oppCard.innerHTML = `
-                    <div class="player-main" style="display:flex; flex-direction:column; align-items:center;">
-                        <div class="name" style="font-size:24px; font-weight:950; color:#fff; letter-spacing:2px;">${playerName.toUpperCase()}</div>
-                        <div class="tag" style="font-size:11px; color:#ffaa00; font-weight:900; text-transform:uppercase;">GUEST</div>
-                    </div>
-                `;
-
-                // Note: In a real socket environment, the guest would have hc_isHost=false
-                // Setting up the start button
-                const startBtn = document.getElementById('start-btn');
-                startBtn.classList.add('active-ready');
-            }, 2500);
-        }
-
-        function startMatch() {
-            if(document.getElementById('start-btn').classList.contains('active-ready')) {
-                document.getElementById('confirm-modal').classList.add('open');
-            }
-        }
-
-        function closeConfirmModal() {
-            document.getElementById('confirm-modal').classList.remove('open');
-        }
-
-        function executeZoomAndStart() {
-            closeConfirmModal();
-            const roomId = localStorage.getItem('hc_roomId');
-            if (socket) {
-                socket.emit('player_ready', { roomId });
-            } else {
-                // Fallback for local testing
-                startCinematicTransition();
-            }
-        }
-
-        // Listener for server-side game start (Syncs both players)
-        if (socket) {
-            socket.on('game_start', (data) => {
-                startCinematicTransition();
-            });
-        }
-
-        function startCinematicTransition() {
-            // Phase 1: Vaporize the UI flawlessly
-            document.querySelector('.grand-lobby-shell').classList.add('fade-out-ui');
-            document.getElementById('chat-modal').classList.add('fade-out-ui');
-            document.getElementById('start-btn').classList.add('fade-out-ui');
-            
-            // Phase 2: Trigger Massive Cinematic Camera Pan
-            const stadiumBg = document.getElementById('bg-effect');
-            stadiumBg.classList.add('zoom-engage');
-
-            // Phase 3: Transition fully after exactly 7 seconds
-            setTimeout(() => {
-                window.location.href = 'hand_cricket_toss.html';
-            }, 7000);
-        }
-
         function leaveRoom() {
-            const roomId = localStorage.getItem('hc_roomId');
-            if (socket && roomId) {
-                if (isHost) {
-                    socket.emit('close_room', { roomId });
-                } else {
-                    socket.emit('leave_room', { roomId });
-                }
-            }
-            // Comprehensive Session Cleansing
-            const hcKeys = [
-                'hc_roomId', 'hc_isHost', 'hc_isBot', 'hc_opponentName', 
-                'hc_player_role', 'hc_toss_outcome', 'hc_toss_winner', 'hc_toss_choice'
-            ];
-            hcKeys.forEach(key => localStorage.removeItem(key));
-            
+            localStorage.removeItem('hc_roomId');
+            localStorage.removeItem('hc_opponentName');
             window.location.href = 'hand_cricket.html';
         }
 
-        // Listener for room closure (for guests)
-        if (socket) {
-            socket.on('room_closed', () => {
-                alert("THE ROOM HAS BEEN TERMINATED BY THE OPERATIVE-ONE.");
-                window.location.href = 'hand_cricket.html';
-            });
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log(e));
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
         }
     </script>
 </body>
