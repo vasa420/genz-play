@@ -2933,7 +2933,7 @@
                 
                 let currentVol = cEl.volume;
                 chaseFadeInterval = setInterval(() => {
-                    currentVol -= 0.08;
+                    currentVol -= 0.15;
                     if (currentVol <= 0.05) {
                         cEl.volume = 0;
                         cEl.pause();
@@ -2943,7 +2943,7 @@
                     } else {
                         cEl.volume = currentVol;
                     }
-                }, 50);
+                }, 25);
             }
         }
 
@@ -7058,20 +7058,12 @@
             if (micVolume > micVolumeThreshold) {
                 ghostStalking = true;
                 ghostAlertTimer = 180;
-                startChaseMusic();
-            }
-
-            if (ghostStalking) {
-                startChaseMusic();
             }
 
             if (ghostAlertTimer > 0) {
                 ghostAlertTimer--;
                 if (ghostAlertTimer === 0) {
                     ghostStalking = false;
-                    if (micVolume <= micVolumeThreshold) {
-                        stopChaseMusic();
-                    }
                 }
             }
 
@@ -7285,6 +7277,7 @@
 
             if (!micAnalyser || !micDataArray) {
                 micVolume = 0;
+                stopChaseMusic();
                 if (cachedNoiseEl && lastNoiseStatus !== 'NO MIC') {
                     cachedNoiseEl.textContent = "NO MIC";
                     cachedNoiseEl.style.color = "#888";
@@ -7302,21 +7295,21 @@
             
             micVolume = average * micSensitivity;
             
-            const newStatus = micVolume > micVolumeThreshold ? 'DANGER' : 'SAFE';
-            if (newStatus === 'DANGER') {
+            const isMicSoundPresent = micVolume > micVolumeThreshold;
+
+            if (isMicSoundPresent) {
                 ghostStalking = true;
                 ghostAlertTimer = 180;
                 startChaseMusic();
-            } else if (!ghostStalking) {
-                stopChaseMusic();
-            }
-
-            if (cachedNoiseEl && lastNoiseStatus !== newStatus && !isChaseMusicPlaying) {
-                lastNoiseStatus = newStatus;
-                if (newStatus === 'DANGER') {
-                    cachedNoiseEl.textContent = "DANGER! NOISE";
+                if (cachedNoiseEl && lastNoiseStatus !== 'DANGER') {
+                    lastNoiseStatus = 'DANGER';
+                    cachedNoiseEl.textContent = "DANGER! VOICE DETECTED";
                     cachedNoiseEl.style.color = "#ff3b30";
-                } else {
+                }
+            } else {
+                stopChaseMusic();
+                if (cachedNoiseEl && lastNoiseStatus !== 'SAFE') {
+                    lastNoiseStatus = 'SAFE';
                     cachedNoiseEl.textContent = "SAFE";
                     cachedNoiseEl.style.color = "#0f0";
                 }
