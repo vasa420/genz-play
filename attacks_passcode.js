@@ -291,6 +291,48 @@
                 color: #ff3355;
                 border-color: #ff3355;
             }
+
+            @media (max-width: 480px) {
+                .attacks-passcode-card {
+                    padding: 24px 16px;
+                    border-radius: 20px;
+                    width: 95%;
+                    max-width: 340px;
+                }
+                .attacks-shield-icon {
+                    width: 48px; height: 48px;
+                    font-size: 22px;
+                    margin-bottom: 12px;
+                    border-radius: 14px;
+                }
+                .attacks-passcode-title {
+                    font-size: 18px;
+                    letter-spacing: 1px;
+                }
+                .attacks-passcode-subtitle {
+                    font-size: 10px;
+                    margin-bottom: 16px;
+                }
+                .attacks-digits-row {
+                    gap: 6px;
+                    margin-bottom: 16px;
+                }
+                .attacks-digit-box {
+                    width: 42px;
+                    height: 48px;
+                    font-size: 18px;
+                    border-radius: 10px;
+                }
+                .attacks-keypad-grid {
+                    gap: 8px;
+                    max-width: 270px;
+                }
+                .attacks-key-btn {
+                    height: 44px;
+                    font-size: 16px;
+                    border-radius: 10px;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
