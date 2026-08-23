@@ -2231,6 +2231,7 @@
     <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3" preload="auto"></audio>
     <audio id="ghost-laugh" src="alex_jauk-evil-witch-laughing-sound-440272.mp3" preload="auto"></audio>
     <audio id="chase-music" src="50986408-psycho-violin-388911.mp3" loop preload="auto"></audio>
+    <audio id="creepy-kill-laugh" src="u_c98kb8pdp9-creepy-laugh-sound-203187.mp3" preload="auto"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -2952,7 +2953,8 @@
             'door-open': 'jongmankim8596-opening-the-front-door-210347.mp3',
             'impact-sound': 'dragon-studio-hard-heavy-impact-515256 (1).mp3',
             'ghost-laugh': 'alex_jauk-evil-witch-laughing-sound-440272.mp3',
-            'chase-music': '50986408-psycho-violin-388911.mp3'
+            'chase-music': '50986408-psycho-violin-388911.mp3',
+            'creepy-kill-laugh': 'u_c98kb8pdp9-creepy-laugh-sound-203187.mp3'
         };
 
         function preloadWebAudio() {
@@ -2998,7 +3000,8 @@
                 } else {
                     const el = document.getElementById(
                         soundName === 'door-open' ? 'door-open' :
-                        soundName === 'impact-sound' ? 'impact-sound' : 'ghost-laugh'
+                        soundName === 'impact-sound' ? 'impact-sound' :
+                        soundName === 'creepy-kill-laugh' ? 'creepy-kill-laugh' : 'ghost-laugh'
                     );
                     if (el) {
                         el.currentTime = 0;
@@ -8552,6 +8555,9 @@
             killSequenceTimer = 0;
             slashSoundPlayed = false;
             
+            // Play creepy laugh kill music instantly on ghost kill with 0ms delay!
+            playInstantSound('creepy-kill-laugh', 1.0);
+
             // Reset multiple slash sound states
             slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
             
@@ -8569,6 +8575,9 @@
             }
             document.body.style.cursor = 'default';
             
+            // Play creepy laugh kill music instantly on final jumpscare!
+            playInstantSound('creepy-kill-laugh', 1.0);
+
             // Display jumpscare overlay inside the gameplay screen
             const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
             jumpscareOverlay.style.display = 'flex';
