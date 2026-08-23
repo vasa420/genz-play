@@ -3299,48 +3299,66 @@
         let ghostStalking = false;
         let ghostAlertTimer = 0;
         
-        // Define floor maps: 10x10 grids (1 = wall, 0 = walkable, 5 = stairs)
+        // Define floor maps: 16x16 grids (1 = wall, 0 = walkable, 5 = stairs)
         const GROUND_FLOOR_MAP = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
-            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Staircase at (4, 4)
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
-            [1, 0, 0, 1, 0, 1, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 1, 0, 1, 0, 1], // Hidden Nook at (8, 3) connected to (8, 2)
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
+            [1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 5, 0, 0, 1, 0, 0, 0, 0, 1], // Staircase at (7, 7)
+            [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
 
         const SECOND_FLOOR_MAP = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
-            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Staircase at (4, 4)
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
-            [1, 0, 1, 0, 1, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 1, 1, 0, 1], // Hidden safe room at (8, 4) connected to (8, 3)
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 1], // Staircase at (7, 7)
+            [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1],
+            [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1],
+            [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
 
         const MORTUARY_FLOOR_MAP = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1], // Rooms: (1,1)-(1,3) and (1,5)-(1,8)
-            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1], // Walls separating rooms from hallway, doors at (1,2) and (1,6)
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], // Walkable hallway
-            [1, 0, 1, 1, 5, 1, 1, 1, 0, 1], // Stairs at (4, 4)
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], // Walkable hallway
-            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1], // Walls separating bottom rooms, doors at (7,2) and (7,6)
-            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1], // Rooms: (7,1)-(8,3) and (7,5)-(8,8)
-            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 5, 0, 0, 1, 0, 0, 0, 0, 1], // Staircase at (7, 7)
+            [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
         
         const CELL_SIZE = 4;
-        const MAP_SIZE = 10;
+        const MAP_SIZE = 16;
         const MAP_OFFSET = (MAP_SIZE * CELL_SIZE) / 2; // offset to center map at (0, 0)
 
         // Room name labeling mapping
@@ -5034,6 +5052,76 @@
                     }
                 }
             }
+
+            createBloodStreamsAndPools(group, floorIndex);
+            createSideWallVents(group, floorIndex);
+        }
+
+        function createBloodStreamsAndPools(group, floorIndex) {
+            const bloodLocations = [
+                { c: 3, r: 5 }, { c: 9, r: 5 },
+                { c: 5, r: 9 }, { c: 13, r: 9 },
+                { c: 7, r: 13 }, { c: 11, r: 13 }
+            ];
+
+            bloodLocations.forEach(loc => {
+                const wx = loc.c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                const wz = loc.r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+
+                const poolGeo = new THREE.PlaneGeometry(2.4, 0.8);
+                poolGeo.rotateX(-Math.PI / 2);
+                const poolMat = new THREE.MeshStandardMaterial({
+                    color: 0x4a0000,
+                    roughness: 0.06,
+                    metalness: 0.2,
+                    transparent: true,
+                    opacity: 0.88
+                });
+
+                const pool = new THREE.Mesh(poolGeo, poolMat);
+                pool.position.set(wx, 0.005, wz);
+                pool.rotation.y = Math.random() * Math.PI;
+                group.add(pool);
+            });
+        }
+
+        function createSideWallVents(group, floorIndex) {
+            const ventLocations = [
+                { c: 1, r: 4, rot: 0 },
+                { c: 14, r: 5, rot: Math.PI },
+                { c: 4, r: 11, rot: Math.PI / 2 },
+                { c: 11, r: 11, rot: -Math.PI / 2 }
+            ];
+
+            ventLocations.forEach(vl => {
+                const wx = vl.c * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                const wz = vl.r * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+
+                const ventGroup = new THREE.Group();
+                ventGroup.position.set(wx, 0.45, wz);
+                ventGroup.rotation.y = vl.rot;
+
+                const frameGeo = new THREE.BoxGeometry(0.9, 0.7, 0.08);
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+                const frame = new THREE.Mesh(frameGeo, frameMat);
+                ventGroup.add(frame);
+
+                const innerGeo = new THREE.BoxGeometry(0.78, 0.58, 0.05);
+                const innerMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                const inner = new THREE.Mesh(innerGeo, innerMat);
+                inner.position.z = 0.02;
+                ventGroup.add(inner);
+
+                for (let b = -0.22; b <= 0.22; b += 0.11) {
+                    const barGeo = new THREE.BoxGeometry(0.76, 0.02, 0.02);
+                    const barMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 });
+                    const bar = new THREE.Mesh(barGeo, barMat);
+                    bar.position.set(0, b, 0.03);
+                    ventGroup.add(bar);
+                }
+
+                group.add(ventGroup);
+            });
         }
 
         function createBloodStainedSheetTexture() {
@@ -5455,8 +5543,9 @@
 
         function spawnGiantSnakes(floorGroup, floorIndex) {
             const spawnPoints = [
-                { x: 2, z: 2 }, { x: 7, z: 2 },
-                { x: 3, z: 7 }, { x: 8, z: 7 }
+                { x: 2, z: 5 }, { x: 9, z: 5 },
+                { x: 5, z: 9 }, { x: 13, z: 9 },
+                { x: 3, z: 13 }, { x: 11, z: 13 }
             ];
 
             spawnPoints.forEach(sp => {
@@ -5469,6 +5558,90 @@
                 floorGroup.add(snake);
                 giantSnakes.push(snake);
             });
+        }
+
+        function triggerSnakeStrikeJumpscare() {
+            try {
+                if (camera) {
+                    camera.rotation.z += (Math.random() > 0.5 ? 1 : -1) * 0.25;
+                }
+                playInstantSound('ghost-laugh', 0.8);
+                const flash = document.getElementById('kill-blood-splatter');
+                if (flash) {
+                    flash.style.display = 'block';
+                    flash.style.opacity = '0.9';
+                    flash.style.transition = 'none';
+                    flash.offsetHeight;
+                    flash.style.transition = 'opacity 0.4s ease-out';
+                    flash.style.opacity = '0';
+                }
+            } catch(e){}
+        }
+
+        let isCrowJumpscareActive = false;
+        function triggerCrowJumpscare() {
+            if (isCrowJumpscareActive || !camera || !scene) return;
+            isCrowJumpscareActive = true;
+
+            try {
+                const crowGroup = new THREE.Group();
+                const crowMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
+                const wingMat = new THREE.MeshBasicMaterial({ color: 0x141414 });
+
+                for (let i = 0; i < 4; i++) {
+                    const crow = new THREE.Group();
+                    const body = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 5), crowMat);
+                    body.rotation.x = Math.PI / 2;
+                    crow.add(body);
+
+                    const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.02, 0.15), wingMat);
+                    leftWing.position.x = -0.18;
+                    leftWing.name = "leftWing";
+                    crow.add(leftWing);
+
+                    const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.02, 0.15), wingMat);
+                    rightWing.position.x = 0.18;
+                    rightWing.name = "rightWing";
+                    crow.add(rightWing);
+
+                    crow.position.set((i - 1.5) * 0.4, (Math.random() - 0.5) * 0.3, -0.5);
+                    crowGroup.add(crow);
+                }
+
+                camera.add(crowGroup);
+                crowGroup.position.set(-2.5, 0.2, -1.2);
+                crowGroup.rotation.y = Math.PI / 4;
+
+                playInstantSound('ghost-laugh', 0.9);
+
+                let startTime = performance.now();
+                const duration = 550;
+
+                function animateCrows() {
+                    const elapsed = performance.now() - startTime;
+                    const progress = elapsed / duration;
+
+                    if (progress < 1.0) {
+                        crowGroup.position.x = -2.5 + progress * 5.0;
+                        crowGroup.position.z = -1.2 + Math.sin(progress * Math.PI) * 0.4;
+                        
+                        crowGroup.children.forEach(crow => {
+                            const lw = crow.getObjectByName("leftWing");
+                            const rw = crow.getObjectByName("rightWing");
+                            if (lw) lw.rotation.z = Math.sin(elapsed * 0.04) * 0.6;
+                            if (rw) rw.rotation.z = -Math.sin(elapsed * 0.04) * 0.6;
+                        });
+                        
+                        requestAnimationFrame(animateCrows);
+                    } else {
+                        camera.remove(crowGroup);
+                        isCrowJumpscareActive = false;
+                    }
+                }
+                requestAnimationFrame(animateCrows);
+            } catch(e) {
+                isCrowJumpscareActive = false;
+            }
         }
 
         function updateGiantSnakes() {
@@ -5486,23 +5659,31 @@
                 const newX = snake.position.x + stepX;
                 const newZ = snake.position.z + stepZ;
 
-                const gridX = Math.floor((newX + MAP_OFFSET) / CELL_SIZE);
-                const gridZ = Math.floor((newZ + MAP_OFFSET) / CELL_SIZE);
-
-                let isWall = false;
                 let currentMap = GROUND_FLOOR_MAP;
                 if (ud.floor === 1) currentMap = SECOND_FLOOR_MAP;
                 else if (ud.floor === 2) currentMap = MORTUARY_FLOOR_MAP;
 
-                if (gridX >= 0 && gridX < MAP_SIZE && gridZ >= 0 && gridZ < MAP_SIZE) {
-                    if (currentMap[gridZ][gridX] === 1) isWall = true;
-                } else {
-                    isWall = true;
+                // Radial wall collision checking to ensure snake NEVER enters inside walls!
+                const radius = 0.55;
+                const gridMinX = Math.floor((newX - radius + MAP_OFFSET) / CELL_SIZE);
+                const gridMaxX = Math.floor((newX + radius + MAP_OFFSET) / CELL_SIZE);
+                const gridMinZ = Math.floor((newZ - radius + MAP_OFFSET) / CELL_SIZE);
+                const gridMaxZ = Math.floor((newZ + radius + MAP_OFFSET) / CELL_SIZE);
+
+                let isWall = false;
+                for (let r = gridMinZ; r <= gridMaxZ; r++) {
+                    for (let c = gridMinX; c <= gridMaxX; c++) {
+                        if (r < 0 || r >= MAP_SIZE || c < 0 || c >= MAP_SIZE || currentMap[r][c] === 1) {
+                            isWall = true;
+                            break;
+                        }
+                    }
+                    if (isWall) break;
                 }
 
                 ud.changeDirTimer++;
-                if (isWall || ud.changeDirTimer > 120 + Math.random() * 100) {
-                    ud.angle += (Math.random() - 0.5) * Math.PI + Math.PI / 2;
+                if (isWall || ud.changeDirTimer > 100 + Math.random() * 80) {
+                    ud.angle += Math.PI * (0.5 + Math.random() * 0.5);
                     ud.changeDirTimer = 0;
                 } else {
                     snake.position.x = newX;
@@ -5523,11 +5704,12 @@
                 if (ud.floor === activeFloor) {
                     const dx = playerWorldX - snake.position.x;
                     const dz = playerWorldZ - snake.position.z;
-                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    const dist = Math.hypot(dx, dz);
 
-                    if (dist < 3.2 && ud.hissCooldown <= 0) {
+                    if (dist < 2.8 && ud.hissCooldown <= 0) {
                         playSnakeHissSound(dist);
-                        ud.hissCooldown = 180 + Math.random() * 100;
+                        triggerSnakeStrikeJumpscare();
+                        ud.hissCooldown = 220;
                     }
                     if (ud.hissCooldown > 0) ud.hissCooldown--;
 
@@ -6817,10 +6999,11 @@
         function findGhostPath(startCell, targetCell, map) {
             if (startCell.x === targetCell.x && startCell.z === targetCell.z) return null;
             const queue = [startCell];
-            const visited = new Uint8Array(100);
-            const parent = new Int16Array(100).fill(-1);
+            const maxCells = MAP_SIZE * MAP_SIZE;
+            const visited = new Uint8Array(maxCells);
+            const parent = new Int16Array(maxCells).fill(-1);
             
-            visited[startCell.z * 10 + startCell.x] = 1;
+            visited[startCell.z * MAP_SIZE + startCell.x] = 1;
             let found = false;
             let head = 0;
             
@@ -6839,11 +7022,11 @@
                 
                 for (let i = 0; i < 4; i++) {
                     const nx = neighbors[i].x, nz = neighbors[i].z;
-                    if (nx >= 0 && nx < 10 && nz >= 0 && nz < 10 && map[nz][nx] !== 1) {
-                        const idx = nz * 10 + nx;
+                    if (nx >= 0 && nx < MAP_SIZE && nz >= 0 && nz < MAP_SIZE && map[nz][nx] !== 1) {
+                        const idx = nz * MAP_SIZE + nx;
                         if (!visited[idx]) {
                             visited[idx] = 1;
-                            parent[idx] = cz * 10 + cx;
+                            parent[idx] = cz * MAP_SIZE + cx;
                             queue.push({ x: nx, z: nz });
                         }
                     }
@@ -6853,9 +7036,9 @@
             if (!found) return null;
             
             const path = [];
-            let currIdx = targetCell.z * 10 + targetCell.x;
+            let currIdx = targetCell.z * MAP_SIZE + targetCell.x;
             while (currIdx !== -1) {
-                path.unshift({ x: currIdx % 10, z: Math.floor(currIdx / 10) });
+                path.unshift({ x: currIdx % MAP_SIZE, z: Math.floor(currIdx / MAP_SIZE) });
                 currIdx = parent[currIdx];
             }
             return path;
@@ -6906,8 +7089,8 @@
                 
                 if (!isSameFloor) {
                     // Go to the stairs to change floors!
-                    targetCellX = 4;
-                    targetCellZ = 4;
+                    targetCellX = 7;
+                    targetCellZ = 7;
                 }
                 
                 const startCellX = Math.min(MAP_SIZE - 1, Math.max(0, Math.floor(ghostPos.x)));
@@ -6945,8 +7128,8 @@
                         targetX = playerWorldX;
                         targetZ = playerWorldZ;
                     } else {
-                        targetX = 4.5;
-                        targetZ = 4.5;
+                        targetX = 7.5;
+                        targetZ = 7.5;
                     }
                 }
                 
@@ -6960,11 +7143,11 @@
                 ghostPos.z += stepZ;
                 isMoving = true;
 
-                // Transition floor when reaching stairs (4, 4)
-                if (!isSameFloor && Math.floor(ghostPos.x) === 4 && Math.floor(ghostPos.z) === 4) {
+                // Transition floor when reaching stairs (7, 7)
+                if (!isSameFloor && Math.floor(ghostPos.x) === 7 && Math.floor(ghostPos.z) === 7) {
                     ghostFloor = activeFloor; // climb stairs to player's floor
-                    ghostPos.x = 4.5;
-                    ghostPos.z = 4.5;
+                    ghostPos.x = 7.5;
+                    ghostPos.z = 7.5;
                 }
             } else {
                 // Patrol roaming
@@ -7156,9 +7339,9 @@
                 const gridX = Math.floor(playerPos.x);
                 const gridZ = Math.floor(playerPos.z);
                 
-                if (gridX === 4 && gridZ === 4) {
-                    // Continuous 3D step elevation calculation in stairwell cell (4, 4)
-                    const zProgress = Math.max(0, Math.min(1, playerPos.z - 4.0));
+                if (gridX === 7 && gridZ === 7) {
+                    // Continuous 3D step elevation calculation in stairwell cell (7, 7)
+                    const zProgress = Math.max(0, Math.min(1, playerPos.z - 7.0));
                     if (activeFloor === 0) {
                         targetPlayerBaseY = zProgress * 4.0;
                     } else if (activeFloor === 1) {
@@ -7231,9 +7414,9 @@
             const gridZ = Math.floor(playerPos.z);
             const promptEl = document.getElementById('staircase-prompt');
 
-            // Staircase cell is (4, 4)
-            if (gridX === 4 && gridZ === 4) {
-                const zProgress = playerPos.z - 4.0;
+            // Staircase cell is (7, 7)
+            if (gridX === 7 && gridZ === 7) {
+                const zProgress = playerPos.z - 7.0;
                 
                 if (stairCooldown <= 0) {
                     // Stepping off top of stairs onto higher floor
@@ -7313,12 +7496,12 @@
                 try {
                     if (isAscending) {
                         activeFloor = activeFloor === 0 ? 1 : (activeFloor === 1 ? 2 : 0);
-                        playerPos.x = 4.5;
-                        playerPos.z = 4.08; // start at bottom of stairs on new floor
+                        playerPos.x = 7.5;
+                        playerPos.z = 7.08; // start at bottom of stairs on new floor
                     } else {
                         activeFloor = activeFloor === 2 ? 1 : (activeFloor === 1 ? 0 : 2);
-                        playerPos.x = 4.5;
-                        playerPos.z = 4.92; // start at top of stairs on lower floor
+                        playerPos.x = 7.5;
+                        playerPos.z = 7.92; // start at top of stairs on lower floor
                     }
 
                     if (groundFloorGroup) groundFloorGroup.visible = (activeFloor === 0);
@@ -7490,8 +7673,8 @@
                     playerPos.z = newZ;
                 }
 
-                playerPos.x = Math.max(0.6, Math.min(9.4, playerPos.x));
-                playerPos.z = Math.max(0.6, Math.min(9.4, playerPos.z));
+                playerPos.x = Math.max(0.6, Math.min(MAP_SIZE - 0.6, playerPos.x));
+                playerPos.z = Math.max(0.6, Math.min(MAP_SIZE - 0.6, playerPos.z));
 
                 updateCameraPosition();
                 handleWalkFootsteps();
@@ -7907,6 +8090,10 @@
                 updateDustParticles();
                 updateCreatures();
                 updateGiantSnakes();
+
+                if ((keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d) && Math.random() < 0.0006) {
+                    triggerCrowJumpscare();
+                }
 
                 if (activeFloor === 2) {
                     updateParanormalActivity();
