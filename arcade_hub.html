@@ -975,6 +975,12 @@
 
         function launchGame(url) {
             playHeaderClickSound();
+            if (url.includes('attacks') && sessionStorage.getItem('attacks_unlocked') !== 'true') {
+                if (window.openAttacksPasscodeModal) {
+                    window.openAttacksPasscodeModal(url);
+                    return;
+                }
+            }
             const dimmer = document.createElement('div');
             dimmer.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -1031,5 +1037,6 @@
 
         setInterval(rotateHeroTitle, 10000);
     </script>
+    <script src="attacks_passcode.js"></script>
 </body>
 </html>
