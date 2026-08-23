@@ -11,6 +11,16 @@
     let pendingDestination = null;
     let isVerifying = false;
 
+    // If on main hub pages (outside ATTACKS app), reset unlock state so re-entry always prompts
+    function isHubPage() {
+        const path = window.location.pathname.toLowerCase();
+        return path.endsWith('index.html') || path.endsWith('arcade_hub.html') || path === '/' || path.endsWith('/');
+    }
+
+    if (isHubPage()) {
+        sessionStorage.removeItem('attacks_unlocked');
+    }
+
     // Web Audio Sound Synthesizer
     function playAudioTone(freq, type, duration) {
         try {
@@ -70,9 +80,9 @@
             .attacks-passcode-overlay {
                 position: fixed;
                 top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(3, 6, 17, 0.88);
-                backdrop-filter: blur(18px);
-                -webkit-backdrop-filter: blur(18px);
+                background: rgba(3, 6, 17, 0.92);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
                 z-index: 999999;
                 display: flex;
                 align-items: center;
@@ -428,7 +438,7 @@
             const box = document.getElementById(`digit-${i}`);
             if (box) {
                 if (i < currentInput.length) {
-                    box.innerText = '●'; // Bullet dot or number: currentInput[i]
+                    box.innerText = '●';
                     box.classList.add('filled');
                     box.classList.remove('active-cursor');
                 } else if (i === currentInput.length) {
@@ -513,13 +523,14 @@
         return path.endsWith('attacks_game.html') || path.endsWith('attacks_lobby.html');
     }
 
-    // Public API
-    window.openAttacksPasscodeModal = function(destinationUrl) {
-        if (sessionStorage.getItem('attacks_unlocked') === 'true') {
+    // Public API: Always opens passcode modal when requested or launching ATTACKS
+    window.openAttacksPasscodeModal = function(destinationUrl, forcePrompt) {
+        if (!forcePrompt && sessionStorage.getItem('attacks_unlocked') === 'true') {
             if (destinationUrl) window.location.href = destinationUrl;
             return;
         }
 
+        // If forcePrompt (e.g. clicking card from outside hub), require passcode entry every time
         pendingDestination = destinationUrl || null;
         currentInput = '';
         isVerifying = false;
