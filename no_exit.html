@@ -7078,7 +7078,7 @@
                 }
 
                 // Smooth camera height lerping for stutter-free 60fps movement
-                smoothPlayerBaseY += (targetPlayerBaseY - smoothPlayerBaseY) * 0.25;
+                smoothPlayerBaseY += (targetPlayerBaseY - smoothPlayerBaseY) * 0.35;
 
                 camera.position.set(
                     playerPos.x * CELL_SIZE - MAP_OFFSET,
@@ -7086,6 +7086,28 @@
                     playerPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
+        }
+
+        function updateStairFloorVisibility() {
+            if (activeFloor === 0) {
+                if (groundFloorGroup) groundFloorGroup.visible = true;
+                if (secondFloorGroup) secondFloorGroup.visible = true;
+                if (mortuaryFloorGroup) mortuaryFloorGroup.visible = false;
+            } else if (activeFloor === 1) {
+                if (groundFloorGroup) groundFloorGroup.visible = true;
+                if (secondFloorGroup) secondFloorGroup.visible = true;
+                if (mortuaryFloorGroup) mortuaryFloorGroup.visible = true;
+            } else {
+                if (groundFloorGroup) groundFloorGroup.visible = false;
+                if (secondFloorGroup) secondFloorGroup.visible = true;
+                if (mortuaryFloorGroup) mortuaryFloorGroup.visible = true;
+            }
+        }
+
+        function syncFloorVisibility() {
+            if (groundFloorGroup) groundFloorGroup.visible = (activeFloor === 0);
+            if (secondFloorGroup) secondFloorGroup.visible = (activeFloor === 1);
+            if (mortuaryFloorGroup) mortuaryFloorGroup.visible = (activeFloor === 2);
         }
 
         function getCurrentLocationName() {
@@ -7107,7 +7129,6 @@
             if (!isGameRunning) return;
             if (stairCooldown > 0) {
                 stairCooldown--;
-                return;
             }
 
             const gridX = Math.floor(playerPos.x);
@@ -7118,20 +7139,28 @@
             if (gridX === 4 && gridZ === 4) {
                 const zProgress = playerPos.z - 4.0;
                 
-                // Stepping off top of stairs onto higher floor
-                if (zProgress >= 0.92) {
-                    if (activeFloor === 0) { activeFloor = 1; stairCooldown = 25; }
-                    else if (activeFloor === 1) { activeFloor = 2; stairCooldown = 25; }
+                if (stairCooldown <= 0) {
+                    // Stepping off top of stairs onto higher floor
+                    if (zProgress >= 0.90) {
+                        if (activeFloor === 0) { activeFloor = 1; stairCooldown = 18; try { playCreakyFootstep(); } catch(e){} }
+                        else if (activeFloor === 1) { activeFloor = 2; stairCooldown = 18; try { playCreakyFootstep(); } catch(e){} }
+                    }
+                    // Stepping off bottom of stairs onto lower floor
+                    else if (zProgress <= 0.10) {
+                        if (activeFloor === 1) { activeFloor = 0; stairCooldown = 18; try { playCreakyFootstep(); } catch(e){} }
+                        else if (activeFloor === 2) { activeFloor = 1; stairCooldown = 18; try { playCreakyFootstep(); } catch(e){} }
+                    }
                 }
-                // Stepping off bottom of stairs onto lower floor
-                else if (zProgress <= 0.08) {
-                    if (activeFloor === 1) { activeFloor = 0; stairCooldown = 25; }
-                    else if (activeFloor === 2) { activeFloor = 1; stairCooldown = 25; }
-                }
+
+                // Seamlessly show adjacent 3D floor groups while on the stairs
+                updateStairFloorVisibility();
 
                 if (promptEl) promptEl.style.display = 'none';
                 currentInteractiveDoor = null;
                 return;
+            } else {
+                // Outside stairwell: sync current active floor 3D group
+                syncFloorVisibility();
             }
 
             isNearStairs = false;
