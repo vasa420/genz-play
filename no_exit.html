@@ -2735,6 +2735,7 @@
         let headphoneMonitorInterval = null;
 
         let gameAudioCtx = null;
+        let sharedNoiseBuffer = null;
         function getAudioContext() {
             if (!gameAudioCtx) {
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -2744,6 +2745,18 @@
                 gameAudioCtx.resume();
             }
             return gameAudioCtx;
+        }
+
+        function getSharedNoiseBuffer(ctx) {
+            if (!sharedNoiseBuffer && ctx) {
+                const bufferSize = Math.floor(ctx.sampleRate * 0.4);
+                sharedNoiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = sharedNoiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+            }
+            return sharedNoiseBuffer;
         }
 
         function startHeadphoneMonitor() {
@@ -3437,9 +3450,11 @@
             camera.rotation.y = mouseYaw;
             camera.rotation.x = mousePitch;
 
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.BasicShadowMap;
 
             // Initialize or reset CCTV render targets
             if (cctvTargets && cctvTargets.length > 0) {
@@ -5458,12 +5473,7 @@
         function playSnakeHissSound(dist) {
             try {
                 const ctx = getAudioContext();
-                const bufferSize = ctx.sampleRate * 0.4;
-                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = Math.random() * 2 - 1;
-                }
+                const buffer = getSharedNoiseBuffer(ctx);
 
                 const noise = ctx.createBufferSource();
                 noise.buffer = buffer;
@@ -6215,8 +6225,17 @@
                 ratMesh.position.set(startPos.x, 0.02, startPos.z);
                 group.add(ratMesh);
                 
+                const ratParts = {
+                    tail: ratMesh.children.find(child => child.name === "tail"),
+                    flLeg: ratMesh.children.find(child => child.name === "flLeg"),
+                    frLeg: ratMesh.children.find(child => child.name === "frLeg"),
+                    blLeg: ratMesh.children.find(child => child.name === "blLeg"),
+                    brLeg: ratMesh.children.find(child => child.name === "brLeg")
+                };
+
                 group.creatures.push({
                     mesh: ratMesh,
+                    parts: ratParts,
                     type: 'rat',
                     pos: { x: startPos.x, z: startPos.z },
                     targetPos: getRandomWalkablePos(),
@@ -6234,8 +6253,20 @@
                 roachMesh.position.set(startPos.x, 0.005, startPos.z);
                 group.add(roachMesh);
                 
+                const groupA = ["leg_LF", "leg_RM", "leg_LB"].map(n => roachMesh.children.find(c => c.name === n)).filter(Boolean);
+                const groupB = ["leg_RF", "leg_LM", "leg_RB"].map(n => roachMesh.children.find(c => c.name === n)).filter(Boolean);
+                const allLegs = [...groupA, ...groupB];
+                const roachParts = {
+                    leftAnt: roachMesh.children.find(c => c.name === "leftAnt"),
+                    rightAnt: roachMesh.children.find(c => c.name === "rightAnt"),
+                    groupA: groupA,
+                    groupB: groupB,
+                    allLegs: allLegs
+                };
+
                 group.creatures.push({
                     mesh: roachMesh,
+                    parts: roachParts,
                     type: 'cockroach',
                     pos: { x: startPos.x, z: startPos.z },
                     targetPos: getRandomWalkablePos(),
@@ -6274,37 +6305,20 @@
                     // Wiggle antennae or tail slightly while idle
                     const t = performance.now() * 0.01;
                     if (c.type === 'rat') {
-                        // Wiggle tail
-                        const tail = c.mesh.children.find(child => child.name === "tail");
-                        if (tail) tail.rotation.z = Math.sin(t * 1.5) * 0.15;
-                        
-                        // Dampen leg swings back to rest position
-                        const flLeg = c.mesh.children.find(child => child.name === "flLeg");
-                        const frLeg = c.mesh.children.find(child => child.name === "frLeg");
-                        const blLeg = c.mesh.children.find(child => child.name === "blLeg");
-                        const brLeg = c.mesh.children.find(child => child.name === "brLeg");
-                        if (flLeg) flLeg.rotation.x *= 0.8;
-                        if (frLeg) frLeg.rotation.x *= 0.8;
-                        if (blLeg) blLeg.rotation.x *= 0.8;
-                        if (brLeg) brLeg.rotation.x *= 0.8;
+                        if (c.parts.tail) c.parts.tail.rotation.z = Math.sin(t * 1.5) * 0.15;
+                        if (c.parts.flLeg) c.parts.flLeg.rotation.x *= 0.8;
+                        if (c.parts.frLeg) c.parts.frLeg.rotation.x *= 0.8;
+                        if (c.parts.blLeg) c.parts.blLeg.rotation.x *= 0.8;
+                        if (c.parts.brLeg) c.parts.brLeg.rotation.x *= 0.8;
                     } else if (c.type === 'cockroach') {
-                        // Wiggle antennae
-                        const leftAnt = c.mesh.children.find(child => child.name === "leftAnt");
-                        const rightAnt = c.mesh.children.find(child => child.name === "rightAnt");
-                        if (leftAnt) leftAnt.rotation.y = 0.45 + Math.sin(t * 4.0) * 0.12;
-                        if (rightAnt) rightAnt.rotation.y = -0.45 + Math.cos(t * 4.0) * 0.12;
-                        
-                        // Dampen leg swings
-                        const legs = ["leg_LF", "leg_LM", "leg_LB", "leg_RF", "leg_RM", "leg_RB"];
-                        legs.forEach(legName => {
-                            const leg = c.mesh.children.find(child => child.name === legName);
-                            if (leg) {
+                        if (c.parts.leftAnt) c.parts.leftAnt.rotation.y = 0.45 + Math.sin(t * 4.0) * 0.12;
+                        if (c.parts.rightAnt) c.parts.rightAnt.rotation.y = -0.45 + Math.cos(t * 4.0) * 0.12;
+                        if (c.parts.allLegs) {
+                            c.parts.allLegs.forEach(leg => {
                                 leg.rotation.z *= 0.8;
                                 leg.rotation.x *= 0.8;
-                            }
-                        });
-                        
-                        // Wiggle body slightly
+                            });
+                        }
                         c.mesh.rotation.y += Math.sin(t * 3) * 0.01;
                     }
                     
@@ -6335,48 +6349,23 @@
                         c.mesh.rotation.y += Math.sin(performance.now() * wiggleSpeed) * wiggleAmp;
                         
                         if (c.type === 'rat') {
-                            // Scurry bobbing
                             c.mesh.position.y = 0.02 + Math.abs(Math.sin(performance.now() * 0.02)) * 0.015;
-                            
-                            // Leg swinging scurry animation
                             const animTime = performance.now() * 0.035;
-                            const flLeg = c.mesh.children.find(child => child.name === "flLeg");
-                            const frLeg = c.mesh.children.find(child => child.name === "frLeg");
-                            const blLeg = c.mesh.children.find(child => child.name === "blLeg");
-                            const brLeg = c.mesh.children.find(child => child.name === "brLeg");
-                            if (flLeg) flLeg.rotation.x = Math.sin(animTime) * 0.6;
-                            if (frLeg) frLeg.rotation.x = -Math.sin(animTime) * 0.6;
-                            if (blLeg) blLeg.rotation.x = -Math.sin(animTime) * 0.6;
-                            if (brLeg) brLeg.rotation.x = Math.sin(animTime) * 0.6;
-                            
-                            // Scurry tail wagging
-                            const tail = c.mesh.children.find(child => child.name === "tail");
-                            if (tail) tail.rotation.y = Math.sin(animTime) * 0.25;
+                            if (c.parts.flLeg) c.parts.flLeg.rotation.x = Math.sin(animTime) * 0.6;
+                            if (c.parts.frLeg) c.parts.frLeg.rotation.x = -Math.sin(animTime) * 0.6;
+                            if (c.parts.blLeg) c.parts.blLeg.rotation.x = -Math.sin(animTime) * 0.6;
+                            if (c.parts.brLeg) c.parts.brLeg.rotation.x = Math.sin(animTime) * 0.6;
+                            if (c.parts.tail) c.parts.tail.rotation.y = Math.sin(animTime) * 0.25;
                         } else if (c.type === 'cockroach') {
                             const t = performance.now() * 0.01;
-                            // Scurry antennae wiggling
-                            const leftAnt = c.mesh.children.find(child => child.name === "leftAnt");
-                            const rightAnt = c.mesh.children.find(child => child.name === "rightAnt");
-                            if (leftAnt) leftAnt.rotation.y = 0.45 + Math.sin(t * 8.0) * 0.2;
-                            if (rightAnt) rightAnt.rotation.y = -0.45 + Math.cos(t * 8.0) * 0.2;
+                            if (c.parts.leftAnt) c.parts.leftAnt.rotation.y = 0.45 + Math.sin(t * 8.0) * 0.2;
+                            if (c.parts.rightAnt) c.parts.rightAnt.rotation.y = -0.45 + Math.cos(t * 8.0) * 0.2;
 
-                            // Alternating tripod gait leg swinging
                             const walkCycle = performance.now() * 0.05 * c.speed * 20;
-                            const groupALegs = ["leg_LF", "leg_RM", "leg_LB"];
-                            const groupBLegs = ["leg_RF", "leg_LM", "leg_RB"];
-                            
                             const angleSwing = Math.sin(walkCycle) * 0.35;
-                            
-                            groupALegs.forEach(legName => {
-                                const leg = c.mesh.children.find(child => child.name === legName);
-                                if (leg) leg.rotation.z = angleSwing;
-                            });
-                            groupBLegs.forEach(legName => {
-                                const leg = c.mesh.children.find(child => child.name === legName);
-                                if (leg) leg.rotation.z = -angleSwing;
-                            });
+                            if (c.parts.groupA) c.parts.groupA.forEach(leg => leg.rotation.z = angleSwing);
+                            if (c.parts.groupB) c.parts.groupB.forEach(leg => leg.rotation.z = -angleSwing);
 
-                            // High frequency body vibration/wobble
                             c.mesh.position.y = 0.005 + Math.sin(walkCycle * 2.0) * 0.002;
                         }
                     } else {
@@ -6758,38 +6747,50 @@
         }
 
         function findGhostPath(startCell, targetCell, map) {
-            const queue = [[startCell]];
-            const visited = new Set();
-            visited.add(`${startCell.x},${startCell.z}`);
+            if (startCell.x === targetCell.x && startCell.z === targetCell.z) return null;
+            const queue = [startCell];
+            const visited = new Uint8Array(100);
+            const parent = new Int16Array(100).fill(-1);
             
-            while (queue.length > 0) {
-                const path = queue.shift();
-                const curr = path[path.length - 1];
-                
+            visited[startCell.z * 10 + startCell.x] = 1;
+            let found = false;
+            let head = 0;
+            
+            while (head < queue.length) {
+                const curr = queue[head++];
                 if (curr.x === targetCell.x && curr.z === targetCell.z) {
-                    return path;
+                    found = true;
+                    break;
                 }
                 
+                const cx = curr.x, cz = curr.z;
                 const neighbors = [
-                    { x: curr.x + 1, z: curr.z },
-                    { x: curr.x - 1, z: curr.z },
-                    { x: curr.x, z: curr.z + 1 },
-                    { x: curr.x, z: curr.z - 1 }
+                    { x: cx + 1, z: cz }, { x: cx - 1, z: cz },
+                    { x: cx, z: cz + 1 }, { x: cx, z: cz - 1 }
                 ];
                 
-                for (const n of neighbors) {
-                    if (n.x >= 0 && n.x < 10 && n.z >= 0 && n.z < 10) {
-                        if (map[n.z][n.x] !== 1) { // !== 1 is walkable (corridor 0 or stairs 5)
-                            const key = `${n.x},${n.z}`;
-                            if (!visited.has(key)) {
-                                visited.add(key);
-                                queue.push([...path, n]);
-                            }
+                for (let i = 0; i < 4; i++) {
+                    const nx = neighbors[i].x, nz = neighbors[i].z;
+                    if (nx >= 0 && nx < 10 && nz >= 0 && nz < 10 && map[nz][nx] !== 1) {
+                        const idx = nz * 10 + nx;
+                        if (!visited[idx]) {
+                            visited[idx] = 1;
+                            parent[idx] = cz * 10 + cx;
+                            queue.push({ x: nx, z: nz });
                         }
                     }
                 }
             }
-            return null;
+            
+            if (!found) return null;
+            
+            const path = [];
+            let currIdx = targetCell.z * 10 + targetCell.x;
+            while (currIdx !== -1) {
+                path.unshift({ x: currIdx % 10, z: Math.floor(currIdx / 10) });
+                currIdx = parent[currIdx];
+            }
+            return path;
         }
 
         function updateGhostAI() {
@@ -7017,11 +7018,19 @@
                 });
         }
 
+        let cachedNoiseEl = null;
+        let lastNoiseStatus = '';
+
         function updateMicVolumeLevel() {
+            if (!cachedNoiseEl) cachedNoiseEl = document.getElementById('hud-noise-level');
+
             if (!micAnalyser || !micDataArray) {
                 micVolume = 0;
-                document.getElementById('hud-noise-level').textContent = "NO MIC";
-                document.getElementById('hud-noise-level').style.color = "#888";
+                if (cachedNoiseEl && lastNoiseStatus !== 'NO MIC') {
+                    cachedNoiseEl.textContent = "NO MIC";
+                    cachedNoiseEl.style.color = "#888";
+                    lastNoiseStatus = 'NO MIC';
+                }
                 return;
             }
 
@@ -7033,14 +7042,17 @@
             const average = sum / micDataArray.length;
             
             micVolume = average * micSensitivity;
-            const noiseEl = document.getElementById('hud-noise-level');
             
-            if (micVolume > micVolumeThreshold) {
-                noiseEl.textContent = "DANGER! NOISE";
-                noiseEl.style.color = "#ff3b30";
-            } else {
-                noiseEl.textContent = "SAFE";
-                noiseEl.style.color = "#0f0";
+            const newStatus = micVolume > micVolumeThreshold ? 'DANGER' : 'SAFE';
+            if (cachedNoiseEl && lastNoiseStatus !== newStatus) {
+                lastNoiseStatus = newStatus;
+                if (newStatus === 'DANGER') {
+                    cachedNoiseEl.textContent = "DANGER! NOISE";
+                    cachedNoiseEl.style.color = "#ff3b30";
+                } else {
+                    cachedNoiseEl.textContent = "SAFE";
+                    cachedNoiseEl.style.color = "#0f0";
+                }
             }
         }
 
@@ -7311,10 +7323,11 @@
             }
         }
 
-        function handleMovement() {
+        function handleMovement(dt) {
             if (!isGameRunning || isTransitioningFloor || isMapOpen) return;
 
-            const moveSpeed = 0.035;
+            const deltaSec = (dt && dt > 0) ? dt : 0.016;
+            const moveSpeed = 2.1 * deltaSec;
             let moveX = 0;
             let moveZ = 0;
 
@@ -7364,10 +7377,14 @@
 
                 const now = performance.now();
                 const deltaSeconds = (now - lastWalkTimeUpdate) / 1000;
+                lastWalkTimeUpdate = now;
                 walkTimer += deltaSeconds;
                 
                 const minutesWalked = (walkTimer * 10) / 60;
-                document.getElementById('hud-survival-time').textContent = `${minutesWalked.toFixed(2)} / 20.00 MIN`;
+                if (frameCount % 6 === 0) {
+                    const timeEl = document.getElementById('hud-survival-time');
+                    if (timeEl) timeEl.textContent = `${minutesWalked.toFixed(2)} / 20.00 MIN`;
+                }
 
                 if (minutesWalked >= 20) {
                     triggerVictory();
@@ -7446,12 +7463,7 @@
         function playFootstepSound() {
             try {
                 const ctx = getAudioContext();
-                const bufferSize = ctx.sampleRate * 0.15;
-                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = Math.random() * 2 - 1;
-                }
+                const buffer = getSharedNoiseBuffer(ctx);
 
                 const noise = ctx.createBufferSource();
                 noise.buffer = buffer;
@@ -7737,6 +7749,9 @@
 
             requestAnimationFrame(animateHorrorGame);
 
+            if (!window.gameClock) window.gameClock = new THREE.Clock();
+            const dt = Math.min(window.gameClock.getDelta(), 0.05);
+
             // Update water leaking dripping/splashing particles
             updateWaterLeaks();
 
@@ -7762,7 +7777,7 @@
             if (isKillingActive) {
                 updateKillingSequence();
             } else {
-                handleMovement();
+                handleMovement(dt);
                 updateFlashlight();
                 updateMicVolumeLevel();
                 updateGhostAI();
@@ -7836,23 +7851,20 @@
             // Increment global frameCount for staggered rendering
             frameCount++;
 
-            // Staggered CCTV updates to maintain high performance
-            if (activeFloor === 1 && secondFloorGroup.tvMonitor && secondFloorGroup.cctvCameras) {
-                // Update only one camera every 4 frames (reduces secondary rendering calls by 75%)
-                if (frameCount % 4 === 0) {
-                    const cctvIndex = Math.floor(frameCount / 4) % 4;
+            // Proximity-throttled CCTV updates (only when player is near TV monitor on Floor 1)
+            const distToTv = Math.hypot(playerPos.x - 8.5, playerPos.z - 7.5);
+            if (activeFloor === 1 && distToTv < 12.0 && secondFloorGroup.tvMonitor && secondFloorGroup.cctvCameras) {
+                if (frameCount % 6 === 0) {
+                    const cctvIndex = Math.floor(frameCount / 6) % 4;
                     const cctvCam = secondFloorGroup.cctvCameras[cctvIndex];
                     if (cctvCam && renderer && scene) {
-                        // Hide the TV monitor temporarily to prevent infinite recursive rendering
                         const monitor = secondFloorGroup.tvMonitor;
                         monitor.visible = false;
                         
-                        // Render CCTV perspective to target
                         renderer.setRenderTarget(cctvTargets[cctvIndex]);
                         renderer.render(scene, cctvCam);
                         renderer.setRenderTarget(null);
                         
-                        // Restore monitor visibility
                         monitor.visible = true;
                     }
                 }
@@ -7871,8 +7883,8 @@
                 });
             }
 
-            // Update TV Monitor overlay canvas in Security Room on second floor
-            if (secondFloorGroup.tvMonitor) {
+            // Update TV Monitor overlay canvas only when player is near on Floor 1
+            if (activeFloor === 1 && distToTv < 12.0 && secondFloorGroup.tvMonitor && frameCount % 3 === 0) {
                 const monitor = secondFloorGroup.tvMonitor;
                 const ctx = monitor.ctx;
                 const canvas = monitor.canvas;
