@@ -437,6 +437,11 @@
             100% { text-shadow: 0 0 25px rgba(255, 59, 48, 1), 0 0 50px rgba(255, 59, 48, 0.6); }
         }
 
+        @keyframes pulseDanger {
+            0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 20px rgba(255, 59, 48, 0.8); }
+            100% { transform: translateX(-50%) scale(1.04); box-shadow: 0 0 45px rgba(255, 0, 0, 1); }
+        }
+
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
@@ -2135,6 +2140,11 @@
             </div>
         </div>
 
+        <!-- DANGER ZONE CHASE OVERLAY -->
+        <div id="danger-zone-banner" style="display: none; position: absolute; top: 35px; left: 50%; transform: translateX(-50%); z-index: 8000; background: rgba(160, 0, 0, 0.88); border: 2px solid #ff3b30; padding: 10px 25px; border-radius: 8px; box-shadow: 0 0 30px rgba(255, 59, 48, 0.85); text-align: center; pointer-events: none; animation: pulseDanger 0.6s infinite alternate ease-in-out;">
+            <div style="font-family: 'Creepster', cursive; font-size: 26px; color: #ffffff; letter-spacing: 2px; text-shadow: 0 0 12px #000;">⚠️ DANGER ZONE! GHOST IS CHASING YOU - RUN AWAY! ⚠️</div>
+        </div>
+
         <!-- Horror HUD -->
         <div class="game-hud">
             <!-- Left panel: Mic Indicator, Walking Time, Flashlight status -->
@@ -2220,6 +2230,7 @@
     <audio id="impact-sound" src="dragon-studio-hard-heavy-impact-515256 (1).mp3" preload="auto"></audio>
     <audio id="breathing-sound" src="ribhavagrawal-heavy-breathing-sound-effect-type-02-294195.mp3" preload="auto"></audio>
     <audio id="ghost-laugh" src="alex_jauk-evil-witch-laughing-sound-440272.mp3" preload="auto"></audio>
+    <audio id="chase-music" src="50986408-psycho-violin-388911.mp3" loop preload="auto"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -2871,13 +2882,77 @@
         const breathingAudio = document.getElementById('breathing-sound');
         const ambientAudio = document.getElementById('ambient-music');
         const lobbyAudio = document.getElementById('lobby-music');
+        const chaseAudio = document.getElementById('chase-music');
+
+        let isChaseMusicPlaying = false;
+        let chaseFadeInterval = null;
+
+        function startChaseMusic() {
+            if (isChaseMusicPlaying) return;
+            isChaseMusicPlaying = true;
+
+            if (chaseFadeInterval) {
+                clearInterval(chaseFadeInterval);
+                chaseFadeInterval = null;
+            }
+
+            const cEl = document.getElementById('chase-music');
+            if (cEl) {
+                cEl.currentTime = 0;
+                cEl.volume = Math.max(0.6, masterVolume / 100);
+                cEl.play().catch(e => {});
+            }
+
+            const dangerBanner = document.getElementById('danger-zone-banner');
+            if (dangerBanner) dangerBanner.style.display = 'block';
+
+            const noiseEl = document.getElementById('hud-noise-level');
+            if (noiseEl) {
+                noiseEl.textContent = "DANGER! GHOST CHASING";
+                noiseEl.style.color = "#ff3b30";
+            }
+        }
+
+        function stopChaseMusic() {
+            if (!isChaseMusicPlaying) return;
+            isChaseMusicPlaying = false;
+
+            const dangerBanner = document.getElementById('danger-zone-banner');
+            if (dangerBanner) dangerBanner.style.display = 'none';
+
+            const noiseEl = document.getElementById('hud-noise-level');
+            if (noiseEl) {
+                noiseEl.textContent = "SAFE";
+                noiseEl.style.color = "#0f0";
+            }
+
+            const cEl = document.getElementById('chase-music');
+            if (cEl && !cEl.paused) {
+                if (chaseFadeInterval) clearInterval(chaseFadeInterval);
+                
+                let currentVol = cEl.volume;
+                chaseFadeInterval = setInterval(() => {
+                    currentVol -= 0.08;
+                    if (currentVol <= 0.05) {
+                        cEl.volume = 0;
+                        cEl.pause();
+                        cEl.currentTime = 0;
+                        clearInterval(chaseFadeInterval);
+                        chaseFadeInterval = null;
+                    } else {
+                        cEl.volume = currentVol;
+                    }
+                }, 50);
+            }
+        }
 
         // Web Audio API low-latency buffer caching for instantaneous SFX play
         const audioBuffers = {};
         const audioSources = {
             'door-open': 'jongmankim8596-opening-the-front-door-210347.mp3',
             'impact-sound': 'dragon-studio-hard-heavy-impact-515256 (1).mp3',
-            'ghost-laugh': 'alex_jauk-evil-witch-laughing-sound-440272.mp3'
+            'ghost-laugh': 'alex_jauk-evil-witch-laughing-sound-440272.mp3',
+            'chase-music': '50986408-psycho-violin-388911.mp3'
         };
 
         function preloadWebAudio() {
@@ -6797,12 +6872,20 @@
             if (micVolume > micVolumeThreshold) {
                 ghostStalking = true;
                 ghostAlertTimer = 180;
+                startChaseMusic();
+            }
+
+            if (ghostStalking) {
+                startChaseMusic();
             }
 
             if (ghostAlertTimer > 0) {
                 ghostAlertTimer--;
                 if (ghostAlertTimer === 0) {
                     ghostStalking = false;
+                    if (micVolume <= micVolumeThreshold) {
+                        stopChaseMusic();
+                    }
                 }
             }
 
@@ -7034,7 +7117,15 @@
             micVolume = average * micSensitivity;
             
             const newStatus = micVolume > micVolumeThreshold ? 'DANGER' : 'SAFE';
-            if (cachedNoiseEl && lastNoiseStatus !== newStatus) {
+            if (newStatus === 'DANGER') {
+                ghostStalking = true;
+                ghostAlertTimer = 180;
+                startChaseMusic();
+            } else if (!ghostStalking) {
+                stopChaseMusic();
+            }
+
+            if (cachedNoiseEl && lastNoiseStatus !== newStatus && !isChaseMusicPlaying) {
                 lastNoiseStatus = newStatus;
                 if (newStatus === 'DANGER') {
                     cachedNoiseEl.textContent = "DANGER! NOISE";
@@ -8472,6 +8563,7 @@
 
         function triggerFinalJumpscare() {
             isGameRunning = false;
+            stopChaseMusic();
             if (document.exitPointerLock) {
                 try { document.exitPointerLock(); } catch(e) {}
             }
@@ -8504,6 +8596,7 @@
 
         function triggerVictory() {
             isGameRunning = false;
+            stopChaseMusic();
             if (document.exitPointerLock) {
                 try { document.exitPointerLock(); } catch(e) {}
             }
@@ -8515,6 +8608,7 @@
         }
 
         function retryHorrorGame() {
+            stopChaseMusic();
             document.getElementById('game-over-overlay').style.display = 'none';
             document.getElementById('click-to-play-overlay').style.display = 'flex';
 
