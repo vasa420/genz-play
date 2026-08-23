@@ -1020,6 +1020,7 @@
             text-align: center;
             box-sizing: border-box;
             padding: 20px;
+            cursor: default !important;
         }
 
         #click-to-play-overlay {
@@ -8438,6 +8439,10 @@
 
         function triggerFinalJumpscare() {
             isGameRunning = false;
+            if (document.exitPointerLock) {
+                try { document.exitPointerLock(); } catch(e) {}
+            }
+            document.body.style.cursor = 'default';
             
             // Display jumpscare overlay inside the gameplay screen
             const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
@@ -8450,21 +8455,30 @@
             breathingAudio.volume = (masterVolume / 100) * 1.0;
             breathingAudio.play().catch(e => {});
 
-            // After 2.5 seconds, hide jumpscare and show Game Over modal
+            // After 2.5 seconds, hide jumpscare and show Game Over modal with mouse pointer restored
             setTimeout(() => {
                 jumpscareOverlay.style.display = 'none';
+                if (document.exitPointerLock) {
+                    try { document.exitPointerLock(); } catch(e) {}
+                }
+                document.body.style.cursor = 'default';
                 
                 const gameOverOverlay = document.getElementById('game-over-overlay');
                 gameOverOverlay.style.display = 'flex';
+                gameOverOverlay.style.cursor = 'default';
             }, 2500);
         }
 
         function triggerVictory() {
             isGameRunning = false;
-            document.exitPointerLock();
+            if (document.exitPointerLock) {
+                try { document.exitPointerLock(); } catch(e) {}
+            }
+            document.body.style.cursor = 'default';
 
             const victoryOverlay = document.getElementById('victory-overlay');
             victoryOverlay.style.display = 'flex';
+            victoryOverlay.style.cursor = 'default';
         }
 
         function retryHorrorGame() {
