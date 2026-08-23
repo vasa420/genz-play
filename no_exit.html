@@ -379,8 +379,8 @@
             color: var(--primary);
             margin: 0 0 10px 0;
             text-transform: uppercase;
-            text-shadow: 2px 2px 0px #000, -2px -2px 0px rgba(0,255,255,0.7);
-            animation: glitchText 3s infinite linear alternate-reverse;
+            text-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 40px rgba(255, 59, 48, 0.4);
+            animation: glowTitle 3s infinite ease-in-out alternate;
         }
 
         .subtitle {
@@ -432,10 +432,9 @@
             transform: scale(1.02);
         }
 
-        @keyframes glitchText {
-            0% { text-shadow: 2px 2px 0px #000, -2px -2px 0px rgba(0,255,255,0.7); }
-            50% { text-shadow: -2px 3px 0px #000, 2px -3px 0px rgba(255,0,255,0.7); }
-            100% { text-shadow: 3px -2px 0px #000, -3px 2px 0px rgba(0,255,0,0.7); }
+        @keyframes glowTitle {
+            0% { text-shadow: 0 0 15px rgba(255, 59, 48, 0.8), 0 0 30px rgba(255, 59, 48, 0.4); }
+            100% { text-shadow: 0 0 25px rgba(255, 59, 48, 1), 0 0 50px rgba(255, 59, 48, 0.6); }
         }
 
         @keyframes blink {
@@ -7102,8 +7101,13 @@
             }
         }
 
+        let stairCooldown = 0;
         function checkStaircaseInteraction() {
             if (!isGameRunning) return;
+            if (stairCooldown > 0) {
+                stairCooldown--;
+                return;
+            }
 
             const gridX = Math.floor(playerPos.x);
             const gridZ = Math.floor(playerPos.z);
@@ -7114,14 +7118,14 @@
                 const zProgress = playerPos.z - 4.0;
                 
                 // Stepping off top of stairs onto higher floor
-                if (zProgress >= 0.95) {
-                    if (activeFloor === 0) activeFloor = 1;
-                    else if (activeFloor === 1) activeFloor = 2;
+                if (zProgress >= 0.92) {
+                    if (activeFloor === 0) { activeFloor = 1; stairCooldown = 25; }
+                    else if (activeFloor === 1) { activeFloor = 2; stairCooldown = 25; }
                 }
                 // Stepping off bottom of stairs onto lower floor
-                else if (zProgress <= 0.05) {
-                    if (activeFloor === 1) activeFloor = 0;
-                    else if (activeFloor === 2) activeFloor = 1;
+                else if (zProgress <= 0.08) {
+                    if (activeFloor === 1) { activeFloor = 0; stairCooldown = 25; }
+                    else if (activeFloor === 2) { activeFloor = 1; stairCooldown = 25; }
                 }
 
                 if (promptEl) promptEl.style.display = 'none';
@@ -7359,6 +7363,9 @@
                 if (!checkWallCollision(playerPos.x, newZ, radius)) {
                     playerPos.z = newZ;
                 }
+
+                playerPos.x = Math.max(0.6, Math.min(9.4, playerPos.x));
+                playerPos.z = Math.max(0.6, Math.min(9.4, playerPos.z));
 
                 updateCameraPosition();
                 handleWalkFootsteps();
@@ -7599,9 +7606,11 @@
             if (document.pointerLockElement !== canvas || !isGameRunning || isMapOpen) return;
 
             const sensitivity = 0.002 * globalSensitivity;
+            const deltaX = Math.max(-50, Math.min(50, event.movementX || 0));
+            const deltaY = Math.max(-50, Math.min(50, event.movementY || 0));
             
-            mouseYaw -= event.movementX * sensitivity;
-            mousePitch -= event.movementY * sensitivity;
+            mouseYaw -= deltaX * sensitivity;
+            mousePitch -= deltaY * sensitivity;
             mousePitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, mousePitch));
 
             camera.rotation.y = mouseYaw;
