@@ -3753,16 +3753,16 @@
             // 4. Create Ghost Stalker
             createGhost();
 
-            // 5. Lighting
-            ambientLight = new THREE.AmbientLight(0xff3b30, 0.003); // extreme low red ambient glow
+            // 5. High-Power Tactical Flashlight
+            ambientLight = new THREE.AmbientLight(0xff3b30, 0.006); // subtle low red ambient glow
             scene.add(ambientLight);
 
-            spotLight = new THREE.SpotLight(0xffffff, 2.5, 25, Math.PI / 6, 0.5, 1);
+            spotLight = new THREE.SpotLight(0xffffff, 6.5, 60, Math.PI / 5, 0.45, 1);
             spotLight.castShadow = true;
-            spotLight.shadow.mapSize.width = 512;
-            spotLight.shadow.mapSize.height = 512;
-            spotLight.shadow.camera.near = 0.5;
-            spotLight.shadow.camera.far = 15.0;
+            spotLight.shadow.mapSize.width = 1024;
+            spotLight.shadow.mapSize.height = 1024;
+            spotLight.shadow.camera.near = 0.2;
+            spotLight.shadow.camera.far = 40.0;
             spotLight.shadow.bias = -0.0005;
             scene.add(spotLight);
             scene.add(spotLight.target); // Need target to be in scene
@@ -7809,7 +7809,7 @@
             const statusEl = document.getElementById('hud-flashlight-status');
 
             if (isFlashlightOn) {
-                spotLight.intensity = 2.5;
+                spotLight.intensity = 6.5;
                 statusEl.textContent = "ON";
                 statusEl.style.color = "#ffcc00";
             } else {
@@ -8459,7 +8459,7 @@
                     camera.rotation.z += (1.4 - camera.rotation.z) * 0.12;
 
                     if (spotLight) {
-                        spotLight.intensity = Math.max(0.0, 2.5 * (1.0 - deathT));
+                        spotLight.intensity = Math.max(0.0, 6.5 * (1.0 - deathT));
                     }
                     if (ambientLight) {
                         ambientLight.intensity = Math.max(0.0, 0.003 * (1.0 - deathT));
@@ -8878,7 +8878,7 @@
             }
             isFlashlightOn = true;
             if (spotLight) {
-                spotLight.intensity = 2.5;
+                spotLight.intensity = 6.5;
             }
             const statusEl = document.getElementById('hud-flashlight-status');
             if (statusEl) {
