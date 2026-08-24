@@ -2298,6 +2298,7 @@
     <audio id="chase-music" src="50986408-psycho-violin-388911.mp3" loop preload="auto"></audio>
     <audio id="creepy-kill-laugh" src="u_c98kb8pdp9-creepy-laugh-sound-203187.mp3" preload="auto"></audio>
     <audio id="woman-scream" src="dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3" preload="auto"></audio>
+    <audio id="blood-drip" src="freesound_community-water-drop-85731.mp3" preload="auto"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -3021,7 +3022,8 @@
             'ghost-laugh': 'alex_jauk-evil-witch-laughing-sound-440272.mp3',
             'chase-music': '50986408-psycho-violin-388911.mp3',
             'creepy-kill-laugh': 'u_c98kb8pdp9-creepy-laugh-sound-203187.mp3',
-            'woman-scream': 'dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3'
+            'woman-scream': 'dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3',
+            'blood-drip': 'freesound_community-water-drop-85731.mp3'
         };
 
         function preloadWebAudio() {
@@ -3069,7 +3071,8 @@
                         soundName === 'door-open' ? 'door-open' :
                         soundName === 'impact-sound' ? 'impact-sound' :
                         soundName === 'creepy-kill-laugh' ? 'creepy-kill-laugh' :
-                        soundName === 'woman-scream' ? 'woman-scream' : 'ghost-laugh'
+                        soundName === 'woman-scream' ? 'woman-scream' :
+                        soundName === 'blood-drip' ? 'blood-drip' : 'ghost-laugh'
                     );
                     if (el) {
                         el.currentTime = 0;
@@ -8273,6 +8276,13 @@
                         const dropX = positions[i * 3];
                         const dropZ = positions[i * 3 + 2];
                         
+                        // Play blood drip audio SFX if close to player
+                        const pdx = playerPos.x - dropX;
+                        const pdz = playerPos.z - dropZ;
+                        if (Math.sqrt(pdx * pdx + pdz * pdz) < 6.0 && Math.random() > 0.6) {
+                            playInstantSound('blood-drip', 0.45);
+                        }
+                        
                         // Reset to sign bottom or ceiling
                         if (leak.isSignLeak) {
                             const widthOffset = (Math.random() - 0.5) * 0.45;
@@ -8688,6 +8698,9 @@
                 document.body.appendChild(container);
             }
             container.style.display = 'block';
+
+            // Play visceral blood drop audio SFX
+            playInstantSound('blood-drip', 1.0);
 
             for (let i = 0; i < count; i++) {
                 setTimeout(() => {
