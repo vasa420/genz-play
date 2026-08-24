@@ -134,33 +134,77 @@
             background: #ffffff; height: 100%; overflow-y: hidden;
         }
 
-        .panel-header { margin-bottom: 15px; }
+        .panel-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .panel-header h1 { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
         .panel-header p { font-size: 13px; color: #64748b; }
+
+        .btn-voice-toggle {
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+            background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb;
+            font-size: 12px; font-weight: 700; border-radius: 20px; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-voice-toggle.active { background: #dcfce7; border-color: #86efac; color: #16a34a; }
 
         .chat-container {
             flex: 1; width: 100%; background: #f8fafc; border: 1px solid #e2e8f0;
             border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px;
-            overflow-y: auto; margin-bottom: 15px;
+            overflow-y: auto; margin-bottom: 12px; position: relative;
         }
 
         .chat-bubble {
-            max-width: 75%; padding: 12px 18px; border-radius: 12px; font-size: 14px; line-height: 1.5;
+            max-width: 78%; padding: 14px 20px; border-radius: 14px; font-size: 14px; line-height: 1.6;
+            animation: bubbleFade 0.3s ease forwards;
         }
-        .chat-bubble.ai { background: #ffffff; border: 1px solid #e2e8f0; color: #0f172a; align-self: flex-start; }
-        .chat-bubble.user { background: #2563eb; color: #ffffff; align-self: flex-end; }
+        @keyframes bubbleFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        .chat-input-row { display: flex; gap: 10px; width: 100%; }
+        .chat-bubble.ai { background: #ffffff; border: 1px solid #e2e8f0; color: #0f172a; align-self: flex-start; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .chat-bubble.user { background: #2563eb; color: #ffffff; align-self: flex-end; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+
+        .typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+        .typing-dots span { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: dotPulse 1.2s infinite ease-in-out; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        /* Quick Suggestions Row */
+        .suggestions-row {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;
+            scrollbar-width: none;
+        }
+        .suggestions-row::-webkit-scrollbar { display: none; }
+        .chip-btn {
+            white-space: nowrap; padding: 7px 14px; background: #ffffff; border: 1px solid #cbd5e1;
+            color: #334155; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .chip-btn:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; transform: translateY(-1px); }
+
+        .chat-input-row { display: flex; gap: 8px; width: 100%; align-items: center; }
         .chat-input {
             flex: 1; padding: 14px 18px; background: #ffffff; border: 1px solid #cbd5e1;
-            border-radius: 10px; font-size: 14px; outline: none; color: #0f172a;
+            border-radius: 12px; font-size: 14px; outline: none; color: #0f172a; transition: all 0.2s ease;
         }
         .chat-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 
-        .btn-send {
-            padding: 0 22px; background: #2563eb; color: #ffffff; border: none;
-            border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+        .btn-mic {
+            padding: 14px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569;
+            border-radius: 12px; font-size: 16px; cursor: pointer; transition: all 0.2s ease;
+            display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;
         }
+        .btn-mic:hover { background: #eff6ff; color: #2563eb; border-color: #2563eb; }
+        .btn-mic.listening {
+            background: #ef4444 !important; color: #ffffff !important; border-color: #dc2626 !important;
+            animation: pulseMic 1s infinite alternate;
+        }
+        @keyframes pulseMic { from { transform: scale(1); box-shadow: 0 0 0 rgba(239, 68, 68, 0.4); } to { transform: scale(1.08); box-shadow: 0 0 14px rgba(239, 68, 68, 0.6); } }
+
+        .btn-send {
+            padding: 0 22px; height: 48px; background: #2563eb; color: #ffffff; border: none;
+            border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-send:hover { background: #1d4ed8; }
+
         .btn-hamburger { display: none; background: transparent; border: none; color: #0f172a; cursor: pointer; flex-direction: column; gap: 4px; padding: 6px; }
         .btn-hamburger span { display: block; width: 20px; height: 2px; background: #0f172a; border-radius: 2px; }
 
@@ -177,8 +221,6 @@
         }
         .mobile-drawer-overlay.active .drawer-content { transform: translateX(0); }
 
-        .btn-send:hover { background: #1d4ed8; }
-
         /* ── Mobile Responsive Styles ─────────────────────────── */
         @media (max-width: 768px) {
             body { height: auto; min-height: 100vh; overflow-y: auto; padding: 8px 10px; }
@@ -192,8 +234,10 @@
             .desktop-sidebar { display: none !important; }
             .app-wrapper { height: calc(100vh - 75px); grid-template-columns: 1fr !important; border-radius: 12px; }
             .main-panel { padding: 16px 12px; }
-            .panel-header h1 { font-size: 22px; }
-            .chat-bubble { max-width: 88%; font-size: 13px; }
+            .panel-header h1 { font-size: 20px; }
+            .panel-header-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .chat-bubble { max-width: 90%; font-size: 13px; }
+            .btn-send { padding: 0 14px; font-size: 13px; }
         }
     </style>
 </head>
@@ -259,19 +303,34 @@
 
         <!-- Right Main Panel -->
         <main class="main-panel">
-            <div class="panel-header">
-                <h1>🤖 Speak with AI</h1>
-                <p>Have a conversation with our tactical AI assistant for squad insights.</p>
+            <div class="panel-header-row">
+                <div class="panel-header" style="margin-bottom:0;">
+                    <h1>🤖 Speak with AI</h1>
+                    <p>Voice-enabled tactical AI assistant for squad lore, passcodes & battle strategies.</p>
+                </div>
+                <button class="btn-voice-toggle active" id="voice-toggle-btn" onclick="toggleVoiceAudio()">
+                    <span id="voice-icon">🔊</span> <span id="voice-txt">Voice Audio On</span>
+                </button>
             </div>
 
             <div class="chat-container" id="chat-box">
                 <div class="chat-bubble ai">
-                    Hello! I am your Vetri Intelligence AI assistant. Ask me anything about squad operatives, battle strategy, or FLAMES compatibility!
+                    👋 Hello! I am your Vetri Intelligence AI Assistant. You can speak into your microphone or type any question about squad operatives, battle strategies, security passcodes, or FLAMES compatibility!
                 </div>
             </div>
 
+            <!-- Quick Suggestion Chips -->
+            <div class="suggestions-row">
+                <button class="chip-btn" onclick="askSuggestion('Tell me about Operative Vaisal')">🚌 Vaisal Bus Story</button>
+                <button class="chip-btn" onclick="askSuggestion('Who is Surya Kaveri Bath?')">🌊 Surya Kaveri Bath</button>
+                <button class="chip-btn" onclick="askSuggestion('Tell me Dharnish Cobra Bakery story')">🐍 Dharnish Cobra</button>
+                <button class="chip-btn" onclick="askSuggestion('What is the security checkpoint passcode?')">🔑 Checkpoint Passcode</button>
+                <button class="chip-btn" onclick="askSuggestion('How do I survive the Ghost Chase?')">👻 Ghost Survival</button>
+            </div>
+
             <div class="chat-input-row">
-                <input type="text" id="chat-input" class="chat-input" placeholder="Type your message to AI..." onkeydown="if(event.key==='Enter') sendMessage()">
+                <button class="btn-mic" id="btn-mic" onclick="toggleVoiceInput()" title="Click to Speak into Microphone">🎙️</button>
+                <input type="text" id="chat-input" class="chat-input" placeholder="Type your message or click 🎙️ to speak..." onkeydown="if(event.key==='Enter') sendMessage()">
                 <button class="btn-send" onclick="sendMessage()">Send 💬</button>
             </div>
         </main>
@@ -282,26 +341,197 @@
         function toggleMobileMenu() { document.getElementById('mobile-drawer').classList.toggle('active'); }
         function closeMobileMenu(e) { if(e.target.id==='mobile-drawer') document.getElementById('mobile-drawer').classList.remove('active'); }
 
+        let isVoiceAudioEnabled = true;
+        let isListening = false;
+        let recognition = null;
+
+        // Initialize Speech Recognition if supported by browser
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                isListening = true;
+                const micBtn = document.getElementById('btn-mic');
+                micBtn.classList.add('listening');
+                micBtn.title = "Listening... Speak now!";
+                document.getElementById('chat-input').placeholder = "🎙️ Listening to your voice... Speak into microphone!";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('chat-input').value = transcript;
+                stopVoiceInput();
+                sendMessage();
+            };
+
+            recognition.onerror = function(event) {
+                console.warn('Speech recognition error:', event.error);
+                stopVoiceInput();
+                if (event.error === 'not-allowed') {
+                    alert('Microphone permission denied. Please allow microphone access in your browser settings!');
+                }
+            };
+
+            recognition.onend = function() {
+                stopVoiceInput();
+            };
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                alert('Speech Recognition is not supported on this browser. Please type your message in the chat box!');
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+                stopVoiceInput();
+            } else {
+                try {
+                    recognition.start();
+                } catch(e) {
+                    console.error(e);
+                    stopVoiceInput();
+                }
+            }
+        }
+
+        function stopVoiceInput() {
+            isListening = false;
+            const micBtn = document.getElementById('btn-mic');
+            if (micBtn) {
+                micBtn.classList.remove('listening');
+                micBtn.title = "Click to Speak into Microphone";
+            }
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.placeholder = "Type your message or click 🎙️ to speak...";
+            }
+        }
+
+        function toggleVoiceAudio() {
+            isVoiceAudioEnabled = !isVoiceAudioEnabled;
+            const btn = document.getElementById('voice-toggle-btn');
+            const icon = document.getElementById('voice-icon');
+            const txt = document.getElementById('voice-txt');
+
+            if (isVoiceAudioEnabled) {
+                btn.classList.add('active');
+                icon.textContent = '🔊';
+                txt.textContent = 'Voice Audio On';
+            } else {
+                btn.classList.remove('active');
+                icon.textContent = '🔇';
+                txt.textContent = 'Voice Audio Off';
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+            }
+        }
+
+        function speakText(text) {
+            if (!isVoiceAudioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel(); // Stop current speech
+            const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, ''); // Remove emojis
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function askSuggestion(question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+        }
+
+        function getAIAnswer(userQuery) {
+            const q = userQuery.toLowerCase();
+
+            if (q.includes('vaisal') || q.includes('bus')) {
+                return "🚌 Operative Vaisal doesn't just drive the bus—the bus asks Vaisal for permission to start its engine! Known to drift 40-ton government buses around tight city turns, passengers never need tickets because Vaisal's aura alone covers the fare!";
+            }
+            if (q.includes('surya') || q.includes('kaveri') || q.includes('bath')) {
+                return "🌊 Operative Surya dives into the Kaveri River every morning for a mass bath that warms up the entire river water! He performs 360-degree heroic flip dives mid-air while shampooing, and Kaveri river fishes applaud whenever he steps in!";
+            }
+            if (q.includes('dharnish') || q.includes('dhanish') || q.includes('cobra') || q.includes('bakery')) {
+                return "🐍 Operative Dharnish operates a local bakery where even 10-foot King Cobras line up to buy hot egg puffs! He once charmed a king cobra using a freshly baked cream bun as a flute!";
+            }
+            if (q.includes('nithish') || q.includes('bell') || q.includes('conductor')) {
+                return "🔔 Operative Nithish rang the temple bell with such holy force that the entire colony thought a thunderstorm hit! He also works as a bus conductor issuing tickets at supersonic speed using tactical mantras!";
+            }
+            if (q.includes('girish') || q.includes('truck') || q.includes('lorry')) {
+                return "🚚 Operative Girish drives a massive 18-wheeler Ashok Leyland lorry at F1 supercar speeds! He blasts loud mass DJ songs that clear highway traffic 5 kilometers ahead!";
+            }
+            if (q.includes('logith') || q.includes('mutton') || q.includes('meat') || q.includes('butcher')) {
+                return "🔪 Operative Logith is the ultimate master butcher! He chops mutton with 360-degree surgical precision faster than a ninja katana blade. Even the meat shop scales get nervous when he picks up his cleaver!";
+            }
+            if (q.includes('vasanth') || q.includes('hook') || q.includes('cyber') || q.includes('ceiling')) {
+                return "🪝 Operative Vasanth hangs upside down from iron ceiling hooks like a cyber bat! He claims hanging on a hook boosts his brain's coding speed by 500%, once writing 10,000 lines of bug-free code while suspended by one foot!";
+            }
+            if (q.includes('kishoor') || q.includes('durai') || q.includes('son')) {
+                return "🔱 Operative Kishoor is the legendary Son of Durai, born with pure royal squad dominance! When Kishoor announces 'I am Durai's Son!', the entire battlefield stops and bows!";
+            }
+            if (q.includes('sudhish') || q.includes('sun') || q.includes('moon') || q.includes('orbit')) {
+                return "☀️🌙 Operative Sudhish controls cosmic orbits of the Sun and Moon with just a wave of his hand! He once made the Sun and Moon appear together to light up a night squad cricket match!";
+            }
+            if (q.includes('thaya') || q.includes('cement') || q.includes('brick') || q.includes('wall')) {
+                return "🧱 Operative Thaya is a master civil engineer! He mixes Ultratech cement with bare hands and lays 500 bricks in 30 seconds to build instant concrete bunkers!";
+            }
+            if (q.includes('passcode') || q.includes('code') || q.includes('password') || q.includes('checkpoint') || q.includes('security')) {
+                return "🔑 The security checkpoint passcode is 99123! Type 99123 on the keypad to unlock full access to the tactical dashboard.";
+            }
+            if (q.includes('ghost') || q.includes('danger') || q.includes('safe') || q.includes('chase') || q.includes('survive')) {
+                return "👻 When you hear the Psycho Violin Danger Zone music, the Ghost is actively chasing you—RUN to a vent or stairway! When you enter a Safe Zone, turn silent so the microphone volume drops, and the chase music will stop instantly!";
+            }
+            if (q.includes('flames') || q.includes('love') || q.includes('marriage') || q.includes('relationship')) {
+                return "🔥 The FLAMES calculator computes tactical compatibility (Friends, Love, Affection, Marriage, Enemy, Siblings) using operative name character algorithms! Check out the Flames Calculator page from the navigation sidebar!";
+            }
+            if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('who are you')) {
+                return "🤖 Greetings Operative! I am Vetri AI, your strategic command assistant. Ask me about squad stats, operative stories, passcodes (e.g. 99123), or horror survival tactics!";
+            }
+
+            // Fallback intelligent tactical answer
+            return `⚡ Strategic Query Analyzed: "${userQuery}". Database records indicate high tactical synergy across Vetri Squad operatives! Operative Vaisal (Bus Driver), Surya (Kaveri Bath), Nithish (Sacred Bell), and Dharnish (Cobra Bakery) stand ready for mission deployment!`;
+        }
+
         function sendMessage() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if (!msg) return;
 
             const chatBox = document.getElementById('chat-box');
+            
+            // Render user bubble
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-bubble user';
             userBubble.textContent = msg;
             chatBox.appendChild(userBubble);
             input.value = '';
-
             chatBox.scrollTop = chatBox.scrollHeight;
 
+            // Render typing indicator
+            const typingBubble = document.createElement('div');
+            typingBubble.className = 'chat-bubble ai';
+            typingBubble.id = 'typing-indicator';
+            typingBubble.innerHTML = `🤖 Vetri AI is thinking <div class="typing-dots"><span></span><span></span><span></span></div>`;
+            chatBox.appendChild(typingBubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Compute AI response
             setTimeout(() => {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) indicator.remove();
+
                 const aiBubble = document.createElement('div');
                 aiBubble.className = 'chat-bubble ai';
-                aiBubble.textContent = "Analysing squad query... Operative stats and tactical records indicate high strategic synergy!";
+                const answerText = getAIAnswer(msg);
+                aiBubble.textContent = answerText;
                 chatBox.appendChild(aiBubble);
                 chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Audio Speech Output
+                speakText(answerText);
             }, 600);
         }
     </script>
