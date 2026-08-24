@@ -3254,7 +3254,7 @@
         let ghostMesh;
         let ghostPos = { x: 7.5, z: 7.5 }; // Spawn ghost further away
         let ghostFloor = 0; // 0 = Ground Floor, 1 = Second Floor
-        let ghostSpeed = 0.015;
+        let ghostSpeed = 0.038;
         let ghostAnimTime = 0;
         let ghostStepsTimer = 0;
         let isKillingActive = false;
@@ -6956,7 +6956,7 @@
 
             if (micVolume > micVolumeThreshold) {
                 ghostStalking = true;
-                ghostAlertTimer = 180;
+                ghostAlertTimer = 300;
             }
 
             if (ghostAlertTimer > 0) {
@@ -7002,7 +7002,7 @@
 
                 if (window.ghostPathCooldown <= 0 || !window.ghostPathCache) {
                     window.ghostPathCache = findGhostPath({ x: startCellX, z: startCellZ }, { x: targetCellX, z: targetCellZ }, currentMap);
-                    window.ghostPathCooldown = 12;
+                    window.ghostPathCooldown = 3;
                 } else {
                     window.ghostPathCooldown--;
                 }
@@ -7024,7 +7024,7 @@
                     }
                 }
                 
-                const activeSpeed = micVolume > micVolumeThreshold ? ghostSpeed * 2.2 : ghostSpeed * 1.5;
+                const activeSpeed = micVolume > micVolumeThreshold ? ghostSpeed * 2.5 : ghostSpeed * 1.8;
                 
                 const angle = Math.atan2(targetZ - ghostPos.z, targetX - ghostPos.x);
                 stepX = Math.cos(angle) * activeSpeed;
