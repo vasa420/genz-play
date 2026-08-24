@@ -3641,6 +3641,7 @@
             scheduleMortuaryLaugh();
             scheduleWomanScreamSound();
             scheduleCrowJumpscares();
+            scheduleRandomGameplayJumpscares();
 
             // Initialize the 3D Horror house rendering
             initHorror3D();
@@ -4119,23 +4120,31 @@
                 ctx.fill();
             }
 
-            // Dripping Blood stains
-            ctx.fillStyle = 'rgba(90, 0, 0, 0.8)';
+            // Dripping Water stains (wet wall streaks)
             for (let i = 0; i < 12; i++) {
                 const bx = Math.random() * 512;
                 const by = Math.random() * 400 + 50;
-                const radius = Math.random() * 6 + 2;
+                const radius = Math.random() * 5 + 2;
 
+                // Wet darken overlay
+                ctx.fillStyle = 'rgba(15, 25, 30, 0.45)';
                 ctx.beginPath();
                 ctx.arc(bx, by, radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.strokeStyle = 'rgba(90, 0, 0, 0.8)';
-                ctx.lineWidth = radius * 0.4;
+                // Wet run down
+                ctx.strokeStyle = 'rgba(15, 25, 30, 0.35)';
+                ctx.lineWidth = radius * 0.55;
                 ctx.beginPath();
                 ctx.moveTo(bx, by);
-                ctx.lineTo(bx, by + Math.random() * 60 + 15);
+                ctx.lineTo(bx, by + Math.random() * 70 + 20);
                 ctx.stroke();
+
+                // Highlight/Reflective sheen on water drop
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.beginPath();
+                ctx.arc(bx - radius * 0.35, by - radius * 0.35, radius * 0.22, 0, Math.PI * 2);
+                ctx.fill();
             }
 
             const texture = new THREE.CanvasTexture(canvas);
@@ -5898,6 +5907,262 @@
                 }
                 scheduleCrowJumpscares();
             }, randomInterval);
+        }
+
+        let activeGhostPeek = null;
+        let randomJumpscareTimeout = null;
+
+        function triggerSuddenGhostFaceFlash() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
+            if (!jumpscareOverlay) return;
+
+            // Display overlay
+            jumpscareOverlay.style.display = 'flex';
+
+            // Play scream & impact sound
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+
+            // Spawn screen blood drips
+            spawnScreenBloodDroplets(15);
+
+            // Shaking effect on camera
+            let shakeTicks = 0;
+            const maxShakeTicks = 18;
+            
+            function shakeCamera() {
+                if (shakeTicks < maxShakeTicks && isGameRunning && !isKillingActive) {
+                    camera.rotation.z = (Math.random() - 0.5) * 0.22;
+                    camera.position.x += (Math.random() - 0.5) * 0.15;
+                    camera.position.y += (Math.random() - 0.5) * 0.15;
+                    shakeTicks++;
+                    requestAnimationFrame(shakeCamera);
+                } else if (camera) {
+                    camera.rotation.z = 0;
+                }
+            }
+            requestAnimationFrame(shakeCamera);
+
+            // Show a terrifying dialogue subtitle overlay
+            const subtitleEl = document.getElementById('crow-dialogue-subtitle');
+            const subtitleTextEl = subtitleEl ? subtitleEl.querySelector('.crow-subtitle-text') : null;
+            
+            let originalSubtitleHTML = "";
+            if (subtitleEl && subtitleTextEl) {
+                originalSubtitleHTML = subtitleTextEl.innerHTML;
+                const scaryPhrases = ["BEHIND YOU!", "GET OUT!", "I SEE YOU...", "RUN!"];
+                const phrase = scaryPhrases[Math.floor(Math.random() * scaryPhrases.length)];
+                subtitleTextEl.innerHTML = phrase;
+                subtitleEl.style.display = 'block';
+            }
+
+            // Hide after 350ms
+            setTimeout(() => {
+                jumpscareOverlay.style.display = 'none';
+                if (subtitleEl && subtitleTextEl) {
+                    subtitleEl.style.display = 'none';
+                    subtitleTextEl.innerHTML = originalSubtitleHTML;
+                }
+            }, 350);
+        }
+
+        function triggerGhostPeekJumpscare() {
+            if (activeGhostPeek || !isGameRunning || isKillingActive || !camera || !scene) return;
+
+            // Get player's current floor map
+            let currentMap;
+            if (activeFloor === 0) currentMap = GROUND_FLOOR_MAP;
+            else if (activeFloor === 1) currentMap = SECOND_FLOOR_MAP;
+            else currentMap = MORTUARY_FLOOR_MAP;
+
+            // Find a cell in front of the player
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+
+            // Let's check 4, 5, or 6 units ahead of the player
+            let spawnCellX = -1;
+            let spawnCellZ = -1;
+            let spawnWorldX = 0;
+            let spawnWorldZ = 0;
+
+            for (let dist = 6; dist >= 4; dist--) {
+                const checkPos = new THREE.Vector3().copy(camera.position).addScaledVector(dir, dist);
+                const cx = Math.floor((checkPos.x + MAP_OFFSET) / CELL_SIZE);
+                const cz = Math.floor((checkPos.z + MAP_OFFSET) / CELL_SIZE);
+
+                if (cx >= 0 && cx < MAP_SIZE && cz >= 0 && cz < MAP_SIZE) {
+                    if (currentMap[cz][cx] === 0) { // Walkable path
+                        spawnCellX = cx;
+                        spawnCellZ = cz;
+                        spawnWorldX = cx * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                        spawnWorldZ = cz * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                        break;
+                    }
+                }
+            }
+
+            if (spawnCellX === -1) return; // No suitable corridor cell found
+
+            // Create a scary, semi-transparent ghost mesh
+            const peekGroup = new THREE.Group();
+            
+            // Gown / body
+            const bodyGeo = new THREE.CylinderGeometry(0.2, 0.45, 1.8, 8);
+            const bodyMat = new THREE.MeshBasicMaterial({
+                color: 0x15151a,
+                transparent: true,
+                opacity: 0.85,
+                wireframe: false
+            });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.9;
+            peekGroup.add(body);
+
+            // Glowing red eyes
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), eyeMat);
+            leftEye.position.set(-0.1, 1.45, 0.22);
+            peekGroup.add(leftEye);
+
+            const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), eyeMat);
+            rightEye.position.set(0.1, 1.45, 0.22);
+            peekGroup.add(rightEye);
+
+            // Shroud hair
+            const shroudGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.5, 8);
+            const shroudMat = new THREE.MeshBasicMaterial({ color: 0x050505, transparent: true, opacity: 0.9 });
+            const shroud = new THREE.Mesh(shroudGeo, shroudMat);
+            shroud.position.y = 1.4;
+            peekGroup.add(shroud);
+
+            peekGroup.position.set(spawnWorldX, 0.05, spawnWorldZ);
+            peekGroup.lookAt(camera.position.x, 0.05, camera.position.z);
+
+            // Add to active floor's group
+            let activeGroup = groundFloorGroup;
+            if (activeFloor === 1) activeGroup = secondFloorGroup;
+            else if (activeFloor === 2) activeGroup = mortuaryFloorGroup;
+
+            if (activeGroup) {
+                activeGroup.add(peekGroup);
+            } else {
+                scene.add(peekGroup);
+            }
+
+            activeGhostPeek = {
+                mesh: peekGroup,
+                spawnTime: performance.now(),
+                isRushing: false,
+                group: activeGroup || scene,
+                x: spawnWorldX,
+                z: spawnWorldZ
+            };
+        }
+
+        function triggerFlickerWhisperJumpscare() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            // Play scary ghost laugh
+            playInstantSound('ghost-laugh', 1.0);
+
+            // Flicker flashlight rapidly
+            let flickerCount = 0;
+            const maxFlickers = 25;
+            
+            function runFlicker() {
+                if (flickerCount < maxFlickers && isGameRunning) {
+                    flashlight.visible = Math.random() < 0.25;
+                    flickerCount++;
+                    setTimeout(runFlicker, Math.random() * 80 + 30);
+                } else if (flashlight) {
+                    flashlight.visible = isFlashlightOn;
+                }
+            }
+            runFlicker();
+        }
+
+        function triggerRandomGameplayJumpscare() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            const choice = Math.random();
+            if (choice < 0.34) {
+                triggerSuddenGhostFaceFlash();
+            } else if (choice < 0.67) {
+                triggerGhostPeekJumpscare();
+            } else {
+                triggerFlickerWhisperJumpscare();
+            }
+        }
+
+        function scheduleRandomGameplayJumpscares() {
+            if (randomJumpscareTimeout) clearTimeout(randomJumpscareTimeout);
+
+            // Run a jumpscare every 20 to 45 seconds of gameplay
+            const nextTime = Math.random() * 25000 + 20000;
+            randomJumpscareTimeout = setTimeout(() => {
+                const gameplayScreen = document.getElementById('gameplay-screen');
+                if (isGameRunning && gameplayScreen && gameplayScreen.style.display === 'block' && !isKillingActive) {
+                    triggerRandomGameplayJumpscare();
+                }
+                scheduleRandomGameplayJumpscares();
+            }, nextTime);
+        }
+
+        function updateGhostPeekJumpscare(dt) {
+            if (!activeGhostPeek) return;
+
+            const now = performance.now();
+            const elapsed = now - activeGhostPeek.spawnTime;
+            const ghostPos = activeGhostPeek.mesh.position;
+            const distToPlayer = Math.hypot(camera.position.x - ghostPos.x, camera.position.z - ghostPos.z);
+            
+            // Look at player
+            activeGhostPeek.mesh.lookAt(camera.position.x, ghostPos.y, camera.position.z);
+
+            if (!activeGhostPeek.isRushing) {
+                const playerDir = new THREE.Vector3();
+                camera.getWorldDirection(playerDir);
+                
+                const toGhost = new THREE.Vector3().subVectors(ghostPos, camera.position).normalize();
+                const dot = playerDir.dot(toGhost);
+
+                // If player is looking at the ghost or gets close
+                if (distToPlayer < 3.2 || (dot > 0.82 && distToPlayer < 10.0)) {
+                    activeGhostPeek.isRushing = true;
+                    activeGhostPeek.rushStartTime = now;
+                    playInstantSound('woman-scream', 1.0);
+                    playInstantSound('impact-sound', 1.2);
+                } else if (elapsed > 4500) {
+                    activeGhostPeek.group.remove(activeGhostPeek.mesh);
+                    activeGhostPeek = null;
+                }
+            } else {
+                const rushElapsed = now - activeGhostPeek.rushStartTime;
+                const rushDuration = 550;
+                const t = Math.min(1.0, rushElapsed / rushDuration);
+                
+                ghostPos.lerpVectors(
+                    new THREE.Vector3(activeGhostPeek.x, 0.05, activeGhostPeek.z),
+                    new THREE.Vector3(camera.position.x, 0.05, camera.position.z),
+                    t
+                );
+                
+                ghostPos.y = 0.05 + t * (camera.position.y - 0.25);
+
+                if (t > 0.7 && camera) {
+                    camera.rotation.z = (Math.random() - 0.5) * 0.2;
+                    camera.position.x += (Math.random() - 0.5) * 0.08;
+                    camera.position.y += (Math.random() - 0.5) * 0.08;
+                }
+
+                if (t >= 1.0) {
+                    triggerSuddenGhostFaceFlash();
+                    activeGhostPeek.group.remove(activeGhostPeek.mesh);
+                    activeGhostPeek = null;
+                }
+            }
         }
 
         function updateGiantSnakes() {
@@ -8235,9 +8500,10 @@
                 updateDustParticles();
                 updateCreatures();
                 updateGiantSnakes();
+                updateGhostPeekJumpscare(dt);
 
-                if ((keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d) && Math.random() < 0.0006) {
-                    triggerCrowJumpscare();
+                if ((keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d) && Math.random() < 0.0008) {
+                    triggerRandomGameplayJumpscare();
                 }
 
                 if (activeFloor === 2) {
@@ -9039,6 +9305,15 @@
             clearScreenBlood();
             document.getElementById('game-over-overlay').style.display = 'none';
             document.getElementById('click-to-play-overlay').style.display = 'flex';
+
+            if (crowScheduleTimeout) clearTimeout(crowScheduleTimeout);
+            if (randomJumpscareTimeout) clearTimeout(randomJumpscareTimeout);
+            if (activeGhostPeek) {
+                try {
+                    activeGhostPeek.group.remove(activeGhostPeek.mesh);
+                } catch(e){}
+                activeGhostPeek = null;
+            }
 
             playerPos.x = 1.5;
             playerPos.z = 1.5;
