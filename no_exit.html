@@ -3121,12 +3121,39 @@
             }
         }
 
+        function playSyntheticDrip(ctx, volumeMultiplier = 1.0) {
+            try {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1500, ctx.currentTime + 0.05);
+                
+                const vol = Math.max(0.1, (masterVolume / 100) * volumeMultiplier * 0.25);
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.05);
+            } catch (e) {}
+        }
+
         function playInstantSound(soundName, volumeMultiplier = 1.0) {
             try {
                 const ctx = getAudioContext();
                 if (ctx.state === 'suspended') {
                     ctx.resume();
                 }
+                
+                if (soundName === 'blood-drip' && !audioBuffers['blood-drip']) {
+                    playSyntheticDrip(ctx, volumeMultiplier);
+                    return;
+                }
+
                 const buffer = audioBuffers[soundName];
                 if (buffer) {
                     const source = ctx.createBufferSource();
@@ -9246,6 +9273,7 @@
                 } else {
                     // Droplet reached bottom floor
                     createFloorSplash(startX, window.innerHeight - 10);
+                    playInstantSound('blood-drip', 0.8);
                     droplet.remove();
                 }
             }
@@ -9256,6 +9284,7 @@
         function triggerButtonRedEffect(btn, hitX) {
             btn.classList.add('blood-splatted');
             playSplatSynthSound();
+            playInstantSound('blood-drip', 0.8);
 
             const btnRect = btn.getBoundingClientRect();
             const relativeX = hitX - btnRect.left;
@@ -9346,6 +9375,47 @@
             }, 800);
         }
 
+        let titleDripTimeouts = [];
+        let titleDripIntervals = [];
+
+        function startTitleDripSounds() {
+            stopTitleDripSounds();
+
+            const drips = document.querySelectorAll('.blood-drip');
+            drips.forEach(drip => {
+                let delay = 0;
+                const delayStyle = drip.style.animationDelay;
+                if (delayStyle) {
+                    delay = parseFloat(delayStyle);
+                }
+
+                // Landing happens at around 3.5 seconds in the 5s animation loop
+                const initialDelayMs = (delay + 3.5) * 1000;
+
+                const timeoutId = setTimeout(() => {
+                    if (isLobbyScreenActive) {
+                        playInstantSound('blood-drip', 0.6);
+                    }
+
+                    const intervalId = setInterval(() => {
+                        if (isLobbyScreenActive) {
+                            playInstantSound('blood-drip', 0.6);
+                        }
+                    }, 5000);
+                    titleDripIntervals.push(intervalId);
+                }, initialDelayMs);
+
+                titleDripTimeouts.push(timeoutId);
+            });
+        }
+
+        function stopTitleDripSounds() {
+            titleDripTimeouts.forEach(clearTimeout);
+            titleDripIntervals.forEach(clearInterval);
+            titleDripTimeouts = [];
+            titleDripIntervals = [];
+        }
+
         function showLobbyScreen() {
             // Pause normal ambient music while in the lobby
             ambientAudio.pause();
@@ -9364,6 +9434,9 @@
 
             // Start interactive blood drip loop
             startInteractiveDripLoop();
+
+            // Start synchronized audio loops for the title logo drips
+            startTitleDripSounds();
         }
 
         function lobbyPlay() {
@@ -9372,6 +9445,9 @@
 
             // Stop interactive blood drip loop
             stopInteractiveDripLoop();
+
+            // Stop synchronized title logo drip sound triggers
+            stopTitleDripSounds();
 
             const lobby = document.getElementById('lobby-screen');
             if (lobby) {
@@ -9390,6 +9466,7 @@
 
         function lobbyQuit() {
             stopInteractiveDripLoop();
+            stopTitleDripSounds();
             window.location.href = 'arcade_hub.html';
         }
 
