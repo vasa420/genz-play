@@ -1210,6 +1210,68 @@
             100% { transform: scale(1) rotate(var(--rot, 15deg)); opacity: 0.88; }
         }
 
+        /* Sudden Crow Jumpscare & Screen Shake Overlay */
+        #crow-jumpscare-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 19000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .crow-screen-shake {
+            animation: crowScreenShakeAnim 0.85s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes crowScreenShakeAnim {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-18px, 14px) rotate(-3.5deg); }
+            20% { transform: translate(22px, -16px) rotate(4deg); }
+            30% { transform: translate(-25px, -10px) rotate(-4.5deg); }
+            40% { transform: translate(20px, 18px) rotate(3deg); }
+            50% { transform: translate(-14px, -18px) rotate(-2.5deg); }
+            60% { transform: translate(16px, 12px) rotate(2deg); }
+            70% { transform: translate(-10px, -8px) rotate(-1deg); }
+            80% { transform: translate(6px, 6px) rotate(0.5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Dialogue Subtitle Overlay */
+        #crow-dialogue-subtitle {
+            position: fixed;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20000;
+            display: none;
+            background: rgba(12, 0, 0, 0.94);
+            border: 2px solid #ff3b30;
+            box-shadow: 0 0 25px rgba(255, 59, 48, 0.9), inset 0 0 15px rgba(255, 0, 0, 0.6);
+            border-radius: 12px;
+            padding: 12px 30px;
+            text-align: center;
+            pointer-events: none;
+            animation: popSubtitle 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .crow-subtitle-text {
+            font-family: 'Creepster', 'Outfit', sans-serif;
+            font-size: 32px;
+            letter-spacing: 3px;
+            color: #ff3b30;
+            text-shadow: 0 0 16px rgba(255, 59, 48, 0.9), 0 0 30px #000;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        @keyframes popSubtitle {
+            0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1.0); opacity: 1; }
+        }
+
         /* Staircase Prompts and Fade */
         #staircase-prompt {
             position: absolute;
@@ -2245,6 +2307,11 @@
         <!-- Fullscreen Jumpscare Screen inside the gameplay -->
         <div id="gameplay-jumpscare-overlay">
             <img class="jumpscare-img-3d" src="terror_jumpscare.png" alt="Scary Ghost Jumpscare">
+        </div>
+
+        <!-- Crow Dialogue Subtitle Overlay -->
+        <div id="crow-dialogue-subtitle">
+            <div class="crow-subtitle-text">🗣️ "The fucking crows!"</div>
         </div>
 
         <!-- Game Over / Death Screen -->
@@ -3533,10 +3600,11 @@
                 gameplayScreen.style.display = 'block';
             }
 
-            // Schedule laughs & woman scream sound (every 30 seconds)
+            // Schedule laughs, woman scream sound, & sudden crow jumpscares
             scheduleRandomGhostLaugh();
             scheduleMortuaryLaugh();
             scheduleWomanScreamSound();
+            scheduleCrowJumpscares();
 
             // Initialize the 3D Horror house rendering
             initHorror3D();
@@ -5636,69 +5704,126 @@
         }
 
         let isCrowJumpscareActive = false;
+        let crowScheduleTimeout = null;
+
         function triggerCrowJumpscare() {
-            if (isCrowJumpscareActive || !camera || !scene) return;
+            if (isCrowJumpscareActive || !camera || !scene || !isGameRunning) return;
             isCrowJumpscareActive = true;
 
+            const container = document.getElementById('gameplay-screen') || document.body;
+            const subtitleEl = document.getElementById('crow-dialogue-subtitle');
+            
+            // 1. Add Screen & Viewport Shake Class
+            container.classList.add('crow-screen-shake');
+
+            // 2. Display Dialogue Subtitle: "The fucking crows!"
+            if (subtitleEl) {
+                subtitleEl.style.display = 'block';
+            }
+
+            // 3. Play Boy's Voice Line ("The fucking crows!") using Web Speech Synthesis & Loud Impact SFX
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const msg = new SpeechSynthesisUtterance("The fucking crows!");
+                    msg.volume = 1.0;
+                    msg.rate = 1.2;  // fast panicked voice
+                    msg.pitch = 0.75; // scared male voice
+                    window.speechSynthesis.speak(msg);
+                }
+            } catch(e) {}
+
+            playInstantSound('impact-sound', 1.0);
+
+            // 4. Create 14 3D Crows Flying STRAIGHT AT THE SCREEN FAST
             try {
                 const crowGroup = new THREE.Group();
-                const crowMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
-                const wingMat = new THREE.MeshBasicMaterial({ color: 0x141414 });
+                const crowMat = new THREE.MeshBasicMaterial({ color: 0x050508 });
+                const wingMat = new THREE.MeshBasicMaterial({ color: 0x121218 });
 
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 14; i++) {
                     const crow = new THREE.Group();
-                    const body = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 5), crowMat);
+                    
+                    // Body pointing straight forward at camera
+                    const body = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 6), crowMat);
                     body.rotation.x = Math.PI / 2;
                     crow.add(body);
 
-                    const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.02, 0.15), wingMat);
-                    leftWing.position.x = -0.18;
+                    // Flapping Wings
+                    const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.22), wingMat);
+                    leftWing.position.x = -0.25;
                     leftWing.name = "leftWing";
                     crow.add(leftWing);
 
-                    const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.02, 0.15), wingMat);
-                    rightWing.position.x = 0.18;
+                    const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.22), wingMat);
+                    rightWing.position.x = 0.25;
                     rightWing.name = "rightWing";
                     crow.add(rightWing);
 
-                    crow.position.set((i - 1.5) * 0.4, (Math.random() - 0.5) * 0.3, -0.5);
+                    // Position crows in a swarm starting 6 to 9 meters back in camera space
+                    const spreadX = (Math.random() - 0.5) * 3.2;
+                    const spreadY = (Math.random() - 0.5) * 2.4;
+                    const spreadZ = -6.5 - Math.random() * 3.5;
+                    crow.position.set(spreadX, spreadY, spreadZ);
                     crowGroup.add(crow);
                 }
 
                 camera.add(crowGroup);
-                crowGroup.position.set(-2.5, 0.2, -1.2);
-                crowGroup.rotation.y = Math.PI / 4;
-
-                playInstantSound('ghost-laugh', 0.9);
 
                 let startTime = performance.now();
-                const duration = 550;
+                const duration = 850; // fast 0.85s dive straight into screen!
 
                 function animateCrows() {
                     const elapsed = performance.now() - startTime;
                     const progress = elapsed / duration;
 
                     if (progress < 1.0) {
-                        crowGroup.position.x = -2.5 + progress * 5.0;
-                        crowGroup.position.z = -1.2 + Math.sin(progress * Math.PI) * 0.4;
-                        
-                        crowGroup.children.forEach(crow => {
+                        // Fly straight into the screen fast!
+                        crowGroup.children.forEach((crow, idx) => {
+                            crow.position.z += 0.22 + (idx * 0.008); // high speed dive
+                            crow.position.x += (Math.random() - 0.5) * 0.06;
+                            crow.position.y += (Math.random() - 0.5) * 0.06;
+
                             const lw = crow.getObjectByName("leftWing");
                             const rw = crow.getObjectByName("rightWing");
-                            if (lw) lw.rotation.z = Math.sin(elapsed * 0.04) * 0.6;
-                            if (rw) rw.rotation.z = -Math.sin(elapsed * 0.04) * 0.6;
+                            if (lw) lw.rotation.z = Math.sin(elapsed * 0.06 + idx) * 0.9;
+                            if (rw) rw.rotation.z = -Math.sin(elapsed * 0.06 + idx) * 0.9;
                         });
-                        
+
+                        // Camera shake
+                        camera.rotation.z = (Math.random() - 0.5) * 0.14;
+
                         requestAnimationFrame(animateCrows);
                     } else {
+                        camera.rotation.z = 0;
                         camera.remove(crowGroup);
-                        isCrowJumpscareActive = false;
+                        container.classList.remove('crow-screen-shake');
+                        
+                        setTimeout(() => {
+                            if (subtitleEl) subtitleEl.style.display = 'none';
+                            isCrowJumpscareActive = false;
+                        }, 1400);
                     }
                 }
                 requestAnimationFrame(animateCrows);
             } catch(e) {
+                container.classList.remove('crow-screen-shake');
+                if (subtitleEl) subtitleEl.style.display = 'none';
                 isCrowJumpscareActive = false;
             }
+        }
+
+        function scheduleCrowJumpscares() {
+            if (crowScheduleTimeout) clearTimeout(crowScheduleTimeout);
+
+            const randomInterval = Math.random() * 30000 + 35000; // every 35 to 65 seconds
+            crowScheduleTimeout = setTimeout(() => {
+                const gameplayScreen = document.getElementById('gameplay-screen');
+                if (isGameRunning && gameplayScreen && gameplayScreen.style.display === 'block' && !isKillingActive) {
+                    triggerCrowJumpscare();
+                }
+                scheduleCrowJumpscares();
+            }, randomInterval);
         }
 
         function updateGiantSnakes() {
