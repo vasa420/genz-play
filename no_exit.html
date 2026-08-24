@@ -5542,40 +5542,11 @@
         let giantSnakes = [];
 
         function spawnGiantSnakes(floorGroup, floorIndex) {
-            const spawnPoints = [
-                { x: 2, z: 5 }, { x: 9, z: 5 },
-                { x: 5, z: 9 }, { x: 13, z: 9 },
-                { x: 3, z: 13 }, { x: 11, z: 13 }
-            ];
-
-            spawnPoints.forEach(sp => {
-                const snake = createGiantSnakeMesh();
-                const wx = sp.x * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-                const wz = sp.z * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-                
-                snake.position.set(wx, 0.12, wz);
-                snake.userData.floor = floorIndex;
-                floorGroup.add(snake);
-                giantSnakes.push(snake);
-            });
+            // Snakes completely removed per user request
         }
 
         function triggerSnakeStrikeJumpscare() {
-            try {
-                if (camera) {
-                    camera.rotation.z += (Math.random() > 0.5 ? 1 : -1) * 0.25;
-                }
-                playInstantSound('ghost-laugh', 0.8);
-                const flash = document.getElementById('kill-blood-splatter');
-                if (flash) {
-                    flash.style.display = 'block';
-                    flash.style.opacity = '0.9';
-                    flash.style.transition = 'none';
-                    flash.offsetHeight;
-                    flash.style.transition = 'opacity 0.4s ease-out';
-                    flash.style.opacity = '0';
-                }
-            } catch(e){}
+            // Snakes completely removed
         }
 
         let isCrowJumpscareActive = false;
@@ -5645,79 +5616,7 @@
         }
 
         function updateGiantSnakes() {
-            if (!isGameRunning || giantSnakes.length === 0) return;
-            const time = performance.now() * 0.003;
-
-            const playerWorldX = playerPos.x * CELL_SIZE - MAP_OFFSET;
-            const playerWorldZ = playerPos.z * CELL_SIZE - MAP_OFFSET;
-
-            giantSnakes.forEach(snake => {
-                const ud = snake.userData;
-
-                const stepX = Math.cos(ud.angle) * ud.speed;
-                const stepZ = Math.sin(ud.angle) * ud.speed;
-                const newX = snake.position.x + stepX;
-                const newZ = snake.position.z + stepZ;
-
-                let currentMap = GROUND_FLOOR_MAP;
-                if (ud.floor === 1) currentMap = SECOND_FLOOR_MAP;
-                else if (ud.floor === 2) currentMap = MORTUARY_FLOOR_MAP;
-
-                // Radial wall collision checking to ensure snake NEVER enters inside walls!
-                const radius = 0.55;
-                const gridMinX = Math.floor((newX - radius + MAP_OFFSET) / CELL_SIZE);
-                const gridMaxX = Math.floor((newX + radius + MAP_OFFSET) / CELL_SIZE);
-                const gridMinZ = Math.floor((newZ - radius + MAP_OFFSET) / CELL_SIZE);
-                const gridMaxZ = Math.floor((newZ + radius + MAP_OFFSET) / CELL_SIZE);
-
-                let isWall = false;
-                for (let r = gridMinZ; r <= gridMaxZ; r++) {
-                    for (let c = gridMinX; c <= gridMaxX; c++) {
-                        if (r < 0 || r >= MAP_SIZE || c < 0 || c >= MAP_SIZE || currentMap[r][c] === 1) {
-                            isWall = true;
-                            break;
-                        }
-                    }
-                    if (isWall) break;
-                }
-
-                ud.changeDirTimer++;
-                if (isWall || ud.changeDirTimer > 100 + Math.random() * 80) {
-                    ud.angle += Math.PI * (0.5 + Math.random() * 0.5);
-                    ud.changeDirTimer = 0;
-                } else {
-                    snake.position.x = newX;
-                    snake.position.z = newZ;
-                }
-
-                snake.rotation.y = -ud.angle + Math.PI / 2;
-
-                ud.segments.forEach((seg, idx) => {
-                    const wave = Math.sin(time * 8 - idx * 0.35) * 0.16;
-                    seg.position.x = wave;
-                });
-
-                if (ud.tongue) {
-                    ud.tongue.position.z = 0.32 + Math.sin(time * 14) * 0.08;
-                }
-
-                if (ud.floor === activeFloor) {
-                    const dx = playerWorldX - snake.position.x;
-                    const dz = playerWorldZ - snake.position.z;
-                    const dist = Math.hypot(dx, dz);
-
-                    if (dist < 2.8 && ud.hissCooldown <= 0) {
-                        playSnakeHissSound(dist);
-                        triggerSnakeStrikeJumpscare();
-                        ud.hissCooldown = 220;
-                    }
-                    if (ud.hissCooldown > 0) ud.hissCooldown--;
-
-                    if (dist < 0.75) {
-                        triggerJumpscare();
-                    }
-                }
-            });
+            // Snakes completely removed
         }
 
         function playSnakeHissSound(dist) {
@@ -7321,14 +7220,7 @@
 
         function updateCameraPosition() {
             if (camera) {
-                let bobOffset = 0;
-                if (keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d) {
-                    headBobTime += 0.15;
-                    bobOffset = Math.sin(headBobTime) * 0.05;
-                } else {
-                    headBobTime = 0;
-                }
-
+                // Rock-steady camera: zero head-bob / building wobble
                 const gridX = Math.floor(playerPos.x);
                 const gridZ = Math.floor(playerPos.z);
                 
@@ -7354,7 +7246,7 @@
 
                 camera.position.set(
                     playerPos.x * CELL_SIZE - MAP_OFFSET,
-                    playerHeight + smoothPlayerBaseY + bobOffset,
+                    playerHeight + smoothPlayerBaseY,
                     playerPos.z * CELL_SIZE - MAP_OFFSET
                 );
             }
