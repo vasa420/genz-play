@@ -1145,6 +1145,71 @@
             box-shadow: 0 4px 15px rgba(255,255,255,0.1);
         }
 
+        /* Screen Blood Droplet & Dripping Animation Overlay */
+        #screen-blood-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 18000;
+            overflow: hidden;
+            display: none;
+        }
+
+        .screen-blood-drop {
+            position: absolute;
+            width: var(--drop-size, 10px);
+            height: var(--drop-size, 10px);
+            background: radial-gradient(circle at 35% 35%, #ff4d4d 0%, #b30000 50%, #4d0000 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 12px rgba(179, 0, 0, 0.9), inset -1px -1px 3px rgba(0,0,0,0.9);
+            opacity: 0.95;
+            animation: bloodDripFall var(--drip-speed, 3s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            will-change: transform, opacity;
+        }
+
+        .screen-blood-drop::before {
+            content: '';
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--trail-width, 3px);
+            height: var(--trail-len, 90px);
+            background: linear-gradient(to top, rgba(179, 0, 0, 0.9) 0%, rgba(110, 0, 0, 0.7) 60%, transparent 100%);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        @keyframes bloodDripFall {
+            0% {
+                transform: translateY(0) scaleY(1);
+                opacity: 0.95;
+            }
+            70% {
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(var(--drip-dist, 450px)) scaleY(1.4);
+                opacity: 0.25;
+            }
+        }
+
+        .screen-blood-splatter-spot {
+            position: absolute;
+            border-radius: 50% 40% 60% 45% / 45% 55% 45% 55%;
+            background: radial-gradient(circle, rgba(200, 0, 0, 0.95) 0%, rgba(95, 0, 0, 0.96) 70%, rgba(35, 0, 0, 0.98) 100%);
+            box-shadow: 0 0 15px rgba(180, 0, 0, 0.85), inset 0 0 10px rgba(0,0,0,0.8);
+            transform: scale(0);
+            animation: bloodSplatterPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: none;
+        }
+
+        @keyframes bloodSplatterPop {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.25) rotate(var(--rot, 15deg)); opacity: 1; }
+            100% { transform: scale(1) rotate(var(--rot, 15deg)); opacity: 0.88; }
+        }
+
         /* Staircase Prompts and Fade */
         #staircase-prompt {
             position: absolute;
@@ -8501,7 +8566,7 @@
             camera.position.y += (Math.random() - 0.5) * 0.25;
             camera.position.z += (Math.random() - 0.5) * 0.25;
 
-            // 3. Screen red radial flash overlay
+            // 3. Screen red radial flash overlay & dripping blood droplets
             const flash = document.getElementById('kill-blood-splatter');
             if (flash) {
                 flash.style.display = 'block';
@@ -8512,6 +8577,9 @@
                 flash.style.transition = 'opacity 0.45s cubic-bezier(0.1, 0.8, 0.3, 1)';
                 flash.style.opacity = '0';
             }
+
+            // Trigger visceral screen blood droplets & lens splatter drops
+            spawnScreenBloodDroplets(20);
 
             // 4. Instantiation of 60 red 3D particles spraying outward
             try {
@@ -8617,6 +8685,70 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        // Visceral Screen Blood Droplets & Dripping Animation Manager
+        function spawnScreenBloodDroplets(count = 25) {
+            let container = document.getElementById('screen-blood-overlay');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'screen-blood-overlay';
+                document.body.appendChild(container);
+            }
+            container.style.display = 'block';
+
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    // Spawn dripping blood droplet
+                    const drop = document.createElement('div');
+                    drop.className = 'screen-blood-drop';
+                    
+                    const startX = Math.random() * 98; // 0vw to 98vw
+                    const startY = Math.random() * 35;  // 0vh to 35vh (top area of viewport)
+                    const dropSize = Math.floor(Math.random() * 12 + 6); // 6px to 18px
+                    const trailWidth = Math.max(2, Math.floor(dropSize * 0.35));
+                    const trailLen = Math.floor(Math.random() * 140 + 70); // 70px to 210px
+                    const dripDist = Math.floor(Math.random() * 550 + 250); // drip down 250px to 800px
+                    const dripSpeed = (Math.random() * 2.2 + 1.2).toFixed(2); // 1.2s to 3.4s
+
+                    drop.style.left = startX + 'vw';
+                    drop.style.top = startY + 'vh';
+                    drop.style.setProperty('--drop-size', dropSize + 'px');
+                    drop.style.setProperty('--trail-width', trailWidth + 'px');
+                    drop.style.setProperty('--trail-len', trailLen + 'px');
+                    drop.style.setProperty('--drip-dist', dripDist + 'px');
+                    drop.style.setProperty('--drip-speed', dripSpeed + 's');
+
+                    container.appendChild(drop);
+
+                    // Spawn dynamic lens splatter spots
+                    if (Math.random() > 0.3) {
+                        const spot = document.createElement('div');
+                        spot.className = 'screen-blood-splatter-spot';
+                        const spotSize = Math.floor(Math.random() * 50 + 16);
+                        spot.style.left = (Math.random() * 90 + 5) + 'vw';
+                        spot.style.top = (Math.random() * 85 + 5) + 'vh';
+                        spot.style.width = spotSize + 'px';
+                        spot.style.height = (spotSize * (0.8 + Math.random() * 0.5)) + 'px';
+                        spot.style.setProperty('--rot', (Math.random() * 360) + 'deg');
+                        container.appendChild(spot);
+                    }
+
+                    // Cleanup droplet element after animation finishes
+                    setTimeout(() => {
+                        try { if (drop.parentNode) drop.parentNode.removeChild(drop); } catch(e){}
+                    }, parseFloat(dripSpeed) * 1000 + 500);
+
+                }, i * 35);
+            }
+        }
+
+        function clearScreenBlood() {
+            const container = document.getElementById('screen-blood-overlay');
+            if (container) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+            }
+        }
+
         let slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
 
         function triggerJumpscare() {
@@ -8630,13 +8762,13 @@
             // Play creepy laugh kill music instantly on ghost kill with 0ms delay!
             playInstantSound('creepy-kill-laugh', 1.0);
 
+            // Spawn dynamic dripping blood droplets on screen kill
+            spawnScreenBloodDroplets(35);
+
             // Reset multiple slash sound states
             slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
             
             document.exitPointerLock();
-            
-            // Note: We keep isGameRunning = true during the killing sequence so that 
-            // requestAnimationFrame(animateHorrorGame) keeps looping to run updateKillingSequence().
         }
 
         function triggerFinalJumpscare() {
@@ -8649,6 +8781,9 @@
             
             // Play creepy laugh kill music instantly on final jumpscare!
             playInstantSound('creepy-kill-laugh', 1.0);
+
+            // Trigger screen blood droplets dripping animation
+            spawnScreenBloodDroplets(30);
 
             // Display jumpscare overlay inside the gameplay screen
             const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
@@ -8690,6 +8825,7 @@
 
         function retryHorrorGame() {
             stopChaseMusic();
+            clearScreenBlood();
             document.getElementById('game-over-overlay').style.display = 'none';
             document.getElementById('click-to-play-overlay').style.display = 'flex';
 
