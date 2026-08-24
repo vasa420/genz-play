@@ -445,9 +445,66 @@
             sendMessage();
         }
 
-        function getAIAnswer(userQuery) {
-            const q = userQuery.toLowerCase();
+        // Live Real-Time Math Evaluator
+        function evaluateMathQuery(q) {
+            const mathMatch = q.match(/(?:what is|calculate|compute|eval|solve)?\s*([0-9\.\s\+\-\*\/\^\(\)]+)/i);
+            if (mathMatch && mathMatch[1] && mathMatch[1].trim().length >= 3 && /[0-9]/.test(mathMatch[1])) {
+                try {
+                    const expr = mathMatch[1].trim();
+                    if (/^[0-9\.\s\+\-\*\/\^\(\)]+$/.test(expr)) {
+                        const sanitized = expr.replace(/\^/g, '**');
+                        const res = Function(`'use strict'; return (${sanitized})`)();
+                        if (typeof res === 'number' && !isNaN(res)) {
+                            return `🧮 Real-Time Math Calculation: ${expr} = ${res}`;
+                        }
+                    }
+                } catch(e) {}
+            }
+            return null;
+        }
 
+        // Live Wikipedia Real-Time Fact Fetcher
+        async function fetchWikipediaFact(term) {
+            try {
+                const cleanTerm = term.replace(/who is|what is|where is|tell me about|explain|how does|what are/gi, '').trim();
+                if (!cleanTerm || cleanTerm.length < 3) return null;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+                const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanTerm)}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.extract && data.type !== 'disambiguation' && data.extract.length > 20) {
+                        return `📚 Real-Time Knowledge Insight (${data.title}): ${data.extract}`;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // Live Real-Time LLM AI Fetcher via CORS API
+        async function fetchLivePollinationsAI(userQuery) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4500);
+                const systemPrompt = "You are Vetri Tactical AI, a smart, friendly, real-time AI assistant. Answer concisely and accurately in 2-3 sentences.";
+                const promptUrl = `https://text.pollinations.ai/${encodeURIComponent(systemPrompt + " User: " + userQuery)}`;
+
+                const res = await fetch(promptUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text && text.trim().length > 10 && !text.includes('<html')) {
+                        return text.trim();
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // Local Squad Lore & Deep NLP Fallback Engine
+        function getLocalKnowledgeAnswer(q) {
             if (q.includes('vaisal') || q.includes('bus')) {
                 return "🚌 Operative Vaisal doesn't just drive the bus—the bus asks Vaisal for permission to start its engine! Known to drift 40-ton government buses around tight city turns, passengers never need tickets because Vaisal's aura alone covers the fare!";
             }
@@ -488,14 +545,72 @@
                 return "🔥 The FLAMES calculator computes tactical compatibility (Friends, Love, Affection, Marriage, Enemy, Siblings) using operative name character algorithms! Check out the Flames Calculator page from the navigation sidebar!";
             }
             if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('who are you')) {
-                return "🤖 Greetings Operative! I am Vetri AI, your strategic command assistant. Ask me about squad stats, operative stories, passcodes (e.g. 99123), or horror survival tactics!";
+                return "🤖 Greetings Operative! I am Vetri AI, your real-time strategic command assistant. Ask me anything about science, math, technology, squad lore, passcodes (99123), or battle strategies!";
             }
 
-            // Fallback intelligent tactical answer
-            return `⚡ Strategic Query Analyzed: "${userQuery}". Database records indicate high tactical synergy across Vetri Squad operatives! Operative Vaisal (Bus Driver), Surya (Kaveri Bath), Nithish (Sacred Bell), and Dharnish (Cobra Bakery) stand ready for mission deployment!`;
+            if (q.includes('time') || q.includes('clock') || q.includes('date')) {
+                const now = new Date();
+                return `⏰ Real-Time Clock: Current local time is ${now.toLocaleTimeString()} on ${now.toLocaleDateString()}.`;
+            }
+
+            if (q.includes('code') || q.includes('python') || q.includes('javascript') || q.includes('program') || q.includes('html')) {
+                return `💻 Real-Time Coding Intelligence: I can analyze software queries! In JavaScript and HTML, interactive UI elements utilize DOM manipulation and event handlers for real-time reactivity.`;
+            }
+
+            // Semantic NLP Synthesis Fallback
+            return `🤖 Real-Time AI Analysis: I have analyzed your query "${q}". Vetri AI Engine observes high strategic interest! For squad lore, check out Operative Vaisal (Bus Driver), Surya (Kaveri Bath), or Dharnish (Cobra Bakery). Ask me any math equation, scientific concept, or tactical question!`;
         }
 
-        function sendMessage() {
+        // Master Real-Time AI Analyzer (Combines LLM API, Live Wikipedia, Math Engine & Local Knowledge)
+        async function analyzeRealTimeAIAnswer(userQuery) {
+            const q = userQuery.toLowerCase().trim();
+
+            // 1. Check math expressions
+            const mathRes = evaluateMathQuery(q);
+            if (mathRes) return mathRes;
+
+            // 2. Check squad lore & game specific queries first
+            if (q.includes('vaisal') || q.includes('surya') || q.includes('dharnish') || q.includes('nithish') || 
+                q.includes('girish') || q.includes('logith') || q.includes('vasanth') || q.includes('kishoor') || 
+                q.includes('sudhish') || q.includes('thaya') || q.includes('passcode') || q.includes('ghost') || 
+                q.includes('flames') || q.includes('checkpoint')) {
+                return getLocalKnowledgeAnswer(q);
+            }
+
+            // 3. Try Live Real-Time LLM AI Fetcher
+            const liveAIRes = await fetchLivePollinationsAI(userQuery);
+            if (liveAIRes) return liveAIRes;
+
+            // 4. Try Live Wikipedia Fact Fetcher
+            const wikiRes = await fetchWikipediaFact(userQuery);
+            if (wikiRes) return wikiRes;
+
+            // 5. Fallback to Local Semantic Engine
+            return getLocalKnowledgeAnswer(q);
+        }
+
+        // Stream AI Response Word-By-Word in Real-Time
+        function streamAIResponseWordByWord(container, fullText, callback) {
+            const aiBubble = document.createElement('div');
+            aiBubble.className = 'chat-bubble ai';
+            container.appendChild(aiBubble);
+
+            const words = fullText.split(' ');
+            let wordIndex = 0;
+
+            const streamInterval = setInterval(() => {
+                if (wordIndex < words.length) {
+                    aiBubble.textContent += (wordIndex === 0 ? '' : ' ') + words[wordIndex];
+                    container.scrollTop = container.scrollHeight;
+                    wordIndex++;
+                } else {
+                    clearInterval(streamInterval);
+                    if (callback) callback();
+                }
+            }, 35); // 35ms per word typing animation
+        }
+
+        async function sendMessage() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if (!msg) return;
@@ -510,29 +625,26 @@
             input.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Render typing indicator
+            // Render real-time analyzing indicator
             const typingBubble = document.createElement('div');
             typingBubble.className = 'chat-bubble ai';
             typingBubble.id = 'typing-indicator';
-            typingBubble.innerHTML = `🤖 Vetri AI is thinking <div class="typing-dots"><span></span><span></span><span></span></div>`;
+            typingBubble.innerHTML = `🤖 Vetri AI is analyzing in real-time <div class="typing-dots"><span></span><span></span><span></span></div>`;
             chatBox.appendChild(typingBubble);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Compute AI response
-            setTimeout(() => {
-                const indicator = document.getElementById('typing-indicator');
-                if (indicator) indicator.remove();
+            // Perform Real-Time Analysis
+            const finalAnswerText = await analyzeRealTimeAIAnswer(msg);
 
-                const aiBubble = document.createElement('div');
-                aiBubble.className = 'chat-bubble ai';
-                const answerText = getAIAnswer(msg);
-                aiBubble.textContent = answerText;
-                chatBox.appendChild(aiBubble);
-                chatBox.scrollTop = chatBox.scrollHeight;
+            // Remove indicator
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
 
-                // Audio Speech Output
-                speakText(answerText);
-            }, 600);
+            // Stream AI Response Word-By-Word
+            streamAIResponseWordByWord(chatBox, finalAnswerText, () => {
+                // Audio Speech Output after response completes
+                speakText(finalAnswerText);
+            });
         }
     </script>
 </body>
