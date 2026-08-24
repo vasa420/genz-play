@@ -1975,8 +1975,7 @@
 
         socket.on('game_start', (data) => {
             console.log("GAME START SIGNAL RECEIVED", data);
-            // Navigate to chess board with room id and player role
-            window.location.href = `chess.html?id=${roomId}&role=${role}`;
+            startMatchWithCountdown();
         });
 
         function confirmStartMatch() {
@@ -2085,6 +2084,8 @@
             closeModal();
             let overlay = document.getElementById('match-countdown-overlay');
             if (!overlay) return;
+            if (overlay.dataset.active === 'true') return;
+            overlay.dataset.active = 'true';
 
             overlay.style.display = 'flex';
             const numEl = document.getElementById('countdown-number');
