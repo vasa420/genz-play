@@ -1272,6 +1272,12 @@
             100% { transform: translateX(-50%) scale(1.0); opacity: 1; }
         }
 
+        @keyframes crowZoomAttack {
+            0% { transform: scale(0.1) rotate(-15deg); opacity: 0; }
+            40% { opacity: 1; }
+            100% { transform: scale(4.0) rotate(15deg); opacity: 0.98; }
+        }
+
         /* Staircase Prompts and Fade */
         #staircase-prompt {
             position: absolute;
@@ -5715,6 +5721,7 @@
 
             const container = document.getElementById('gameplay-screen') || document.body;
             const subtitleEl = document.getElementById('crow-dialogue-subtitle');
+            const overlayEl = document.getElementById('crow-jumpscare-overlay');
             
             // 1. Add Screen & Viewport Shake Class
             container.classList.add('crow-screen-shake');
@@ -5724,13 +5731,23 @@
                 subtitleEl.style.display = 'block';
             }
 
-            // 3. Play Boy's Voice Line ("The fucking crows!") using Web Speech Synthesis & Loud Impact SFX
+            // 3. Render 2D Diving Crow Silhouette Overlay zooming straight at camera
+            if (overlayEl) {
+                overlayEl.style.display = 'flex';
+                overlayEl.innerHTML = `
+                    <div style="font-size: 150px; filter: drop-shadow(0 0 25px #000); animation: crowZoomAttack 0.65s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; transform-origin: center;">🦅</div>
+                    <div style="position: absolute; font-size: 200px; filter: drop-shadow(0 0 35px #ff0000); animation: crowZoomAttack 0.75s 0.08s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; transform-origin: center;">🦅</div>
+                    <div style="position: absolute; font-size: 250px; filter: drop-shadow(0 0 45px #000); animation: crowZoomAttack 0.85s 0.15s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; transform-origin: center;">🦅</div>
+                `;
+            }
+
+            // 4. Play Boy's Voice Line ("The fucking crows!") & SFX
             try {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     const msg = new SpeechSynthesisUtterance("The fucking crows!");
                     msg.volume = 1.0;
-                    msg.rate = 1.2;  // fast panicked voice
+                    msg.rate = 1.25;  // fast panicked voice
                     msg.pitch = 0.75; // scared male voice
                     window.speechSynthesis.speak(msg);
                 }
@@ -5739,35 +5756,45 @@
             playInstantSound('impact-sound', 1.0);
             playInstantSound('crow-call', 1.0);
 
-            // 4. Create 14 3D Crows Flying STRAIGHT AT THE SCREEN FAST
+            // 5. Create 18 3D Crows Flying STRAIGHT into Camera Lens
             try {
                 const crowGroup = new THREE.Group();
-                const crowMat = new THREE.MeshBasicMaterial({ color: 0x050508 });
-                const wingMat = new THREE.MeshBasicMaterial({ color: 0x121218 });
+                const crowMat = new THREE.MeshBasicMaterial({ color: 0x030305 });
+                const wingMat = new THREE.MeshBasicMaterial({ color: 0x0f0f14 });
+                const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Glowing red eyes
 
-                for (let i = 0; i < 14; i++) {
+                for (let i = 0; i < 18; i++) {
                     const crow = new THREE.Group();
                     
-                    // Body pointing straight forward at camera
-                    const body = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 6), crowMat);
+                    // Body pointing straight forward at camera (-Z to +Z)
+                    const body = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.55, 6), crowMat);
                     body.rotation.x = Math.PI / 2;
                     crow.add(body);
 
+                    // Red glowing eye points
+                    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), eyeMat);
+                    leftEye.position.set(-0.06, 0.06, 0.22);
+                    crow.add(leftEye);
+
+                    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), eyeMat);
+                    rightEye.position.set(0.06, 0.06, 0.22);
+                    crow.add(rightEye);
+
                     // Flapping Wings
-                    const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.22), wingMat);
-                    leftWing.position.x = -0.25;
+                    const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.02, 0.25), wingMat);
+                    leftWing.position.x = -0.28;
                     leftWing.name = "leftWing";
                     crow.add(leftWing);
 
-                    const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.22), wingMat);
-                    rightWing.position.x = 0.25;
+                    const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.02, 0.25), wingMat);
+                    rightWing.position.x = 0.28;
                     rightWing.name = "rightWing";
                     crow.add(rightWing);
 
-                    // Position crows in a swarm starting 6 to 9 meters back in camera space
-                    const spreadX = (Math.random() - 0.5) * 3.2;
-                    const spreadY = (Math.random() - 0.5) * 2.4;
-                    const spreadZ = -6.5 - Math.random() * 3.5;
+                    // Spawn in a cone centered directly on camera Z-axis (-8.0m to -2.5m)
+                    const spreadX = (Math.random() - 0.5) * 1.8;
+                    const spreadY = (Math.random() - 0.5) * 1.4;
+                    const spreadZ = -8.0 + (i * 0.3);
                     crow.position.set(spreadX, spreadY, spreadZ);
                     crowGroup.add(crow);
                 }
@@ -5775,33 +5802,46 @@
                 camera.add(crowGroup);
 
                 let startTime = performance.now();
-                const duration = 850; // fast 0.85s dive straight into screen!
+                const duration = 800; // fast 0.8s dive straight into screen!
 
                 function animateCrows() {
                     const elapsed = performance.now() - startTime;
                     const progress = elapsed / duration;
 
                     if (progress < 1.0) {
-                        // Fly straight into the screen fast!
+                        // Fly straight into camera center (0, 0, 0)!
                         crowGroup.children.forEach((crow, idx) => {
-                            crow.position.z += 0.22 + (idx * 0.008); // high speed dive
-                            crow.position.x += (Math.random() - 0.5) * 0.06;
-                            crow.position.y += (Math.random() - 0.5) * 0.06;
+                            // Funnel X & Y coordinates towards camera center (0, 0)
+                            crow.position.x *= 0.94;
+                            crow.position.y *= 0.94;
+                            // High speed dive straight forward into player's eyes!
+                            crow.position.z += 0.26 + (idx * 0.005);
+
+                            // Scale up dramatically as they hit the camera lens
+                            if (crow.position.z > -1.5) {
+                                const s = 1.0 + (crow.position.z + 1.5) * 1.5;
+                                crow.scale.setScalar(s);
+                            }
 
                             const lw = crow.getObjectByName("leftWing");
                             const rw = crow.getObjectByName("rightWing");
-                            if (lw) lw.rotation.z = Math.sin(elapsed * 0.06 + idx) * 0.9;
-                            if (rw) rw.rotation.z = -Math.sin(elapsed * 0.06 + idx) * 0.9;
+                            if (lw) lw.rotation.z = Math.sin(elapsed * 0.08 + idx) * 1.1;
+                            if (rw) rw.rotation.z = -Math.sin(elapsed * 0.08 + idx) * 1.1;
                         });
 
-                        // Camera shake
-                        camera.rotation.z = (Math.random() - 0.5) * 0.14;
+                        // Violent Camera Roll & Shake
+                        camera.rotation.z = (Math.random() - 0.5) * 0.18;
+                        camera.position.x = (Math.random() - 0.5) * 0.08;
+                        camera.position.y = (Math.random() - 0.5) * 0.08;
 
                         requestAnimationFrame(animateCrows);
                     } else {
                         camera.rotation.z = 0;
+                        camera.position.x = 0;
+                        camera.position.y = 0;
                         camera.remove(crowGroup);
                         container.classList.remove('crow-screen-shake');
+                        if (overlayEl) overlayEl.style.display = 'none';
                         
                         setTimeout(() => {
                             if (subtitleEl) subtitleEl.style.display = 'none';
@@ -5812,6 +5852,7 @@
                 requestAnimationFrame(animateCrows);
             } catch(e) {
                 container.classList.remove('crow-screen-shake');
+                if (overlayEl) overlayEl.style.display = 'none';
                 if (subtitleEl) subtitleEl.style.display = 'none';
                 isCrowJumpscareActive = false;
             }
