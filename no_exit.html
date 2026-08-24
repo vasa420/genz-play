@@ -6824,60 +6824,36 @@
                 ghostMesh.add(strip);
             }
 
-            // 2. Head (Pitch Black Shadow Void completely covered by hair)
-            const headGeo = new THREE.SphereGeometry(0.18, 16, 16);
+            // 2. Ghostface Scream Mask & Hooded Head
+            const headGeo = new THREE.SphereGeometry(0.2, 16, 16);
             const headMat = new THREE.MeshStandardMaterial({
-                color: 0x030303,
-                roughness: 0.95
+                color: 0x050508,
+                roughness: 0.9
             });
             const head = new THREE.Mesh(headGeo, headMat);
-            head.position.y = 1.92;
-            head.rotation.x = 0.15; // Slouched forward creepy head posture
+            head.position.y = 1.9;
             ghostMesh.add(head);
 
-            // 3. Dense Long Wet Black Hair (Completely covering face and cascading past waist)
-            const hairMat = new THREE.MeshStandardMaterial({
-                color: 0x020202,
-                roughness: 0.35,
-                metalness: 0.15
-            });
+            // Ghostface Scream Mask 3D Front Plate (Loads user's exact Ghostface photo)
+            try {
+                const maskTex = new THREE.TextureLoader().load('ghostface_mask.png');
+                const maskMat = new THREE.MeshBasicMaterial({
+                    map: maskTex,
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+                const maskPlaneGeo = new THREE.PlaneGeometry(0.55, 0.72);
+                const maskMesh = new THREE.Mesh(maskPlaneGeo, maskMat);
+                maskMesh.position.set(0, 1.9, 0.2);
+                ghostMesh.add(maskMesh);
+            } catch(e) {}
 
-            // Full Front Hair Veil (Completely covering front face down past chest)
-            const frontHairGeo = new THREE.BoxGeometry(0.42, 1.3, 0.09);
-            const frontHair = new THREE.Mesh(frontHairGeo, hairMat);
-            frontHair.position.set(0, 1.38, 0.14);
-            frontHair.rotation.x = 0.08;
-            ghostMesh.add(frontHair);
-
-            // Back Hair Curtain
-            const backHairGeo = new THREE.BoxGeometry(0.44, 1.4, 0.1);
-            const backHair = new THREE.Mesh(backHairGeo, hairMat);
-            backHair.position.set(0, 1.32, -0.12);
-            ghostMesh.add(backHair);
-
-            // Side Hair Strands
-            const sideHairGeo = new THREE.BoxGeometry(0.13, 1.25, 0.14);
-            const leftSideHair = new THREE.Mesh(sideHairGeo, hairMat);
-            leftSideHair.position.set(-0.21, 1.38, 0.02);
-            leftSideHair.rotation.z = 0.06;
-            ghostMesh.add(leftSideHair);
-
-            const rightSideHair = new THREE.Mesh(sideHairGeo, hairMat);
-            rightSideHair.position.set(0.21, 1.38, 0.02);
-            rightSideHair.rotation.z = -0.06;
-            ghostMesh.add(rightSideHair);
-
-            // Individual Wet Stringy Hair Strands Draping Down
-            const strandGeo = new THREE.CylinderGeometry(0.012, 0.007, 1.15, 4);
-            for (let i = 0; i < 16; i++) {
-                const strand = new THREE.Mesh(strandGeo, hairMat);
-                const angle = (i / 16) * Math.PI * 2;
-                const r = 0.17 + (Math.random() - 0.5) * 0.04;
-                strand.position.set(Math.cos(angle) * r, 1.35, Math.sin(angle) * r + 0.04);
-                strand.rotation.z = (Math.random() - 0.5) * 0.22;
-                strand.rotation.x = (Math.random() - 0.5) * 0.22;
-                ghostMesh.add(strand);
-            }
+            // Black Hood surrounding Ghostface Mask
+            const hoodGeo = new THREE.CylinderGeometry(0.26, 0.35, 0.65, 12, 1, true);
+            const hoodMat = new THREE.MeshStandardMaterial({ color: 0x08080c, roughness: 0.92, side: THREE.DoubleSide });
+            const hood = new THREE.Mesh(hoodGeo, hoodMat);
+            hood.position.set(0, 1.88, -0.02);
+            ghostMesh.add(hood);
 
             // 4. Slender Pale/Dirty Arms & Hanging Hands
             const armMat = new THREE.MeshStandardMaterial({
