@@ -3940,23 +3940,35 @@
                 ctx.fill();
             }
 
-            // 6. Blood drips and stains
-            for (let i = 0; i < 6; i++) {
-                if (Math.random() > 0.3) {
+            // 6. Realistic Organic Blood Drips and Wall Run Trails
+            for (let i = 0; i < 5; i++) {
+                if (Math.random() > 0.35) {
                     const bx = Math.random() * 512;
-                    const by = Math.random() * 150 + 50;
-                    ctx.fillStyle = 'rgba(110, 0, 0, 0.75)';
+                    const by = Math.random() * 120 + 60;
+                    const dripLen = Math.random() * 120 + 60;
+                    
+                    const grad = ctx.createLinearGradient(bx, by, bx, by + dripLen);
+                    grad.addColorStop(0, 'rgba(70, 0, 0, 0.9)');
+                    grad.addColorStop(0.4, 'rgba(100, 0, 0, 0.85)');
+                    grad.addColorStop(1, 'rgba(40, 0, 0, 0.15)');
+                    
+                    ctx.fillStyle = grad;
                     ctx.beginPath();
-                    ctx.arc(bx, by, Math.random() * 8 + 3, 0, Math.PI * 2);
+                    ctx.arc(bx, by, Math.random() * 5 + 3, 0, Math.PI * 2);
                     ctx.fill();
 
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = Math.random() * 3 + 1.5;
                     ctx.beginPath();
-                    ctx.moveTo(bx - 1.5, by);
-                    ctx.lineTo(bx + 1.5, by);
-                    ctx.lineTo(bx + 0.5, by + Math.random() * 90 + 30);
-                    ctx.lineTo(bx - 0.5, by + Math.random() * 90 + 30);
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.moveTo(bx, by);
+                    let currX = bx;
+                    let currY = by;
+                    for (let step = 0; step < 6; step++) {
+                        currX += (Math.random() - 0.5) * 4;
+                        currY += dripLen / 6;
+                        ctx.lineTo(currX, currY);
+                    }
+                    ctx.stroke();
                 }
             }
 
@@ -4086,22 +4098,32 @@
                 ctx.fill();
             }
 
-            // Dripping Blood stains
-            ctx.fillStyle = 'rgba(90, 0, 0, 0.8)';
-            for (let i = 0; i < 12; i++) {
+            // Realistic Coagulated Organic Blood Drips & Wall Runs
+            for (let i = 0; i < 6; i++) {
                 const bx = Math.random() * 512;
-                const by = Math.random() * 400 + 50;
-                const radius = Math.random() * 6 + 2;
+                const by = Math.random() * 200 + 60;
+                const dripLen = Math.random() * 100 + 40;
+                const grad = ctx.createLinearGradient(bx, by, bx, by + dripLen);
+                grad.addColorStop(0, 'rgba(80, 0, 0, 0.88)');
+                grad.addColorStop(0.5, 'rgba(110, 0, 0, 0.75)');
+                grad.addColorStop(1, 'rgba(30, 0, 0, 0.15)');
 
+                ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.arc(bx, by, radius, 0, Math.PI * 2);
+                ctx.arc(bx, by, Math.random() * 4 + 2, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.strokeStyle = 'rgba(90, 0, 0, 0.8)';
-                ctx.lineWidth = radius * 0.4;
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = Math.random() * 2.5 + 1;
                 ctx.beginPath();
                 ctx.moveTo(bx, by);
-                ctx.lineTo(bx, by + Math.random() * 60 + 15);
+                let cx = bx;
+                let cy = by;
+                for (let k = 0; k < 5; k++) {
+                    cx += (Math.random() - 0.5) * 3;
+                    cy += dripLen / 5;
+                    ctx.lineTo(cx, cy);
+                }
                 ctx.stroke();
             }
 
