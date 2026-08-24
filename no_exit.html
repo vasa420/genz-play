@@ -2297,6 +2297,7 @@
     <audio id="ghost-laugh" src="alex_jauk-evil-witch-laughing-sound-440272.mp3" preload="auto"></audio>
     <audio id="chase-music" src="50986408-psycho-violin-388911.mp3" loop preload="auto"></audio>
     <audio id="creepy-kill-laugh" src="u_c98kb8pdp9-creepy-laugh-sound-203187.mp3" preload="auto"></audio>
+    <audio id="woman-scream" src="dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3" preload="auto"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -3019,7 +3020,8 @@
             'impact-sound': 'dragon-studio-hard-heavy-impact-515256 (1).mp3',
             'ghost-laugh': 'alex_jauk-evil-witch-laughing-sound-440272.mp3',
             'chase-music': '50986408-psycho-violin-388911.mp3',
-            'creepy-kill-laugh': 'u_c98kb8pdp9-creepy-laugh-sound-203187.mp3'
+            'creepy-kill-laugh': 'u_c98kb8pdp9-creepy-laugh-sound-203187.mp3',
+            'woman-scream': 'dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3'
         };
 
         function preloadWebAudio() {
@@ -3066,7 +3068,8 @@
                     const el = document.getElementById(
                         soundName === 'door-open' ? 'door-open' :
                         soundName === 'impact-sound' ? 'impact-sound' :
-                        soundName === 'creepy-kill-laugh' ? 'creepy-kill-laugh' : 'ghost-laugh'
+                        soundName === 'creepy-kill-laugh' ? 'creepy-kill-laugh' :
+                        soundName === 'woman-scream' ? 'woman-scream' : 'ghost-laugh'
                     );
                     if (el) {
                         el.currentTime = 0;
@@ -3463,6 +3466,20 @@
         };
         let ghostLaughTimeout = null;
         let mortuaryLaughTimeout = null;
+        let womanScreamTimeout = null;
+
+        function scheduleWomanScreamSound() {
+            if (womanScreamTimeout) clearTimeout(womanScreamTimeout);
+            
+            womanScreamTimeout = setTimeout(() => {
+                const gameplayScreen = document.getElementById('gameplay-screen');
+                if (isGameRunning && gameplayScreen && gameplayScreen.style.display === 'block') {
+                    playInstantSound('woman-scream', 1.0);
+                }
+                // Repeat every 30 seconds continuously during gameplay
+                scheduleWomanScreamSound();
+            }, 30000); // 30 seconds interval
+        }
 
         function scheduleRandomGhostLaugh() {
             if (ghostLaughTimeout) clearTimeout(ghostLaughTimeout);
@@ -3513,9 +3530,10 @@
                 gameplayScreen.style.display = 'block';
             }
 
-            // Schedule laughs
+            // Schedule laughs & woman scream sound (every 30 seconds)
             scheduleRandomGhostLaugh();
             scheduleMortuaryLaugh();
+            scheduleWomanScreamSound();
 
             // Initialize the 3D Horror house rendering
             initHorror3D();
