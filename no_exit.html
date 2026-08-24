@@ -9431,6 +9431,36 @@
 
         // Initialize engine state on page load
         window.addEventListener('DOMContentLoaded', () => {
+            const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                    background: #030303; z-index: 999999; display: flex;
+                    flex-direction: column; align-items: center; justify-content: center;
+                    padding: 24px; text-align: center; font-family: 'Outfit', sans-serif;
+                `;
+                overlay.innerHTML = `
+                    <div style="font-size: 56px; margin-bottom: 12px;">💀</div>
+                    <h1 style="font-family: 'Creepster', cursive; font-size: 32px; color: #ff3b30; letter-spacing: 2px; margin-bottom: 8px;">NOT AVAILABLE ON MOBILE</h1>
+                    <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ff8800; font-weight: 800; letter-spacing: 2px; margin-bottom: 20px;">
+                        UNDER DEVELOPMENT FOR MOBILE DEVICES
+                    </p>
+                    <div style="background: rgba(255, 59, 48, 0.1); border: 1.5px solid rgba(255, 59, 48, 0.4); border-radius: 18px; padding: 20px; max-width: 360px; width: 100%; margin-bottom: 24px;">
+                        <p style="font-size: 14px; color: #ffffff; line-height: 1.5; font-weight: 600; margin-bottom: 12px;">
+                            <strong>NO EXIT</strong> is a 3D First-Person Horror experience optimized for Desktop Keyboard & Mouse controls.
+                        </p>
+                        <div style="background: rgba(0,0,0,0.6); padding: 12px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #ffd700; font-weight: 800;">
+                            💻 PLEASE PLAY ON PC OR LAPTOP
+                        </div>
+                    </div>
+                    <a href="arcade_hub.html" style="background: linear-gradient(135deg, #ff3b30, #990000); color: #ffffff; text-decoration: none; padding: 16px 36px; border-radius: 30px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 0 25px rgba(255,59,48,0.5);">
+                        ← RETURN TO ARCADE HUB
+                    </a>
+                `;
+                document.body.appendChild(overlay);
+                return;
+            }
             engineSetState('orbis');
         });
         setTimeout(() => {

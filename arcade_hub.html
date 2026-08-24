@@ -535,6 +535,32 @@
         </div>
     </div>
 
+    <!-- MODAL 4: MOBILE NOT AVAILABLE WARNING OVERLAY -->
+    <div class="modal-overlay-shell" id="mobile-warning-modal" onclick="closeAllModalsOnBg(event)">
+        <div class="modal-card-box" style="border-color: #ff3355; box-shadow: 0 0 50px rgba(255, 51, 85, 0.4);">
+            <button class="modal-close-btn" onclick="closeModal('mobile-warning-modal')">✕</button>
+            
+            <div style="font-size: 42px; margin-bottom: 8px;">💀</div>
+            <h2 style="font-size: 20px; font-weight: 950; color: #ff3355; margin-bottom: 4px; letter-spacing: 1px;">NOT AVAILABLE ON MOBILE</h2>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ff8800; font-weight: 800; letter-spacing: 2px; margin-bottom: 16px;">
+                UNDER DEVELOPMENT FOR PHONES
+            </p>
+
+            <div style="background: rgba(255, 51, 85, 0.08); border: 1.5px solid rgba(255, 51, 85, 0.3); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; font-family: 'Outfit', sans-serif; text-align: center;">
+                <p style="font-size: 13px; color: #ffffff; line-height: 1.5; font-weight: 600;">
+                    <strong>NO EXIT</strong> is a 3D First-Person Horror experience requiring Keyboard & Mouse controls.
+                </p>
+                <div style="background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold-glow); font-weight: 800;">
+                    💻 PLEASE PLAY ON PC OR LAPTOP
+                </div>
+            </div>
+
+            <button onclick="closeModal('mobile-warning-modal')" style="width: 100%; background: linear-gradient(135deg, #ff3355, #cc0022); border: none; color: #fff; padding: 14px; border-radius: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 950; letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 20px rgba(255,51,85,0.4);">
+                UNDERSTOOD ➔
+            </button>
+        </div>
+    </div>
+
     <!-- Main Experience Shell -->
     <main class="main-shell" id="main-shell">
 
@@ -973,8 +999,24 @@
             }
         }
 
+        function openMobileNotAvailableModal() {
+            closeAllHeaderElements();
+            playHeaderClickSound();
+            const modal = document.getElementById('mobile-warning-modal');
+            if (modal) modal.classList.add('open');
+        }
+
         function launchGame(url) {
             playHeaderClickSound();
+
+            if (url.includes('no_exit')) {
+                const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile) {
+                    openMobileNotAvailableModal();
+                    return;
+                }
+            }
+
             if (url.includes('attacks')) {
                 if (window.openAttacksPasscodeModal) {
                     window.openAttacksPasscodeModal(url, true);
