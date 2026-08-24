@@ -324,17 +324,18 @@
             </div>
         </header>
 
-        <!-- Main Image Frame -->
-        <div class="image-frame">
+        <!-- Main Anonymized Avatar Frame -->
+        <div class="image-frame" style="width: 360px; max-width: 90vw; height: 380px; flex-direction: column; gap: 20px; background: linear-gradient(145deg, #090e1e, #040711); border: 2px solid rgba(255, 100, 0, 0.4); box-shadow: 0 0 40px rgba(255, 100, 0, 0.25);">
             <div class="scanner-beam"></div>
-            <img>
-        </div>
-
-        <!-- Download Badge -->
-        <div class="floating-download">
-            <a class="btn-download" id="btn-download-img">
-                <span>⬇</span> DOWNLOAD FULLSCREEN IMAGE
-            </a>
+            <div style="width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 950; color: #fff; box-shadow: 0 0 35px rgba(59, 130, 246, 0.6); border: 3px solid rgba(255, 255, 255, 0.3);">
+                V
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 900; letter-spacing: 3px; color: #ffffff;">
+                RECORD: VAISAL
+            </div>
+            <div style="font-size: 12px; color: var(--green); font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">
+                ✓ ANONYMIZED OPERATIVE PROFILE
+            </div>
         </div>
 
     </main>
@@ -396,40 +397,6 @@
             }
             draw();
         })();
-
-        // Randomly select image and status configuration
-        const VAISAL_RECORDS = [
-            {
-                image: 'vaisal.jpg',
-                status: 'DRIVING THE BUS',
-                downloadName: 'vaisal_driving_bus.jpg',
-                alt: 'Vaisal driving the bus on duty'
-            },
-            {
-                image: 'vaisal2.jpg',
-                status: 'CONDUCTING THE BUS',
-                downloadName: 'vaisal_conducting_bus.jpg',
-                alt: 'Vaisal conducting the bus on duty'
-            }
-        ];
-
-        const selectedRecord = VAISAL_RECORDS[Math.floor(Math.random() * VAISAL_RECORDS.length)];
-
-        // Set status
-        document.getElementById('rec-status').textContent = selectedRecord.status;
-
-        // Set backdrop blur image
-        document.getElementById('rec-backdrop').style.backgroundImage = `url('${selectedRecord.image}')`;
-
-        // Set image source and alt text
-        const imageElement = document.querySelector('.image-frame img');
-        imageElement.src = selectedRecord.image;
-        imageElement.alt = selectedRecord.alt;
-
-        // Set download link parameters
-        const downloadBtn = document.getElementById('btn-download-img');
-        downloadBtn.href = selectedRecord.image;
-        downloadBtn.download = selectedRecord.downloadName;
 
         // Fade in entrance effect
         document.body.style.opacity = '0';
