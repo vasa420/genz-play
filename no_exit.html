@@ -8276,11 +8276,17 @@
                         const dropX = positions[i * 3];
                         const dropZ = positions[i * 3 + 2];
                         
-                        // Play blood drip audio SFX if close to player
-                        const pdx = playerPos.x - dropX;
-                        const pdz = playerPos.z - dropZ;
-                        if (Math.sqrt(pdx * pdx + pdz * pdz) < 6.0 && Math.random() > 0.6) {
-                            playInstantSound('blood-drip', 0.45);
+                        // Play water droplet splash audio SFX with realistic distance-based volume
+                        const now = performance.now();
+                        if (!leak.lastSoundTime || (now - leak.lastSoundTime > 180)) {
+                            const pdx = playerPos.x - dropX;
+                            const pdz = playerPos.z - dropZ;
+                            const distToPlayer = Math.sqrt(pdx * pdx + pdz * pdz);
+                            if (distToPlayer < 15.0) {
+                                const vol = Math.max(0.2, (1.0 - distToPlayer / 15.0) * 0.75);
+                                playInstantSound('blood-drip', vol);
+                                leak.lastSoundTime = now;
+                            }
                         }
                         
                         // Reset to sign bottom or ceiling
