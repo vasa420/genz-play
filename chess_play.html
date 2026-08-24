@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grandmaster Chess | Live Match</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900;950&family=JetBrains+Mono:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #040711;
+            --sidebar-bg: #090e1c;
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #0088ff;
+            --accent-blue-glow: rgba(0, 136, 255, 0.4);
+            --neon-cyan: #00d2ff;
+            --gold: #ffd700;
+            --wood-white: #e3c193;
+            --wood-black: #a07044;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Match Header */
+        .match-header {
+            width: 100%;
+            height: 56px;
+            background: #090e1c;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .btn-exit-match {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+        }
+
+        .header-title-group {
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .header-sub {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--neon-cyan);
+            letter-spacing: 1px;
+        }
+
+        .turn-pill {
+            background: rgba(0, 136, 255, 0.15);
+            border: 1px solid var(--accent-blue);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 12px var(--accent-blue-glow);
+        }
+
+        .turn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 8px #ffffff;
+        }
+
+        /* Main Game Arena Body */
+        .match-arena-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px 14px 12px;
+            overflow-y: auto;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Player Profile Cards */
+        .player-card {
+            width: 100%;
+            background: #090e1c;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+
+        .player-info-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0088ff, #00d2ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .player-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-name {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        .player-elo {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+
+        .captured-pieces {
+            font-size: 13px;
+            letter-spacing: -2px;
+            opacity: 0.8;
+            min-height: 18px;
+        }
+
+        /* Chess Board Frame & Perfect Alignment */
+        .board-container-card {
+            width: 100%;
+            background: #090e1c;
+            border: 1.5px solid var(--card-border);
+            border-radius: 16px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+            flex-shrink: 0;
+            margin: 6px 0;
+        }
+
+        .board-grid-wrapper {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 16px 1fr;
+            grid-template-rows: 1fr 16px;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .ranks-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            height: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .files-labels {
+            grid-column: 2;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+            padding-top: 2px;
+        }
+
+        /* Responsive Perfect Square Board */
+        .chessboard-grid {
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+            touch-action: manipulation;
+        }
+
+        .sq {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            font-size: clamp(26px, 7vw, 40px);
+            line-height: 1;
+        }
+
+        /* Themes */
+        .sq.classic-light { background-color: var(--wood-white); }
+        .sq.classic-dark { background-color: var(--wood-black); }
+
+        .sq.dark-light { background-color: #2a3447; }
+        .sq.dark-dark { background-color: #121927; }
+
+        .sq.ocean-light { background-color: #7396b8; }
+        .sq.ocean-dark { background-color: #4a688a; }
+
+        .sq.selected {
+            background-color: rgba(0, 210, 255, 0.45) !important;
+            box-shadow: inset 0 0 12px rgba(0, 210, 255, 0.8);
+        }
+
+        .sq.highlight-move::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: rgba(0, 255, 136, 0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
+        }
+
+        .sq.highlight-capture {
+            background: rgba(255, 51, 85, 0.45) !important;
+        }
+
+        .piece-symbol {
+            z-index: 2;
+            transition: transform 0.12s ease;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
+            pointer-events: none;
+        }
+
+        .piece-symbol.white-p { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.7); }
+        .piece-symbol.black-p { color: #000000; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+
+        /* Action Buttons Toolbar */
+        .action-toolbar {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-tool {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 10px 6px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-tool:hover, .btn-tool:active {
+            background: rgba(0, 136, 255, 0.2);
+            border-color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Match Header -->
+    <header class="match-header">
+        <a href="chess.html" class="btn-exit-match">← EXIT</a>
+        <div class="header-title-group">
+            <div class="header-title">CHESS ARENA</div>
+            <div class="header-sub">SOLO MATCH</div>
+        </div>
+        <div class="turn-pill" id="turn-pill">
+            <div class="turn-dot" id="turn-dot"></div>
+            <span id="turn-txt">WHITE'S TURN</span>
+        </div>
+    </header>
+
+    <!-- Main Arena Body -->
+    <main class="match-arena-body">
+
+        <!-- Opponent Player Card (Top) -->
+        <div class="player-card">
+            <div class="player-info-left">
+                <div class="player-avatar" style="background: linear-gradient(135deg, #ff3b30, #ff8800);">💻</div>
+                <div class="player-details">
+                    <span class="player-name" id="opp-name">COMPUTER AI</span>
+                    <span class="player-elo">1450 ELO</span>
+                </div>
+            </div>
+            <div class="captured-pieces" id="opp-captured"></div>
+        </div>
+
+        <!-- Board Frame & 8x8 Grid -->
+        <div class="board-container-card">
+            <div class="board-grid-wrapper">
+                <!-- Ranks 8 to 1 -->
+                <div class="ranks-labels">
+                    <span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>
+                </div>
+
+                <!-- 8x8 Chessboard Grid -->
+                <div class="chessboard-grid" id="chessboard"></div>
+
+                <!-- Files A to H -->
+                <div class="files-labels">
+                    <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Card (Bottom) -->
+        <div class="player-card">
+            <div class="player-info-left">
+                <div class="player-avatar">👤</div>
+                <div class="player-details">
+                    <span class="player-name" id="user-name">VASANTH KAVIN</span>
+                    <span class="player-elo">1800 ELO • YOU</span>
+                </div>
+            </div>
+            <div class="captured-pieces" id="user-captured"></div>
+        </div>
+
+        <!-- Toolbar Buttons -->
+        <div class="action-toolbar">
+            <button class="btn-tool" onclick="resetGame()">🔄 RESET</button>
+            <button class="btn-tool" id="btn-mode" onclick="toggleVsCpu()">💻 VS CPU</button>
+            <button class="btn-tool" onclick="cycleTheme()">🎨 THEME</button>
+        </div>
+
+    </main>
+
+    <!-- Audio Effects -->
+    <audio id="move-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+
+    <script>
+        const PIECES = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+        };
+
+        const INITIAL_BOARD = [
+            ['r','n','b','q','k','b','n','r'],
+            ['p','p','p','p','p','p','p','p'],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['P','P','P','P','P','P','P','P'],
+            ['R','N','B','Q','K','B','N','R']
+        ];
+
+        const THEMES = ['classic', 'dark', 'ocean'];
+
+        let board = JSON.parse(JSON.stringify(INITIAL_BOARD));
+        let turn = 'W';
+        let selectedSq = null;
+        let validMoves = [];
+        let isVsCpu = true;
+        let currentThemeIdx = 0;
+
+        window.onload = () => {
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) document.getElementById('user-name').innerText = savedName.toUpperCase();
+            renderBoard();
+        };
+
+        function resetGame() {
+            board = JSON.parse(JSON.stringify(INITIAL_BOARD));
+            turn = 'W';
+            selectedSq = null;
+            validMoves = [];
+            updateTurnUI();
+            renderBoard();
+        }
+
+        function toggleVsCpu() {
+            isVsCpu = !isVsCpu;
+            const btn = document.getElementById('btn-mode');
+            const oppName = document.getElementById('opp-name');
+            if (isVsCpu) {
+                btn.innerText = '💻 VS CPU';
+                oppName.innerText = 'COMPUTER AI';
+            } else {
+                btn.innerText = '👥 2 PLAYER';
+                oppName.innerText = 'PLAYER 2';
+            }
+            resetGame();
+        }
+
+        function cycleTheme() {
+            currentThemeIdx = (currentThemeIdx + 1) % THEMES.length;
+            renderBoard();
+        }
+
+        function updateTurnUI() {
+            const pill = document.getElementById('turn-pill');
+            const dot = document.getElementById('turn-dot');
+            const txt = document.getElementById('turn-txt');
+
+            if (turn === 'W') {
+                txt.innerText = "WHITE'S TURN";
+                dot.style.background = '#ffffff';
+                dot.style.boxShadow = '0 0 8px #ffffff';
+                pill.style.borderColor = 'var(--accent-blue)';
+            } else {
+                txt.innerText = "BLACK'S TURN";
+                dot.style.background = '#ff3b30';
+                dot.style.boxShadow = '0 0 8px #ff3b30';
+                pill.style.borderColor = '#ff3b30';
+            }
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('chessboard');
+            container.innerHTML = '';
+            const themeName = THEMES[currentThemeIdx];
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const sq = document.createElement('div');
+                    const isDark = (r + c) % 2 === 1;
+                    sq.className = `sq ${themeName}-${isDark ? 'dark' : 'light'}`;
+
+                    if (selectedSq && selectedSq.r === r && selectedSq.c === c) {
+                        sq.classList.add('selected');
+                    }
+
+                    const isMove = validMoves.some(m => m.r === r && m.c === c);
+                    if (isMove) {
+                        if (board[r][c]) {
+                            sq.classList.add('highlight-capture');
+                        } else {
+                            sq.classList.add('highlight-move');
+                        }
+                    }
+
+                    const piece = board[r][c];
+                    if (piece) {
+                        const span = document.createElement('span');
+                        const isWhite = piece === piece.toUpperCase();
+                        span.className = `piece-symbol ${isWhite ? 'white-p' : 'black-p'}`;
+                        span.textContent = PIECES[piece] || piece;
+                        sq.appendChild(span);
+                    }
+
+                    sq.onclick = () => handleSquareClick(r, c);
+                    container.appendChild(sq);
+                }
+            }
+        }
+
+        function handleSquareClick(r, c) {
+            if (isVsCpu && turn === 'B') return;
+
+            const piece = board[r][c];
+            const isWhitePiece = piece && piece === piece.toUpperCase();
+            const isMyPiece = piece && ((turn === 'W' && isWhitePiece) || (turn === 'B' && !isWhitePiece));
+
+            if (selectedSq) {
+                const moveMatch = validMoves.find(m => m.r === r && m.c === c);
+                if (moveMatch) {
+                    executeMove(selectedSq.r, selectedSq.c, r, c);
+                    selectedSq = null;
+                    validMoves = [];
+                    return;
+                }
+            }
+
+            if (isMyPiece) {
+                selectedSq = { r, c };
+                validMoves = getLegalMoves(r, c);
+            } else {
+                selectedSq = null;
+                validMoves = [];
+            }
+
+            renderBoard();
+        }
+
+        function executeMove(fromR, fromC, toR, toC) {
+            const piece = board[fromR][fromC];
+            board[toR][toC] = piece;
+            board[fromR][fromC] = '';
+
+            try {
+                const snd = document.getElementById('move-sound');
+                snd.currentTime = 0;
+                snd.play().catch(e=>{});
+            } catch(e){}
+
+            turn = turn === 'W' ? 'B' : 'W';
+            updateTurnUI();
+            renderBoard();
+
+            if (isVsCpu && turn === 'B') {
+                setTimeout(makeCpuMove, 500);
+            }
+        }
+
+        function makeCpuMove() {
+            if (turn !== 'B') return;
+            const allMoves = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = board[r][c];
+                    if (p && p === p.toLowerCase()) {
+                        const moves = getLegalMoves(r, c);
+                        moves.forEach(m => allMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, isCap: !!board[m.r][m.c] }));
+                    }
+                }
+            }
+
+            if (allMoves.length === 0) return;
+            const captures = allMoves.filter(m => m.isCap);
+            const chosen = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
+
+            executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC);
+        }
+
+        function getLegalMoves(r, c) {
+            const piece = board[r][c];
+            if (!piece) return [];
+
+            const isWhite = piece === piece.toUpperCase();
+            const type = piece.toLowerCase();
+            const moves = [];
+
+            if (type === 'p') {
+                const dir = isWhite ? -1 : 1;
+                const startRow = isWhite ? 6 : 1;
+                
+                if (r + dir >= 0 && r + dir < 8 && !board[r + dir][c]) {
+                    moves.push({ r: r + dir, c });
+                    if (r === startRow && !board[r + 2 * dir][c]) {
+                        moves.push({ r: r + 2 * dir, c });
+                    }
+                }
+                [-1, 1].forEach(dc => {
+                    const nr = r + dir, nc = c + dc;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc]) {
+                        if ((board[nr][nc] === board[nr][nc].toUpperCase()) !== isWhite) {
+                            moves.push({ r: nr, c: nc });
+                        }
+                    }
+                });
+            } else {
+                let dirs = [];
+                if (type === 'n') dirs = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+                if (type === 'r' || type === 'q') dirs.push([1,0],[-1,0],[0,1],[0,-1]);
+                if (type === 'b' || type === 'q') dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
+                if (type === 'k') dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+
+                dirs.forEach(([dr, dc]) => {
+                    let nr = r + dr, nc = c + dc;
+                    while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                        const target = board[nr][nc];
+                        if (!target) {
+                            moves.push({ r: nr, c: nc });
+                        } else {
+                            if ((target === target.toUpperCase()) !== isWhite) moves.push({ r: nr, c: nc });
+                            break;
+                        }
+                        if (type === 'k' || type === 'n') break;
+                        nr += dr; nc += dc;
+                    }
+                });
+            }
+
+            return moves;
+        }
+    </script>
+</body>
+</html>
