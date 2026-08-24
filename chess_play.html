@@ -285,9 +285,13 @@
 
         .piece-symbol {
             z-index: 2;
-            transition: transform 0.12s ease;
             filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
             pointer-events: none;
+        }
+
+        .piece-symbol.moving-piece {
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1) !important;
+            z-index: 100 !important;
         }
 
         .piece-symbol.white-p { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.7); }
@@ -477,7 +481,7 @@
             }
         }
 
-        function renderBoard() {
+        function renderBoard(animData = null) {
             const container = document.getElementById('chessboard');
             container.innerHTML = '';
             const themeName = THEMES[currentThemeIdx];
@@ -507,6 +511,16 @@
                         const isWhite = piece === piece.toUpperCase();
                         span.className = `piece-symbol ${isWhite ? 'white-p' : 'black-p'}`;
                         span.textContent = PIECES[piece] || piece;
+
+                        if (animData && animData.toR === r && animData.toC === c) {
+                            span.style.transform = `translate(${animData.deltaX}px, ${animData.deltaY}px)`;
+                            span.style.transition = 'none';
+                            requestAnimationFrame(() => {
+                                span.classList.add('moving-piece');
+                                span.style.transform = 'translate(0px, 0px)';
+                            });
+                        }
+
                         sq.appendChild(span);
                     }
 
@@ -545,6 +559,18 @@
         }
 
         function executeMove(fromR, fromC, toR, toC) {
+            const container = document.getElementById('chessboard');
+            const fromSqEl = container ? container.children[fromR * 8 + fromC] : null;
+            const toSqEl = container ? container.children[toR * 8 + toC] : null;
+
+            let deltaX = 0, deltaY = 0;
+            if (fromSqEl && toSqEl) {
+                const fromRect = fromSqEl.getBoundingClientRect();
+                const toRect = toSqEl.getBoundingClientRect();
+                deltaX = fromRect.left - toRect.left;
+                deltaY = fromRect.top - toRect.top;
+            }
+
             const piece = board[fromR][fromC];
             board[toR][toC] = piece;
             board[fromR][fromC] = '';
@@ -557,10 +583,10 @@
 
             turn = turn === 'W' ? 'B' : 'W';
             updateTurnUI();
-            renderBoard();
+            renderBoard({ toR, toC, deltaX, deltaY });
 
             if (isVsCpu && turn === 'B') {
-                setTimeout(makeCpuMove, 500);
+                setTimeout(makeCpuMove, 600);
             }
         }
 
