@@ -2079,7 +2079,84 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') picker.classList.remove('open');
         });
-    </script>
-</body>
 
+        // 3-2-1 Animated Countdown Engine for 2 Real Players
+        function startMatchWithCountdown() {
+            closeModal();
+            let overlay = document.getElementById('match-countdown-overlay');
+            if (!overlay) return;
+
+            overlay.style.display = 'flex';
+            const numEl = document.getElementById('countdown-number');
+            let count = 3;
+
+            function playBeep(freq = 600) {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.15);
+                } catch(e){}
+            }
+
+            playBeep(600);
+            numEl.innerText = count;
+            numEl.style.transform = 'scale(1.4)';
+            setTimeout(() => { numEl.style.transform = 'scale(1)'; }, 100);
+
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    playBeep(600);
+                    numEl.innerText = count;
+                    numEl.style.transform = 'scale(1.4)';
+                    setTimeout(() => { numEl.style.transform = 'scale(1)'; }, 100);
+                } else if (count === 0) {
+                    playBeep(1000);
+                    numEl.innerText = 'MATCH START!';
+                    numEl.style.fontSize = '44px';
+                    numEl.style.color = '#00ff88';
+                } else {
+                    clearInterval(timer);
+                    const oppName = (role === 'host') ? 'GRANDMASTER' : 'ROOM HOST';
+                    window.location.href = `chess_play.html?mode=pvp&room=${roomId}&p1=${encodeURIComponent(myName)}&p2=${encodeURIComponent(oppName)}`;
+                }
+            }, 1000);
+        }
+
+        socket.on('start_countdown_signal', () => {
+            startMatchWithCountdown();
+        });
+
+        socket.on('game_start', (data) => {
+            startMatchWithCountdown();
+        });
+
+        function confirmStartMatch() {
+            socket.emit('player_ready', { roomId: roomId });
+            socket.emit('trigger_countdown', { roomId: roomId });
+            startMatchWithCountdown();
+        }
+    </script>
+
+    <!-- 3-2-1 Animated High-Tech Countdown Modal Overlay -->
+    <div id="match-countdown-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(3, 6, 17, 0.96); backdrop-filter: blur(24px); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 18px; text-align: center; padding: 20px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 900; letter-spacing: 4px; color: #ffd700; text-transform: uppercase;">
+            ⚔️ ARENA MATCH STARTING ⚔️
+        </div>
+        <div id="countdown-number" style="font-family: 'Outfit', sans-serif; font-size: 120px; font-weight: 950; color: #ffffff; text-shadow: 0 0 50px #00d2ff, 0 0 100px rgba(0, 210, 255, 0.6); line-height: 1; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            3
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #00ffcc;">
+            PREPARE CHESSBOARD FOR 2 REAL PLAYERS!
+        </div>
+    </div>
+</body>
 </html>

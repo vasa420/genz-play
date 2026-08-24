@@ -493,8 +493,28 @@
         let isGameOver = false;
 
         window.onload = () => {
-            const savedName = localStorage.getItem('playerName');
-            if (savedName) document.getElementById('user-name').innerText = savedName.toUpperCase();
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            const p1 = params.get('p1');
+            const p2 = params.get('p2');
+            const room = params.get('room');
+
+            if (mode === 'pvp' || mode === 'room') {
+                isVsCpu = false;
+                const btn = document.getElementById('btn-mode');
+                if (btn) btn.innerText = '👥 2 PLAYER MATCH';
+                
+                if (p1) document.getElementById('user-name').innerText = decodeURIComponent(p1).toUpperCase();
+                if (p2) document.getElementById('opp-name').innerText = decodeURIComponent(p2).toUpperCase();
+                if (room) {
+                    const subTitle = document.querySelector('.header-sub');
+                    if (subTitle) subTitle.innerText = `ROOM #${room} • 2 REAL PLAYERS`;
+                }
+            } else {
+                const savedName = localStorage.getItem('playerName');
+                if (savedName) document.getElementById('user-name').innerText = savedName.toUpperCase();
+            }
+
             renderBoard();
         };
 
