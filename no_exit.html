@@ -4421,21 +4421,22 @@
             const steps = 8;
             const stepWidth = CELL_SIZE;
             const stepDepth = CELL_SIZE / steps;
-            const stepHeight = 4 / steps; 
+            const stepHeight = 4.0 / steps; 
 
             // Calculate starting world position (bottom left of cell)
             const xStart = cellC * CELL_SIZE - MAP_OFFSET;
             const zStart = cellR * CELL_SIZE - MAP_OFFSET;
 
             for (let i = 0; i < steps; i++) {
-                const stepGeo = new THREE.BoxGeometry(stepWidth, (i + 1) * stepHeight, stepDepth);
+                // Each step is modeled individually as a flat box with a small overlap to prevent gaps
+                const stepGeo = new THREE.BoxGeometry(stepWidth, stepHeight + 0.02, stepDepth + 0.02);
                 const stepMat = new THREE.MeshStandardMaterial({ color: 0x18100c, roughness: 0.9 });
                 const stepMesh = new THREE.Mesh(stepGeo, stepMat);
                 
-                // Align steps back-to-front inside cell
+                // Position each step box precisely at its step height level, removing the solid block wedge underneath
                 stepMesh.position.set(
                     xStart + CELL_SIZE / 2,
-                    ((i + 1) * stepHeight) / 2,
+                    i * stepHeight + stepHeight / 2,
                     zStart + (i * stepDepth) + stepDepth / 2
                 );
                 group.add(stepMesh);
@@ -4443,7 +4444,8 @@
 
             // Balustrades (handrails) on both left and right edges of the stairs
             const handrailMat = new THREE.MeshStandardMaterial({ color: 0x221510, roughness: 0.85 });
-            const postGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.95, 8);
+            const H = 0.95; // post height
+            const postGeo = new THREE.CylinderGeometry(0.025, 0.025, H, 8);
             const railGeo = new THREE.BoxGeometry(0.04, 0.04, 5.66); // diagonal handrail length
 
             const sides = [0.15, CELL_SIZE - 0.15];
@@ -4454,13 +4456,13 @@
                     const post = new THREE.Mesh(postGeo, handrailMat);
                     const stepY = (idx + 1) * stepHeight;
                     const stepZ = zStart + (idx * stepDepth) + stepDepth / 2;
-                    post.position.set(xStart + xOffset, stepY + 0.475, stepZ);
+                    post.position.set(xStart + xOffset, stepY + H / 2, stepZ);
                     group.add(post);
                 });
 
-                // Spawn diagonal handrail
+                // Spawn diagonal handrail - positioned to sit perfectly on top of the posts
                 const handrail = new THREE.Mesh(railGeo, handrailMat);
-                handrail.position.set(xStart + xOffset, 3.0, zStart + CELL_SIZE / 2);
+                handrail.position.set(xStart + xOffset, 2.25 + H, zStart + CELL_SIZE / 2);
                 handrail.rotation.x = -Math.PI / 4;
                 group.add(handrail);
             });
@@ -7488,10 +7490,9 @@
                     const zProgress = Math.max(0, Math.min(1, playerPos.z - 7.0));
                     if (activeFloor === 0) {
                         targetPlayerBaseY = zProgress * 4.0;
-                    } else if (activeFloor === 1) {
-                        targetPlayerBaseY = 4.0 + zProgress * 4.0;
                     } else {
-                        targetPlayerBaseY = 8.0 + (1 - zProgress) * 4.0;
+                        // For Floor 1 and Floor 2 stairs, height ranges between 4.0 and 8.0 smoothly
+                        targetPlayerBaseY = 4.0 + zProgress * 4.0;
                     }
                 } else {
                     // Lock active floor height when stepping out of stairwell
