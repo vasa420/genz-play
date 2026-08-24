@@ -99,6 +99,19 @@
             align-items: center;
             gap: 6px;
             box-shadow: 0 0 12px var(--accent-blue-glow);
+            transition: all 0.3s ease;
+        }
+
+        .turn-pill.in-check-pill {
+            background: rgba(255, 0, 51, 0.25) !important;
+            border-color: #ff0033 !important;
+            box-shadow: 0 0 20px rgba(255, 0, 51, 0.8) !important;
+            animation: pulseCheckPill 0.8s infinite alternate;
+        }
+
+        @keyframes pulseCheckPill {
+            from { transform: scale(1); }
+            to { transform: scale(1.06); }
         }
 
         .turn-dot {
@@ -274,13 +287,24 @@
             content: '';
             width: 14px;
             height: 14px;
-            background: rgba(0, 255, 136, 0.6);
+            background: rgba(0, 255, 136, 0.65);
             border-radius: 50%;
             box-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
         }
 
         .sq.highlight-capture {
             background: rgba(255, 51, 85, 0.45) !important;
+        }
+
+        .sq.in-check {
+            background-color: rgba(255, 0, 51, 0.6) !important;
+            box-shadow: inset 0 0 20px rgba(255, 0, 51, 0.9) !important;
+            animation: pulseCheck 1s infinite alternate;
+        }
+
+        @keyframes pulseCheck {
+            from { box-shadow: inset 0 0 10px rgba(255, 0, 51, 0.6); }
+            to { box-shadow: inset 0 0 25px rgba(255, 0, 51, 1); }
         }
 
         .piece-symbol {
@@ -329,6 +353,35 @@
             background: rgba(0, 136, 255, 0.2);
             border-color: var(--accent-blue);
         }
+
+        /* Checkmate / Victory Modal Overlay */
+        .game-over-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(4, 7, 17, 0.92); backdrop-filter: blur(16px);
+            z-index: 10000; display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px; text-align: center; padding: 20px;
+        }
+        .game-over-overlay.active { display: flex; }
+        .game-over-card {
+            background: #090e1c; border: 2px solid var(--card-border);
+            border-radius: 24px; padding: 32px 28px; max-width: 380px; width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px var(--accent-blue-glow);
+            display: flex; flex-direction: column; align-items: center; gap: 14px;
+        }
+        .game-over-title {
+            font-size: 24px; font-weight: 950; letter-spacing: 3px; color: var(--gold);
+            text-transform: uppercase;
+        }
+        .game-over-sub {
+            font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 1.5px;
+        }
+        .btn-restart-game {
+            background: var(--accent-blue); color: #fff; border: none;
+            padding: 14px 32px; border-radius: 30px; font-weight: 900;
+            font-size: 13px; letter-spacing: 2px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 8px 24px var(--accent-blue-glow); transition: transform 0.2s ease;
+        }
+        .btn-restart-game:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -338,7 +391,7 @@
         <a href="chess.html" class="btn-exit-match">← EXIT</a>
         <div class="header-title-group">
             <div class="header-title">CHESS ARENA</div>
-            <div class="header-sub">SOLO MATCH</div>
+            <div class="header-sub">OFFICIAL RULES ACTIVE</div>
         </div>
         <div class="turn-pill" id="turn-pill">
             <div class="turn-dot" id="turn-dot"></div>
@@ -400,6 +453,15 @@
 
     </main>
 
+    <!-- Checkmate / Stalemate Modal Overlay -->
+    <div class="game-over-overlay" id="game-over-modal">
+        <div class="game-over-card">
+            <div class="game-over-title" id="game-over-title">CHECKMATE!</div>
+            <div class="game-over-sub" id="game-over-sub">WHITE WINS THE MATCH!</div>
+            <button class="btn-restart-game" onclick="resetGame()">PLAY AGAIN 🔄</button>
+        </div>
+    </div>
+
     <!-- Audio Effects -->
     <audio id="move-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
 
@@ -428,6 +490,7 @@
         let validMoves = [];
         let isVsCpu = true;
         let currentThemeIdx = 0;
+        let isGameOver = false;
 
         window.onload = () => {
             const savedName = localStorage.getItem('playerName');
@@ -440,6 +503,8 @@
             turn = 'W';
             selectedSq = null;
             validMoves = [];
+            isGameOver = false;
+            document.getElementById('game-over-modal').classList.remove('active');
             updateTurnUI();
             renderBoard();
         }
@@ -468,23 +533,43 @@
             const dot = document.getElementById('turn-dot');
             const txt = document.getElementById('turn-txt');
 
-            if (turn === 'W') {
-                txt.innerText = "WHITE'S TURN";
-                dot.style.background = '#ffffff';
-                dot.style.boxShadow = '0 0 8px #ffffff';
-                pill.style.borderColor = 'var(--accent-blue)';
+            const inCheck = isKingInCheck(turn, board);
+
+            if (inCheck) {
+                txt.innerText = `⚠️ ${turn === 'W' ? 'WHITE' : 'BLACK'} IN CHECK!`;
+                dot.style.background = '#ff0033';
+                dot.style.boxShadow = '0 0 10px #ff0033';
+                pill.classList.add('in-check-pill');
             } else {
-                txt.innerText = "BLACK'S TURN";
-                dot.style.background = '#ff3b30';
-                dot.style.boxShadow = '0 0 8px #ff3b30';
-                pill.style.borderColor = '#ff3b30';
+                pill.classList.remove('in-check-pill');
+                if (turn === 'W') {
+                    txt.innerText = "WHITE'S TURN";
+                    dot.style.background = '#ffffff';
+                    dot.style.boxShadow = '0 0 8px #ffffff';
+                    pill.style.borderColor = 'var(--accent-blue)';
+                } else {
+                    txt.innerText = "BLACK'S TURN";
+                    dot.style.background = '#ff3b30';
+                    dot.style.boxShadow = '0 0 8px #ff3b30';
+                    pill.style.borderColor = '#ff3b30';
+                }
             }
+        }
+
+        function showGameOverModal(title, message) {
+            isGameOver = true;
+            document.getElementById('game-over-title').innerText = title;
+            document.getElementById('game-over-sub').innerText = message;
+            document.getElementById('game-over-modal').classList.add('active');
         }
 
         function renderBoard(animData = null) {
             const container = document.getElementById('chessboard');
             container.innerHTML = '';
             const themeName = THEMES[currentThemeIdx];
+
+            const inCheck = isKingInCheck(turn, board);
+            const kingPos = inCheck ? findKing(turn, board) : null;
 
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
@@ -494,6 +579,10 @@
 
                     if (selectedSq && selectedSq.r === r && selectedSq.c === c) {
                         sq.classList.add('selected');
+                    }
+
+                    if (kingPos && kingPos.r === r && kingPos.c === c) {
+                        sq.classList.add('in-check');
                     }
 
                     const isMove = validMoves.some(m => m.r === r && m.c === c);
@@ -531,6 +620,7 @@
         }
 
         function handleSquareClick(r, c) {
+            if (isGameOver) return;
             if (isVsCpu && turn === 'B') return;
 
             const piece = board[r][c];
@@ -540,7 +630,7 @@
             if (selectedSq) {
                 const moveMatch = validMoves.find(m => m.r === r && m.c === c);
                 if (moveMatch) {
-                    executeMove(selectedSq.r, selectedSq.c, r, c);
+                    executeMove(selectedSq.r, selectedSq.c, r, c, moveMatch);
                     selectedSq = null;
                     validMoves = [];
                     return;
@@ -558,7 +648,7 @@
             renderBoard();
         }
 
-        function executeMove(fromR, fromC, toR, toC) {
+        function executeMove(fromR, fromC, toR, toC, moveData = {}) {
             const container = document.getElementById('chessboard');
             const fromSqEl = container ? container.children[fromR * 8 + fromC] : null;
             const toSqEl = container ? container.children[toR * 8 + toC] : null;
@@ -571,9 +661,25 @@
                 deltaY = fromRect.top - toRect.top;
             }
 
-            const piece = board[fromR][fromC];
+            let piece = board[fromR][fromC];
+
+            // Pawn Promotion Condition
+            if (piece === 'P' && toR === 0) piece = 'Q';
+            if (piece === 'p' && toR === 7) piece = 'q';
+
             board[toR][toC] = piece;
             board[fromR][fromC] = '';
+
+            // Castling Condition Handling
+            if (moveData.isCastle === 'K') {
+                const rookChar = board[fromR][7];
+                board[fromR][5] = rookChar;
+                board[fromR][7] = '';
+            } else if (moveData.isCastle === 'Q') {
+                const rookChar = board[fromR][0];
+                board[fromR][3] = rookChar;
+                board[fromR][0] = '';
+            }
 
             try {
                 const snd = document.getElementById('move-sound');
@@ -585,33 +691,127 @@
             updateTurnUI();
             renderBoard({ toR, toC, deltaX, deltaY });
 
-            if (isVsCpu && turn === 'B') {
+            // Check Checkmate / Stalemate Condition for Next Player
+            const nextMoves = getAllPlayerMoves(turn);
+            const inCheck = isKingInCheck(turn, board);
+
+            if (nextMoves.length === 0) {
+                if (inCheck) {
+                    const winner = turn === 'W' ? 'BLACK' : 'WHITE';
+                    showGameOverModal('CHECKMATE!', `${winner} WINS THE MATCH! 🏆`);
+                } else {
+                    showGameOverModal('STALEMATE!', 'THE MATCH ENDED IN A DRAW! 🤝');
+                }
+                return;
+            }
+
+            if (isVsCpu && turn === 'B' && !isGameOver) {
                 setTimeout(makeCpuMove, 600);
             }
         }
 
         function makeCpuMove() {
-            if (turn !== 'B') return;
-            const allMoves = [];
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const p = board[r][c];
-                    if (p && p === p.toLowerCase()) {
-                        const moves = getLegalMoves(r, c);
-                        moves.forEach(m => allMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, isCap: !!board[m.r][m.c] }));
-                    }
-                }
-            }
+            if (turn !== 'B' || isGameOver) return;
+            const allMoves = getAllPlayerMoves('B');
 
             if (allMoves.length === 0) return;
             const captures = allMoves.filter(m => m.isCap);
             const chosen = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
 
-            executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC);
+            executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, chosen);
+        }
+
+        function getAllPlayerMoves(color) {
+            const allMoves = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = board[r][c];
+                    if (!p) continue;
+                    const isWhite = p === p.toUpperCase();
+                    if ((color === 'W' && isWhite) || (color === 'B' && !isWhite)) {
+                        const moves = getLegalMoves(r, c);
+                        moves.forEach(m => allMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, isCap: !!board[m.r][m.c], isCastle: m.isCastle }));
+                    }
+                }
+            }
+            return allMoves;
+        }
+
+        function isSquareAttacked(r, c, attackerColor, targetBoard) {
+            for (let tr = 0; tr < 8; tr++) {
+                for (let tc = 0; tc < 8; tc++) {
+                    const p = targetBoard[tr][tc];
+                    if (!p) continue;
+                    const isWhite = p === p.toUpperCase();
+                    if ((attackerColor === 'W' && isWhite) || (attackerColor === 'B' && !isWhite)) {
+                        const raw = getRawMoves(tr, tc, targetBoard);
+                        if (raw.some(m => m.r === r && m.c === c)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function findKing(color, targetBoard) {
+            const char = color === 'W' ? 'K' : 'k';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (targetBoard[r][c] === char) return { r, c };
+                }
+            }
+            return null;
+        }
+
+        function isKingInCheck(color, targetBoard) {
+            const kPos = findKing(color, targetBoard);
+            if (!kPos) return false;
+            const enemy = color === 'W' ? 'B' : 'W';
+            return isSquareAttacked(kPos.r, kPos.c, enemy, targetBoard);
         }
 
         function getLegalMoves(r, c) {
             const piece = board[r][c];
+            if (!piece) return [];
+
+            const isWhite = piece === piece.toUpperCase();
+            const color = isWhite ? 'W' : 'B';
+            const raw = getRawMoves(r, c, board);
+
+            // Filter out moves that leave own king in check (Pinned pieces & King into check)
+            const strict = raw.filter(m => {
+                const temp = JSON.parse(JSON.stringify(board));
+                temp[m.r][m.c] = temp[r][c];
+                temp[r][c] = '';
+                return !isKingInCheck(color, temp);
+            });
+
+            // Castling Condition
+            if (piece.toLowerCase() === 'k') {
+                const homeRow = isWhite ? 7 : 0;
+                if (r === homeRow && c === 4 && !isKingInCheck(color, board)) {
+                    const rookChar = isWhite ? 'R' : 'r';
+                    // Kingside
+                    if (board[homeRow][7] === rookChar && !board[homeRow][5] && !board[homeRow][6]) {
+                        const enemy = isWhite ? 'B' : 'W';
+                        if (!isSquareAttacked(homeRow, 5, enemy, board) && !isSquareAttacked(homeRow, 6, enemy, board)) {
+                            strict.push({ r: homeRow, c: 6, isCastle: 'K' });
+                        }
+                    }
+                    // Queenside
+                    if (board[homeRow][0] === rookChar && !board[homeRow][1] && !board[homeRow][2] && !board[homeRow][3]) {
+                        const enemy = isWhite ? 'B' : 'W';
+                        if (!isSquareAttacked(homeRow, 2, enemy, board) && !isSquareAttacked(homeRow, 3, enemy, board)) {
+                            strict.push({ r: homeRow, c: 2, isCastle: 'Q' });
+                        }
+                    }
+                }
+            }
+
+            return strict;
+        }
+
+        function getRawMoves(r, c, targetBoard) {
+            const piece = targetBoard[r][c];
             if (!piece) return [];
 
             const isWhite = piece === piece.toUpperCase();
@@ -622,16 +822,16 @@
                 const dir = isWhite ? -1 : 1;
                 const startRow = isWhite ? 6 : 1;
                 
-                if (r + dir >= 0 && r + dir < 8 && !board[r + dir][c]) {
+                if (r + dir >= 0 && r + dir < 8 && !targetBoard[r + dir][c]) {
                     moves.push({ r: r + dir, c });
-                    if (r === startRow && !board[r + 2 * dir][c]) {
+                    if (r === startRow && !targetBoard[r + 2 * dir][c]) {
                         moves.push({ r: r + 2 * dir, c });
                     }
                 }
                 [-1, 1].forEach(dc => {
                     const nr = r + dir, nc = c + dc;
-                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc]) {
-                        if ((board[nr][nc] === board[nr][nc].toUpperCase()) !== isWhite) {
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && targetBoard[nr][nc]) {
+                        if ((targetBoard[nr][nc] === targetBoard[nr][nc].toUpperCase()) !== isWhite) {
                             moves.push({ r: nr, c: nc });
                         }
                     }
@@ -646,7 +846,7 @@
                 dirs.forEach(([dr, dc]) => {
                     let nr = r + dr, nc = c + dc;
                     while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                        const target = board[nr][nc];
+                        const target = targetBoard[nr][nc];
                         if (!target) {
                             moves.push({ r: nr, c: nc });
                         } else {
