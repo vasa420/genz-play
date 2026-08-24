@@ -354,6 +354,103 @@
             border-color: var(--accent-blue);
         }
 
+        /* LAPTOP / DESKTOP ALIGNMENT (992px and wider) - 100vh NO SCROLLBAR */
+        @media (min-width: 992px) {
+            html, body {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+            }
+
+            .match-header {
+                height: 52px !important;
+            }
+
+            .match-arena-body {
+                max-width: 1050px !important;
+                width: 100% !important;
+                height: calc(100vh - 52px) !important;
+                max-height: calc(100vh - 52px) !important;
+                display: grid !important;
+                grid-template-columns: 320px 1fr !important;
+                grid-template-rows: auto auto 1fr !important;
+                gap: 16px 28px !important;
+                padding: 16px 32px !important;
+                align-items: center !important;
+                justify-content: center !important;
+                overflow: hidden !important;
+            }
+
+            /* Place Opponent card top left */
+            .match-arena-body > .player-card:nth-of-type(1) {
+                grid-column: 1 !important;
+                grid-row: 1 !important;
+            }
+
+            /* Place Chessboard on right taking full height */
+            .board-container-card {
+                grid-column: 2 !important;
+                grid-row: 1 / span 3 !important;
+                width: auto !important;
+                max-width: 100% !important;
+                height: min(520px, calc(100vh - 90px)) !important;
+                aspect-ratio: 1 !important;
+                margin: 0 !important;
+                justify-content: center !important;
+                align-self: center !important;
+            }
+
+            /* Place Player card middle left */
+            .match-arena-body > .player-card:nth-of-type(2) {
+                grid-column: 1 !important;
+                grid-row: 2 !important;
+            }
+
+            /* Place Action toolbar bottom left */
+            .action-toolbar {
+                grid-column: 1 !important;
+                grid-row: 3 !important;
+                align-self: start !important;
+            }
+
+            .chessboard-grid {
+                width: min(460px, calc(100vh - 150px)) !important;
+                height: min(460px, calc(100vh - 150px)) !important;
+                aspect-ratio: 1 !important;
+            }
+
+            .sq {
+                font-size: clamp(28px, 4vw, 44px) !important;
+            }
+        }
+
+        /* MOBILE ALIGNMENT (768px and smaller) */
+        @media (max-width: 768px) {
+            .match-arena-body {
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 8px 12px 14px 12px !important;
+                max-width: 500px !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+
+            .board-container-card {
+                width: 100% !important;
+                margin: 6px 0 !important;
+            }
+
+            .chessboard-grid {
+                width: 100% !important;
+                aspect-ratio: 1 !important;
+            }
+
+            .sq {
+                font-size: clamp(24px, 7vw, 40px) !important;
+            }
+        }
+
         /* Checkmate / Victory Modal Overlay */
         .game-over-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
