@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOGIC ESCAPE ROOM | Vetri Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700;800&family=Creepster&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --primary: #9933ff;
+            --primary-glow: rgba(153, 51, 255, 0.4);
+            --secondary: #00d2ff;
+            --secondary-glow: rgba(0, 210, 255, 0.4);
+            --bg: #030308;
+            --card-bg: rgba(10, 15, 30, 0.7);
+            --border: rgba(153, 51, 255, 0.25);
+            --red: #ff3355;
+            --green: #00ff88;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at center, #150926 0%, #020205 100%);
+            padding: 20px;
+        }
+
+        /* Glassmorphic Container */
+        .app-shell {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(153, 51, 255, 0.15);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Ambient glowing circles behind */
+        .bg-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        .glow-1 {
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+        }
+        .glow-2 {
+            background: var(--secondary);
+            bottom: -100px;
+            right: -100px;
+        }
+
+        /* Typography & Headings */
+        h1, h2, h3 {
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .title-glitch {
+            font-family: 'Creepster', cursive;
+            font-size: 52px;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 0 10px var(--primary-glow), 0 0 30px var(--primary);
+            margin-bottom: 8px;
+            letter-spacing: 4px;
+            animation: pulseTitle 2s infinite ease-in-out;
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: var(--secondary);
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            font-weight: 700;
+        }
+
+        /* View Controllers */
+        .screen-view {
+            display: none;
+            flex-direction: column;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .screen-view.active {
+            display: flex;
+        }
+
+        /* Buttons and Interactive Elements */
+        .btn {
+            background: linear-gradient(135deg, var(--primary), #7000ff);
+            color: #fff;
+            border: none;
+            padding: 16px 36px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 0 20px var(--primary-glow);
+            text-transform: uppercase;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            transform: scale(1.04) translateY(-2px);
+            box-shadow: 0 0 30px rgba(153, 51, 255, 0.7);
+        }
+        .btn:active {
+            transform: scale(0.98) translateY(0);
+        }
+        .btn.secondary {
+            background: linear-gradient(135deg, var(--secondary), #00a2cc);
+            box-shadow: 0 0 20px var(--secondary-glow);
+        }
+        .btn.secondary:hover {
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.7);
+        }
+        .btn.danger {
+            background: linear-gradient(135deg, var(--red), #cc0033);
+            box-shadow: 0 0 20px rgba(255, 51, 85, 0.3);
+        }
+        .btn.danger:hover {
+            box-shadow: 0 0 30px rgba(255, 51, 85, 0.6);
+        }
+        .btn:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.25);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 1. Home Screen Styling */
+        .home-menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        .info-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .info-card h3 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: var(--secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .info-card ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #94a3b8;
+        }
+        .info-card ul li::before {
+            content: '✦';
+            color: var(--primary);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        /* Input Elements */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+        .input-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--secondary);
+            text-transform: uppercase;
+        }
+        .text-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            color: #fff;
+            font-size: 16px;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            transition: 0.25s;
+        }
+        .text-input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px var(--secondary-glow);
+        }
+
+        /* 2. Room Screen / Code display */
+        .room-code-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--secondary);
+            text-shadow: 0 0 15px var(--secondary-glow);
+            letter-spacing: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px 32px;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+            margin: 20px 0 30px;
+            text-align: center;
+        }
+
+        /* 3. Lobby Screen */
+        .lobby-status-box {
+            text-align: center;
+            margin: 10px 0 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .players-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .player-slot {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+        .player-slot.active {
+            border-color: var(--green);
+            background: rgba(0, 255, 136, 0.04);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.05);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #475569;
+        }
+        .player-slot.active .status-dot {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+        }
+        .player-name {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .player-name .badge-host {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            padding: 2px 6px;
+            background: var(--primary);
+            border-radius: 6px;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Countdown Overlay screen */
+        .countdown-view {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border-radius: 24px;
+        }
+        .countdown-view.active {
+            display: flex;
+        }
+        .countdown-number {
+            font-family: 'Creepster', cursive;
+            font-size: 120px;
+            color: var(--red);
+            text-shadow: 0 0 30px rgba(255, 51, 85, 0.6);
+            animation: zoomInNum 1s ease infinite;
+        }
+
+        /* 4. Game Screen Grid Layout */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+        .timer-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--red);
+            text-shadow: 0 0 15px rgba(255, 51, 85, 0.4);
+            letter-spacing: 2px;
+        }
+        .puzzle-progress {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: rgba(0, 210, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+
+        /* The room itself visual rendering */
+        .escape-room-scene {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            background: radial-gradient(circle at center, #1b203a 0%, #070913 100%);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+            margin-bottom: 24px;
+        }
+
+        /* Interactive Elements styling */
+        .scene-object {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1.5px dashed rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .scene-object:hover {
+            transform: scale(1.08);
+            border-color: var(--secondary);
+            background: rgba(0, 210, 255, 0.08);
+            box-shadow: 0 0 25px var(--secondary-glow);
+            color: #fff;
+        }
+        .scene-object.locked {
+            border-color: rgba(255, 51, 85, 0.4);
+            color: rgba(255, 51, 85, 0.8);
+        }
+        .scene-object.locked:hover {
+            border-color: var(--red);
+            background: rgba(255, 51, 85, 0.08);
+            box-shadow: 0 0 25px rgba(255, 51, 85, 0.3);
+            color: var(--red);
+        }
+        .scene-object.solved {
+            border-color: var(--green);
+            color: var(--green);
+        }
+        .scene-object.solved:hover {
+            border-color: var(--green);
+            background: rgba(0, 255, 136, 0.08);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+        }
+        .object-icon {
+            font-size: 38px;
+            margin-bottom: 6px;
+        }
+        .object-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Specific Object Placements */
+        .obj-painting { top: 60px; left: 80px; width: 110px; height: 110px; }
+        .obj-clock { top: 60px; right: 80px; width: 110px; height: 110px; }
+        .obj-safe { bottom: 60px; left: 110px; width: 110px; height: 110px; }
+        .obj-box { bottom: 60px; right: 110px; width: 110px; height: 110px; }
+        .obj-exit { top: 120px; left: calc(50% - 60px); width: 120px; height: 160px; border-style: solid; border-width: 2px; }
+
+        /* Status lock icon overlay */
+        .lock-badge {
+            position: absolute;
+            top: -8px; right: -8px;
+            background: var(--red);
+            color: #fff;
+            font-size: 9px;
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 8px rgba(255,51,85,0.6);
+        }
+        .scene-object.solved .lock-badge {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+        }
+
+        /* Console message box */
+        .log-console {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            height: 120px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+        .log-console::-webkit-scrollbar {
+            width: 6px;
+        }
+        .log-console::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .log-console::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        .log-entry {
+            color: #94a3b8;
+        }
+        .log-entry.system { color: var(--secondary); font-weight: bold; }
+        .log-entry.success { color: var(--green); }
+        .log-entry.error { color: var(--red); }
+
+        /* Puzzle Overlay Modals */
+        .puzzle-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 4, 10, 0.95);
+            z-index: 50;
+            border-radius: 20px;
+            padding: 32px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.25s ease forwards;
+        }
+        .puzzle-modal.active {
+            display: flex;
+        }
+        .puzzle-modal-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 12px;
+        }
+        .puzzle-modal-title {
+            color: var(--secondary);
+            font-size: 18px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .puzzle-close-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .puzzle-close-btn:hover { color: #fff; }
+
+        .puzzle-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .puzzle-instruction {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #94a3b8;
+        }
+
+        .puzzle-display-box {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            padding: 16px 32px;
+            border-radius: 12px;
+            color: #fff;
+            letter-spacing: 4px;
+            margin: 10px 0;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+        }
+
+        .puzzle-feedback {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            min-height: 18px;
+            color: var(--red);
+            font-weight: bold;
+        }
+
+        .puzzle-input-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+        .puzzle-input-row input {
+            background: #000;
+            border: 1.5px solid var(--border);
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 10px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .puzzle-input-row input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 10px var(--secondary-glow);
+        }
+
+        /* 3 Digit Code Boxes */
+        .color-code-inputs {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .color-code-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+        .color-circle.red { background-color: var(--red); color: var(--red); }
+        .color-circle.blue { background-color: var(--secondary); color: var(--secondary); }
+        .color-circle.green { background-color: var(--green); color: var(--green); }
+
+        .digit-input {
+            width: 60px;
+            height: 60px;
+            font-size: 28px !important;
+        }
+
+        /* 5. Win / Lose Screens */
+        .result-stats {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            margin-bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        .stat-row span:last-child {
+            font-weight: 800;
+            color: #fff;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes zoomInNum {
+            0% { transform: scale(0.6); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        @keyframes pulseTitle {
+            0%, 100% { text-shadow: 0 0 10px var(--primary-glow), 0 0 25px var(--primary); }
+            50% { text-shadow: 0 0 15px var(--primary-glow), 0 0 40px var(--primary), 0 0 60px var(--primary); }
+        }
+
+        /* Spooky pulsing for locked exit door */
+        .scene-object.obj-exit.locked {
+            box-shadow: 0 0 15px rgba(255, 51, 85, 0.1), inset 0 0 20px rgba(255, 51, 85, 0.05);
+            animation: pulseExit 3s infinite alternate;
+        }
+        @keyframes pulseExit {
+            0% { border-color: rgba(255, 51, 85, 0.3); box-shadow: 0 0 10px rgba(255, 51, 85, 0.1); }
+            100% { border-color: rgba(255, 51, 85, 0.7); box-shadow: 0 0 25px rgba(255, 51, 85, 0.35); }
+        }
+
+        /* Toast Popup Alerts */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: rgba(8, 14, 30, 0.95);
+            border-left: 4px solid var(--primary);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            min-width: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .toast.error { border-left-color: var(--red); }
+        .toast.success { border-left-color: var(--green); }
+
+        @keyframes slideInToast {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+
+    <div class="app-shell">
+        <!-- 1. HOME / LANDING VIEW -->
+        <div id="view-home" class="screen-view active">
+            <h1 class="title-glitch">🧠 LOGIC ESCAPE ROOM</h1>
+            <p class="subtitle">Solve. Communicate. Escape.</p>
+
+            <div class="input-group">
+                <label class="input-label" for="player-name-input">OPERATIVE DESIGNATION</label>
+                <input type="text" id="player-name-input" class="text-input" placeholder="Enter Nickname..." autocomplete="off">
+            </div>
+
+            <div class="home-menu-options">
+                <button class="btn" onclick="triggerCreateRoom()">[ CREATE ROOM ]</button>
+                <button class="btn secondary" onclick="switchView('view-join')">[ JOIN ROOM ]</button>
+            </div>
+
+            <div class="info-card">
+                <h3>How to Play</h3>
+                <ul>
+                    <li>Play together cooperatively with 2–4 players.</li>
+                    <li>Investigate the room and coordinate to solve 3 logic puzzles.</li>
+                    <li>Any player can submit an answer, and progress is shared globally.</li>
+                    <li>Coordinate carefully! You must escape before the 5-minute timer hits zero.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. JOIN ROOM VIEW -->
+        <div id="view-join" class="screen-view">
+            <h2 class="title-glitch" style="font-size: 38px;">JOIN ESCAPE SESSION</h2>
+            <p class="subtitle">Enter session access coordinates</p>
+
+            <div class="input-group">
+                <label class="input-label" for="join-code-input">4-DIGIT ROOM CODE</label>
+                <input type="text" id="join-code-input" class="text-input" placeholder="Enter Room Code..." maxlength="4" style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 24px; letter-spacing: 8px;">
+            </div>
+
+            <div class="home-menu-options" style="margin-bottom: 20px;">
+                <button class="btn secondary" onclick="triggerJoinRoom()">[ ESTABLISH LINK ]</button>
+                <button class="btn danger" onclick="switchView('view-home')">[ ABORT ]</button>
+            </div>
+        </div>
+
+        <!-- 3. WAITING LOBBY VIEW -->
+        <div id="view-lobby" class="screen-view">
+            <h2 class="title-glitch" style="font-size: 36px;">SESSION PREPARATION</h2>
+            <p class="subtitle" style="margin-bottom: 20px;">LOBBY ACCESS CORRIDOR</p>
+
+            <div class="room-code-display" id="lobby-code-display">----</div>
+
+            <div class="lobby-status-box" id="lobby-status-msg">
+                Awaiting connection integrity. 2–4 operatives required.
+            </div>
+
+            <div class="players-list" id="lobby-players-list">
+                <!-- Injected slots -->
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" id="lobby-start-btn" onclick="triggerStartGame()" disabled>[ START EXPERIMENT ]</button>
+                <button class="btn danger" onclick="triggerLeaveRoom()" style="margin-left: 10px;">[ LEAVE ]</button>
+            </div>
+        </div>
+
+        <!-- 3.5. GAME START COUNTDOWN OVERLAY -->
+        <div class="countdown-view" id="view-countdown">
+            <div style="font-family: 'JetBrains Mono', monospace; letter-spacing: 4px; color: var(--secondary); font-size: 14px; margin-bottom: 20px; font-weight: 800;">CORRIDOR SECURING IN PROGRESS</div>
+            <div class="countdown-number" id="countdown-number-val">3</div>
+        </div>
+
+        <!-- 4. MAIN GAMEPLAY VIEW -->
+        <div id="view-game" class="screen-view">
+            <div class="game-header">
+                <div>
+                    <h3 style="font-size: 18px; letter-spacing: 1px;">SECTOR L-1</h3>
+                    <div id="room-code-sub" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748b; margin-top: 2px;">CODE: ----</div>
+                </div>
+                <div class="timer-display" id="game-timer">05:00</div>
+                <div class="puzzle-progress" id="game-progress-label">PUZZLE: 1 / 3</div>
+            </div>
+
+            <!-- Interative scene -->
+            <div class="escape-room-scene">
+                <!-- Painting: Puzzle 1 -->
+                <div class="scene-object obj-painting" id="obj-painting" onclick="openPuzzleModal(1)">
+                    <span class="object-icon">🖼️</span>
+                    <span class="object-label">Painting</span>
+                    <span class="lock-badge" id="lock-painting">Lock</span>
+                </div>
+
+                <!-- Clock / Note -->
+                <div class="scene-object obj-clock" id="obj-clock" onclick="inspectClock()">
+                    <span class="object-icon">🕐</span>
+                    <span class="object-label">Clock</span>
+                </div>
+
+                <!-- Safe: Puzzle 2 -->
+                <div class="scene-object obj-safe locked" id="obj-safe" onclick="openPuzzleModal(2)">
+                    <span class="object-icon">🔐</span>
+                    <span class="object-label">Safe</span>
+                    <span class="lock-badge" id="lock-safe">Locked</span>
+                </div>
+
+                <!-- Box: Puzzle 3 -->
+                <div class="scene-object obj-box locked" id="obj-box" onclick="openPuzzleModal(3)">
+                    <span class="object-icon">📦</span>
+                    <span class="object-label">Box</span>
+                    <span class="lock-badge" id="lock-box">Locked</span>
+                </div>
+
+                <!-- Exit Door -->
+                <div class="scene-object obj-exit locked" id="obj-exit" onclick="inspectExitDoor()">
+                    <span class="object-icon">🚪</span>
+                    <span class="object-label" style="font-size:13px; font-weight:800;">EXIT</span>
+                    <span class="lock-badge" id="lock-exit">Locked</span>
+                </div>
+
+                <!-- Puzzle 1 Modal overlay -->
+                <div class="puzzle-modal" id="modal-puzzle-1">
+                    <div class="puzzle-modal-header">
+                        <span class="puzzle-modal-title">🖼️ PUZZLE 1: NUMBER SEQUENCE</span>
+                        <button class="puzzle-close-btn" onclick="closePuzzleModal(1)">✕</button>
+                    </div>
+                    <div class="puzzle-body">
+                        <p class="puzzle-instruction">Determine the logical pattern to find the missing designation number.</p>
+                        <div class="puzzle-display-box">2 &nbsp; 4 &nbsp; 6 &nbsp; 8 &nbsp; ?</div>
+                        <div class="input-group" style="align-items: center;">
+                            <input type="text" id="puzzle-1-input" class="text-input" placeholder="Enter value..." autocomplete="off" style="max-width: 200px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 20px;">
+                        </div>
+                        <div class="puzzle-feedback" id="puzzle-1-feedback"></div>
+                        <button class="btn" onclick="submitPuzzleAnswer(1)">[ DECRYPT CODE ]</button>
+                    </div>
+                </div>
+
+                <!-- Puzzle 2 Modal overlay -->
+                <div class="puzzle-modal" id="modal-puzzle-2">
+                    <div class="puzzle-modal-header">
+                        <span class="puzzle-modal-title">🔐 PUZZLE 2: SAFE SEQUENCE</span>
+                        <button class="puzzle-close-btn" onclick="closePuzzleModal(2)">✕</button>
+                    </div>
+                    <div class="puzzle-body">
+                        <p class="puzzle-instruction">The safe reveals a note written with another sequence.</p>
+                        <div class="puzzle-display-box">1 &nbsp; 2 &nbsp; ? &nbsp; 4</div>
+                        <div class="input-group" style="align-items: center;">
+                            <input type="text" id="puzzle-2-input" class="text-input" placeholder="Enter value..." autocomplete="off" style="max-width: 200px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 20px;">
+                        </div>
+                        <div class="puzzle-feedback" id="puzzle-2-feedback"></div>
+                        <button class="btn" onclick="submitPuzzleAnswer(2)">[ OPEN SAFE ]</button>
+                    </div>
+                </div>
+
+                <!-- Puzzle 3 Modal overlay -->
+                <div class="puzzle-modal" id="modal-puzzle-3">
+                    <div class="puzzle-modal-header">
+                        <span class="puzzle-modal-title">📦 PUZZLE 3: FINAL DOOR</span>
+                        <button class="puzzle-close-btn" onclick="closePuzzleModal(3)">✕</button>
+                    </div>
+                    <div class="puzzle-body">
+                        <p class="puzzle-instruction">The box opens to show a note with color coordinates:</p>
+                        <div style="background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #94a3b8; display: flex; gap: 20px; margin-bottom: 5px;">
+                            <div>🔴 RED = 5</div>
+                            <div>🔵 BLUE = 2</div>
+                            <div>🟢 GREEN = 8</div>
+                        </div>
+                        <p class="puzzle-instruction" style="font-size:12px; color:var(--secondary);">Enter values in this specific order: RED → BLUE → GREEN</p>
+                        
+                        <div class="color-code-inputs">
+                            <div class="color-code-box">
+                                <div class="color-circle red"></div>
+                                <input type="text" id="color-digit-1" class="text-input digit-input" placeholder="-" maxlength="1" oninput="focusNextColorInput(1)">
+                            </div>
+                            <div class="color-code-box">
+                                <div class="color-circle blue"></div>
+                                <input type="text" id="color-digit-2" class="text-input digit-input" placeholder="-" maxlength="1" oninput="focusNextColorInput(2)">
+                            </div>
+                            <div class="color-code-box">
+                                <div class="color-circle green"></div>
+                                <input type="text" id="color-digit-3" class="text-input digit-input" placeholder="-" maxlength="1" oninput="focusNextColorInput(3)">
+                            </div>
+                        </div>
+                        
+                        <div class="puzzle-feedback" id="puzzle-3-feedback"></div>
+                        <button class="btn" onclick="submitPuzzleAnswer(3)">[ UNLOCK DOOR ]</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal log console -->
+            <div class="log-console" id="game-console">
+                <div class="log-entry system">[SYSTEM] Neural link operational. Coordinate with your team.</div>
+            </div>
+        </div>
+
+        <!-- 5. WIN SCREEN VIEW -->
+        <div id="view-win" class="screen-view">
+            <h2 class="title-glitch" style="color: var(--green); text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);">🎉 COGNITIVE ESCAPE SUCCESS</h2>
+            <p class="subtitle" style="color: var(--green);">CORRIDOR COMPLETED</p>
+
+            <div class="result-stats">
+                <div class="stat-row">
+                    <span>TIME REMAINING</span>
+                    <span id="win-time-val">02:17</span>
+                </div>
+                <div class="stat-row">
+                    <span>PUZZLES COMPLETED</span>
+                    <span>3 / 3</span>
+                </div>
+                <div class="stat-row" style="flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; margin-top: 4px;">
+                    <span style="color:#64748b; font-size:11px;">SURVIVED OPERATIVES</span>
+                    <div id="win-players-list" style="display:flex; flex-direction:column; gap:4px; font-weight:800; color:#fff; font-size:12px;">
+                        <!-- Injected players -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-menu-options">
+                <button class="btn" onclick="lobbyPlayAgain()">[ INITIALIZE RETRY ]</button>
+                <button class="btn secondary" onclick="returnToMainMenu()">[ RETURN TO HUB ]</button>
+            </div>
+        </div>
+
+        <!-- 6. LOSE SCREEN VIEW -->
+        <div id="view-lose" class="screen-view">
+            <h2 class="title-glitch" style="color: var(--red); text-shadow: 0 0 30px rgba(255, 51, 85, 0.5);">💀 CORRIDOR LOCKED</h2>
+            <p class="subtitle" style="color: var(--red);">TIME EXPIRED</p>
+
+            <div class="result-stats" style="border-color: rgba(255, 51, 85, 0.2);">
+                <div class="stat-row">
+                    <span>TIME REMAINING</span>
+                    <span style="color: var(--red);">00:00</span>
+                </div>
+                <div class="stat-row">
+                    <span>PUZZLES COMPLETED</span>
+                    <span id="lose-progress-val">1 / 3</span>
+                </div>
+                <p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 10px; line-height: 1.5;">
+                    The room system locking mechanism activated. You failed to escape before time ran out.
+                </p>
+            </div>
+
+            <div class="home-menu-options">
+                <button class="btn danger" onclick="lobbyPlayAgain()">[ REINITIALIZE SESSION ]</button>
+                <button class="btn secondary" onclick="returnToMainMenu()">[ RETURN TO HUB ]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast alert list wrapper -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // --- SOUND EFFECTS SYNTHESIS ---
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        function playSynthSound(type) {
+            try {
+                const ctx = getAudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const now = ctx.currentTime;
+                
+                if (type === 'click') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.08);
+                } else if (type === 'join') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.25);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.25);
+                } else if (type === 'solved') {
+                    // Play major triad arpeggio
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, index) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + index * 0.1);
+                        gain.gain.setValueAtTime(0.05, now + index * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + index * 0.1);
+                        osc.stop(now + index * 0.1 + 0.4);
+                    });
+                } else if (type === 'wrong') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(90, now + 0.35);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.35);
+                } else if (type === 'safe_open' || type === 'box_open') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(450, now + 0.5);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.5);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.5);
+                } else if (type === 'door_open') {
+                    // low drone rising
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 1.2);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 1.2);
+                } else if (type === 'countdown_tick') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.12);
+                } else if (type === 'victory') {
+                    // Ascending fanfare
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 1046.50]; // C4, E4, G4, C5, E5, C6
+                    notes.forEach((freq, index) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + index * 0.08);
+                        gain.gain.setValueAtTime(0.07, now + index * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.5);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + index * 0.08);
+                        osc.stop(now + index * 0.08 + 0.5);
+                    });
+                } else if (type === 'game_over') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 1.5);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 1.5);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 1.5);
+                }
+            } catch (e) {
+                console.warn("Sound synth error:", e);
+            }
+        }
+
+        // --- CLIENT GAME STATE CONTROL ---
+        const socket = io();
+        let roomCode = null;
+        let playerName = '';
+        let isHost = false;
+        let gameState = {};
+
+        // Auto load name from LocalStorage
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) {
+                document.getElementById('player-name-input').value = savedName;
+            }
+        });
+
+        // Switch active interface screens
+        function switchView(viewId) {
+            playSynthSound('click');
+            document.querySelectorAll('.screen-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.classList.add('active');
+            }
+        }
+
+        // Alert popup trigger
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) reverse forwards';
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // Home Actions
+        function triggerCreateRoom() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if (!nameInput) {
+                showToast("Operative nickname is required.", "error");
+                playSynthSound('wrong');
+                return;
+            }
+            playerName = nameInput.toUpperCase();
+            localStorage.setItem('playerName', playerName);
+
+            playSynthSound('click');
+            socket.emit('er_create_room', { playerName });
+        }
+
+        function triggerJoinRoom() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            const codeInput = document.getElementById('join-code-input').value.trim();
+            if (!nameInput) {
+                showToast("Operative nickname is required.", "error");
+                playSynthSound('wrong');
+                return;
+            }
+            if (!codeInput || codeInput.length !== 4) {
+                showToast("Access coordinates must be 4 digits.", "error");
+                playSynthSound('wrong');
+                return;
+            }
+            playerName = nameInput.toUpperCase();
+            localStorage.setItem('playerName', playerName);
+            roomCode = codeInput;
+
+            playSynthSound('click');
+            socket.emit('er_join_room', { roomCode, playerName });
+        }
+
+        function triggerLeaveRoom() {
+            playSynthSound('click');
+            socket.emit('er_leave_room', { roomCode });
+            switchView('view-home');
+        }
+
+        function triggerStartGame() {
+            if (!isHost) return;
+            playSynthSound('click');
+            socket.emit('er_start_game', { roomCode });
+        }
+
+        // Interactive room clicks
+        function openPuzzleModal(puzzleNum) {
+            playSynthSound('click');
+            
+            // Check logic limits
+            if (puzzleNum === 2 && !gameState.puzzle1Solved) {
+                appendConsoleLog("✕ The safe is securely locked. Try solving Puzzle 1 first.", "error");
+                playSynthSound('wrong');
+                return;
+            }
+            if (puzzleNum === 3 && !gameState.puzzle2Solved) {
+                appendConsoleLog("✕ The heavy box is shut tight. Try decrypting the safe first.", "error");
+                playSynthSound('wrong');
+                return;
+            }
+
+            const modal = document.getElementById(`modal-puzzle-${puzzleNum}`);
+            if (modal) modal.classList.add('active');
+        }
+
+        function closePuzzleModal(puzzleNum) {
+            playSynthSound('click');
+            const modal = document.getElementById(`modal-puzzle-${puzzleNum}`);
+            if (modal) modal.classList.remove('active');
+        }
+
+        function inspectClock() {
+            playSynthSound('click');
+            if (gameState.puzzle1Solved) {
+                appendConsoleLog("🕐 The clock displays: 1 2 ? 4. Solve Safe sequence.", "system");
+            } else {
+                appendConsoleLog("🕐 The ticking clock face shows no clear anomalies yet.", "system");
+            }
+        }
+
+        function inspectExitDoor() {
+            playSynthSound('click');
+            if (gameState.puzzle3Solved) {
+                appendConsoleLog("🔓 The locking system is fully offline. ESCAPED!", "success");
+            } else {
+                appendConsoleLog("🚪 The exit door coordinates are locked. Solve Box puzzle.", "error");
+                playSynthSound('wrong');
+            }
+        }
+
+        function focusNextColorInput(index) {
+            if (index < 3) {
+                const val = document.getElementById(`color-digit-${index}`).value;
+                if (val.length === 1) {
+                    document.getElementById(`color-digit-${index + 1}`).focus();
+                }
+            }
+        }
+
+        function submitPuzzleAnswer(puzzleNum) {
+            let answer = '';
+            const feedbackEl = document.getElementById(`puzzle-${puzzleNum}-feedback`);
+            feedbackEl.textContent = '';
+
+            if (puzzleNum === 1) {
+                answer = document.getElementById('puzzle-1-input').value.trim();
+            } else if (puzzleNum === 2) {
+                answer = document.getElementById('puzzle-2-input').value.trim();
+            } else if (puzzleNum === 3) {
+                const d1 = document.getElementById('color-digit-1').value.trim();
+                const d2 = document.getElementById('color-digit-2').value.trim();
+                const d3 = document.getElementById('color-digit-3').value.trim();
+                answer = d1 + d2 + d3;
+            }
+
+            if (!answer) {
+                feedbackEl.textContent = "Answer cannot be blank.";
+                playSynthSound('wrong');
+                return;
+            }
+
+            playSynthSound('click');
+            socket.emit('er_submit_answer', { roomCode, puzzleNum, answer });
+        }
+
+        function lobbyPlayAgain() {
+            playSynthSound('click');
+            socket.emit('er_leave_room', { roomCode });
+            // Re-create a room directly
+            triggerCreateRoom();
+        }
+
+        function returnToMainMenu() {
+            playSynthSound('click');
+            socket.emit('er_leave_room', { roomCode });
+            window.location.href = 'arcade_hub.html';
+        }
+
+        // Live Console logs writer
+        function appendConsoleLog(text, type = 'info') {
+            const consoleEl = document.getElementById('game-console');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = text;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Sync local interface status to server state updates
+        function syncRoomState(room) {
+            gameState = room;
+            roomCode = room.roomCode;
+            isHost = (room.hostId === socket.id);
+
+            // 1. Lobby Update
+            document.getElementById('lobby-code-display').textContent = room.roomCode;
+            document.getElementById('room-code-sub').textContent = `CODE: ${room.roomCode}`;
+            
+            const playersList = document.getElementById('lobby-players-list');
+            playersList.innerHTML = '';
+            
+            for (let i = 0; i < 4; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'player-slot';
+                
+                if (room.players[i]) {
+                    const p = room.players[i];
+                    slot.classList.add('active');
+                    
+                    let nameStr = p.name;
+                    if (p.isHost) {
+                        nameStr += ` <span class="badge-host">HOST</span>`;
+                    }
+                    
+                    slot.innerHTML = `
+                        <div class="status-dot"></div>
+                        <div class="player-name">${nameStr}</div>
+                    `;
+                } else {
+                    slot.innerHTML = `
+                        <div class="status-dot"></div>
+                        <div class="player-name" style="color: #475569;">AWAITING...</div>
+                    `;
+                }
+                playersList.appendChild(slot);
+            }
+
+            // Adjust start button
+            const startBtn = document.getElementById('lobby-start-btn');
+            if (isHost) {
+                startBtn.removeAttribute('disabled');
+                startBtn.textContent = '[ START EXPERIMENT ]';
+                if (room.players.length < 2) {
+                    document.getElementById('lobby-status-msg').textContent = 'Host ready. At least 2 players required.';
+                    startBtn.setAttribute('disabled', 'true');
+                } else {
+                    document.getElementById('lobby-status-msg').textContent = 'Link stabilized. Host can start game.';
+                }
+            } else {
+                startBtn.setAttribute('disabled', 'true');
+                startBtn.textContent = '[ HOST DECISION ]';
+                document.getElementById('lobby-status-msg').textContent = 'Waiting for host to initiate corridor load.';
+            }
+
+            // 2. Game View Update
+            // Object locks
+            const paintingObj = document.getElementById('obj-painting');
+            const safeObj = document.getElementById('obj-safe');
+            const boxObj = document.getElementById('obj-box');
+            const exitObj = document.getElementById('obj-exit');
+
+            if (room.puzzle1Solved) {
+                paintingObj.classList.add('solved');
+                paintingObj.classList.remove('locked');
+                document.getElementById('lock-painting').textContent = 'Solved';
+                document.getElementById('lock-painting').style.background = 'var(--green)';
+                
+                safeObj.classList.remove('locked');
+                document.getElementById('lock-safe').textContent = 'Openable';
+            }
+            if (room.puzzle2Solved) {
+                safeObj.classList.add('solved');
+                document.getElementById('lock-safe').textContent = 'Open';
+                document.getElementById('lock-safe').style.background = 'var(--green)';
+                
+                boxObj.classList.remove('locked');
+                document.getElementById('lock-box').textContent = 'Openable';
+            }
+            if (room.puzzle3Solved) {
+                boxObj.classList.add('solved');
+                document.getElementById('lock-box').textContent = 'Open';
+                document.getElementById('lock-box').style.background = 'var(--green)';
+                
+                exitObj.classList.remove('locked');
+                document.getElementById('lock-exit').textContent = 'OPEN';
+                document.getElementById('lock-exit').style.background = 'var(--green)';
+            }
+
+            // Game progress top bar text
+            document.getElementById('game-progress-label').textContent = `PUZZLE: ${room.currentPuzzle} / 3`;
+
+            // Adjust timers
+            formatAndDisplayTimer(room.timeRemaining);
+
+            // Modal views cleanup on correct answer
+            if (room.puzzle1Solved) {
+                document.getElementById('modal-puzzle-1').classList.remove('active');
+            }
+            if (room.puzzle2Solved) {
+                document.getElementById('modal-puzzle-2').classList.remove('active');
+            }
+            if (room.puzzle3Solved) {
+                document.getElementById('modal-puzzle-3').classList.remove('active');
+            }
+        }
+
+        function formatAndDisplayTimer(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            const minsStr = String(mins).padStart(2, '0');
+            const secsStr = String(secs).padStart(2, '0');
+            document.getElementById('game-timer').textContent = `${minsStr}:${secsStr}`;
+        }
+
+        // --- SOCKET EVENT HANDLERS ---
+        socket.on('er_room_created', (room) => {
+            syncRoomState(room);
+            switchView('view-lobby');
+            showToast("Session room created successfully.", "success");
+        });
+
+        socket.on('er_room_updated', (room) => {
+            syncRoomState(room);
+        });
+
+        socket.on('er_player_joined', (room) => {
+            syncRoomState(room);
+            playSynthSound('join');
+        });
+
+        socket.on('er_system_message', (msg) => {
+            appendConsoleLog(msg.text, 'system');
+            
+            // Trigger specific SFX based on text clues
+            if (msg.text.includes('joined')) {
+                playSynthSound('join');
+                showToast(msg.text, 'info');
+            } else if (msg.text.includes('Puzzle 1!')) {
+                playSynthSound('solved');
+                playSynthSound('safe_open');
+                showToast("Safe coordinates unlocked!", "success");
+            } else if (msg.text.includes('Puzzle 2!')) {
+                playSynthSound('solved');
+                playSynthSound('box_open');
+                showToast("Box coordinates unlocked!", "success");
+            } else if (msg.text.includes('unlocked the final door')) {
+                playSynthSound('solved');
+                playSynthSound('door_open');
+                showToast("Escape corridor open!", "success");
+            } else if (msg.text.includes('incorrect answer')) {
+                playSynthSound('wrong');
+            }
+        });
+
+        socket.on('er_game_start_countdown', () => {
+            document.getElementById('view-countdown').classList.add('active');
+            playSynthSound('countdown_tick');
+            
+            let count = 3;
+            document.getElementById('countdown-number-val').textContent = count;
+            
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    document.getElementById('countdown-number-val').textContent = count;
+                    playSynthSound('countdown_tick');
+                } else if (count === 0) {
+                    document.getElementById('countdown-number-val').textContent = 'ESCAPE!';
+                    playSynthSound('door_open');
+                } else {
+                    clearInterval(countInterval);
+                    document.getElementById('view-countdown').classList.remove('active');
+                }
+            }, 1000);
+        });
+
+        socket.on('er_game_started', () => {
+            switchView('view-game');
+            showToast("Corridor countdown initiated. Start!", "info");
+        });
+
+        socket.on('er_timer_tick', (data) => {
+            formatAndDisplayTimer(data.timeRemaining);
+            if (data.timeRemaining <= 10) {
+                playSynthSound('countdown_tick');
+            }
+        });
+
+        socket.on('er_answer_result', (res) => {
+            if (!res.correct) {
+                // Flash feedback text locally
+                showToast(res.message, "error");
+                
+                // Set modal feedback texts
+                const p1f = document.getElementById('puzzle-1-feedback');
+                const p2f = document.getElementById('puzzle-2-feedback');
+                const p3f = document.getElementById('puzzle-3-feedback');
+                
+                if (p1f) p1f.textContent = res.message;
+                if (p2f) p2f.textContent = res.message;
+                if (p3f) p3f.textContent = res.message;
+                
+                playSynthSound('wrong');
+            }
+        });
+
+        socket.on('er_puzzle_solved', (data) => {
+            // Handled globally via er_system_message, but cleanup local form inputs
+            if (data.puzzleNum === 1) {
+                document.getElementById('puzzle-1-input').value = '';
+            } else if (data.puzzleNum === 2) {
+                document.getElementById('puzzle-2-input').value = '';
+            } else if (data.puzzleNum === 3) {
+                document.getElementById('color-digit-1').value = '';
+                document.getElementById('color-digit-2').value = '';
+                document.getElementById('color-digit-3').value = '';
+            }
+        });
+
+        socket.on('er_game_won', (data) => {
+            playSynthSound('victory');
+            
+            // Format time remaining
+            const mins = Math.floor(data.timeRemaining / 60);
+            const secs = data.timeRemaining % 60;
+            document.getElementById('win-time-val').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            // List players
+            const winPlayers = document.getElementById('win-players-list');
+            winPlayers.innerHTML = '';
+            gameState.players.forEach(p => {
+                const row = document.createElement('div');
+                row.textContent = `🟢 OPERATIVE ${p.name}`;
+                winPlayers.appendChild(row);
+            });
+
+            switchView('view-win');
+        });
+
+        socket.on('er_game_over', (data) => {
+            playSynthSound('game_over');
+            
+            let solveCount = 0;
+            if (gameState.puzzle1Solved) solveCount = 1;
+            if (gameState.puzzle2Solved) solveCount = 2;
+            document.getElementById('lose-progress-val').textContent = `${solveCount} / 3`;
+
+            switchView('view-lose');
+        });
+
+        socket.on('er_error', (data) => {
+            showToast(data.message, "error");
+            playSynthSound('wrong');
+        });
+    </script>
+</body>
+</html>

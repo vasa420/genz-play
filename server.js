@@ -476,8 +476,236 @@ io.on('connection', (socket) => {
                 }
             }
         });
+
+        // Handle Escape Room disconnections
+        handleEscapeRoomDisconnect(socket);
+    });
+
+    // --- LOGIC ESCAPE ROOM HANDLERS ---
+    socket.on('er_create_room', (data) => {
+        const { playerName } = data;
+        if (!playerName || playerName.trim() === '') {
+            socket.emit('er_error', { message: "Player name is required." });
+            return;
+        }
+
+        let roomCode;
+        do {
+            roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        } while (escapeRooms.has(roomCode));
+
+        const room = {
+            roomCode,
+            hostId: socket.id,
+            players: [{ id: socket.id, name: playerName.trim(), isHost: true }],
+            gameStarted: false,
+            currentPuzzle: 1,
+            puzzle1Solved: false,
+            puzzle2Solved: false,
+            puzzle3Solved: false,
+            timeRemaining: 300, // 5 minutes
+            gameFinished: false,
+            winner: false,
+            timerInterval: null
+        };
+
+        escapeRooms.set(roomCode, room);
+        socket.join(`er_${roomCode}`);
+        
+        console.log(`Escape Room ${roomCode} created by ${playerName}`);
+        sendEscapeRoomUpdate(io, roomCode);
+    });
+
+    socket.on('er_join_room', (data) => {
+        const { roomCode, playerName } = data;
+        if (!roomCode || !playerName || playerName.trim() === '') {
+            socket.emit('er_error', { message: "Room code and player name are required." });
+            return;
+        }
+
+        const room = escapeRooms.get(roomCode);
+        if (!room) {
+            socket.emit('er_error', { message: "Room not found." });
+            return;
+        }
+
+        if (room.gameStarted) {
+            socket.emit('er_error', { message: "This game has already started." });
+            return;
+        }
+
+        if (room.players.length >= 4) {
+            socket.emit('er_error', { message: "Room is full. Maximum 4 players." });
+            return;
+        }
+
+        room.players.push({ id: socket.id, name: playerName.trim(), isHost: false });
+        socket.join(`er_${roomCode}`);
+
+        console.log(`Player ${playerName} joined Escape Room ${roomCode}`);
+        
+        io.to(`er_${roomCode}`).emit('er_system_message', { text: `${playerName.trim()} has joined the room.` });
+        sendEscapeRoomUpdate(io, roomCode);
+    });
+
+    socket.on('er_start_game', (data) => {
+        const { roomCode } = data;
+        const room = escapeRooms.get(roomCode);
+        if (!room) {
+            socket.emit('er_error', { message: "Room not found." });
+            return;
+        }
+
+        if (room.hostId !== socket.id) {
+            socket.emit('er_error', { message: "Only the host can start the game." });
+            return;
+        }
+
+        if (room.players.length < 2) {
+            socket.emit('er_error', { message: "At least 2 players are required." });
+            return;
+        }
+
+        if (room.gameStarted) return;
+
+        room.gameStarted = true;
+        io.to(`er_${roomCode}`).emit('er_game_start_countdown');
+
+        setTimeout(() => {
+            if (!escapeRooms.has(roomCode)) return;
+            
+            io.to(`er_${roomCode}`).emit('er_game_started');
+            
+            room.timerInterval = setInterval(() => {
+                const activeRoom = escapeRooms.get(roomCode);
+                if (!activeRoom) {
+                    clearInterval(room.timerInterval);
+                    return;
+                }
+
+                if (activeRoom.gameFinished) {
+                    clearInterval(activeRoom.timerInterval);
+                    return;
+                }
+
+                activeRoom.timeRemaining--;
+                
+                if (activeRoom.timeRemaining <= 0) {
+                    activeRoom.timeRemaining = 0;
+                    activeRoom.gameFinished = true;
+                    activeRoom.winner = false;
+                    clearInterval(activeRoom.timerInterval);
+                    
+                    io.to(`er_${roomCode}`).emit('er_game_over', { reason: "time_up" });
+                    sendEscapeRoomUpdate(io, roomCode);
+                } else {
+                    io.to(`er_${roomCode}`).emit('er_timer_tick', { timeRemaining: activeRoom.timeRemaining });
+                }
+            }, 1000);
+
+            sendEscapeRoomUpdate(io, roomCode);
+        }, 3000);
+    });
+
+    socket.on('er_submit_answer', (data) => {
+        const { roomCode, puzzleNum, answer } = data;
+        const room = escapeRooms.get(roomCode);
+        if (!room || room.gameFinished || !room.gameStarted) return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        const name = player ? player.name : "A player";
+
+        let correct = false;
+        const cleanAnswer = answer ? answer.trim().toLowerCase() : "";
+
+        if (puzzleNum === 1 && room.currentPuzzle === 1) {
+            correct = (cleanAnswer === "10");
+        } else if (puzzleNum === 2 && room.currentPuzzle === 2) {
+            correct = (cleanAnswer === "3");
+        } else if (puzzleNum === 3 && room.currentPuzzle === 3) {
+            correct = (cleanAnswer === "528");
+        }
+
+        if (correct) {
+            if (puzzleNum === 1) {
+                room.puzzle1Solved = true;
+                room.currentPuzzle = 2;
+                io.to(`er_${roomCode}`).emit('er_system_message', { text: `✓ ${name} solved Puzzle 1! Safe is unlocked.` });
+                io.to(`er_${roomCode}`).emit('er_puzzle_solved', { puzzleNum: 1, nextPuzzle: 2 });
+            } else if (puzzleNum === 2) {
+                room.puzzle2Solved = true;
+                room.currentPuzzle = 3;
+                io.to(`er_${roomCode}`).emit('er_system_message', { text: `✓ ${name} solved Puzzle 2! Box is unlocked.` });
+                io.to(`er_${roomCode}`).emit('er_puzzle_solved', { puzzleNum: 2, nextPuzzle: 3 });
+            } else if (puzzleNum === 3) {
+                room.puzzle3Solved = true;
+                room.gameFinished = true;
+                room.winner = true;
+                if (room.timerInterval) clearInterval(room.timerInterval);
+                io.to(`er_${roomCode}`).emit('er_system_message', { text: `🎉 ${name} unlocked the final door! ESCAPED!` });
+                io.to(`er_${roomCode}`).emit('er_game_won', { timeRemaining: room.timeRemaining });
+            }
+            sendEscapeRoomUpdate(io, roomCode);
+        } else {
+            socket.emit('er_answer_result', { correct: false, message: "Incorrect answer. Try again." });
+            socket.to(`er_${roomCode}`).emit('er_system_message', { text: `✕ ${name} submitted an incorrect answer.` });
+        }
+    });
+
+    socket.on('er_leave_room', (data) => {
+        const { roomCode } = data;
+        handleEscapeRoomDisconnect(socket, roomCode);
     });
 });
+
+// --- LOGIC ESCAPE ROOM SERVER-SIDE CONFIG ---
+const escapeRooms = new Map();
+
+function sendEscapeRoomUpdate(io, roomCode) {
+    const room = escapeRooms.get(roomCode);
+    if (!room) return;
+    io.to(`er_${roomCode}`).emit('er_room_updated', {
+        roomCode: room.roomCode,
+        hostId: room.hostId,
+        players: room.players,
+        gameStarted: room.gameStarted,
+        currentPuzzle: room.currentPuzzle,
+        puzzle1Solved: room.puzzle1Solved,
+        puzzle2Solved: room.puzzle2Solved,
+        puzzle3Solved: room.puzzle3Solved,
+        timeRemaining: room.timeRemaining,
+        gameFinished: room.gameFinished,
+        winner: room.winner
+    });
+}
+
+function handleEscapeRoomDisconnect(socket, specificRoomCode) {
+    escapeRooms.forEach((room, roomCode) => {
+        if (specificRoomCode && roomCode !== specificRoomCode) return;
+        
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex !== -1) {
+            const player = room.players.splice(playerIndex, 1)[0];
+            socket.leave(`er_${roomCode}`);
+            console.log(`Player ${player.name} left Escape Room ${roomCode}`);
+
+            if (room.players.length === 0) {
+                if (room.timerInterval) clearInterval(room.timerInterval);
+                escapeRooms.delete(roomCode);
+                console.log(`Escape Room ${roomCode} destroyed (no players left)`);
+            } else {
+                if (player.isHost) {
+                    room.hostId = room.players[0].id;
+                    room.players[0].isHost = true;
+                    io.to(`er_${roomCode}`).emit('er_system_message', { text: `Host left. ${room.players[0].name} is now the host.` });
+                } else {
+                    io.to(`er_${roomCode}`).emit('er_system_message', { text: `${player.name} has disconnected.` });
+                }
+                sendEscapeRoomUpdate(io, roomCode);
+            }
+        }
+    });
+}
 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
