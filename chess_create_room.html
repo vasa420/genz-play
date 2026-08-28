@@ -1353,7 +1353,12 @@
 
         // Socket Multiplayer Initialization
         console.log("Initializing Socket Arena...");
-        const socket = io();
+        const socket = io({
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 15,
+            reconnectionDelay: 300
+        });
         const myName = localStorage.getItem('playerName') || "OPERATIVE_X";
 
         console.log(`Joining Room: ${roomId} as ${role}`);

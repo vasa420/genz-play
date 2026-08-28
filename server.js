@@ -9,7 +9,12 @@ const io = new Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
+    transports: ['websocket', 'polling'],
+    pingInterval: 10000,
+    pingTimeout: 5000,
+    perMessageDeflate: false,
+    maxHttpBufferSize: 1e6
 });
 
 // Middleware to parse JSON payloads
@@ -259,7 +264,24 @@ io.on('connection', (socket) => {
 
     socket.on('chess_move', (data) => {
         const { roomId, move } = data;
+        const room = rooms.get(roomId);
+        if (room) {
+            if (!room.chessMoves) room.chessMoves = [];
+            room.chessMoves.push(move);
+            room.lastChessMove = move;
+        }
         socket.to(roomId).emit('chess_move_received', move);
+    });
+
+    socket.on('request_chess_sync', (data) => {
+        const { roomId } = data;
+        const room = rooms.get(roomId);
+        if (room && room.lastChessMove) {
+            socket.emit('chess_sync_state', {
+                lastMove: room.lastChessMove,
+                movesCount: room.chessMoves ? room.chessMoves.length : 0
+            });
+        }
     });
 
     socket.on('sync_striker_set', (data) => {

@@ -643,9 +643,17 @@
             renderBoard();
         };
 
+        let lastExecutedMoveId = null;
+
         function initOnlineSocket() {
             try {
-                socket = io();
+                socket = io({
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionAttempts: 15,
+                    reconnectionDelay: 300
+                });
+
                 socket.on('connect', () => {
                     console.log("Connected to Chess Arena socket. Socket ID:", socket.id);
                     socket.emit('join_room', {
@@ -654,12 +662,29 @@
                         role: onlineRole,
                         isCreating: false
                     });
+                    
+                    // Request latest sync state in case of reconnection
+                    socket.emit('request_chess_sync', { roomId: onlineRoomId });
                 });
 
                 socket.on('chess_move_received', (move) => {
                     console.log("Received opponent move:", move);
                     if (move && move.fromR !== undefined && move.toR !== undefined) {
+                        const moveId = `${move.fromR}-${move.fromC}-${move.toR}-${move.toC}`;
+                        if (lastExecutedMoveId === moveId) return; // Ignore duplicate move packets
+                        lastExecutedMoveId = moveId;
                         executeMove(move.fromR, move.fromC, move.toR, move.toC, move.moveData || {}, true);
+                    }
+                });
+
+                socket.on('chess_sync_state', (data) => {
+                    if (data && data.lastMove) {
+                        const move = data.lastMove;
+                        const moveId = `${move.fromR}-${move.fromC}-${move.toR}-${move.toC}`;
+                        if (lastExecutedMoveId !== moveId) {
+                            lastExecutedMoveId = moveId;
+                            executeMove(move.fromR, move.fromC, move.toR, move.toC, move.moveData || {}, true);
+                        }
                     }
                 });
 
@@ -671,6 +696,20 @@
                         pill.style.borderColor = "#ff3355";
                     }
                 });
+
+                // Live ping measurement for smooth multiplayer indicator
+                setInterval(() => {
+                    if (socket && socket.connected) {
+                        const start = Date.now();
+                        socket.emit('ping_local', () => {
+                            const latency = Date.now() - start;
+                            const subTitle = document.querySelector('.header-sub');
+                            if (subTitle) {
+                                subTitle.innerText = `ROOM #${onlineRoomId} • 🟢 ${latency}ms (STABLE)`;
+                            }
+                        });
+                    }
+                }, 4000);
             } catch (e) {
                 console.warn("Socket initialization failed:", e);
             }
