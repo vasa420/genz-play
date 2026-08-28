@@ -608,26 +608,106 @@
             .sq { font-size: clamp(28px, 4vw, 38px); }
         }
 
+        /* MOBILE BOTTOM NAVBAR */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 60px;
+            background: rgba(9, 14, 28, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 9999;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 4px;
+        }
+
+        .nav-tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tab-item.active, .nav-tab-item:hover {
+            color: var(--neon-cyan);
+        }
+
+        .nav-tab-icon {
+            font-size: 18px;
+        }
+
         /* MOBILE / PHONE STYLES (768px and smaller) */
         @media (max-width: 768px) {
-            body { padding-top: 60px; align-items: flex-start; }
-            .btn-hamburger { display: flex !important; } /* Visible only on mobile/phone screens */
+            body {
+                padding-top: 54px !important;
+                padding-bottom: 66px !important;
+                align-items: flex-start !important;
+            }
+            .btn-hamburger { display: flex !important; }
             .chess-app-shell {
                 grid-template-columns: 1fr !important;
-                padding: 12px;
-                gap: 16px;
-                margin-top: 10px;
+                padding: 6px 8px !important;
+                gap: 10px !important;
+                margin-top: 0 !important;
             }
             .left-col { height: auto; width: 100%; }
-            .right-col { display: none !important; } /* Hidden on phone downside; accessible via top-left 3-line sidebar drawer */
-            .board-frame { padding: 12px; width: 100%; border-radius: 16px; }
-            .board-grid-wrap { gap: 4px; grid-template-columns: 18px 1fr; grid-template-rows: 1fr 18px; }
-            .ranks-col, .files-row { font-size: 10px; }
-            .chessboard {
-                width: 100%; max-width: calc(100vw - 44px); height: auto; aspect-ratio: 1;
+            .right-col { display: none !important; } /* REMOVED from main page layout on phone; accessible via 3-line hamburger bar menu */
+
+            /* INCREASE BOARD SIZE ON PHONE ONLY */
+            .center-board-col {
+                width: 100% !important;
+                padding: 0 !important;
             }
-            .sq { font-size: clamp(24px, 7vw, 42px); }
-            .btn-start-match-pill { padding: 14px 32px; font-size: 14px; letter-spacing: 2px; }
+            .board-frame {
+                padding: 6px 4px !important;
+                width: 100% !important;
+                border-radius: 14px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 136, 255, 0.25) !important;
+            }
+            .board-grid-wrap {
+                gap: 2px !important;
+                grid-template-columns: 14px 1fr !important;
+                grid-template-rows: 1fr 14px !important;
+            }
+            .ranks-col, .files-row {
+                font-size: 9px !important;
+                color: #64748b !important;
+            }
+            .chessboard {
+                width: 100% !important;
+                max-width: calc(100vw - 16px) !important;
+                height: auto !important;
+                aspect-ratio: 1 !important;
+                border-radius: 8px !important;
+            }
+            .sq {
+                font-size: clamp(30px, 9.8vw, 56px) !important;
+            }
+            .btn-start-match-pill {
+                padding: 16px 36px !important;
+                font-size: 15px !important;
+                font-weight: 950 !important;
+                letter-spacing: 2px !important;
+                box-shadow: 0 10px 35px rgba(255, 255, 255, 0.5), 0 0 25px rgba(0, 210, 255, 0.7) !important;
+            }
+            
+            .mobile-bottom-nav {
+                display: flex !important;
+            }
         }
     </style>
 </head>
@@ -936,6 +1016,30 @@
 
     <!-- Gameplay Sounds -->
     <audio id="move-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav">
+        <a class="nav-tab-item active" href="chess.html">
+            <span class="nav-tab-icon">🏠</span>
+            <span>HOME</span>
+        </a>
+        <a class="nav-tab-item" href="chess_tutorial.html">
+            <span class="nav-tab-icon">🎓</span>
+            <span>LEARN</span>
+        </a>
+        <div class="nav-tab-item" onclick="alert('Grandmaster Stats: 1800 ELO • 42 Wins')">
+            <span class="nav-tab-icon">📊</span>
+            <span>STATS</span>
+        </div>
+        <div class="nav-tab-item" onclick="alert('Recent Match History: 3 Wins, 0 Losses')">
+            <span class="nav-tab-icon">🕒</span>
+            <span>HISTORY</span>
+        </div>
+        <div class="nav-tab-item" onclick="toggleMobileMenu()">
+            <span class="nav-tab-icon">👤</span>
+            <span>PROFILE</span>
+        </div>
+    </nav>
 
     <script>
         function toggleMobileMenu() {
