@@ -1265,6 +1265,7 @@
                     <div class="player-main">
                         <span class="name">QWE</span>
                         <span class="tag">(YOU)</span>
+                        <span class="player-uid" id="self-player-uid" style="font-size:10px; color:#00ffcc; font-weight:800; font-family:'JetBrains Mono',monospace; display:block; margin-top:2px; letter-spacing:1.5px;">ID: #------</span>
                     </div>
                 </div>
             </div>
@@ -1347,6 +1348,20 @@
     </div>
 
     <script>
+        function getOrGenerateUserId() {
+            let uid = localStorage.getItem('arena_user_6digit_id');
+            if (!uid || uid.length !== 6 || isNaN(uid)) {
+                uid = Math.floor(100000 + Math.random() * 900000).toString();
+                localStorage.setItem('arena_user_6digit_id', uid);
+            }
+            return uid;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = getOrGenerateUserId();
+            const selfIdElem = document.getElementById('self-player-uid');
+            if (selfIdElem) selfIdElem.innerText = `ID: #${userId}`;
+        });
         function openModal(msg, primaryText = "PROCEED", primaryAction = closeModal, showSecondary = false, secondaryText = "CANCEL", secondaryAction = closeModal, title = "SYSTEM NOTICE", showPrimary = true) {
             const content = document.getElementById('modal-content');
             const titleTag = document.getElementById('modal-title-tag');

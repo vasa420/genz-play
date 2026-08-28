@@ -342,6 +342,7 @@
         .user-name-group { display: flex; flex-direction: column; }
         .user-title-name { font-size: 15px; font-weight: 950; letter-spacing: 1.5px; color: #fff; }
         .user-rank-sub { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--neon-cyan); text-transform: uppercase; }
+        .user-id-sub { font-size: 9.5px; font-weight: 800; letter-spacing: 1.5px; color: #94a3b8; margin-top: 1px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
 
         /* Wallet Box */
         .wallet-pill-card {
@@ -1052,6 +1053,7 @@
                     <div class="user-name-group">
                         <span class="user-title-name" id="user-display-name">GRANDMASTER</span>
                         <span class="user-rank-sub">ROOKIE</span>
+                        <span class="user-id-sub" id="user-id-display">ID: #------</span>
                     </div>
                 </div>
 
@@ -1170,6 +1172,23 @@
     </nav>
 
     <script>
+        function getOrGenerateUserId() {
+            let uid = localStorage.getItem('arena_user_6digit_id');
+            if (!uid || uid.length !== 6 || isNaN(uid)) {
+                uid = Math.floor(100000 + Math.random() * 900000).toString();
+                localStorage.setItem('arena_user_6digit_id', uid);
+            }
+            return uid;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = getOrGenerateUserId();
+            const idElem = document.getElementById('user-id-display');
+            if (idElem) idElem.innerText = `ID: #${userId}`;
+            const mobIdElem = document.getElementById('mobile-user-id-display');
+            if (mobIdElem) mobIdElem.innerText = `ID: #${userId}`;
+        });
+
         function toggleMobileMenu() {
             const drawer = document.getElementById('mobile-drawer');
             const btn = document.querySelector('.btn-hamburger');
