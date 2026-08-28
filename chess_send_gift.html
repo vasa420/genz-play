@@ -704,19 +704,6 @@
         let selectedGiftPrice = 50;
         let selectedGiftIcon = "🪙";
 
-        // Registered Players Database
-        const PLAYERS_DATABASE = [
-            { name: "Girish", id: "582910" },
-            { name: "Nithish", id: "893012" },
-            { name: "Dhanish", id: "749102" },
-            { name: "Vaisal", id: "381049" },
-            { name: "Thaya", id: "687742" },
-            { name: "Sanjay", id: "910283" },
-            { name: "Vicky", id: "109284" },
-            { name: "Logith", id: "492018" },
-            { name: "Surya", id: "301928" }
-        ];
-
         function getOrGenerateUserId() {
             let uid = localStorage.getItem('arena_user_6digit_id');
             if (!uid || uid.length !== 6 || isNaN(uid)) {
@@ -773,41 +760,26 @@
             selectedGiftIcon = iconElem ? iconElem.innerText : '🎁';
         }
 
-        function findRecipientPlayer(query) {
+        function extract6DigitId(query) {
             if (!query) return null;
-            const cleanQuery = query.trim().toUpperCase();
-            
-            // Match 6-digit User ID inside text or input
-            const matchDigits = cleanQuery.match(/\d{6}/);
-            const targetDigit = matchDigits ? matchDigits[0] : (cleanQuery.length === 6 && !isNaN(cleanQuery) ? cleanQuery : null);
-
-            // Check registered players
-            for (let player of PLAYERS_DATABASE) {
-                if (targetDigit && player.id === targetDigit) return player;
-                if (player.name.toUpperCase() === cleanQuery || cleanQuery.includes(player.name.toUpperCase())) return player;
-                if (player.id === cleanQuery) return player;
-            }
-
-            // Check current user ID
-            const myId = getOrGenerateUserId();
-            if (targetDigit === myId || cleanQuery === myId) {
-                return { name: "You (Self)", id: myId };
-            }
-
+            const cleanQuery = query.trim();
+            const match = cleanQuery.match(/\d{6}/);
+            if (match) return match[0];
+            if (cleanQuery.length === 6 && !isNaN(cleanQuery)) return cleanQuery;
             return null;
         }
 
         function processSendGift() {
             const recipientInput = document.getElementById('recipient-id-input').value.trim();
             if (!recipientInput) {
-                showModal('⚠️', 'ENTER USER ID', 'Please enter a 6-digit User ID or select a friend from your list.');
+                showModal('⚠️', 'ENTER USER ID', 'Please enter a 6-digit User ID (e.g. 582910) to send a gift.');
                 return;
             }
 
-            // Search Player Database
-            const foundPlayer = findRecipientPlayer(recipientInput);
-            if (!foundPlayer) {
-                showModal('❌', 'INVALID ID', `No active player found with User ID "${recipientInput}". Please check the 6-digit User ID.`);
+            // Extract & Validate 6-digit User ID
+            const targetId = extract6DigitId(recipientInput);
+            if (!targetId) {
+                showModal('❌', 'INVALID ID', `Invalid ID "${recipientInput}"! Please enter a valid 6-digit User ID (e.g. 582910).`);
                 return;
             }
 
@@ -820,7 +792,7 @@
             walletBalance -= selectedGiftPrice;
             document.getElementById('wallet-balance-display').innerText = `$${walletBalance.toFixed(2)}`;
 
-            // Create gift entry in shared localStorage
+            // Register gift for target 6-digit User ID
             const myId = getOrGenerateUserId();
             const giftMsg = document.getElementById('gift-message-input').value.trim() || "Enjoy your Arena gift!";
             
@@ -828,8 +800,8 @@
                 id: 'gift_' + Date.now(),
                 senderName: `Player #${myId}`,
                 senderId: myId,
-                recipientId: foundPlayer.id,
-                recipientName: foundPlayer.name,
+                recipientId: targetId,
+                recipientName: `User #${targetId}`,
                 giftName: selectedGiftName,
                 giftPrice: selectedGiftPrice,
                 giftIcon: selectedGiftIcon,
@@ -845,7 +817,7 @@
             showModal(
                 '🎉', 
                 'GIFT DELIVERED!', 
-                `Your ${selectedGiftName} ($${selectedGiftPrice}.00) has been sent to ${foundPlayer.name} (#${foundPlayer.id})!\n\nThey can now claim it in their Receive Gift Inbox.`
+                `Your ${selectedGiftName} ($${selectedGiftPrice}.00) has been sent to User ID #${targetId}!\n\nThey can now claim it in their Receive Gift Inbox.`
             );
 
             document.getElementById('gift-message-input').value = "";
