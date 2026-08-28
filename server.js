@@ -123,17 +123,31 @@ io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on('hc_check_room', (data, callback) => {
-        const { roomId } = data;
-        const exists = rooms.has(roomId);
-        if (exists) {
-            callback({ success: true });
-        } else {
-            callback({ success: false, message: `ROOM ID ${roomId} WAS NOT CREATED IN ANY SERVER!` });
+        if (typeof callback !== 'function') return;
+        const { roomId } = data || {};
+        if (!roomId) {
+            callback({ success: false, message: 'PLEASE ENTER A VALID ARENA ROOM CODE!' });
+            return;
         }
+        const room = rooms.get(roomId);
+        if (!room) {
+            callback({ success: false, message: `ROOM ID ${roomId} WAS NOT CREATED IN ANY SERVER!` });
+            return;
+        }
+        if (room.players && room.players.length >= 2) {
+            callback({ success: false, message: `ROOM ID ${roomId} IS ALREADY FULL (2/2 PLAYERS)!` });
+            return;
+        }
+        if (room.gameState === 'PLAYING') {
+            callback({ success: false, message: `MATCH IN ROOM ${roomId} IS ALREADY IN PROGRESS!` });
+            return;
+        }
+        callback({ success: true });
     });
 
     socket.on('join_room', (data) => {
-        const { roomId, playerName, password, isCreating } = data;
+        const { roomId, playerName, password, isCreating } = data || {};
+        if (!roomId) return;
 
         let room = rooms.get(roomId);
         if (!room) {
@@ -159,19 +173,25 @@ io.on('connection', (socket) => {
             return;
         }
 
-        // --- ROOM MANAGEMENT ---
-        // If a player with the same name exists on a DIFFERENT socket, create a unique name
-        let finalName = playerName;
-        const nameCollision = room.players.some(p => p.name === finalName && p.id !== socket.id);
-        if (nameCollision) {
-            finalName = `${playerName}_${Math.floor(100 + Math.random() * 899)}`;
+        // If room had a pending cleanup timeout from brief disconnect, cancel it
+        if (room.cleanupTimeout) {
+            clearTimeout(room.cleanupTimeout);
+            room.cleanupTimeout = null;
         }
 
-        // Cleanup: Remove any existing player with the SAME name to prevent ghost duplicates
-        const oldIndex = room.players.findIndex(p => p.name === playerName);
+        // --- ROOM MANAGEMENT ---
+        // Cleanup: Remove any existing player with the SAME name or socket ID to prevent ghost duplicates on reconnect
+        const oldIndex = room.players.findIndex(p => p.name === playerName || p.id === socket.id);
         if (oldIndex !== -1) {
             console.log(`Cleaning up old session for ${playerName}`);
             room.players.splice(oldIndex, 1);
+        }
+
+        // If a player with the same name exists on a DIFFERENT socket, create a unique name
+        let finalName = playerName || "Player";
+        const nameCollision = room.players.some(p => p.name === finalName && p.id !== socket.id);
+        if (nameCollision) {
+            finalName = `${playerName}_${Math.floor(100 + Math.random() * 899)}`;
         }
 
         const player = {
@@ -181,7 +201,7 @@ io.on('connection', (socket) => {
             index: room.players.length + 1
         };
 
-        if (isCreating) {
+        if (isCreating && room.players.length === 0) {
             room.players.unshift(player);
             console.log(`Host ${finalName} JOINED as index 0. Socket ID: ${socket.id}`);
         } else {
@@ -460,19 +480,15 @@ io.on('connection', (socket) => {
                 io.to(roomId).emit('player_left', { leaver, players: room.players });
 
                 if (room.players.length === 0) {
-                    if (room.gameState === 'PLAYING') {
-                        // Keep PLAYING rooms alive for 10 minutes to allow reconnection
-                        // (players navigate from create_room -> chess.html, causing a brief disconnect)
-                        console.log(`Room ${roomId} is PLAYING with 0 players - keeping alive for reconnection.`);
-                        setTimeout(() => {
-                            if (rooms.has(roomId) && rooms.get(roomId).players.length === 0) {
-                                rooms.delete(roomId);
-                                console.log(`Room ${roomId} cleaned up after timeout.`);
-                            }
-                        }, 10 * 60 * 1000); // 10 minutes
-                    } else {
-                        rooms.delete(roomId);
-                    }
+                    // Keep rooms alive for 2 minutes to allow page transitions / reconnection
+                    console.log(`Room ${roomId} has 0 players - keeping alive for reconnection.`);
+                    if (room.cleanupTimeout) clearTimeout(room.cleanupTimeout);
+                    room.cleanupTimeout = setTimeout(() => {
+                        if (rooms.has(roomId) && rooms.get(roomId).players.length === 0) {
+                            rooms.delete(roomId);
+                            console.log(`Room ${roomId} cleaned up after timeout.`);
+                        }
+                    }, 2 * 60 * 1000); // 2 minutes
                 }
             }
         });

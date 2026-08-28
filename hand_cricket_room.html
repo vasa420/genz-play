@@ -450,6 +450,32 @@
             .btn-find-opp, .btn-start-match { width: 100%; justify-content: center; }
             .match-config-group { width: 100%; justify-content: space-around; }
         }
+
+        @media (max-width: 600px) {
+            .top-header { padding: 10px; gap: 8px; flex-direction: row; justify-content: space-between; align-items: center; }
+            .header-logo-group { gap: 6px; }
+            .logo-badge { font-size: 15px; }
+            .logo-icon-box { width: 32px; height: 32px; font-size: 16px; }
+            .room-type-pill { display: none; }
+            .room-id-hex-box { order: unset; width: auto; margin-top: 0; padding: 4px 16px; }
+            .room-id-label { font-size: 8px; }
+            .room-id-value { font-size: 18px; letter-spacing: 3px; }
+            .btn-leave-room { padding: 6px 12px; font-size: 10px; border-radius: 8px; }
+            .icon-btn { width: 34px; height: 34px; font-size: 14px; border-radius: 8px; }
+            .player-card { min-height: 220px; padding: 16px; border-radius: 16px; }
+            .card-shield-emblem { width: 70px; height: 80px; margin-bottom: 6px; }
+            .card-shield-icon { font-size: 30px; }
+            .player-team-name { font-size: 20px; }
+            .vs-3d-text { font-size: 36px; }
+            .card-stats-grid { padding: 8px 4px; font-size: 9px; }
+            .stat-val { font-size: 11px; }
+            .bottom-controls-bar { padding: 12px; border-radius: 14px; }
+            .match-config-group { padding: 8px; border-radius: 10px; }
+            .config-icon { font-size: 18px; }
+            .config-val { font-size: 12px; }
+            .btn-find-opp, .btn-start-match { padding: 12px; font-size: 12px; border-radius: 12px; }
+            .chat-modal { width: calc(100vw - 24px); right: 12px; bottom: 70px; height: 360px; }
+        }
     </style>
 </head>
 <body>
@@ -504,7 +530,7 @@
                 <div class="player-identity">
                     <span class="player-team-label">TEAM</span>
                     <span class="player-team-name" id="my-name">CRICKET PRO</span>
-                    <span class="host-pill-badge">HOST</span>
+                    <span class="host-pill-badge" id="my-role-badge">HOST</span>
                 </div>
 
                 <!-- Bottom Stats Grid -->
@@ -549,8 +575,9 @@
                 </div>
 
                 <div class="player-identity">
-                    <span class="player-team-label">WAITING FOR PLAYERS</span>
+                    <span class="player-team-label" id="opp-team-label">WAITING FOR PLAYERS</span>
                     <span class="waiting-pulse-text" id="opp-name-text">WAITING...</span>
+                    <span class="guest-pill-badge" id="opp-role-badge" style="display:none;">GUEST</span>
                 </div>
 
                 <!-- Bottom Stats Grid -->
@@ -662,11 +689,13 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         let socket;
-        let isHost = localStorage.getItem('hc_isHost') !== 'false';
+        let isHost = localStorage.getItem('hc_isHost') === 'true';
+        let lastOpponentName = null;
 
         window.onload = () => {
             const name = localStorage.getItem('playerName') || "CRICKET PRO";
             let roomId = localStorage.getItem('hc_roomId');
+            isHost = localStorage.getItem('hc_isHost') === 'true';
 
             if (isHost) {
                 if (!roomId) {
@@ -677,17 +706,30 @@
                     localStorage.setItem('hc_roomId', roomId);
                 }
                 document.getElementById('my-name').innerText = name.toUpperCase();
+                const myBadge = document.getElementById('my-role-badge');
+                if (myBadge) { myBadge.className = "host-pill-badge"; myBadge.innerText = "HOST"; }
             } else {
-                document.getElementById('room-id').innerText = roomId || "101913";
+                if (!roomId) {
+                    window.location.href = 'hand_cricket.html';
+                    return;
+                }
                 document.getElementById('my-name').innerText = name.toUpperCase();
-                document.querySelector('.host-pill-badge').className = "guest-pill-badge";
-                document.querySelector('.guest-pill-badge').innerText = "GUEST";
+                const myBadge = document.getElementById('my-role-badge');
+                if (myBadge) { myBadge.className = "guest-pill-badge"; myBadge.innerText = "GUEST"; }
 
                 const startBtn = document.getElementById('start-btn');
-                startBtn.style.display = 'none';
+                if (startBtn) {
+                    startBtn.style.cursor = 'not-allowed';
+                    startBtn.classList.remove('ready');
+                    startBtn.innerHTML = '<span>⏳</span> WAITING FOR HOST...';
+                }
             }
 
-            document.getElementById('room-id').innerText = roomId || "101913";
+            document.getElementById('room-id').innerText = roomId;
+            const chatBox = document.getElementById('chat-messages');
+            if (chatBox) {
+                chatBox.innerHTML = `<div class="chat-msg system">Private Match Room Initialized. Room ID: ${roomId}. Waiting for opponent...</div>`;
+            }
 
             // Socket connection logic
             try {
@@ -696,10 +738,30 @@
                     socket.emit('join_room', { roomId, playerName: name, isCreating: isHost });
                 });
 
+                socket.on('room_error', (data) => {
+                    alert((data && data.message) || "Room error encountered!");
+                    window.location.href = 'hand_cricket.html';
+                });
+
                 socket.on('player_joined', (data) => {
-                    if (data.players.length >= 2) {
+                    if (data.players && data.players.length >= 2) {
                         const other = data.players.find(p => p.id !== socket.id);
-                        if (other) updateOpponentUI(other.name, isHost ? "GUEST" : "HOST");
+                        if (other) {
+                            updateOpponentUI(other.name, isHost ? "GUEST" : "HOST");
+                        }
+                    } else {
+                        resetOpponentUI();
+                    }
+                });
+
+                socket.on('player_left', (data) => {
+                    resetOpponentUI();
+                    const box = document.getElementById('chat-messages');
+                    if (box && data.leaver) {
+                        const sysMsg = document.createElement('div');
+                        sysMsg.className = 'chat-msg system';
+                        sysMsg.innerText = `${data.leaver.name.toUpperCase()} HAS LEFT THE ROOM.`;
+                        box.appendChild(sysMsg);
                     }
                 });
 
@@ -709,12 +771,59 @@
             } catch(e) { console.warn("Socket not active:", e); }
         };
 
+        function resetOpponentUI() {
+            lastOpponentName = null;
+            const card = document.getElementById('opponent-card');
+            if (card) card.className = "player-card waiting-card";
+            
+            const teamLabel = document.getElementById('opp-team-label');
+            if (teamLabel) teamLabel.innerText = "WAITING FOR PLAYERS";
+            
+            const oppNameEl = document.getElementById('opp-name-text');
+            if (oppNameEl) {
+                oppNameEl.className = "waiting-pulse-text";
+                oppNameEl.innerText = "WAITING...";
+            }
+            
+            const oppBadge = document.getElementById('opp-role-badge');
+            if (oppBadge) oppBadge.style.display = "none";
+
+            document.getElementById('opp-stat-players').innerText = "-";
+            document.getElementById('opp-stat-rank').innerText = "-";
+            document.getElementById('opp-stat-form').innerText = "-";
+
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) {
+                startBtn.classList.remove('ready');
+                if (isHost) {
+                    startBtn.innerHTML = '<span>▶</span> START MATCH';
+                } else {
+                    startBtn.innerHTML = '<span>⏳</span> WAITING FOR HOST...';
+                }
+            }
+        }
+
         function updateOpponentUI(playerName, tag) {
             const card = document.getElementById('opponent-card');
-            card.className = "player-card guest-card";
+            if (!card) return;
+
+            card.className = tag === "HOST" ? "player-card host-card" : "player-card guest-card";
             
-            document.getElementById('opp-name-text').className = "player-team-name";
-            document.getElementById('opp-name-text').innerText = playerName.toUpperCase();
+            const teamLabel = document.getElementById('opp-team-label');
+            if (teamLabel) teamLabel.innerText = "TEAM";
+
+            const oppNameEl = document.getElementById('opp-name-text');
+            if (oppNameEl) {
+                oppNameEl.className = "player-team-name";
+                oppNameEl.innerText = playerName.toUpperCase();
+            }
+
+            const oppBadge = document.getElementById('opp-role-badge');
+            if (oppBadge) {
+                oppBadge.style.display = "inline-block";
+                oppBadge.className = tag === "HOST" ? "host-pill-badge" : "guest-pill-badge";
+                oppBadge.innerText = tag;
+            }
             
             document.getElementById('opp-stat-players').innerText = "1 / 11";
             document.getElementById('opp-stat-rank').innerHTML = '<span style="color:var(--gold-glow);">PRO</span>';
@@ -725,15 +834,22 @@
 
             if (isHost) {
                 const startBtn = document.getElementById('start-btn');
-                startBtn.classList.add('ready');
-                startBtn.innerHTML = '<span>▶</span> START MATCH';
+                if (startBtn) {
+                    startBtn.classList.add('ready');
+                    startBtn.innerHTML = '<span>▶</span> START MATCH';
+                }
             }
 
-            const box = document.getElementById('chat-messages');
-            const sysMsg = document.createElement('div');
-            sysMsg.className = 'chat-msg system';
-            sysMsg.innerText = `${playerName.toUpperCase()} HAS JOINED THE ROOM!`;
-            box.appendChild(sysMsg);
+            if (lastOpponentName !== playerName) {
+                lastOpponentName = playerName;
+                const box = document.getElementById('chat-messages');
+                if (box) {
+                    const sysMsg = document.createElement('div');
+                    sysMsg.className = 'chat-msg system';
+                    sysMsg.innerText = `${playerName.toUpperCase()} HAS JOINED THE ROOM!`;
+                    box.appendChild(sysMsg);
+                }
+            }
         }
 
         function invitePlayer(name) {
@@ -799,6 +915,10 @@
         }
 
         function leaveRoom() {
+            const roomId = localStorage.getItem('hc_roomId');
+            if (socket && roomId) {
+                socket.emit('leave_room', { roomId });
+            }
             localStorage.removeItem('hc_roomId');
             localStorage.removeItem('hc_opponentName');
             window.location.href = 'hand_cricket.html';

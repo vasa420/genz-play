@@ -898,14 +898,32 @@
                 return;
             }
 
+            if (!socket || !socket.connected) {
+                try {
+                    if (!socket) socket = io();
+                    else socket.connect();
+                } catch(e) {}
+            }
+
             if (socket) {
+                let responded = false;
+                const timeout = setTimeout(() => {
+                    if (!responded) {
+                        responded = true;
+                        showCustomAlert("CONNECTION TIMEOUT", "Unable to reach the arena server. Please ensure the server is active.");
+                    }
+                }, 5000);
+
                 socket.emit('hc_check_room', { roomId: code }, (response) => {
-                    if (response.success) {
+                    if (responded) return;
+                    responded = true;
+                    clearTimeout(timeout);
+                    if (response && response.success) {
                         localStorage.setItem('hc_roomId', code);
                         localStorage.setItem('hc_isHost', 'false');
                         window.location.href = 'hand_cricket_room.html?v=' + Date.now();
                     } else {
-                        showCustomAlert("ROOM NOT FOUND", response.message || "THIS ARENA ID DOES NOT EXIST!");
+                        showCustomAlert("ROOM ERROR", (response && response.message) || "THIS ARENA ID DOES NOT EXIST!");
                     }
                 });
             } else {
