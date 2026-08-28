@@ -1237,7 +1237,6 @@
                 <div class="arena-id-display">ROOM ID: 7842</div>
             </div>
             <div class="header-controls">
-                <div class="header-btn" id="bet-btn" onclick="openBetMenu()" title="BET MATCH">💰</div>
                 <div class="header-btn" id="share-btn" onclick="shareArenaLink()" title="COPY LINK">🔗</div>
                 <div class="header-btn" id="record-btn" onclick="toggleRecording()" title="RECORD MATCH">⏺️</div>
                 <div class="header-btn mic" id="mic-btn" onclick="toggleMic()" title="TOGGLE VOICE LINK"><span
@@ -1277,27 +1276,10 @@
         </div>
 
         <div class="grand-footer">
-            <div class="mobile-footer-row">
-                <button class="invite-friends-btn" onclick="window.location.href='chess_friends.html'">
-                    <span class="pawn-plus">♟️+</span>
-                    <span class="btn-lbl">INVITE FROM FRIENDS LIST</span>
-                </button>
-
-                <button class="message-lobby-btn" id="lobby-msg-btn" onclick="toggleLobbyChat()" title="TOGGLE CHAT">
-                    💬
+            <div class="footer-actions-container">
+                <button class="message-lobby-btn" id="lobby-msg-btn" onclick="toggleLobbyChat()" title="TOGGLE LOBBY CHAT">
+                    💬 CHAT
                     <div id="chat-notification-dot" class="notification-dot"></div>
-                </button>
-            </div>
-
-            <div class="mobile-footer-actions-row">
-                <button class="kickstart-btn" id="kickstart-btn" onclick="openBetMenu()" title="BET MATCH">
-                    💰
-                    <span class="btn-lbl">BET MATCH (OPTIONAL)</span>
-                </button>
-
-                <button class="reminder-btn" id="reminder-btn" onclick="sendHostReminder()" style="display:none;">
-                    <span class="bell-icon">🔔</span>
-                    <span class="rem-txt">REMIND HOST</span>
                 </button>
 
                 <button class="leave-room-btn-participant" id="leave-room-btn-p" onclick="confirmLeaveRoom()" style="display:none;" title="SIGNAL DISCONNECT">
@@ -1310,7 +1292,6 @@
                     <span>START MATCH</span>
                 </button>
             </div>
-            <span id="bet-status-display" class="bet-status-display" style="text-align: center; font-size: 10px; color: #ffd700;"></span>
         </div>
     </div>
 
@@ -1449,33 +1430,29 @@
         }
 
         function updateRoleSystem() {
-            const ksBtn = document.getElementById('kickstart-btn');
             const startBtn = document.getElementById('start-match-btn');
-            const rBtn = document.getElementById('reminder-btn');
 
             if (role === 'participant') {
-                if (ksBtn) { ksBtn.classList.add('disabled'); ksBtn.style.cursor = 'not-allowed'; }
                 if (startBtn) { startBtn.classList.add('disabled'); startBtn.style.cursor = 'not-allowed'; startBtn.title = "ONLY HOST CAN START"; }
-                rBtn.style.display = 'flex';
 
                 // Hide Host-Only Controls
-                document.getElementById('bet-btn').style.display = 'none';
-                document.getElementById('share-btn').style.display = 'none';
-                document.getElementById('record-btn').style.display = 'none';
-                document.getElementById('exit-room-btn').style.display = 'none';
+                const shareBtn = document.getElementById('share-btn');
+                if (shareBtn) shareBtn.style.display = 'none';
+                const recordBtn = document.getElementById('record-btn');
+                if (recordBtn) recordBtn.style.display = 'none';
+                const exitBtn = document.getElementById('exit-room-btn');
+                if (exitBtn) exitBtn.style.display = 'none';
 
-                // Allow participants to chat immediately (since their presence = 2 players)
+                // Allow participants to chat immediately
                 const lobbyMsgBtn = document.getElementById('lobby-msg-btn');
-                lobbyMsgBtn.classList.add('enabled');
-                lobbyMsgBtn.title = "OPEN TACTICAL CHAT";
-
-                // Remove invite button for participants (they are the ones being invited)
-                document.querySelector('.invite-friends-btn').style.display = 'none';
+                if (lobbyMsgBtn) {
+                    lobbyMsgBtn.classList.add('enabled');
+                    lobbyMsgBtn.title = "OPEN TACTICAL CHAT";
+                }
 
                 // Show Participant Exit
-                document.getElementById('leave-room-btn-p').style.display = 'flex';
-            } else {
-                rBtn.style.display = 'none';
+                const leaveBtn = document.getElementById('leave-room-btn-p');
+                if (leaveBtn) leaveBtn.style.display = 'flex';
             }
         }
 
