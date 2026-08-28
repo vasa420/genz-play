@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Master - Gifting Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #040711;
+            --card-bg: rgba(12, 18, 34, 0.75);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --neon-cyan: #00f0ff;
+            --neon-gold: #ffd700;
+            --neon-pink: #ff007f;
+            --neon-green: #00ff88;
+            --accent-blue: #0088ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(255, 0, 127, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 60%);
+        }
+
+        /* Fixed Header */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 64px;
+            background: rgba(9, 14, 28, 0.92);
+            border-bottom: 1.5px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .btn-back-hub {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.25s ease;
+        }
+
+        .btn-back-hub:hover {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            transform: translateX(-3px);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 950;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #fff 30%, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-id-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--neon-cyan);
+            letter-spacing: 1.5px;
+        }
+
+        .wallet-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 10px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--neon-gold);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Main Container */
+        .gifting-container {
+            margin-top: 84px;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 900px;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Tabs Navigation */
+        .tab-switcher {
+            display: flex;
+            background: rgba(12, 18, 34, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 6px;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: #94a3b8;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(0, 136, 255, 0.4), rgba(0, 240, 255, 0.2));
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+        }
+
+        /* Panel Card */
+        .gift-panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Recipient Selection */
+        .recipient-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            font-size: 16px;
+            color: var(--neon-cyan);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .quick-friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .friend-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .friend-pill:hover, .friend-pill.selected {
+            background: rgba(0, 240, 255, 0.12);
+            border-color: var(--neon-cyan);
+            transform: translateY(-2px);
+        }
+
+        .friend-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0088ff, #00d2ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .friend-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .friend-name {
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .friend-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9.5px;
+            color: #94a3b8;
+        }
+
+        /* Gift Categories & Items */
+        .gift-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+        }
+
+        .gift-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gift-card:hover, .gift-card.selected {
+            background: rgba(0, 240, 255, 0.08);
+            border-color: var(--neon-cyan);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 240, 255, 0.2);
+        }
+
+        .gift-card.selected::after {
+            content: "✓ SELECTED";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 8px;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .gift-icon {
+            font-size: 36px;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        .gift-name {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .gift-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--neon-gold);
+            background: rgba(255, 215, 0, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* Message Box */
+        .message-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .textarea-field {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            outline: none;
+            resize: none;
+            transition: all 0.3s ease;
+        }
+
+        .textarea-field:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+        }
+
+        /* Send Button */
+        .btn-send-gift {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #00f0ff, #0088ff);
+            border: none;
+            border-radius: 18px;
+            color: #040711;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 950;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 35px rgba(0, 240, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-send-gift:hover {
+            transform: scale(1.02);
+            box-shadow: 0 16px 45px rgba(0, 240, 255, 0.6);
+            background: linear-gradient(135deg, #00ff88, #00f0ff);
+        }
+
+        /* Inbox List */
+        .inbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .inbox-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .inbox-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .inbox-gift-icon {
+            font-size: 32px;
+        }
+
+        .inbox-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .inbox-sender {
+            font-size: 13px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .inbox-msg {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .btn-claim-gift {
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid var(--neon-green);
+            border-radius: 10px;
+            color: var(--neon-green);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .btn-claim-gift:hover {
+            background: var(--neon-green);
+            color: #040711;
+            transform: scale(1.05);
+        }
+
+        /* Notification Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(4, 7, 17, 0.85);
+            backdrop-filter: blur(16px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: rgba(12, 18, 34, 0.95);
+            border: 1.5px solid var(--neon-cyan);
+            border-radius: 28px;
+            padding: 36px 40px;
+            text-align: center;
+            max-width: 420px;
+            box-shadow: 0 25px 60px rgba(0, 240, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-icon { font-size: 54px; }
+        .modal-title { font-size: 18px; font-weight: 950; letter-spacing: 2px; color: #fff; }
+        .modal-desc { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+        .modal-close-btn {
+            margin-top: 10px;
+            padding: 12px 32px;
+            background: var(--neon-cyan);
+            border: none;
+            border-radius: 12px;
+            color: #040711;
+            font-size: 12px;
+            font-weight: 950;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="top-header">
+        <a href="chess.html" class="btn-back-hub">← BACK TO CHESS</a>
+        <div class="header-title">🎁 ARENA GIFT TERMINAL</div>
+        <div class="header-right">
+            <div class="user-id-badge" id="header-user-id">ID: #------</div>
+            <div class="wallet-pill">
+                <span>💼</span>
+                <span id="wallet-balance-display">$1800.00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="gifting-container">
+
+        <!-- Tabs -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" id="tab-send-btn" onclick="switchTab('send')">🎁 SEND A GIFT</button>
+            <button class="tab-btn" id="tab-inbox-btn" onclick="switchTab('inbox')">📦 INBOX GIFTS (2)</button>
+        </div>
+
+        <!-- TAB 1: SEND GIFT PANEL -->
+        <div class="gift-panel-card" id="panel-send">
+            
+            <!-- Recipient Selection -->
+            <div class="recipient-box">
+                <span class="section-title">👤 1. SELECT RECIPIENT FRIEND</span>
+                <div class="input-group">
+                    <span class="input-icon">🔍</span>
+                    <input type="text" class="input-field" id="recipient-id-input" placeholder="ENTER 6-DIGIT USER ID OR FRIEND NAME (e.g. 582910)">
+                </div>
+
+                <div class="quick-friends-grid">
+                    <div class="friend-pill" onclick="selectFriend('Girish', '582910', this)">
+                        <div class="friend-avatar">👑</div>
+                        <div class="friend-info">
+                            <span class="friend-name">Girish</span>
+                            <span class="friend-id">#582910</span>
+                        </div>
+                    </div>
+
+                    <div class="friend-pill" onclick="selectFriend('Nithish', '893012', this)">
+                        <div class="friend-avatar">⚡</div>
+                        <div class="friend-info">
+                            <span class="friend-name">Nithish</span>
+                            <span class="friend-id">#893012</span>
+                        </div>
+                    </div>
+
+                    <div class="friend-pill" onclick="selectFriend('Dhanish', '749102', this)">
+                        <div class="friend-avatar">⚔️</div>
+                        <div class="friend-info">
+                            <span class="friend-name">Dhanish</span>
+                            <span class="friend-id">#749102</span>
+                        </div>
+                    </div>
+
+                    <div class="friend-pill" onclick="selectFriend('Vaisal', '381049', this)">
+                        <div class="friend-avatar">🛡️</div>
+                        <div class="friend-info">
+                            <span class="friend-name">Vaisal</span>
+                            <span class="friend-id">#381049</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gift Item Selection -->
+            <div class="recipient-box">
+                <span class="section-title">🎁 2. CHOOSE GIFT PACK</span>
+                <div class="gift-options-grid">
+                    
+                    <div class="gift-card selected" onclick="selectGift(this, '50 Coins Pack', 50)">
+                        <div class="gift-icon">🪙</div>
+                        <div class="gift-name">50 COINS</div>
+                        <div class="gift-price">$50.00</div>
+                    </div>
+
+                    <div class="gift-card" onclick="selectGift(this, '250 Gold Chest', 250)">
+                        <div class="gift-icon">💰</div>
+                        <div class="gift-name">250 GOLD CHEST</div>
+                        <div class="gift-price">$250.00</div>
+                    </div>
+
+                    <div class="gift-card" onclick="selectGift(this, 'Crown King Skin', 300)">
+                        <div class="gift-icon">👑</div>
+                        <div class="gift-name">CROWN KING SKIN</div>
+                        <div class="gift-price">$300.00</div>
+                    </div>
+
+                    <div class="gift-card" onclick="selectGift(this, 'Cyber Queen Armor', 450)">
+                        <div class="gift-icon">⚔️</div>
+                        <div class="gift-name">CYBER QUEEN SKIN</div>
+                        <div class="gift-price">$450.00</div>
+                    </div>
+
+                    <div class="gift-card" onclick="selectGift(this, 'VIP Season Pass', 500)">
+                        <div class="gift-icon">💎</div>
+                        <div class="gift-name">VIP BATTLE PASS</div>
+                        <div class="gift-price">$500.00</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Gift Message -->
+            <div class="message-box">
+                <span class="section-title">✍️ 3. ADD PERSONAL NOTE (OPTIONAL)</span>
+                <textarea class="textarea-field" id="gift-message-input" placeholder="Write a message to your friend (e.g. 'Good luck in the upcoming tournament!')"></textarea>
+            </div>
+
+            <!-- Action Button -->
+            <button class="btn-send-gift" onclick="processSendGift()">
+                <span>🎁</span>
+                <span>SEND GIFT NOW</span>
+            </button>
+
+        </div>
+
+        <!-- TAB 2: INBOX GIFTS PANEL -->
+        <div class="gift-panel-card" id="panel-inbox" style="display: none;">
+            <span class="section-title">📫 PENDING RECEIVED GIFTS</span>
+            
+            <div class="inbox-list">
+                
+                <div class="inbox-card">
+                    <div class="inbox-left">
+                        <div class="inbox-gift-icon">🎁</div>
+                        <div class="inbox-details">
+                            <div class="inbox-sender">FROM: Girish (#582910)</div>
+                            <div class="inbox-msg">"Sent you 100 Bonus Arena Coins! GG on your match."</div>
+                        </div>
+                    </div>
+                    <button class="btn-claim-gift" onclick="claimGift(this, 100)">CLAIM $100</button>
+                </div>
+
+                <div class="inbox-card">
+                    <div class="inbox-left">
+                        <div class="inbox-gift-icon">👑</div>
+                        <div class="inbox-details">
+                            <div class="inbox-sender">FROM: Nithish (#893012)</div>
+                            <div class="inbox-msg">"Golden Crown King Piece Skin Unlocked!"</div>
+                        </div>
+                    </div>
+                    <button class="btn-claim-gift" onclick="claimGift(this, 300)">CLAIM SKIN</button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="status-modal">
+        <div class="modal-card">
+            <div class="modal-icon" id="modal-icon">✨</div>
+            <div class="modal-title" id="modal-title">GIFT DELIVERED!</div>
+            <div class="modal-desc" id="modal-desc">Your gift has been sent successfully to recipient friend.</div>
+            <button class="modal-close-btn" onclick="closeModal()">GREAT!</button>
+        </div>
+    </div>
+
+    <script>
+        let walletBalance = 1800.00;
+        let selectedGiftName = "50 Coins Pack";
+        let selectedGiftPrice = 50;
+
+        function getOrGenerateUserId() {
+            let uid = localStorage.getItem('arena_user_6digit_id');
+            if (!uid || uid.length !== 6 || isNaN(uid)) {
+                uid = Math.floor(100000 + Math.random() * 900000).toString();
+                localStorage.setItem('arena_user_6digit_id', uid);
+            }
+            return uid;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = getOrGenerateUserId();
+            document.getElementById('header-user-id').innerText = `ID: #${userId}`;
+
+            // Check URL parameters for tab=received
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tab') === 'received' || urlParams.get('tab') === 'inbox') {
+                switchTab('inbox');
+            }
+        });
+
+        function switchTab(tab) {
+            const sendPanel = document.getElementById('panel-send');
+            const inboxPanel = document.getElementById('panel-inbox');
+            const sendBtn = document.getElementById('tab-send-btn');
+            const inboxBtn = document.getElementById('tab-inbox-btn');
+
+            if (tab === 'send') {
+                sendPanel.style.display = 'flex';
+                inboxPanel.style.display = 'none';
+                sendBtn.classList.add('active');
+                inboxBtn.classList.remove('active');
+            } else {
+                sendPanel.style.display = 'none';
+                inboxPanel.style.display = 'flex';
+                inboxBtn.classList.add('active');
+                sendBtn.classList.remove('active');
+            }
+        }
+
+        function selectFriend(name, id, element) {
+            document.querySelectorAll('.friend-pill').forEach(pill => pill.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('recipient-id-input').value = `${name} (#${id})`;
+        }
+
+        function selectGift(element, name, price) {
+            document.querySelectorAll('.gift-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedGiftName = name;
+            selectedGiftPrice = price;
+        }
+
+        function processSendGift() {
+            const recipient = document.getElementById('recipient-id-input').value.trim();
+            if (!recipient) {
+                showModal('⚠️', 'PLEASE SELECT RECIPIENT', 'Please enter a 6-digit User ID or select a friend from your list.');
+                return;
+            }
+
+            if (walletBalance < selectedGiftPrice) {
+                showModal('❌', 'INSUFFICIENT FUNDS', `Your wallet balance ($${walletBalance.toFixed(2)}) is insufficient for $${selectedGiftPrice}.00.`);
+                return;
+            }
+
+            walletBalance -= selectedGiftPrice;
+            document.getElementById('wallet-balance-display').innerText = `$${walletBalance.toFixed(2)}`;
+
+            showModal(
+                '🎉', 
+                'GIFT SENT SUCCESSFULLY!', 
+                `You have sent ${selectedGiftName} ($${selectedGiftPrice}.00) to ${recipient}.`
+            );
+        }
+
+        function claimGift(btn, amount) {
+            walletBalance += amount;
+            document.getElementById('wallet-balance-display').innerText = `$${walletBalance.toFixed(2)}`;
+            btn.innerText = "CLAIMED!";
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "default";
+            showModal('🎁', 'GIFT CLAIMED!', `Successfully added $${amount}.00 to your wallet balance!`);
+        }
+
+        function showModal(icon, title, desc) {
+            document.getElementById('modal-icon').innerText = icon;
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('status-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('status-modal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
