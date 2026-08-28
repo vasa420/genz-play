@@ -998,30 +998,38 @@
                 justify-content: space-between !important;
             }
 
-            /* Mobile Header */
+            /* Mobile Header 2-Row Layout */
             .grand-header {
                 height: auto !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
+                display: flex !important;
+                flex-direction: column !important;
                 gap: 6px !important;
                 padding: 8px 12px !important;
                 border-radius: 14px !important;
-                align-items: center !important;
-                justify-content: space-between !important;
                 background: rgba(9, 14, 28, 0.95) !important;
                 border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                width: 100% !important;
+            }
+
+            .header-top-row {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                width: 100% !important;
             }
 
             .header-left {
                 width: auto !important;
                 display: flex !important;
                 align-items: center !important;
-                gap: 6px !important;
             }
 
             .room-label {
-                font-size: 9px !important;
-                letter-spacing: 0.5px !important;
+                font-size: 10px !important;
+                font-weight: 800 !important;
+                letter-spacing: 1px !important;
+                white-space: nowrap !important;
+                color: #ffffff !important;
             }
 
             .arena-id-display {
@@ -1029,38 +1037,52 @@
                 padding: 3px 8px !important;
                 letter-spacing: 1.5px !important;
                 border-radius: 8px !important;
+                background: rgba(0, 210, 255, 0.12) !important;
+                border: 1px solid rgba(0, 210, 255, 0.3) !important;
+                color: #00ffcc !important;
+                white-space: nowrap !important;
             }
 
             .header-controls {
-                width: auto !important;
+                width: 100% !important;
                 display: flex !important;
-                gap: 4px !important;
+                gap: 6px !important;
                 align-items: center !important;
+                justify-content: space-between !important;
+                padding-top: 4px !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
             }
 
             .header-btn {
-                width: 32px !important;
-                height: 32px !important;
-                font-size: 12px !important;
+                flex: 1 !important;
+                height: 34px !important;
+                font-size: 13px !important;
                 border-radius: 8px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
 
             .exit-btn {
-                padding: 4px 8px !important;
+                padding: 4px 10px !important;
                 border-radius: 8px !important;
-                height: 32px !important;
+                height: 34px !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
             }
 
             .exit-txt {
-                font-size: 8px !important;
+                font-size: 8.5px !important;
                 line-height: 1 !important;
+                white-space: nowrap !important;
             }
 
             /* Mobile Matchup Compact Stack */
             .arena-matchup {
                 flex-direction: column !important;
-                gap: 10px !important;
-                padding: 6px 0 !important;
+                gap: 8px !important;
+                padding: 4px 0 !important;
                 flex-grow: 1 !important;
                 justify-content: center !important;
                 align-items: center !important;
@@ -1070,8 +1092,8 @@
             .premium-card {
                 width: 100% !important;
                 max-width: 100% !important;
-                height: 76px !important;
-                padding: 12px 18px !important;
+                height: 72px !important;
+                padding: 10px 16px !important;
                 border-radius: 16px !important;
                 display: flex !important;
                 align-items: center !important;
@@ -1081,22 +1103,22 @@
             }
 
             .player-main .name {
-                font-size: 18px !important;
+                font-size: 17px !important;
                 font-weight: 950 !important;
                 letter-spacing: 1px !important;
             }
 
             .player-main .tag {
-                font-size: 10px !important;
+                font-size: 9.5px !important;
             }
 
             .trophy-vs {
-                transform: scale(0.85) !important;
-                margin: -4px 0 !important;
+                transform: scale(0.8) !important;
+                margin: -2px 0 !important;
             }
 
             .waiting-label {
-                font-size: 15px !important;
+                font-size: 14px !important;
                 letter-spacing: 3px !important;
             }
 
@@ -1149,10 +1171,22 @@
                 padding: 0 10px !important;
                 font-size: 10.5px !important;
                 font-weight: 800 !important;
-                display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
                 gap: 6px !important;
+            }
+
+            /* Respect inline style="display:none;" on hidden buttons */
+            .reminder-btn[style*="display: none"],
+            .leave-room-btn-participant[style*="display: none"],
+            .kickstart-btn[style*="display: none"] {
+                display: none !important;
+            }
+
+            .reminder-btn:not([style*="display: none"]),
+            .leave-room-btn-participant:not([style*="display: none"]),
+            .kickstart-btn:not([style*="display: none"]) {
+                display: flex !important;
             }
 
             #start-match-btn {
@@ -1169,6 +1203,9 @@
                 letter-spacing: 1.5px !important;
                 margin: 0 !important;
                 opacity: 0.3 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             #start-match-btn.active {
                 opacity: 1 !important;
@@ -1191,12 +1228,14 @@
     <div class="grand-lobby-shell">
         <!-- Top Bar -->
         <div class="grand-header">
-            <div class="header-left">
-                <div class="header-text-group">
-                    <span class="room-label">ROOM: PRIVATE LOBBY</span>
+            <div class="header-top-row">
+                <div class="header-left">
+                    <div class="header-text-group">
+                        <span class="room-label">ROOM: PRIVATE LOBBY</span>
+                    </div>
                 </div>
+                <div class="arena-id-display">ROOM ID: 7842</div>
             </div>
-            <div class="arena-id-display">ROOM ID: 7842</div>
             <div class="header-controls">
                 <div class="header-btn" id="bet-btn" onclick="openBetMenu()" title="BET MATCH">💰</div>
                 <div class="header-btn" id="share-btn" onclick="shareArenaLink()" title="COPY LINK">🔗</div>
@@ -1205,7 +1244,7 @@
                         class="mic-icon">🎙️</span><span class="mic-toggle">×</span></div>
                 <button class="exit-btn" id="exit-room-btn" onclick="exitToArena()">
                     <span class="exit-icon">🏰</span>
-                    <div class="exit-txt">CLOSE<br>ROOM</div>
+                    <div class="exit-txt">CLOSE ROOM</div>
                 </button>
             </div>
         </div>
