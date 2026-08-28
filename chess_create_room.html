@@ -1888,7 +1888,10 @@
             }
         }
 
+        let currentOpponentName = "";
+
         function renderOpponentJoined(opponentName) {
+            currentOpponentName = opponentName;
             const opponentCard = document.querySelector('.waiting-slot');
             if (!opponentCard) return;
 
@@ -2126,8 +2129,8 @@
                     numEl.style.color = '#00ff88';
                 } else {
                     clearInterval(timer);
-                    const oppName = (role === 'host') ? 'GRANDMASTER' : 'ROOM HOST';
-                    window.location.href = `chess_play.html?mode=pvp&room=${roomId}&p1=${encodeURIComponent(myName)}&p2=${encodeURIComponent(oppName)}`;
+                    const oppName = currentOpponentName || ((role === 'host') ? 'CHALLENGER' : 'HOST');
+                    window.location.href = `chess_play.html?mode=pvp&room=${roomId}&p1=${encodeURIComponent(myName)}&p2=${encodeURIComponent(oppName)}&role=${role}`;
                 }
             }, 1000);
         }

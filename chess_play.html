@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Grandmaster Chess | Live Match</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900;950&family=JetBrains+Mono:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
             --bg-dark: #040711;
@@ -491,7 +492,7 @@
 
     <!-- Match Header -->
     <header class="match-header">
-        <a href="chess.html" class="btn-exit-match">← EXIT</a>
+        <button class="btn-exit-match" onclick="exitMatch()">← EXIT</button>
         <div class="header-title-group">
             <div class="header-title">CHESS ARENA</div>
             <div class="header-sub">OFFICIAL RULES ACTIVE</div>
@@ -595,23 +596,44 @@
         let currentThemeIdx = 0;
         let isGameOver = false;
 
+        let socket = null;
+        let onlineRoomId = null;
+        let onlineRole = 'host';
+        let myColor = 'W'; // 'W' for Host, 'B' for Participant
+        let myName = 'PLAYER';
+
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const mode = params.get('mode');
             const p1 = params.get('p1');
             const p2 = params.get('p2');
             const room = params.get('room');
+            const role = params.get('role') || 'host';
 
-            if (mode === 'pvp' || mode === 'room') {
+            onlineRole = role;
+            onlineRoomId = room;
+
+            if (mode === 'pvp' || mode === 'room' || room) {
                 isVsCpu = false;
                 const btn = document.getElementById('btn-mode');
-                if (btn) btn.innerText = '👥 2 PLAYER MATCH';
+                if (btn) btn.innerText = '🌐 ONLINE MULTIPLAYER';
                 
-                if (p1) document.getElementById('user-name').innerText = decodeURIComponent(p1).toUpperCase();
-                if (p2) document.getElementById('opp-name').innerText = decodeURIComponent(p2).toUpperCase();
+                if (role === 'host') {
+                    myColor = 'W';
+                    myName = p1 ? decodeURIComponent(p1) : 'HOST';
+                    if (p1) document.getElementById('user-name').innerText = decodeURIComponent(p1).toUpperCase() + " (WHITE)";
+                    if (p2) document.getElementById('opp-name').innerText = decodeURIComponent(p2).toUpperCase() + " (BLACK)";
+                } else {
+                    myColor = 'B';
+                    myName = p2 ? decodeURIComponent(p2) : 'GUEST';
+                    if (p2) document.getElementById('user-name').innerText = decodeURIComponent(p2).toUpperCase() + " (BLACK)";
+                    if (p1) document.getElementById('opp-name').innerText = decodeURIComponent(p1).toUpperCase() + " (WHITE)";
+                }
+
                 if (room) {
                     const subTitle = document.querySelector('.header-sub');
-                    if (subTitle) subTitle.innerText = `ROOM #${room} • 2 REAL PLAYERS`;
+                    if (subTitle) subTitle.innerText = `ROOM #${room} • ONLINE MULTIPLAYER`;
+                    initOnlineSocket();
                 }
             } else {
                 const savedName = localStorage.getItem('playerName');
@@ -620,6 +642,50 @@
 
             renderBoard();
         };
+
+        function initOnlineSocket() {
+            try {
+                socket = io();
+                socket.on('connect', () => {
+                    console.log("Connected to Chess Arena socket. Socket ID:", socket.id);
+                    socket.emit('join_room', {
+                        roomId: onlineRoomId,
+                        playerName: myName,
+                        role: onlineRole,
+                        isCreating: false
+                    });
+                });
+
+                socket.on('chess_move_received', (move) => {
+                    console.log("Received opponent move:", move);
+                    if (move && move.fromR !== undefined && move.toR !== undefined) {
+                        executeMove(move.fromR, move.fromC, move.toR, move.toC, move.moveData || {}, true);
+                    }
+                });
+
+                socket.on('player_left', (data) => {
+                    const pill = document.getElementById('turn-pill');
+                    if (pill) {
+                        pill.innerText = "⚠️ OPPONENT LEFT MATCH";
+                        pill.style.background = "rgba(255, 51, 85, 0.3)";
+                        pill.style.borderColor = "#ff3355";
+                    }
+                });
+            } catch (e) {
+                console.warn("Socket initialization failed:", e);
+            }
+        }
+
+        function exitMatch() {
+            if (socket && onlineRoomId) {
+                socket.emit('leave_room', { roomId: onlineRoomId });
+            }
+            if (onlineRoomId) {
+                window.location.href = `chess_create_room.html?id=${onlineRoomId}&role=${onlineRole}`;
+            } else {
+                window.location.href = 'chess.html';
+            }
+        }
 
         function resetGame() {
             board = JSON.parse(JSON.stringify(INITIAL_BOARD));
@@ -694,8 +760,12 @@
             const inCheck = isKingInCheck(turn, board);
             const kingPos = inCheck ? findKing(turn, board) : null;
 
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
+            const isFlipped = (!isVsCpu && myColor === 'B');
+
+            for (let rIdx = 0; rIdx < 8; rIdx++) {
+                const r = isFlipped ? (7 - rIdx) : rIdx;
+                for (let cIdx = 0; cIdx < 8; cIdx++) {
+                    const c = isFlipped ? (7 - cIdx) : cIdx;
                     const sq = document.createElement('div');
                     const isDark = (r + c) % 2 === 1;
                     sq.className = `sq ${themeName}-${isDark ? 'dark' : 'light'}`;
@@ -740,11 +810,33 @@
                     container.appendChild(sq);
                 }
             }
+
+            // Update Labels
+            const ranksLabels = document.querySelector('.ranks-labels');
+            if (ranksLabels) {
+                ranksLabels.innerHTML = isFlipped
+                    ? '<span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>'
+                    : '<span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>';
+            }
+            const filesLabels = document.querySelector('.files-labels');
+            if (filesLabels) {
+                filesLabels.innerHTML = isFlipped
+                    ? '<span>H</span><span>G</span><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span>'
+                    : '<span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span>';
+            }
         }
 
         function handleSquareClick(r, c) {
             if (isGameOver) return;
             if (isVsCpu && turn === 'B') return;
+
+            // Online PvP turn restriction: Only current turn player can move
+            if (!isVsCpu && socket && onlineRoomId) {
+                if (turn !== myColor) {
+                    console.log("Not your turn!");
+                    return;
+                }
+            }
 
             const piece = board[r][c];
             const isWhitePiece = piece && piece === piece.toUpperCase();
@@ -753,7 +845,7 @@
             if (selectedSq) {
                 const moveMatch = validMoves.find(m => m.r === r && m.c === c);
                 if (moveMatch) {
-                    executeMove(selectedSq.r, selectedSq.c, r, c, moveMatch);
+                    executeMove(selectedSq.r, selectedSq.c, r, c, moveMatch, false);
                     selectedSq = null;
                     validMoves = [];
                     return;
@@ -771,7 +863,7 @@
             renderBoard();
         }
 
-        function executeMove(fromR, fromC, toR, toC, moveData = {}) {
+        function executeMove(fromR, fromC, toR, toC, moveData = {}, isRemote = false) {
             const container = document.getElementById('chessboard');
             const fromSqEl = container ? container.children[fromR * 8 + fromC] : null;
             const toSqEl = container ? container.children[toR * 8 + toC] : null;
@@ -813,6 +905,20 @@
             turn = turn === 'W' ? 'B' : 'W';
             updateTurnUI();
             renderBoard({ toR, toC, deltaX, deltaY });
+
+            // Broadcast move to remote opponent if executed locally in online match
+            if (!isRemote && !isVsCpu && socket && onlineRoomId) {
+                socket.emit('chess_move', {
+                    roomId: onlineRoomId,
+                    move: {
+                        fromR,
+                        fromC,
+                        toR,
+                        toC,
+                        moveData
+                    }
+                });
+            }
 
             // Check Checkmate / Stalemate Condition for Next Player
             const nextMoves = getAllPlayerMoves(turn);

@@ -178,6 +178,10 @@ io.on('connection', (socket) => {
             clearTimeout(room.cleanupTimeout);
             room.cleanupTimeout = null;
         }
+        if (room.playingDisconnectTimeout) {
+            clearTimeout(room.playingDisconnectTimeout);
+            room.playingDisconnectTimeout = null;
+        }
 
         // --- ROOM MANAGEMENT ---
         // Cleanup: Remove any existing player with the SAME name or socket ID to prevent ghost duplicates on reconnect
@@ -477,18 +481,26 @@ io.on('connection', (socket) => {
             const index = room.players.findIndex(p => p.id === socket.id);
             if (index !== -1) {
                 const leaver = room.players.splice(index, 1)[0];
-                io.to(roomId).emit('player_left', { leaver, players: room.players });
-
-                if (room.players.length === 0) {
-                    // Keep rooms alive for 2 minutes to allow page transitions / reconnection
-                    console.log(`Room ${roomId} has 0 players - keeping alive for reconnection.`);
-                    if (room.cleanupTimeout) clearTimeout(room.cleanupTimeout);
-                    room.cleanupTimeout = setTimeout(() => {
-                        if (rooms.has(roomId) && rooms.get(roomId).players.length === 0) {
-                            rooms.delete(roomId);
-                            console.log(`Room ${roomId} cleaned up after timeout.`);
-                        }
-                    }, 2 * 60 * 1000); // 2 minutes
+                
+                // If match is PLAYING, preserve room state during page transition (grace period)
+                if (room.gameState === 'PLAYING') {
+                    if (!room.disconnectedPlayers) room.disconnectedPlayers = [];
+                    room.disconnectedPlayers.push(leaver);
+                    
+                    if (!room.playingDisconnectTimeout) {
+                        room.playingDisconnectTimeout = setTimeout(() => {
+                            io.to(roomId).emit('player_left', { leaver, players: room.players });
+                            room.playingDisconnectTimeout = null;
+                            if (room.players.length === 0) {
+                                rooms.delete(roomId);
+                            }
+                        }, 15000); // 15 seconds grace period for navigation to chess_play.html
+                    }
+                } else {
+                    io.to(roomId).emit('player_left', { leaver, players: room.players });
+                    if (room.players.length === 0) {
+                        rooms.delete(roomId);
+                    }
                 }
             }
         });
