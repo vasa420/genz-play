@@ -814,6 +814,308 @@
                 display: flex !important;
             }
         }
+
+        /* COLLECTION & INVENTORY MODAL STYLES */
+        .collection-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(4, 8, 18, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .collection-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .collection-modal-card {
+            background: rgba(13, 21, 39, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), 0 0 45px rgba(37, 99, 235, 0.3);
+            border-radius: 24px;
+            width: 860px;
+            max-width: 94vw;
+            height: 590px;
+            max-height: 90vh;
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform: translateY(40px) scale(0.95);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .collection-modal-overlay.active .collection-modal-card {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .collection-modal-overlay.closing .collection-modal-card {
+            transform: translateY(50px) scale(0.94);
+            opacity: 0;
+            transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+        }
+
+        .collection-modal-overlay.closing {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        /* Neon Glow & Bag Bounce Micro-interactions */
+        .menu-nav-item.collection-glow {
+            animation: collectionNeonGlow 0.45s ease-out;
+            border-color: #c084fc !important;
+            box-shadow: 0 0 25px rgba(192, 132, 252, 0.6), 0 0 15px rgba(56, 189, 248, 0.5) !important;
+        }
+
+        @keyframes collectionNeonGlow {
+            0% { transform: scale(0.98); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .item-icon.bag-bounce {
+            animation: bagOpenBounce 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bagOpenBounce {
+            0% { transform: scale(1) rotate(0deg); }
+            40% { transform: scale(1.5) rotate(-16deg); filter: drop-shadow(0 0 18px #c084fc); }
+            70% { transform: scale(1.25) rotate(12deg); filter: drop-shadow(0 0 22px #38bdf8); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .collection-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .collection-header-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bag-icon-header {
+            font-size: 24px;
+            filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.6));
+        }
+
+        .collection-stats-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .collection-stat-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .collection-stat-pill strong { color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+
+        .btn-close-collection {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close-collection:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ffffff;
+            transform: scale(1.03);
+        }
+
+        .collection-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .collection-filter-tab {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .collection-filter-tab:hover { color: #ffffff; background: #0f182d; }
+        .collection-filter-tab.active {
+            background: var(--primary-blue);
+            color: #ffffff;
+            border-color: var(--primary-blue-hover);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .collection-items-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-top: 14px;
+        }
+
+        .collection-item-card {
+            background: #080d19;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+            position: relative;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        .collection-item-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25), 0 0 15px rgba(37, 99, 235, 0.2);
+        }
+
+        .collection-item-card.equipped-active {
+            border: 2px solid var(--accent-cyan);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), #080d19);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Rare Item Animated Gold & Purple Border */
+        .collection-item-card.rare-item {
+            border: 1.5px solid transparent;
+            background-image: linear-gradient(#080d19, #080d19), linear-gradient(135deg, #fbbf24, #c084fc, #38bdf8);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            animation: rareBorderGlow 3s infinite linear;
+        }
+
+        @keyframes rareBorderGlow {
+            0% { filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4)); }
+            50% { filter: drop-shadow(0 0 14px rgba(192, 132, 252, 0.7)); }
+            100% { filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4)); }
+        }
+
+        .collection-item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .item-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(37, 99, 235, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .item-rarity-tag {
+            font-size: 9.5px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rarity-common { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #475569; }
+        .rarity-rare { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .rarity-epic { background: rgba(192, 132, 252, 0.15); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.4); }
+        .rarity-legendary { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.5); }
+
+        .item-title-name { font-size: 14px; font-weight: 800; color: #ffffff; margin-top: 4px; }
+        .item-desc-text { font-size: 11px; color: var(--text-muted); line-height: 1.35; margin-top: 2px; }
+
+        .btn-equip-item {
+            width: 100%;
+            padding: 9px;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .btn-equip-item:hover { background: var(--primary-blue-hover); }
+        .btn-equip-item:active { transform: scale(0.98); }
+
+        .equipped-pill-badge {
+            width: 100%;
+            padding: 8px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 8px;
+            color: var(--accent-cyan);
+            font-size: 11.5px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .locked-pill-badge {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
     </style>
 </head>
 <body>
@@ -848,9 +1150,9 @@
                     <span class="item-arrow">›</span>
                 </a>
 
-                <div class="menu-nav-item" onclick="alert('🎒 Skin & Piece Collection: Classic Wood, Dark Neon, Ocean Blue unlocked!')">
+                <div class="menu-nav-item collection-nav-trigger" onclick="openCollectionModal(event)">
                     <div class="item-left">
-                        <span class="item-icon">🎒</span>
+                        <span class="item-icon">👜</span>
                         <span>2. COLLECTIONS</span>
                     </div>
                     <span class="item-arrow">›</span>
@@ -1073,9 +1375,9 @@
                         <span class="item-arrow">›</span>
                     </a>
 
-                    <div class="menu-nav-item" onclick="alert('Skin & Piece Collection is unlocked through Grandmaster level achievements!')">
+                    <div class="menu-nav-item collection-nav-trigger" onclick="openCollectionModal(event)">
                         <div class="item-left">
-                            <span class="item-icon">🎒</span>
+                            <span class="item-icon">👜</span>
                             <span>COLLECTION</span>
                         </div>
                         <span class="item-arrow">›</span>
@@ -1171,7 +1473,226 @@
         </div>
     </nav>
 
+    <!-- Glassmorphism Collection & Inventory Modal -->
+    <div class="collection-modal-overlay" id="collection-modal-overlay">
+        <div class="collection-modal-card">
+            
+            <div class="collection-header-row">
+                <div class="collection-header-title">
+                    <span class="bag-icon-header">👜</span>
+                    <span>ARENA COLLECTION & INVENTORY</span>
+                </div>
+                
+                <div class="collection-stats-group">
+                    <div class="collection-stat-pill">
+                        <span>🔓 UNLOCKED:</span> <strong id="unlocked-count-text">8/12</strong>
+                    </div>
+                    <div class="collection-stat-pill">
+                        <span>👑 RARE ITEMS:</span> <strong id="rare-count-text">3</strong>
+                    </div>
+                </div>
+
+                <button class="btn-close-collection" onclick="closeCollectionModal()" title="Back to Chess">
+                    ✕ BACK TO CHESS
+                </button>
+            </div>
+
+            <div class="collection-filter-bar">
+                <button class="collection-filter-tab active" onclick="setCollectionFilter('all', this)">ALL ITEMS</button>
+                <button class="collection-filter-tab" onclick="setCollectionFilter('skins', this)">♟️ PIECES & SKINS</button>
+                <button class="collection-filter-tab" onclick="setCollectionFilter('themes', this)">🎨 BOARD THEMES</button>
+                <button class="collection-filter-tab" onclick="setCollectionFilter('badges', this)">🏆 BADGES</button>
+                <button class="collection-filter-tab" onclick="setCollectionFilter('gifts', this)">🎁 GIFTS</button>
+                <button class="collection-filter-tab" onclick="setCollectionFilter('rare', this)">✨ RARE ITEMS</button>
+            </div>
+
+            <div class="collection-items-grid" id="collection-items-grid">
+                <!-- Rendered by JS -->
+            </div>
+
+        </div>
+    </div>
+
     <script>
+        let activeCollectionFilter = 'all';
+
+        const COLLECTION_ITEMS = [
+            // Skins
+            { id: 'skin_classic', category: 'skins', name: 'Classic Wood Pieces', icon: '♟️', rarity: 'COMMON', rarityClass: 'common', desc: 'Traditional carved wooden chess set.', status: 'EQUIPPED', unlock: 'Unlocked by Default' },
+            { id: 'skin_cyber_queen', category: 'skins', name: 'Cyber Neon Queen', icon: '⚔️', rarity: 'EPIC', rarityClass: 'epic', desc: 'Holographic glowing cyber piece skin set.', status: 'OWNED', unlock: 'Unlocked via Arena Gift Terminal' },
+            { id: 'skin_crown_king', category: 'skins', name: 'Crown King Gold', icon: '👑', rarity: 'LEGENDARY', rarityClass: 'legendary', desc: '24K Golden Crown King with sparkling aura.', status: 'OWNED', unlock: 'Achieved Grandmaster Rank' },
+            { id: 'skin_ocean_frost', category: 'skins', name: 'Ocean Frost Pieces', icon: '❄️', rarity: 'RARE', rarityClass: 'rare', desc: 'Sub-zero crystal frozen ice piece set.', status: 'LOCKED', unlock: 'Reach Level 10 or $300 in Arena' },
+
+            // Themes
+            { id: 'theme_classic', category: 'themes', name: 'Classic Wood Board', icon: '🎨', rarity: 'COMMON', rarityClass: 'common', desc: 'Standard wooden checkered chess board.', status: 'EQUIPPED', unlock: 'Unlocked by Default' },
+            { id: 'theme_dark_gaming', category: 'themes', name: 'Dark Gaming Navy', icon: '🌌', rarity: 'RARE', rarityClass: 'rare', desc: 'Deep navy glassmorphism matrix board.', status: 'OWNED', unlock: 'Unlocked in Settings' },
+            { id: 'theme_lava_crimson', category: 'themes', name: 'Lava Crimson Board', icon: '🔥', rarity: 'EPIC', rarityClass: 'epic', desc: 'Fiery magma board with glowing veins.', status: 'LOCKED', unlock: 'Win 10 Matches in Online Arena' },
+
+            // Badges
+            { id: 'badge_rookie', category: 'badges', name: 'Grandmaster Rookie', icon: '🛡️', rarity: 'COMMON', rarityClass: 'common', desc: 'Official Arena contender badge.', status: 'EQUIPPED', unlock: 'Unlocked by Default' },
+            { id: 'badge_firecracker_king', category: 'badges', name: 'Firecracker Master 🎆', icon: '🎆', rarity: 'EPIC', rarityClass: 'epic', desc: 'Master of celebratory firecracker bursts!', status: 'OWNED', unlock: 'Sent a Firecracker Gift' },
+            { id: 'badge_undefeated_legend', category: 'badges', name: 'Undefeated Legend 👑', icon: '🏆', rarity: 'LEGENDARY', rarityClass: 'legendary', desc: 'Exclusive badge for top division players.', status: 'LOCKED', unlock: 'Reach Top 3 in Top Gifters Leaderboard' },
+
+            // Gifts
+            { id: 'gift_diwali_pack', category: 'gifts', name: 'Diwali Cracker Pack', icon: '🎆', rarity: 'EPIC', rarityClass: 'epic', desc: 'Celebratory fireworks reward pack.', status: 'OWNED', unlock: 'Claimed in Gift Terminal' },
+            { id: 'gift_gold_chest', category: 'gifts', name: '250 Gold Chest', icon: '📦', rarity: 'RARE', rarityClass: 'rare', desc: 'Contains 250 Arena Coins.', status: 'OWNED', unlock: 'Received from Friend' },
+
+            // Rare Special
+            { id: 'rare_cosmic_queen', category: 'rare', name: 'Cosmic Diamond Queen 💎', icon: '💎', rarity: 'MYTHIC LEGENDARY', rarityClass: 'legendary', desc: 'Ultra-rare animated prism diamond piece with rainbow particle trail.', status: 'OWNED', unlock: 'Exclusive Special Achievement' }
+        ];
+
+        function triggerCollectionSparkleBurst(originX, originY) {
+            const sparkles = ['✨', '✦', '★', '💜', '💎'];
+            for (let i = 0; i < 18; i++) {
+                const el = document.createElement('span');
+                el.innerText = sparkles[Math.floor(Math.random() * sparkles.length)];
+                el.style.cssText = `
+                    position: fixed;
+                    left: ${originX}px;
+                    top: ${originY}px;
+                    font-size: ${12 + Math.random() * 14}px;
+                    pointer-events: none;
+                    z-index: 10000;
+                    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease-out;
+                    transform: translate(0, 0) scale(1);
+                    opacity: 1;
+                `;
+                document.body.appendChild(el);
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 40 + Math.random() * 70;
+                const tx = Math.cos(angle) * dist;
+                const ty = Math.sin(angle) * dist - 20;
+
+                requestAnimationFrame(() => {
+                    el.style.transform = `translate(${tx}px, ${ty}px) scale(0.4) rotate(${Math.random() * 180}deg)`;
+                    el.style.opacity = '0';
+                });
+
+                setTimeout(() => el.remove(), 480);
+            }
+        }
+
+        function openCollectionModal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const targetElem = event ? event.currentTarget : document.querySelector('.collection-nav-trigger');
+            const iconElem = targetElem ? targetElem.querySelector('.item-icon') : null;
+            
+            if (targetElem) targetElem.classList.add('collection-glow');
+            if (iconElem) iconElem.classList.add('bag-bounce');
+
+            const rect = targetElem ? targetElem.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+            const clickX = event && event.clientX ? event.clientX : (rect.left + rect.width / 2);
+            const clickY = event && event.clientY ? event.clientY : (rect.top + rect.height / 2);
+
+            triggerCollectionSparkleBurst(clickX, clickY);
+
+            setTimeout(() => {
+                if (targetElem) targetElem.classList.remove('collection-glow');
+                if (iconElem) iconElem.classList.remove('bag-bounce');
+                
+                const modal = document.getElementById('collection-modal-overlay');
+                modal.classList.remove('closing');
+                modal.classList.add('active');
+
+                renderCollectionItems();
+            }, 240);
+        }
+
+        function closeCollectionModal() {
+            const modal = document.getElementById('collection-modal-overlay');
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+            }, 280);
+        }
+
+        function setCollectionFilter(cat, btn) {
+            activeCollectionFilter = cat;
+            document.querySelectorAll('.collection-filter-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderCollectionItems();
+        }
+
+        function equipCollectionItem(itemId) {
+            const item = COLLECTION_ITEMS.find(i => i.id === itemId);
+            if (!item || item.status === 'LOCKED') return;
+
+            // Unequip others in same category
+            COLLECTION_ITEMS.forEach(i => {
+                if (i.category === item.category && i.status === 'EQUIPPED') {
+                    i.status = 'OWNED';
+                }
+            });
+
+            item.status = 'EQUIPPED';
+
+            if (item.category === 'skins') {
+                localStorage.setItem('chess_equipped_skin', item.id);
+            } else if (item.category === 'themes') {
+                localStorage.setItem('chess_equipped_board_theme', item.id);
+                if (typeof setTheme === 'function') {
+                    if (item.id === 'theme_classic') setTheme('classic');
+                    if (item.id === 'theme_dark_gaming') setTheme('dark');
+                    if (item.id === 'theme_lava_crimson') setTheme('ocean');
+                }
+            }
+
+            renderCollectionItems();
+        }
+
+        function renderCollectionItems() {
+            const grid = document.getElementById('collection-items-grid');
+            if (!grid) return;
+
+            const items = COLLECTION_ITEMS.filter(i => {
+                if (activeCollectionFilter === 'all') return true;
+                if (activeCollectionFilter === 'rare') return i.rarityClass === 'legendary' || i.rarity === 'EPIC' || i.category === 'rare';
+                return i.category === activeCollectionFilter;
+            });
+
+            const unlockedCount = COLLECTION_ITEMS.filter(i => i.status !== 'LOCKED').length;
+            const rareCount = COLLECTION_ITEMS.filter(i => i.rarityClass === 'legendary' || i.rarity === 'EPIC' || i.category === 'rare').length;
+
+            document.getElementById('unlocked-count-text').innerText = `${unlockedCount}/${COLLECTION_ITEMS.length}`;
+            document.getElementById('rare-count-text').innerText = `${rareCount}`;
+
+            grid.innerHTML = items.map(item => {
+                const isEquipped = item.status === 'EQUIPPED';
+                const isLocked = item.status === 'LOCKED';
+                const isRare = item.rarityClass === 'legendary' || item.rarity === 'EPIC' || item.category === 'rare';
+
+                let actionHTML = '';
+                if (isEquipped) {
+                    actionHTML = `<div class="equipped-pill-badge">✓ EQUIPPED</div>`;
+                } else if (isLocked) {
+                    actionHTML = `<div class="locked-pill-badge">🔒 ${item.unlock}</div>`;
+                } else {
+                    actionHTML = `<button class="btn-equip-item" onclick="equipCollectionItem('${item.id}')">EQUIP</button>`;
+                }
+
+                return `
+                    <div class="collection-item-card ${isEquipped ? 'equipped-active' : ''} ${isRare ? 'rare-item' : ''}">
+                        <div class="collection-item-top">
+                            <div class="item-icon-box">${item.icon}</div>
+                            <span class="item-rarity-tag rarity-${item.rarityClass || 'common'}">${item.rarity}</span>
+                        </div>
+                        <div>
+                            <div class="item-title-name">${item.name}</div>
+                            <div class="item-desc-text">${item.desc}</div>
+                        </div>
+                        <div>
+                            ${actionHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function registerActiveTabGuestPlayer(uid) {
             let registered = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
             let existingIndex = registered.findIndex(p => p.id === uid);
