@@ -189,22 +189,28 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            position: relative;
         }
 
-        /* SEND GIFT PANEL */
+        /* SEND GIFT PANEL - GLASSMORPHISM SLIDE UP */
         .gifting-card-container {
             width: 100%;
             max-width: 920px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 24px 28px;
+            background: rgba(13, 21, 39, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 20px;
+            padding: 26px 30px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(37, 99, 235, 0.25);
             max-height: 100%;
             overflow-y: auto;
+            transform: translateY(0);
+            opacity: 1;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
         }
 
         .section-block {
@@ -246,18 +252,18 @@
             padding: 12px 14px 12px 42px;
             background: var(--input-bg);
             border: 1px solid var(--card-border);
-            border-radius: 8px;
+            border-radius: 10px;
             color: #ffffff;
             font-family: 'Outfit', sans-serif;
             font-size: 13px;
             outline: none;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .search-input-field::placeholder { color: #64748b; }
         .search-input-field:focus {
             border-color: var(--primary-blue);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
         }
 
         .recipient-status-card {
@@ -311,7 +317,7 @@
         .gift-pack-card {
             background: var(--input-bg);
             border: 1px solid var(--card-border);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 16px 10px;
             display: flex;
             flex-direction: column;
@@ -321,17 +327,19 @@
             text-align: center;
             cursor: pointer;
             position: relative;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .gift-pack-card:hover {
-            border-color: #334155;
+            border-color: rgba(56, 189, 248, 0.5);
             background: #0f182d;
+            transform: translateY(-2px);
         }
 
         .gift-pack-card.selected {
-            background: rgba(37, 99, 235, 0.12);
+            background: rgba(37, 99, 235, 0.16);
             border: 2px solid var(--primary-blue);
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
         }
 
         .gift-pack-card.selected .check-circle-badge { display: flex; }
@@ -352,9 +360,18 @@
             justify-content: center;
         }
 
-        .gift-pack-icon { font-size: 32px; margin-bottom: 2px; }
+        .gift-pack-icon {
+            font-size: 32px;
+            margin-bottom: 2px;
+            transition: transform 0.3s ease;
+        }
+
+        .gift-pack-card:hover .gift-pack-icon {
+            transform: scale(1.15) rotate(-4deg);
+        }
+
         .gift-pack-name { font-size: 12.5px; font-weight: 700; color: #ffffff; line-height: 1.2; }
-        .gift-pack-price { font-size: 12.5px; font-weight: 700; color: var(--primary-blue-hover); margin-top: 2px; }
+        .gift-pack-price { font-size: 12.5px; font-weight: 700; color: var(--accent-cyan); margin-top: 2px; }
 
         .note-textarea-field {
             width: 100%;
@@ -362,27 +379,29 @@
             padding: 12px 14px;
             background: var(--input-bg);
             border: 1px solid var(--card-border);
-            border-radius: 8px;
+            border-radius: 10px;
             color: #ffffff;
             font-family: 'Outfit', sans-serif;
             font-size: 13px;
             outline: none;
             resize: none;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .note-textarea-field::placeholder { color: #64748b; }
         .note-textarea-field:focus {
             border-color: var(--primary-blue);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
         }
 
+        /* PREMIUM ANIMATED BUTTON WITH GLOW RIPPLE & ICON FLOAT & SCALE DOWN ON CLICK */
         .btn-send-gift-main {
+            position: relative;
             width: 100%;
             padding: 14px;
-            background: var(--primary-blue);
-            border: none;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 12px;
             color: #ffffff;
             font-family: 'Outfit', sans-serif;
             font-size: 14.5px;
@@ -391,87 +410,52 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            position: relative;
+            gap: 10px;
             overflow: hidden;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-                        background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-                        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-                        filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 25px rgba(37, 99, 235, 0.35);
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, box-shadow 0.2s ease;
             margin-top: 4px;
         }
 
-        /* Subtle Background Light Sweep (Occasional Left-to-Right) */
-        .btn-send-gift-main::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -120%;
-            width: 80%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.12) 50%,
-                transparent 100%
-            );
-            transform: skewX(-20deg);
-            pointer-events: none;
-            animation: subtleLightSweep 7s infinite ease-in-out;
-        }
-
-        @keyframes subtleLightSweep {
-            0%, 75% { left: -120%; }
-            100% { left: 180%; }
-        }
-
-        /* Hover State: 1-2px Upward, Subtle Brightness & Soft Blue Glow */
         .btn-send-gift-main:hover {
-            background: var(--primary-blue-hover);
-            transform: translateY(-2px);
-            filter: brightness(1.06);
-            box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45), 0 0 12px rgba(56, 189, 248, 0.25);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 8px 30px rgba(37, 99, 235, 0.5), 0 0 15px rgba(56, 189, 248, 0.4);
         }
 
-        /* Gift Icon Bounce/Tilt Animation on Hover */
-        .btn-gift-icon {
-            display: inline-block;
-            transition: transform 0.2s ease;
-        }
-
-        .btn-send-gift-main:hover .btn-gift-icon {
-            animation: iconTiltBounce 0.45s ease-out 1;
-        }
-
-        @keyframes iconTiltBounce {
-            0% { transform: scale(1) rotate(0deg); }
-            30% { transform: scale(1.18) rotate(-12deg); }
-            60% { transform: scale(1.1) rotate(8deg); }
-            85% { transform: scale(1.02) rotate(-3deg); }
-            100% { transform: scale(1) rotate(0deg); }
-        }
-
-        /* Mouse Click / Active Press-Down Effect */
         .btn-send-gift-main:active {
-            transform: translateY(0px) scale(0.98);
-            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
-            filter: brightness(0.98);
-            transition: transform 0.08s ease-out, filter 0.08s ease-out;
+            transform: scale(0.98) !important;
         }
 
-        /* Restrained Click Ripple Effect */
-        .btn-ripple-effect {
+        .btn-icon-float {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-send-gift-main:hover .btn-icon-float {
+            animation: iconBounceFloat 0.8s ease infinite alternate;
+        }
+
+        @keyframes iconBounceFloat {
+            0% { transform: translateY(0) scale(1) rotate(0deg); }
+            50% { transform: translateY(-4px) scale(1.2) rotate(-8deg); }
+            100% { transform: translateY(-2px) scale(1.15) rotate(8deg); }
+        }
+
+        /* Glowing Dynamic Ripple */
+        .glowing-ripple {
             position: absolute;
             border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.7) 0%, rgba(37, 99, 235, 0.4) 45%, transparent 70%);
             transform: scale(0);
-            animation: rippleWave 0.45s ease-out forwards;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(37, 99, 235, 0.15) 60%, transparent 100%);
+            animation: rippleEffect 0.65s ease-out;
             pointer-events: none;
         }
 
-        @keyframes rippleWave {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(2.8); opacity: 0; }
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4.5);
+                opacity: 0;
+            }
         }
 
         /* ============================================================ */
@@ -561,16 +545,21 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: background 0.2s ease, transform 0.15s ease;
             margin-top: 4px;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-sidebar-send:hover { background: var(--primary-blue-hover); }
+        .btn-sidebar-send:active { transform: scale(0.98); }
 
         /* Right Main Terminal Card */
         .inbox-main-card {
             flex: 1;
-            background: var(--card-bg);
+            background: rgba(13, 21, 39, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--card-border);
             border-radius: 16px;
             padding: 24px;
@@ -702,8 +691,10 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease, transform 0.15s ease;
             margin-top: 2px;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-send-gift-outlined:hover {
@@ -711,6 +702,8 @@
             color: #ffffff;
             box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
         }
+
+        .btn-send-gift-outlined:active { transform: scale(0.98); }
 
         /* Bottom Trust Banner */
         .inbox-trust-banner {
@@ -775,10 +768,13 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease, transform 0.15s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-claim-item:hover { opacity: 0.9; }
+        .btn-claim-item:active { transform: scale(0.98); }
 
         .btn-decline-item {
             padding: 7px 12px;
@@ -790,10 +786,13 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease, transform 0.15s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-decline-item:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
+        .btn-decline-item:active { transform: scale(0.98); }
 
         .btn-details-item {
             padding: 7px 12px;
@@ -805,10 +804,13 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease, transform 0.15s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-details-item:hover { color: #ffffff; border-color: #475569; }
+        .btn-details-item:active { transform: scale(0.98); }
 
         /* STATUS BADGES */
         .status-badge {
@@ -1058,11 +1060,15 @@
             font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease, transform 0.15s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .btn-settings-action:active { transform: scale(0.98); }
 
         .btn-save-settings {
             background: var(--primary-blue);
@@ -1080,32 +1086,63 @@
 
         .btn-reset-settings:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
 
-        /* Modal Details Styling */
+        /* GLASSMORPHISM MODAL OVERLAY & ANIMATIONS */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: none;
+            background: rgba(4, 8, 18, 0.78);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            backdrop-filter: blur(8px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .modal-card {
-            background: #0f172a;
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 28px;
-            width: 420px;
-            max-width: 90%;
+            background: rgba(13, 21, 39, 0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(37, 99, 235, 0.35);
+            border-radius: 20px;
+            padding: 32px 28px;
+            width: 440px;
+            max-width: 92%;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             position: relative;
+            transform: translateY(80px) scale(0.96);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .modal-icon { font-size: 44px; margin-bottom: 8px; }
-        .modal-title { font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 6px; text-transform: uppercase; }
+        .modal-overlay.active .modal-card {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        /* Dismiss Close Animation */
+        .modal-overlay.closing .modal-card {
+            transform: translateY(60px) scale(0.95);
+            opacity: 0;
+            transition: transform 0.28s ease-in, opacity 0.28s ease-in;
+        }
+
+        .modal-overlay.closing {
+            opacity: 0;
+            transition: opacity 0.28s ease-in;
+        }
+
+        .modal-icon { font-size: 44px; margin-bottom: 8px; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5)); }
+        .modal-title { font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
         .modal-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
 
         .modal-details-box {
@@ -1130,20 +1167,45 @@
         .modal-detail-key { color: var(--text-muted); }
         .modal-detail-val { font-weight: 700; color: #ffffff; }
 
+        .modal-buttons-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
         .modal-close-btn {
             width: 100%;
             padding: 12px;
-            background: var(--primary-blue);
-            border: none;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 10px;
             color: #ffffff;
             font-weight: 700;
             font-size: 13px;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: background 0.2s ease, transform 0.15s ease;
+            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
+            position: relative;
+            overflow: hidden;
         }
 
         .modal-close-btn:hover { background: var(--primary-blue-hover); }
+        .modal-close-btn:active { transform: scale(0.98); }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-cancel:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
 
         @media (max-width: 860px) {
             .inbox-two-col-layout { flex-direction: column; max-height: none; }
@@ -1250,9 +1312,9 @@
                 <textarea class="note-textarea-field" id="gift-message-input" placeholder="Write a message to your friend (e.g. 'Good luck in the upcoming tournament!')"></textarea>
             </div>
 
-            <!-- Send Gift Button -->
-            <button class="btn-send-gift-main" onclick="processSendGift()" onmousedown="createSubtleRipple(event)">
-                <span class="btn-gift-icon">🎁</span> Send Gift Now
+            <!-- Send Gift Button with Floating Icon & Micro-interactions -->
+            <button class="btn-send-gift-main" id="btn-send-gift-now" onclick="processSendGift(event)">
+                <span class="btn-icon-float">🎁</span> Send Gift Now
             </button>
 
         </div>
@@ -1347,7 +1409,7 @@
 
     </main>
 
-    <!-- Modal Dialog Overlay (Notice / Action / View Details) -->
+    <!-- Modal Dialog Overlay (Glassmorphism Slide Up / Down) -->
     <div class="modal-overlay" id="status-modal">
         <div class="modal-card">
             <div class="modal-icon" id="modal-icon">✨</div>
@@ -1357,7 +1419,9 @@
             <!-- Optional Details Box inside Modal -->
             <div id="modal-extra-details" style="display: none;"></div>
 
-            <button class="modal-close-btn" id="modal-action-btn" onclick="closeModal()">GREAT!</button>
+            <div class="modal-buttons-group" id="modal-buttons-wrap">
+                <button class="modal-close-btn" id="modal-action-btn" onclick="closeModal()">GREAT!</button>
+            </div>
         </div>
     </div>
 
@@ -1368,29 +1432,7 @@
         let selectedGiftIcon = "🪙";
         let currentSidebarTab = 'inbox';
         let historyFilter = 'all';
-
-        function createSubtleRipple(e) {
-            const btn = e.currentTarget;
-            const circle = document.createElement('span');
-            const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-            const radius = diameter / 2;
-            const rect = btn.getBoundingClientRect();
-            
-            circle.style.width = circle.style.height = `${diameter}px`;
-            circle.style.left = `${e.clientX - rect.left - radius}px`;
-            circle.style.top = `${e.clientY - rect.top - radius}px`;
-            circle.classList.add('btn-ripple-effect');
-
-            const existingRipple = btn.getElementsByClassName('btn-ripple-effect')[0];
-            if (existingRipple) {
-                existingRipple.remove();
-            }
-
-            btn.appendChild(circle);
-            setTimeout(() => {
-                if (circle.parentElement) circle.remove();
-            }, 450);
-        }
+        let pendingConfirmCallback = null;
 
         function getOrGenerateUserId() {
             let uid = localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID');
@@ -1489,6 +1531,28 @@
             }
         }
 
+        // Create Glowing Ripple on Button Click
+        function createGlowingRipple(event) {
+            const btn = event.currentTarget;
+            if (!btn) return;
+
+            const rect = btn.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const diameter = Math.max(rect.width, rect.height);
+            const radius = diameter / 2;
+
+            ripple.style.width = ripple.style.height = `${diameter}px`;
+            ripple.style.left = `${event.clientX - rect.left - radius}px`;
+            ripple.style.top = `${event.clientY - rect.top - radius}px`;
+            ripple.className = 'glowing-ripple';
+
+            const oldRipple = btn.querySelector('.glowing-ripple');
+            if (oldRipple) oldRipple.remove();
+
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 650);
+        }
+
         // Initialize default sample gifts if none exist
         function initSampleGiftsIfEmpty() {
             let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
@@ -1562,6 +1626,11 @@
             document.getElementById('header-user-id').innerText = `ID: #${userId}`;
             initSampleGiftsIfEmpty();
             
+            // Attach ripple effect to interactive buttons
+            document.querySelectorAll('.btn-send-gift-main, .btn-sidebar-send, .btn-send-gift-outlined').forEach(b => {
+                b.addEventListener('click', createGlowingRipple);
+            });
+
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
             if (tabParam && ['inbox', 'sent', 'history', 'top_gifters', 'settings'].includes(tabParam)) {
@@ -1624,32 +1693,7 @@
             return JSON.parse(localStorage.getItem('arena_gift_settings') || JSON.stringify(defaults));
         }
 
-        function processSendGift() {
-            const recipientInput = document.getElementById('recipient-id-input').value.trim();
-            if (!recipientInput) {
-                showModal('⚠️', 'ENTER USER ID', 'Please enter a 6-digit User ID or friend name to send a gift.');
-                return;
-            }
-
-            const recipientPlayer = findRegisteredPlayer(recipientInput);
-            
-            if (!recipientPlayer) {
-                showModal('❌', 'ENTERED ID WAS INVALID', `Entered ID "${recipientInput}" was invalid! No registered player was found with this ID.`);
-                return;
-            }
-
-            const settings = getSettings();
-            if (settings.confirmExpensive && selectedGiftPrice >= settings.expensiveThreshold) {
-                if (!confirm(`Confirmation required: You are sending an expensive gift "${selectedGiftName}" ($${selectedGiftPrice}.00) to ${recipientPlayer.name}. Proceed?`)) {
-                    return;
-                }
-            }
-
-            if (walletBalance < selectedGiftPrice) {
-                showModal('🚫', 'INSUFFICIENT FUNDS', `Your wallet balance ($${walletBalance.toFixed(2)}) is insufficient for $${selectedGiftPrice}.00.`);
-                return;
-            }
-
+        function executeActualGiftSend(recipientPlayer) {
             walletBalance -= selectedGiftPrice;
             document.getElementById('wallet-balance-display').innerText = `$${walletBalance.toFixed(2)}`;
 
@@ -1682,6 +1726,41 @@
             document.getElementById('recipient-status-badge').style.display = 'none';
 
             updateInboxBadgeCounts();
+        }
+
+        function processSendGift(event) {
+            if (event) createGlowingRipple(event);
+
+            const recipientInput = document.getElementById('recipient-id-input').value.trim();
+            if (!recipientInput) {
+                showModal('⚠️', 'ENTER USER ID', 'Please enter a 6-digit User ID or friend name to send a gift.');
+                return;
+            }
+
+            const recipientPlayer = findRegisteredPlayer(recipientInput);
+            
+            if (!recipientPlayer) {
+                showModal('❌', 'ENTERED ID WAS INVALID', `Entered ID "${recipientInput}" was invalid! No registered player was found with this ID.`);
+                return;
+            }
+
+            if (walletBalance < selectedGiftPrice) {
+                showModal('🚫', 'INSUFFICIENT FUNDS', `Your wallet balance ($${walletBalance.toFixed(2)}) is insufficient for $${selectedGiftPrice}.00.`);
+                return;
+            }
+
+            const settings = getSettings();
+            if (settings.confirmExpensive && selectedGiftPrice >= settings.expensiveThreshold) {
+                showConfirmModal(
+                    '🔐',
+                    'CONFIRM EXPENSIVE GIFT',
+                    `You are sending an expensive gift "${selectedGiftName}" ($${selectedGiftPrice}.00) to ${recipientPlayer.name}. Confirm transaction?`,
+                    () => executeActualGiftSend(recipientPlayer)
+                );
+                return;
+            }
+
+            executeActualGiftSend(recipientPlayer);
         }
 
         function refreshTerminalWithAnimation(event) {
@@ -1807,14 +1886,14 @@
         }
 
         function declineGiftItem(giftId) {
-            if (!confirm('Are you sure you want to decline this gift?')) return;
-            
-            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
-            sharedGifts = sharedGifts.map(g => g.id === giftId ? { ...g, claimed: false, status: 'Declined' } : g);
-            localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
+            showConfirmModal('⚠️', 'DECLINE GIFT?', 'Are you sure you want to decline this gift?', () => {
+                let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+                sharedGifts = sharedGifts.map(g => g.id === giftId ? { ...g, claimed: false, status: 'Declined' } : g);
+                localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
 
-            showModal('🚫', 'GIFT DECLINED', 'The gift was declined and removed from your inbox.');
-            renderCurrentTerminalTab();
+                showModal('🚫', 'GIFT DECLINED', 'The gift was declined and removed from your inbox.');
+                renderCurrentTerminalTab();
+            });
         }
 
         /* 2. SENT GIFTS MODULE */
@@ -2125,10 +2204,11 @@
         }
 
         function resetDefaultSettings() {
-            if (!confirm('Reset all gift settings back to defaults?')) return;
-            localStorage.removeItem('arena_gift_settings');
-            showModal('🔄', 'SETTINGS RESET', 'Gift terminal settings restored to factory defaults.');
-            renderCurrentTerminalTab();
+            showConfirmModal('🔄', 'RESET SETTINGS?', 'Are you sure you want to restore factory default settings?', () => {
+                localStorage.removeItem('arena_gift_settings');
+                showModal('🔄', 'SETTINGS RESET', 'Gift terminal settings restored to factory defaults.');
+                renderCurrentTerminalTab();
+            });
         }
 
         /* VIEW GIFT DETAILS MODAL */
@@ -2177,19 +2257,19 @@
             extraDetailsDiv.innerHTML = detailsHTML;
             extraDetailsDiv.style.display = 'block';
 
-            const actionBtn = document.getElementById('modal-action-btn');
+            const buttonWrap = document.getElementById('modal-buttons-wrap');
             if (isInboxPending) {
-                actionBtn.innerText = `CLAIM $${gift.giftPrice}.00 NOW`;
-                actionBtn.onclick = () => {
-                    closeModal();
-                    claimGiftItem(gift.id, gift.giftPrice);
-                };
+                buttonWrap.innerHTML = `<button class="modal-close-btn" onclick="claimFromModal('${gift.id}', ${gift.giftPrice})">CLAIM $${gift.giftPrice}.00 NOW</button>`;
             } else {
-                actionBtn.innerText = 'CLOSE DETAILS';
-                actionBtn.onclick = closeModal;
+                buttonWrap.innerHTML = `<button class="modal-close-btn" onclick="closeModal()">CLOSE DETAILS</button>`;
             }
 
-            document.getElementById('status-modal').style.display = 'flex';
+            openModalContainer();
+        }
+
+        function claimFromModal(giftId, price) {
+            closeModal();
+            setTimeout(() => claimGiftItem(giftId, price), 250);
         }
 
         function showModal(icon, title, desc) {
@@ -2198,15 +2278,50 @@
             document.getElementById('modal-desc').innerText = desc;
             document.getElementById('modal-extra-details').style.display = 'none';
             
-            const actionBtn = document.getElementById('modal-action-btn');
-            actionBtn.innerText = 'GREAT!';
-            actionBtn.onclick = closeModal;
+            const buttonWrap = document.getElementById('modal-buttons-wrap');
+            buttonWrap.innerHTML = `<button class="modal-close-btn" onclick="closeModal()">GREAT!</button>`;
 
-            document.getElementById('status-modal').style.display = 'flex';
+            openModalContainer();
+        }
+
+        function showConfirmModal(icon, title, desc, onConfirm) {
+            document.getElementById('modal-icon').innerText = icon;
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-extra-details').style.display = 'none';
+
+            pendingConfirmCallback = onConfirm;
+
+            const buttonWrap = document.getElementById('modal-buttons-wrap');
+            buttonWrap.innerHTML = `
+                <button class="modal-btn modal-btn-confirm" onclick="triggerConfirmAction()">CONFIRM</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">CANCEL</button>
+            `;
+
+            openModalContainer();
+        }
+
+        function triggerConfirmAction() {
+            closeModal();
+            if (typeof pendingConfirmCallback === 'function') {
+                const cb = pendingConfirmCallback;
+                pendingConfirmCallback = null;
+                setTimeout(cb, 250);
+            }
+        }
+
+        function openModalContainer() {
+            const modal = document.getElementById('status-modal');
+            modal.classList.remove('closing');
+            modal.classList.add('active');
         }
 
         function closeModal() {
-            document.getElementById('status-modal').style.display = 'none';
+            const modal = document.getElementById('status-modal');
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+            }, 280);
         }
 
         window.addEventListener('storage', (e) => {
