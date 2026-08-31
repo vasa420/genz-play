@@ -879,6 +879,19 @@
                 player = allPlayers.find(p => p.name.toLowerCase().includes(cleanQuery));
             }
 
+            // 4. Any valid 6-digit User ID is valid! (e.g. 817029)
+            if (!player) {
+                const digitOnlyMatch = cleanQuery.match(/^\d{6}$/);
+                if (digitOnlyMatch) {
+                    player = {
+                        id: digitOnlyMatch[0],
+                        name: `Player #${digitOnlyMatch[0]}`,
+                        avatar: '👤',
+                        status: 'Online'
+                    };
+                }
+            }
+
             return player || null;
         }
 
