@@ -392,13 +392,86 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: background-color 0.2s ease, transform 0.15s ease;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             margin-top: 4px;
         }
 
+        /* Subtle Background Light Sweep (Occasional Left-to-Right) */
+        .btn-send-gift-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.12) 50%,
+                transparent 100%
+            );
+            transform: skewX(-20deg);
+            pointer-events: none;
+            animation: subtleLightSweep 7s infinite ease-in-out;
+        }
+
+        @keyframes subtleLightSweep {
+            0%, 75% { left: -120%; }
+            100% { left: 180%; }
+        }
+
+        /* Hover State: 1-2px Upward, Subtle Brightness & Soft Blue Glow */
         .btn-send-gift-main:hover {
             background: var(--primary-blue-hover);
-            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+            box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45), 0 0 12px rgba(56, 189, 248, 0.25);
+        }
+
+        /* Gift Icon Bounce/Tilt Animation on Hover */
+        .btn-gift-icon {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-send-gift-main:hover .btn-gift-icon {
+            animation: iconTiltBounce 0.45s ease-out 1;
+        }
+
+        @keyframes iconTiltBounce {
+            0% { transform: scale(1) rotate(0deg); }
+            30% { transform: scale(1.18) rotate(-12deg); }
+            60% { transform: scale(1.1) rotate(8deg); }
+            85% { transform: scale(1.02) rotate(-3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Mouse Click / Active Press-Down Effect */
+        .btn-send-gift-main:active {
+            transform: translateY(0px) scale(0.98);
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+            filter: brightness(0.98);
+            transition: transform 0.08s ease-out, filter 0.08s ease-out;
+        }
+
+        /* Restrained Click Ripple Effect */
+        .btn-ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: rippleWave 0.45s ease-out forwards;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(37, 99, 235, 0.15) 60%, transparent 100%);
+            pointer-events: none;
+        }
+
+        @keyframes rippleWave {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2.8); opacity: 0; }
         }
 
         /* ============================================================ */
@@ -1178,8 +1251,8 @@
             </div>
 
             <!-- Send Gift Button -->
-            <button class="btn-send-gift-main" onclick="processSendGift()">
-                <span>🎁</span> Send Gift Now
+            <button class="btn-send-gift-main" onclick="processSendGift()" onmousedown="createSubtleRipple(event)">
+                <span class="btn-gift-icon">🎁</span> Send Gift Now
             </button>
 
         </div>
@@ -1295,6 +1368,29 @@
         let selectedGiftIcon = "🪙";
         let currentSidebarTab = 'inbox';
         let historyFilter = 'all';
+
+        function createSubtleRipple(e) {
+            const btn = e.currentTarget;
+            const circle = document.createElement('span');
+            const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+            const radius = diameter / 2;
+            const rect = btn.getBoundingClientRect();
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${e.clientX - rect.left - radius}px`;
+            circle.style.top = `${e.clientY - rect.top - radius}px`;
+            circle.classList.add('btn-ripple-effect');
+
+            const existingRipple = btn.getElementsByClassName('btn-ripple-effect')[0];
+            if (existingRipple) {
+                existingRipple.remove();
+            }
+
+            btn.appendChild(circle);
+            setTimeout(() => {
+                if (circle.parentElement) circle.remove();
+            }, 450);
+        }
 
         function getOrGenerateUserId() {
             let uid = localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID');
