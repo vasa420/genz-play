@@ -1348,12 +1348,38 @@
     </div>
 
     <script>
+        function registerActiveTabGuestPlayer(uid) {
+            let registered = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
+            let existingIndex = registered.findIndex(p => p.id === uid);
+            
+            const playerName = localStorage.getItem('playerName') || `Guest #${uid}`;
+            const playerAvatar = localStorage.getItem('playerAvatar') || '🎮';
+
+            if (existingIndex !== -1) {
+                registered[existingIndex].status = 'Online';
+                registered[existingIndex].lastActive = Date.now();
+            } else {
+                registered.push({
+                    id: uid,
+                    name: playerName,
+                    avatar: playerAvatar,
+                    status: 'Online',
+                    totalGiftsSent: 0,
+                    totalValueSent: 0,
+                    lastActive: Date.now()
+                });
+            }
+
+            localStorage.setItem('arena_registered_players', JSON.stringify(registered));
+        }
+
         function getOrGenerateUserId() {
-            let uid = localStorage.getItem('arena_user_6digit_id');
+            let uid = sessionStorage.getItem('arena_tab_unique_user_id');
             if (!uid || uid.length !== 6 || isNaN(uid)) {
                 uid = Math.floor(100000 + Math.random() * 900000).toString();
-                localStorage.setItem('arena_user_6digit_id', uid);
+                sessionStorage.setItem('arena_tab_unique_user_id', uid);
             }
+            registerActiveTabGuestPlayer(uid);
             return uid;
         }
 
