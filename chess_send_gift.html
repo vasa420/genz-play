@@ -1602,6 +1602,54 @@
             setTimeout(() => ripple.remove(), 650);
         }
 
+        // SYNTHESIZED FIRECRACKER SOUND EFFECT (Web Audio API)
+        function playSynthesizedFirecrackerSound() {
+            try {
+                const settings = getSettings();
+                if (settings.soundEffects === false) return;
+
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                // 1. Initial Launch Rocket Pop
+                const osc = ctx.createOscillator();
+                const oscGain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(160, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.15);
+                oscGain.gain.setValueAtTime(0.3, ctx.currentTime);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.connect(oscGain);
+                oscGain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+
+                // 2. Crackle Sparkle Noise Burst
+                const bufferSize = ctx.sampleRate * 0.35;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2.2);
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.22, ctx.currentTime + 0.05);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1400;
+
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(ctx.destination);
+                noise.start(ctx.currentTime + 0.05);
+            } catch(e) {}
+        }
+
         // HIGH-PERFORMANCE DIGITAL FIRECRACKER CELEBRATION PARTICLE ENGINE (60 FPS)
         function triggerFirecrackerCelebration(originX, originY, onCompleteCallback) {
             const canvas = document.getElementById('firecracker-canvas');
@@ -1613,6 +1661,8 @@
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+
+            playSynthesizedFirecrackerSound();
 
             // Trigger Soft Ambient Screen Glow Pulse
             let screenGlow = document.querySelector('.screen-glow-pulse');
@@ -1629,46 +1679,65 @@
             const sendBtn = document.getElementById('btn-send-gift-now');
             if (sendBtn) {
                 sendBtn.classList.add('bursting');
-                setTimeout(() => sendBtn.classList.remove('bursting'), 700);
+                setTimeout(() => sendBtn.classList.remove('bursting'), 750);
             }
 
-            // Colors: Gold, Cyan/Neon Blue, Purple, Pink, Emerald
-            const colorPalette = ['#fbbf24', '#f59e0b', '#38bdf8', '#2563eb', '#c084fc', '#f472b6', '#34d399', '#ffffff'];
-            const starGlyphs = ['✦', '★', '✨', '❇', '✸'];
+            // Vibrant Diwali Colors: Gold, Flame Orange, Crimson, Cyan/Neon Blue, Purple, Neon Pink, Emerald
+            const colorPalette = ['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#38bdf8', '#2563eb', '#c084fc', '#f472b6', '#34d399', '#ffffff'];
+            const starGlyphs = ['✦', '★', '✨', '❇', '✸', '💥'];
 
             const particles = [];
-            const particleCount = 140;
+            
+            function createParticleCluster(cx, cy, count, speedMultiplier = 1) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = (3 + Math.random() * 15) * speedMultiplier;
+                    const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                    const isGlyph = Math.random() < 0.2;
+                    const isConfetti = !isGlyph && Math.random() < 0.22;
 
-            for (let i = 0; i < particleCount; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 4 + Math.random() * 14;
-                const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
-                const isGlyph = Math.random() < 0.25;
-                const isConfetti = !isGlyph && Math.random() < 0.2;
-
-                particles.push({
-                    x: originX,
-                    y: originY,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - (1 + Math.random() * 3), // slight upward arc
-                    drag: 0.94 + Math.random() * 0.03,
-                    gravity: 0.12 + Math.random() * 0.08,
-                    size: isGlyph ? (12 + Math.random() * 10) : (isConfetti ? (5 + Math.random() * 5) : (3 + Math.random() * 5)),
-                    color: color,
-                    alpha: 1,
-                    decay: 0.014 + Math.random() * 0.016,
-                    isGlyph: isGlyph,
-                    glyph: isGlyph ? starGlyphs[Math.floor(Math.random() * starGlyphs.length)] : '',
-                    isConfetti: isConfetti,
-                    rotation: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.2,
-                    wobble: Math.random() * 10
-                });
+                    particles.push({
+                        x: cx,
+                        y: cy,
+                        history: [],
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - (1.5 + Math.random() * 4), // upward fountain arc
+                        drag: 0.93 + Math.random() * 0.04,
+                        gravity: 0.14 + Math.random() * 0.08,
+                        size: isGlyph ? (12 + Math.random() * 10) : (isConfetti ? (5 + Math.random() * 5) : (2.5 + Math.random() * 4.5)),
+                        color: color,
+                        alpha: 1,
+                        decay: 0.012 + Math.random() * 0.015,
+                        isGlyph: isGlyph,
+                        glyph: isGlyph ? starGlyphs[Math.floor(Math.random() * starGlyphs.length)] : '',
+                        isConfetti: isConfetti,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotSpeed: (Math.random() - 0.5) * 0.25,
+                        wobble: Math.random() * 10
+                    });
+                }
             }
+
+            // Primary Burst at Click / Button Center
+            createParticleCluster(originX, originY, 150, 1);
+
+            // Secondary Rocket Bursts at t = 180ms and t = 360ms
+            setTimeout(() => {
+                const offsetX = originX + (Math.random() > 0.5 ? 140 : -140);
+                const offsetY = Math.max(80, originY - 120);
+                createParticleCluster(offsetX, offsetY, 50, 0.95);
+                playSynthesizedFirecrackerSound();
+            }, 180);
+
+            setTimeout(() => {
+                const offsetX = originX + (Math.random() > 0.5 ? -180 : 180);
+                const offsetY = Math.max(90, originY - 150);
+                createParticleCluster(offsetX, offsetY, 40, 0.85);
+            }, 360);
 
             let animationFrameId;
             const startTime = performance.now();
-            const totalDuration = 1250; // 1.25 seconds celebration
+            const totalDuration = 1350; // 1.35 seconds celebration
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime;
@@ -1681,6 +1750,12 @@
                     if (p.alpha <= 0) continue;
 
                     activeParticles++;
+
+                    // Save history point for sparkler motion trail
+                    if (!p.isGlyph && !p.isConfetti) {
+                        p.history.push({ x: p.x, y: p.y });
+                        if (p.history.length > 3) p.history.shift();
+                    }
 
                     // Update Physics
                     p.vx *= p.drag;
@@ -1697,7 +1772,20 @@
                     ctx.save();
                     ctx.globalAlpha = p.alpha;
                     ctx.shadowColor = p.color;
-                    ctx.shadowBlur = 12;
+                    ctx.shadowBlur = 10;
+
+                    // Render Motion Trail line for sparks
+                    if (!p.isGlyph && !p.isConfetti && p.history.length > 1) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.history[0].x, p.history[0].y);
+                        for (let h = 1; h < p.history.length; h++) {
+                            ctx.lineTo(p.history[h].x, p.history[h].y);
+                        }
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = p.size * 0.8;
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
+                    }
 
                     if (p.isGlyph) {
                         ctx.font = `${p.size}px Outfit, sans-serif`;
@@ -1735,6 +1823,12 @@
 
             requestAnimationFrame(animate);
         }
+
+        window.launchCrackerAnimation = function(x, y) {
+            const posX = x || window.innerWidth / 2;
+            const posY = y || window.innerHeight / 2;
+            triggerFirecrackerCelebration(posX, posY);
+        };
 
         // Initialize default sample gifts if none exist
         function initSampleGiftsIfEmpty() {
