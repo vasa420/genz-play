@@ -289,7 +289,7 @@
                                  data-size="large">
                             </div>
                         </div>
-                        <button onclick="localStorage.setItem('playerName', 'Grandmaster'); enterArena();" 
+                        <button onclick="loginAsGuest()" 
                                 style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 10px; font-weight: 900; letter-spacing: 2px; margin-top: 10px;">
                             CONTINUE AS GUEST
                         </button>
@@ -327,15 +327,63 @@
             }, 600);
         }, 10000);
 
+        function generate6DigitUidFromKey(key) {
+            if (!key) return null;
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash = (hash << 5) - hash + key.charCodeAt(i);
+                hash |= 0;
+            }
+            return (100000 + (Math.abs(hash) % 900000)).toString();
+        }
+
+        function getOrGenerateUniqueUid(userKey, userName, userAvatar) {
+            let uid = userKey ? generate6DigitUidFromKey(userKey) : (localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID'));
+            
+            if (!uid || uid.length !== 6 || isNaN(uid)) {
+                uid = Math.floor(100000 + Math.random() * 900000).toString();
+            }
+
+            localStorage.setItem('arena_user_6digit_id', uid);
+            localStorage.setItem('userUID', uid);
+
+            if (userName) {
+                let extraPlayers = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
+                if (!extraPlayers.some(p => p.id === uid)) {
+                    extraPlayers.push({
+                        id: uid,
+                        name: userName,
+                        avatar: userAvatar || '👑',
+                        status: 'Online'
+                    });
+                    localStorage.setItem('arena_registered_players', JSON.stringify(extraPlayers));
+                }
+            }
+
+            return uid;
+        }
+
+        function loginAsGuest() {
+            const uid = getOrGenerateUniqueUid(null, 'Grandmaster', '👑');
+            localStorage.setItem('playerName', 'Grandmaster');
+            enterArena();
+        }
+
         // Google Login Handler
         window.handleGoogleLogin = function(response) {
             try {
                 const responsePayload = decodeJwtResponse(response.credential);
                 const name = responsePayload.name;
                 const avatar = responsePayload.picture;
+                const accountId = responsePayload.sub || responsePayload.email || name;
+
+                // Generate UNIQUE 6-digit User ID specific to this Google account
+                const uid = getOrGenerateUniqueUid(accountId, name, avatar);
 
                 localStorage.setItem('playerName', name);
                 localStorage.setItem('playerAvatar', avatar);
+                localStorage.setItem('userEmail', responsePayload.email || '');
+                localStorage.setItem('userAccountId', accountId);
                 
                 // Automatically enable arena music upon first secure sign-in 
                 localStorage.setItem('arenaMusicEnabled', 'true');

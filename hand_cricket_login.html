@@ -263,15 +263,53 @@
             }
         });
 
-        function handleSuccess(playerName, playerAvatar) {
+        function generate6DigitUidFromKey(key) {
+            if (!key) return null;
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash = (hash << 5) - hash + key.charCodeAt(i);
+                hash |= 0;
+            }
+            return (100000 + (Math.abs(hash) % 900000)).toString();
+        }
+
+        function getOrGenerateUniqueUid(userKey, userName, userAvatar) {
+            let uid = userKey ? generate6DigitUidFromKey(userKey) : (localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID'));
+            
+            if (!uid || uid.length !== 6 || isNaN(uid)) {
+                uid = Math.floor(100000 + Math.random() * 900000).toString();
+            }
+
+            localStorage.setItem('arena_user_6digit_id', uid);
+            localStorage.setItem('userUID', uid);
+
+            if (userName) {
+                let extraPlayers = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
+                if (!extraPlayers.some(p => p.id === uid)) {
+                    extraPlayers.push({
+                        id: uid,
+                        name: userName,
+                        avatar: userAvatar || '🏏',
+                        status: 'Online'
+                    });
+                    localStorage.setItem('arena_registered_players', JSON.stringify(extraPlayers));
+                }
+            }
+
+            return uid;
+        }
+
+        function handleSuccess(playerName, playerAvatar, userKey) {
             handleFullScreen();
             const finalName = playerName || "CRICKET PLAYER";
+            const uid = getOrGenerateUniqueUid(userKey, finalName, playerAvatar);
+
             localStorage.setItem('playerName', finalName);
             if (playerAvatar) localStorage.setItem('playerAvatar', playerAvatar);
 
             // UI Feedback
             const h2 = document.querySelector('h2');
-            if(h2) h2.innerText = "WELCOME, " + finalName.toUpperCase();
+            if(h2) h2.innerText = "WELCOME, " + finalName.toUpperCase() + " (#" + uid + ")";
             
             // Fast redirect to loading page
             setTimeout(() => {
@@ -301,7 +339,8 @@
                 }).join(''));
 
                 const user = JSON.parse(jsonPayload);
-                handleSuccess(user.name, user.picture);
+                const accountKey = user.sub || user.email || user.name;
+                handleSuccess(user.name, user.picture, accountKey);
 
             } catch (e) {
                 console.error("Login Error:", e);

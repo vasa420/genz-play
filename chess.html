@@ -1236,6 +1236,15 @@
             const name = localStorage.getItem('playerName');
             if (name) document.getElementById('user-display-name').innerText = name.toUpperCase();
             
+            let uid = localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID');
+            if (!uid || uid.length !== 6 || isNaN(uid)) {
+                uid = Math.floor(100000 + Math.random() * 900000).toString();
+                localStorage.setItem('arena_user_6digit_id', uid);
+                localStorage.setItem('userUID', uid);
+            }
+            const idDisplay = document.getElementById('user-id-display');
+            if (idDisplay) idDisplay.innerText = `ID: #${uid}`;
+
             renderBoard();
             updateClock();
             setInterval(updateClock, 1000);
