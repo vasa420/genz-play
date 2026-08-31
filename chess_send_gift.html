@@ -60,7 +60,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--text-muted);
+            color: #38bdf8;
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
@@ -96,7 +96,7 @@
             border-radius: 6px;
             background: var(--badge-blue-bg);
             border: 1px solid var(--badge-blue-border);
-            color: var(--primary-blue-hover);
+            color: #38bdf8;
         }
 
         .wallet-pill {
@@ -122,7 +122,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 40px;
+            gap: 36px;
             flex-shrink: 0;
         }
 
@@ -162,12 +162,22 @@
             box-shadow: 0 -2px 10px rgba(37, 99, 235, 0.6);
         }
 
+        .tab-badge-pill {
+            background: var(--primary-blue);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 2px;
+        }
+
         /* Main Shell Container */
         .gifting-main-shell {
             width: 100%;
-            max-width: 900px;
+            max-width: 1060px;
             flex: 1;
-            padding: 20px 20px;
+            padding: 18px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -175,9 +185,10 @@
             overflow: hidden;
         }
 
-        /* Main Dark Form Card */
+        /* TAB 1: SEND GIFT CONTAINER CARD */
         .gifting-card-container {
             width: 100%;
+            max-width: 900px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 14px;
@@ -411,77 +422,165 @@
             box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
         }
 
-        .btn-send-gift-main:active {
-            transform: scale(0.99);
+        /* ============================================================ */
+        /* TAB 2: TWO-COLUMN INBOX LAYOUT (EXACT SCREENSHOT DESIGN)     */
+        /* ============================================================ */
+
+        .inbox-two-col-layout {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            height: 100%;
+            max-height: 480px;
+            align-items: stretch;
         }
 
-        /* Inbox List Items */
-        .inbox-list-wrap {
+        /* Left Sidebar Menu */
+        .inbox-sidebar-col {
+            width: 210px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            max-height: 380px;
-            overflow-y: auto;
-        }
-
-        .inbox-item-card {
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
             justify-content: space-between;
+            gap: 16px;
         }
 
-        .inbox-left-group {
+        .sidebar-menu-list {
             display: flex;
-            align-items: center;
-            gap: 14px;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .inbox-item-icon {
-            font-size: 28px;
-        }
-
-        .inbox-item-sender {
+        .sidebar-menu-item {
+            padding: 10px 14px;
+            border-radius: 10px;
             font-size: 13px;
             font-weight: 700;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-menu-item:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar-menu-item.active {
+            color: #ffffff;
+            background: #111c35;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Promo Card in Sidebar */
+        .sidebar-promo-card {
+            background: linear-gradient(145deg, #0d152a, #131d3b);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 16px 14px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .promo-gift-icon {
+            font-size: 32px;
+            filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5));
+        }
+
+        .promo-title {
+            font-size: 13px;
+            font-weight: 800;
             color: #ffffff;
         }
 
-        .inbox-item-msg {
-            font-size: 12px;
+        .promo-desc {
+            font-size: 10.5px;
             color: var(--text-muted);
-            margin-top: 2px;
+            line-height: 1.35;
         }
 
-        .btn-claim-item {
-            padding: 8px 18px;
+        .btn-sidebar-send {
+            width: 100%;
+            padding: 9px;
             background: var(--primary-blue);
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #ffffff;
             font-family: 'Outfit', sans-serif;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             transition: background 0.2s ease;
+            margin-top: 4px;
         }
 
-        .btn-claim-item:hover {
+        .btn-sidebar-send:hover {
             background: var(--primary-blue-hover);
         }
 
-        /* Refresh Buttons & Animations */
-        .btn-refresh-inbox {
-            background: rgba(37, 99, 235, 0.12);
+        /* Right Main Inbox Card */
+        .inbox-main-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header Row inside Main Inbox Card */
+        .inbox-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .inbox-title-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .inbox-title-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: rgba(37, 99, 235, 0.18);
             border: 1px solid rgba(37, 99, 235, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
             color: var(--primary-blue-hover);
-            padding: 6px 12px;
-            border-radius: 6px;
+        }
+
+        .btn-refresh-inbox-outlined {
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            color: #38bdf8;
+            padding: 7px 14px;
+            border-radius: 8px;
             font-family: 'Outfit', sans-serif;
-            font-size: 11.5px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
@@ -490,24 +589,10 @@
             transition: all 0.2s ease;
         }
 
-        .btn-refresh-inbox:hover {
-            background: rgba(37, 99, 235, 0.25);
-            border-color: var(--primary-blue-hover);
+        .btn-refresh-inbox-outlined:hover {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: #38bdf8;
             color: #ffffff;
-        }
-
-        .refresh-icon-btn {
-            font-size: 13px;
-            margin-left: 6px;
-            opacity: 0.85;
-            cursor: pointer;
-            display: inline-block;
-            transition: transform 0.3s ease, opacity 0.2s ease;
-        }
-
-        .refresh-icon-btn:hover {
-            opacity: 1;
-            transform: scale(1.15);
         }
 
         .spin-icon {
@@ -522,6 +607,195 @@
         @keyframes spinRotate {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State Illustration */
+        .inbox-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 8px;
+            padding: 15px 0;
+            flex: 1;
+        }
+
+        .empty-gift-glow-container {
+            position: relative;
+            width: 120px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-gift-glow-container::before {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, transparent 70%);
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+        }
+
+        .empty-gift-icon-big {
+            font-size: 60px;
+            filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.6));
+            z-index: 2;
+        }
+
+        .empty-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 4px;
+        }
+
+        .empty-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sparkle-divider {
+            color: #38bdf8;
+            font-size: 10px;
+            margin: 2px 0;
+            opacity: 0.7;
+        }
+
+        .btn-send-gift-outlined {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid var(--primary-blue);
+            color: #38bdf8;
+            padding: 9px 22px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-top: 2px;
+        }
+
+        .btn-send-gift-outlined:hover {
+            background: var(--primary-blue);
+            color: #ffffff;
+            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Trust Banner at Bottom */
+        .inbox-trust-banner {
+            background: rgba(8, 13, 25, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trust-icon-box {
+            font-size: 16px;
+            color: #38bdf8;
+        }
+
+        .trust-text-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trust-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .trust-sub {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 1px;
+        }
+
+        .trust-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--card-border);
+        }
+
+        /* Inbox List Items (When Gifts Present) */
+        .inbox-list-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 280px;
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 4px;
+        }
+
+        .inbox-item-card {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .inbox-left-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .inbox-item-icon {
+            font-size: 26px;
+        }
+
+        .inbox-item-sender {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .inbox-item-msg {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .btn-claim-item {
+            padding: 8px 16px;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 6px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-claim-item:hover {
+            background: var(--primary-blue-hover);
         }
 
         /* Modal Overlay */
@@ -564,10 +838,10 @@
             cursor: pointer;
         }
 
-        @media (max-width: 768px) {
-            .gifting-card-container { padding: 18px 16px; }
-            .gift-packs-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-            .tabs-row-bar { gap: 16px; }
+        @media (max-width: 860px) {
+            .inbox-two-col-layout { flex-direction: column; }
+            .inbox-sidebar-col { width: 100%; flex-direction: row; }
+            .sidebar-promo-card { display: none; }
         }
     </style>
 </head>
@@ -592,8 +866,7 @@
             <span>🎁</span> Send a Gift
         </button>
         <button class="nav-tab-btn" id="tab-inbox-btn" onclick="switchTab('inbox')">
-            <span>📦</span> Inbox Gifts (<span id="inbox-count-display">0</span>)
-            <span class="refresh-icon-btn" id="tab-refresh-icon" onclick="refreshInboxWithAnimation(event)" title="Refresh Inbox Gifts">🔄</span>
+            <span>📦</span> Inbox Gifts ( <span id="inbox-count-display">0</span> ) <span class="tab-badge-pill" id="tab-badge-pill">0</span>
         </button>
     </div>
 
@@ -680,20 +953,90 @@
 
         </div>
 
-        <!-- TAB 2: INBOX GIFTS PANEL -->
-        <div class="gifting-card-container" id="panel-inbox" style="display: none;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <div class="section-heading">
-                    <span class="section-icon">📫</span> PENDING RECEIVED GIFTS
-                </div>
-                <button class="btn-refresh-inbox" onclick="refreshInboxWithAnimation(event)" title="Refresh Inbox Gifts">
-                    <span class="spin-icon" id="refresh-spin-icon">🔄</span> REFRESH INBOX
-                </button>
-            </div>
+        <!-- TAB 2: INBOX GIFTS PANEL (MATCHES SCREENSHOT EXACLY) -->
+        <div class="inbox-two-col-layout" id="panel-inbox" style="display: none;">
             
-            <div class="inbox-list-wrap" id="inbox-list-container">
-                <!-- Inbox items loaded dynamically -->
-            </div>
+            <!-- Left Sidebar -->
+            <aside class="inbox-sidebar-col">
+                <div class="sidebar-menu-list">
+                    <div class="sidebar-menu-item active">
+                        <span>📥</span> Inbox
+                    </div>
+                    <div class="sidebar-menu-item" onclick="switchTab('send')">
+                        <span>🚀</span> Sent Gifts
+                    </div>
+                    <div class="sidebar-menu-item" onclick="alert('Gift History is recorded automatically in your account ledger.')">
+                        <span>🕒</span> Gift History
+                    </div>
+                    <div class="sidebar-menu-item" onclick="alert('Top Gifters Leaderboard is updated weekly!')">
+                        <span>🏆</span> Top Gifters
+                    </div>
+                    <div class="sidebar-menu-item" onclick="alert('Gift Notification Settings are enabled.')">
+                        <span>⚙️</span> Settings
+                    </div>
+                </div>
+
+                <!-- Bottom Sidebar Promo Widget -->
+                <div class="sidebar-promo-card">
+                    <div class="promo-gift-icon">🎁</div>
+                    <div class="promo-title">Send Happiness</div>
+                    <div class="promo-desc">Surprise your opponents with exclusive gifts!</div>
+                    <button class="btn-sidebar-send" onclick="switchTab('send')">Send a Gift</button>
+                </div>
+            </aside>
+
+            <!-- Right Main Inbox Card -->
+            <main class="inbox-main-card">
+                
+                <!-- Inbox Card Header -->
+                <div class="inbox-header-row">
+                    <div class="inbox-title-badge">
+                        <div class="inbox-title-icon-box">📥</div>
+                        <span>PENDING RECEIVED GIFTS</span>
+                    </div>
+                    <button class="btn-refresh-inbox-outlined" onclick="refreshInboxWithAnimation(event)" title="Refresh Inbox Gifts">
+                        <span class="spin-icon" id="refresh-spin-icon">🔄</span> Refresh Inbox
+                    </button>
+                </div>
+
+                <!-- Dynamic Inbox Content (Loaded by JS) -->
+                <div id="inbox-content-area" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <!-- Rendered by JS: Either Empty State or Inbox Items -->
+                </div>
+
+                <!-- Bottom Trust Banner -->
+                <div class="inbox-trust-banner">
+                    <div class="trust-item">
+                        <span class="trust-icon-box">🛡️</span>
+                        <div class="trust-text-group">
+                            <span class="trust-title">100% Secure</span>
+                            <span class="trust-sub">All gifts are safe and secure</span>
+                        </div>
+                    </div>
+
+                    <div class="trust-divider"></div>
+
+                    <div class="trust-item">
+                        <span class="trust-icon-box">⚡</span>
+                        <div class="trust-text-group">
+                            <span class="trust-title">Instant Delivery</span>
+                            <span class="trust-sub">Gifts delivered in real-time</span>
+                        </div>
+                    </div>
+
+                    <div class="trust-divider"></div>
+
+                    <div class="trust-item">
+                        <span class="trust-icon-box">💖</span>
+                        <div class="trust-text-group">
+                            <span class="trust-title">Spread Joy</span>
+                            <span class="trust-sub">Make every match special</span>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
         </div>
 
     </main>
@@ -754,7 +1097,6 @@
                 player = allPlayers.find(p => p.name.toLowerCase().includes(cleanQuery));
             }
 
-            // Accept any valid 6-digit User ID (e.g. 817029)
             if (!player) {
                 const digitOnlyMatch = cleanQuery.match(/^\d{6}$/);
                 if (digitOnlyMatch) {
@@ -904,17 +1246,12 @@
 
         function refreshInboxWithAnimation(event) {
             if (event) event.stopPropagation();
-            
-            const iconTab = document.getElementById('tab-refresh-icon');
             const iconHeader = document.getElementById('refresh-spin-icon');
-            
-            if (iconTab) iconTab.classList.add('spinning');
             if (iconHeader) iconHeader.classList.add('spinning');
 
             loadInboxGifts();
 
             setTimeout(() => {
-                if (iconTab) iconTab.classList.remove('spinning');
                 if (iconHeader) iconHeader.classList.remove('spinning');
             }, 600);
         }
@@ -926,70 +1263,57 @@
         });
 
         function loadInboxGifts() {
-            const container = document.getElementById('inbox-list-container');
+            const container = document.getElementById('inbox-content-area');
             let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
             const myId = getOrGenerateUserId();
             const myName = (localStorage.getItem('playerName') || '').toLowerCase();
             
-            // Add default gifts if empty
-            if (sharedGifts.length === 0) {
-                sharedGifts = [
-                    {
-                        id: 'gift_default_1',
-                        senderName: 'Girish (#582910)',
-                        recipientId: myId,
-                        giftName: '100 Bonus Coins',
-                        giftPrice: 100,
-                        giftIcon: '🪙',
-                        message: 'Sent you 100 Bonus Arena Coins! GG on your match.',
-                        claimed: false
-                    },
-                    {
-                        id: 'gift_default_2',
-                        senderName: 'Nithish (#893012)',
-                        recipientId: myId,
-                        giftName: 'Crown King Skin',
-                        giftPrice: 300,
-                        giftIcon: '👑',
-                        message: 'Golden Crown King Piece Skin Unlocked!',
-                        claimed: false
-                    }
-                ];
-            }
-
-            // Filter unclaimed gifts targeted at this user or sample gifts
+            // Filter unclaimed gifts targeted at this user
             const unclaimedGifts = sharedGifts.filter(g => {
                 if (g.claimed) return false;
                 if (!g.recipientId || g.recipientId === myId) return true;
                 if (g.recipientName && g.recipientName.toLowerCase() === myName) return true;
-                if (g.id && g.id.startsWith('gift_default_')) return true;
                 return false;
             });
 
             document.getElementById('inbox-count-display').innerText = unclaimedGifts.length;
+            document.getElementById('tab-badge-pill').innerText = unclaimedGifts.length;
 
             if (unclaimedGifts.length === 0) {
+                // Render Exact Screenshot Empty State
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px;">
-                        <div style="font-size: 36px; margin-bottom: 8px;">📭</div>
-                        No pending gifts in your inbox right now.
+                    <div class="inbox-empty-state">
+                        <div class="empty-gift-glow-container">
+                            <div class="empty-gift-icon-big">📦</div>
+                        </div>
+                        <div class="empty-title">Your Inbox is Empty</div>
+                        <div class="empty-subtitle">No pending gifts in your inbox right now.</div>
+                        <div class="sparkle-divider">✦</div>
+                        <button class="btn-send-gift-outlined" onclick="switchTab('send')">
+                            <span>🎁</span> Send a Gift Now
+                        </button>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = unclaimedGifts.map(gift => `
-                <div class="inbox-item-card" id="${gift.id}">
-                    <div class="inbox-left-group">
-                        <div class="inbox-item-icon">${gift.giftIcon || '🎁'}</div>
-                        <div>
-                            <div class="inbox-item-sender">FROM: ${gift.senderName}</div>
-                            <div class="inbox-item-msg">"${gift.message}"</div>
+            // Render Inbox Gift Cards
+            container.innerHTML = `
+                <div class="inbox-list-wrap">
+                    ${unclaimedGifts.map(gift => `
+                        <div class="inbox-item-card" id="${gift.id}">
+                            <div class="inbox-left-group">
+                                <div class="inbox-item-icon">${gift.giftIcon || '🎁'}</div>
+                                <div>
+                                    <div class="inbox-item-sender">FROM: ${gift.senderName}</div>
+                                    <div class="inbox-item-msg">"${gift.message}"</div>
+                                </div>
+                            </div>
+                            <button class="btn-claim-item" onclick="claimGiftItem('${gift.id}', ${gift.giftPrice})">CLAIM $${gift.giftPrice}</button>
                         </div>
-                    </div>
-                    <button class="btn-claim-item" onclick="claimGiftItem('${gift.id}', ${gift.giftPrice})">CLAIM $${gift.giftPrice}</button>
+                    `).join('')}
                 </div>
-            `).join('');
+            `;
         }
 
         function claimGiftItem(giftId, price) {
