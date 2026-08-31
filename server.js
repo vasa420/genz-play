@@ -124,8 +124,80 @@ const PORT = process.env.PORT || 3001;
 // Room and Game State Management
 const rooms = new Map();
 
+// Global Laptop-to-Laptop Gifting Network Storage & Socket Registry
+const globalGiftPlayers = new Map(); // id -> { id, name, avatar, socketId, status, lastActive }
+const globalGiftStore = []; // Array of network gift objects
+
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
+
+    // --- LAPTOP-TO-LAPTOP GIFTING NETWORK HANDLERS ---
+    socket.on('register_gift_user', (data) => {
+        const { id, name, avatar } = data || {};
+        if (id) {
+            globalGiftPlayers.set(String(id), {
+                id: String(id),
+                name: name || `Player #${id}`,
+                avatar: avatar || '🎮',
+                socketId: socket.id,
+                status: 'Online',
+                lastActive: Date.now()
+            });
+            console.log(`🎁 Gift Network: Player Registered #${id} (${name}) on socket ${socket.id}`);
+
+            // Send existing network gifts for this user
+            const userGifts = globalGiftStore.filter(g => g.recipientId === String(id) || g.senderId === String(id));
+            socket.emit('sync_network_gifts', userGifts);
+
+            // Broadcast updated connected laptop players list to everyone
+            io.emit('network_players_update', Array.from(globalGiftPlayers.values()));
+        }
+    });
+
+    socket.on('send_gift_network', (data) => {
+        const { giftData, recipientId } = data || {};
+        if (!giftData || !recipientId) return;
+
+        const cleanRecipientId = String(recipientId);
+        console.log(`🎁 Gift Network: Laptop Gift sent from ${giftData.senderName} to #${cleanRecipientId}`);
+
+        // Store gift in server memory
+        const existingIndex = globalGiftStore.findIndex(g => g.id === giftData.id);
+        if (existingIndex === -1) {
+            globalGiftStore.push(giftData);
+        } else {
+            globalGiftStore[existingIndex] = giftData;
+        }
+
+        // Deliver directly to recipient laptop if online
+        const recipientPlayer = globalGiftPlayers.get(cleanRecipientId);
+        if (recipientPlayer && recipientPlayer.socketId) {
+            io.to(recipientPlayer.socketId).emit('receive_gift_network', giftData);
+        }
+
+        // Broadcast to all sockets
+        io.emit('network_gift_delivered', giftData);
+    });
+
+    socket.on('claim_gift_network', (data) => {
+        const { giftId } = data || {};
+        const gift = globalGiftStore.find(g => g.id === giftId);
+        if (gift) {
+            gift.claimed = true;
+            gift.status = 'Claimed';
+            io.emit('network_gift_claimed', { giftId });
+        }
+    });
+
+    socket.on('decline_gift_network', (data) => {
+        const { giftId } = data || {};
+        const gift = globalGiftStore.find(g => g.id === giftId);
+        if (gift) {
+            gift.claimed = false;
+            gift.status = 'Declined';
+            io.emit('network_gift_declined', { giftId });
+        }
+    });
 
     socket.on('hc_check_room', (data, callback) => {
         if (typeof callback !== 'function') return;

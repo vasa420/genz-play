@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Master - Arena Gift Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         /* Modern Dark Navy + Blue Neon Gaming Palette */
         :root {
@@ -1604,24 +1605,87 @@
             { id: '102934', name: 'Thaya', avatar: '🚀', status: 'Online', totalGiftsSent: 2, totalValueSent: 300 }
         ];
 
+        let socket = null;
+        window.networkPlayersList = [];
+
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io({
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionAttempts: 20
+                });
+
+                socket.on('connect', () => {
+                    const myId = getOrGenerateUserId();
+                    const myName = localStorage.getItem('playerName') || `Guest #${myId}`;
+                    const myAvatar = localStorage.getItem('playerAvatar') || '🎮';
+                    
+                    socket.emit('register_gift_user', {
+                        id: myId,
+                        name: myName,
+                        avatar: myAvatar
+                    });
+                });
+
+                socket.on('network_players_update', (networkPlayers) => {
+                    window.networkPlayersList = networkPlayers || [];
+                    updateInboxBadgeCounts();
+                    if (typeof checkRecipientSearch === 'function') checkRecipientSearch();
+                });
+
+                socket.on('receive_gift_network', (giftData) => {
+                    const myId = getOrGenerateUserId();
+                    if (giftData.recipientId === myId) {
+                        let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+                        if (!sharedGifts.some(g => g.id === giftData.id)) {
+                            sharedGifts.push(giftData);
+                            localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
+                        }
+
+                        triggerFirecrackerCelebration(window.innerWidth / 2, window.innerHeight / 3);
+                        showModal('🎁', 'LAPTOP NETWORK GIFT RECEIVED!', `Player "${giftData.senderName}" sent you "${giftData.giftName}" ($${giftData.giftPrice}.00) from another laptop!`);
+                        
+                        updateInboxBadgeCounts();
+                        renderCurrentTerminalTab();
+                    }
+                });
+
+                socket.on('sync_network_gifts', (giftsList) => {
+                    let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+                    (giftsList || []).forEach(g => {
+                        if (!sharedGifts.some(existing => existing.id === g.id)) {
+                            sharedGifts.push(g);
+                        }
+                    });
+                    localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
+                    updateInboxBadgeCounts();
+                    renderCurrentTerminalTab();
+                });
+            }
+        } catch(e) {
+            console.warn("Socket.IO client init exception:", e);
+        }
+
         function findRegisteredPlayer(query) {
             if (!query) return null;
             const cleanQuery = query.trim().toLowerCase();
 
             const extraPlayers = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
-            const allPlayers = [...REGISTERED_PLAYERS, ...extraPlayers];
+            const netPlayers = window.networkPlayersList || [];
+            const allPlayers = [...REGISTERED_PLAYERS, ...extraPlayers, ...netPlayers];
 
-            let player = allPlayers.find(p => p.id === cleanQuery || p.name.toLowerCase() === cleanQuery);
+            let player = allPlayers.find(p => String(p.id) === cleanQuery || (p.name && p.name.toLowerCase() === cleanQuery));
             
             if (!player) {
                 const matchDigits = cleanQuery.match(/\d{6}/);
                 if (matchDigits) {
-                    player = allPlayers.find(p => p.id === matchDigits[0]);
+                    player = allPlayers.find(p => String(p.id) === matchDigits[0]);
                 }
             }
 
             if (!player && cleanQuery.length >= 3) {
-                player = allPlayers.find(p => p.name.toLowerCase().includes(cleanQuery));
+                player = allPlayers.find(p => p.name && p.name.toLowerCase().includes(cleanQuery));
             }
 
             if (!player) {
@@ -2082,7 +2146,7 @@
                 id: 'gift_' + Date.now(),
                 senderName: `Player #${myId}`,
                 senderId: myId,
-                recipientId: recipientPlayer.id,
+                recipientId: String(recipientPlayer.id),
                 recipientName: `${recipientPlayer.name} (#${recipientPlayer.id})`,
                 giftName: selectedGiftName,
                 giftPrice: selectedGiftPrice,
@@ -2097,7 +2161,15 @@
             sharedGifts.push(newGift);
             localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
 
-            showModal('🎁', 'GIFT SENT SUCCESSFULLY!', `Your gift "${selectedGiftName}" ($${selectedGiftPrice}.00) was delivered to ${recipientPlayer.name} (#${recipientPlayer.id}).`);
+            // Emit to Socket.IO Server for Laptop-to-Laptop Real-Time Delivery
+            if (socket && socket.connected) {
+                socket.emit('send_gift_network', {
+                    giftData: newGift,
+                    recipientId: String(recipientPlayer.id)
+                });
+            }
+
+            showModal('🎁', 'GIFT SENT TO LAPTOP NETWORK!', `Your gift "${selectedGiftName}" ($${selectedGiftPrice}.00) was delivered to ${recipientPlayer.name} (#${recipientPlayer.id}) across the network!`);
             
             document.getElementById('recipient-id-input').value = '';
             document.getElementById('gift-message-input').value = '';
