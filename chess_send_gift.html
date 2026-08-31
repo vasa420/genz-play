@@ -251,6 +251,56 @@
             background: rgba(0, 0, 0, 0.6);
         }
 
+        /* Live Recipient Status Badge */
+        .recipient-status-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 11.5px;
+            font-weight: 800;
+            margin-top: 4px;
+            transition: all 0.25s ease;
+            animation: badgeFadeIn 0.2s ease-out;
+        }
+
+        @keyframes badgeFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recipient-status-card.valid {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.15);
+        }
+
+        .recipient-status-card.invalid {
+            background: rgba(255, 51, 85, 0.1);
+            border: 1px solid #ff3355;
+            color: #ff3355;
+            box-shadow: 0 0 12px rgba(255, 51, 85, 0.15);
+        }
+
+        .player-match-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-match-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
         .quick-friends-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -678,10 +728,9 @@
                 <span class="section-title">👤 1. SELECT RECIPIENT FRIEND</span>
                 <div class="input-group">
                     <span class="input-icon">🔍</span>
-                    <input type="text" class="input-field" id="recipient-id-input" placeholder="ENTER 6-DIGIT USER ID OR FRIEND NAME">
+                    <input type="text" class="input-field" id="recipient-id-input" placeholder="ENTER 6-DIGIT USER ID OR FRIEND NAME" oninput="checkRecipientSearch()">
                 </div>
-
-
+                <div id="recipient-status-badge" class="recipient-status-card" style="display: none;"></div>
             </div>
 
             <!-- Gift Item Selection -->
@@ -794,6 +843,75 @@
             return uid;
         }
 
+        const REGISTERED_PLAYERS = [
+            { id: '582910', name: 'Girish', avatar: '👑', status: 'Online' },
+            { id: '893012', name: 'Nithish', avatar: '⚡', status: 'Online' },
+            { id: '749102', name: 'Dhanish', avatar: '⚔️', status: 'In Match' },
+            { id: '381049', name: 'Vaisal', avatar: '🛡️', status: 'Online' },
+            { id: '629410', name: 'Logith', avatar: '🎯', status: 'Online' },
+            { id: '492015', name: 'Surya', avatar: '🔥', status: 'Away' },
+            { id: '102934', name: 'Thaya', avatar: '🚀', status: 'Online' }
+        ];
+
+        function findRegisteredPlayer(query) {
+            if (!query) return null;
+            const cleanQuery = query.trim().toLowerCase();
+
+            // Also check dynamic registered players in localStorage
+            const extraPlayers = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
+            const allPlayers = [...REGISTERED_PLAYERS, ...extraPlayers];
+
+            // 1. Direct match by 6-digit ID or Exact Name
+            let player = allPlayers.find(p => p.id === cleanQuery || p.name.toLowerCase() === cleanQuery);
+            
+            // 2. Extracted 6-digit ID match
+            if (!player) {
+                const matchDigits = cleanQuery.match(/\d{6}/);
+                if (matchDigits) {
+                    player = allPlayers.find(p => p.id === matchDigits[0]);
+                }
+            }
+
+            // 3. Partial name match
+            if (!player && cleanQuery.length >= 3) {
+                player = allPlayers.find(p => p.name.toLowerCase().includes(cleanQuery));
+            }
+
+            return player || null;
+        }
+
+        function checkRecipientSearch() {
+            const inputVal = document.getElementById('recipient-id-input').value.trim();
+            const statusBadge = document.getElementById('recipient-status-badge');
+            
+            if (!inputVal) {
+                statusBadge.style.display = 'none';
+                return;
+            }
+
+            const player = findRegisteredPlayer(inputVal);
+            statusBadge.style.display = 'flex';
+
+            if (player) {
+                statusBadge.className = 'recipient-status-card valid';
+                statusBadge.innerHTML = `
+                    <div class="player-match-left">
+                        <div class="player-match-avatar">${player.avatar}</div>
+                        <span>✓ RECIPIENT FOUND: <strong>${player.name}</strong> (#${player.id})</span>
+                    </div>
+                    <span style="font-size: 9.5px; opacity: 0.85; font-family: 'JetBrains Mono', monospace;">● ${player.status}</span>
+                `;
+            } else {
+                statusBadge.className = 'recipient-status-card invalid';
+                statusBadge.innerHTML = `
+                    <div class="player-match-left">
+                        <span>❌ ENTERED ID WAS INVALID</span>
+                    </div>
+                    <span style="font-size: 9.5px; opacity: 0.85;">Player not found</span>
+                `;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const userId = getOrGenerateUserId();
             document.getElementById('header-user-id').innerText = `ID: #${userId}`;
@@ -826,12 +944,6 @@
             }
         }
 
-        function selectFriend(name, id, element) {
-            document.querySelectorAll('.friend-pill').forEach(pill => pill.classList.remove('selected'));
-            element.classList.add('selected');
-            document.getElementById('recipient-id-input').value = `${id}`;
-        }
-
         function selectGift(element, name, price) {
             document.querySelectorAll('.gift-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
@@ -841,26 +953,18 @@
             selectedGiftIcon = iconElem ? iconElem.innerText : '🎁';
         }
 
-        function extract6DigitId(query) {
-            if (!query) return null;
-            const cleanQuery = query.trim();
-            const match = cleanQuery.match(/\d{6}/);
-            if (match) return match[0];
-            if (cleanQuery.length === 6 && !isNaN(cleanQuery)) return cleanQuery;
-            return null;
-        }
-
         function processSendGift() {
             const recipientInput = document.getElementById('recipient-id-input').value.trim();
             if (!recipientInput) {
-                showModal('⚠️', 'ENTER USER ID', 'Please enter a 6-digit User ID to send a gift.');
+                showModal('⚠️', 'ENTER USER ID', 'Please enter a 6-digit User ID or player name to send a gift.');
                 return;
             }
 
-            // Extract & Validate 6-digit User ID
-            const targetId = extract6DigitId(recipientInput);
-            if (!targetId) {
-                showModal('❌', 'INVALID ID', `Invalid ID "${recipientInput}"! Please enter a valid 6-digit User ID.`);
+            // Verify against real registered players database
+            const recipientPlayer = findRegisteredPlayer(recipientInput);
+            
+            if (!recipientPlayer) {
+                showModal('❌', 'ENTERED ID WAS INVALID', `Entered ID "${recipientInput}" was invalid! No registered player was found with this ID.`);
                 return;
             }
 
@@ -873,7 +977,7 @@
             walletBalance -= selectedGiftPrice;
             document.getElementById('wallet-balance-display').innerText = `$${walletBalance.toFixed(2)}`;
 
-            // Register gift for target 6-digit User ID
+            // Register gift for recipient player
             const myId = getOrGenerateUserId();
             const giftMsg = document.getElementById('gift-message-input').value.trim() || "Enjoy your Arena gift!";
             
@@ -881,8 +985,8 @@
                 id: 'gift_' + Date.now(),
                 senderName: `Player #${myId}`,
                 senderId: myId,
-                recipientId: targetId,
-                recipientName: `User #${targetId}`,
+                recipientId: recipientPlayer.id,
+                recipientName: recipientPlayer.name,
                 giftName: selectedGiftName,
                 giftPrice: selectedGiftPrice,
                 giftIcon: selectedGiftIcon,
@@ -898,11 +1002,12 @@
             showModal(
                 '🎉', 
                 'GIFT DELIVERED!', 
-                `Your ${selectedGiftName} ($${selectedGiftPrice}.00) has been sent to User ID #${targetId}!\n\nThey can now claim it in their Receive Gift Inbox.`
+                `Your ${selectedGiftName} ($${selectedGiftPrice}.00) has been sent to ${recipientPlayer.name} (#${recipientPlayer.id})!\n\nThey can now claim it in their Receive Gift Inbox.`
             );
 
             document.getElementById('gift-message-input').value = "";
             document.getElementById('recipient-id-input').value = "";
+            checkRecipientSearch();
         }
 
         function loadInboxGifts() {
