@@ -531,6 +531,96 @@
             letter-spacing: 1.5px;
             cursor: pointer;
         }
+
+        /* Scroll Lock & Toast Styles */
+        body.scroll-locked {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden !important;
+            touch-action: none;
+        }
+
+        body.scroll-locked .gifting-container {
+            height: calc(100vh - 74px);
+            max-height: calc(100vh - 74px);
+            overflow-y: auto;
+            margin-bottom: 0;
+            padding-bottom: 24px;
+        }
+
+        .gifting-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .gifting-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .gifting-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 240, 255, 0.25);
+            border-radius: 10px;
+        }
+        .gifting-container::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-cyan);
+        }
+
+        .scroll-lock-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #94a3b8;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .scroll-lock-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: rgba(0, 240, 255, 0.3);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .scroll-lock-btn.active {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(12, 18, 34, 0.95);
+            border: 1.5px solid var(--neon-cyan);
+            border-radius: 14px;
+            padding: 12px 20px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -540,6 +630,10 @@
         <a href="chess.html" class="btn-back-hub">← BACK TO CHESS</a>
         <div class="header-title">🎁 ARENA GIFT TERMINAL</div>
         <div class="header-right">
+            <button class="scroll-lock-btn active" id="scroll-lock-toggle" onclick="toggleScrollLock()" title="Toggle Page Scroll Lock">
+                <span id="scroll-lock-icon">🔒</span>
+                <span id="scroll-lock-text">SCROLL LOCK: ON</span>
+            </button>
             <div class="user-id-badge" id="header-user-id">ID: #------</div>
             <div class="wallet-pill">
                 <span>💼</span>
@@ -703,6 +797,49 @@
         let selectedGiftName = "50 Coins Pack";
         let selectedGiftPrice = 50;
         let selectedGiftIcon = "🪙";
+        let isScrollLocked = true;
+
+        function toggleScrollLock(forceState) {
+            if (typeof forceState === 'boolean') {
+                isScrollLocked = forceState;
+            } else {
+                isScrollLocked = !isScrollLocked;
+            }
+
+            const btn = document.getElementById('scroll-lock-toggle');
+            const icon = document.getElementById('scroll-lock-icon');
+            const text = document.getElementById('scroll-lock-text');
+
+            if (isScrollLocked) {
+                document.body.classList.add('scroll-locked');
+                if (btn) btn.classList.add('active');
+                if (icon) icon.innerText = '🔒';
+                if (text) text.innerText = 'SCROLL LOCK: ON';
+                showToast('🔒 Scroll Lock Enabled');
+            } else {
+                document.body.classList.remove('scroll-locked');
+                if (btn) btn.classList.remove('active');
+                if (icon) icon.innerText = '🔓';
+                if (text) text.innerText = 'SCROLL LOCK: OFF';
+                showToast('🔓 Scroll Lock Disabled');
+            }
+        }
+
+        function showToast(msg) {
+            let toast = document.getElementById('scroll-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'scroll-toast';
+                toast.className = 'toast-notification';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = msg;
+            toast.classList.add('show');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
 
         function getOrGenerateUserId() {
             let uid = localStorage.getItem('arena_user_6digit_id');
@@ -714,6 +851,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            toggleScrollLock(true);
             const userId = getOrGenerateUserId();
             document.getElementById('header-user-id').innerText = `ID: #${userId}`;
             loadInboxGifts();
@@ -907,10 +1045,16 @@
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerText = desc;
             document.getElementById('status-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
             document.getElementById('status-modal').classList.remove('active');
+            if (isScrollLocked) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
         }
     </script>
 </body>
