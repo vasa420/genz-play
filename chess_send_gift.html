@@ -299,6 +299,8 @@
             align-items: center;
             justify-content: center;
             font-size: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
         }
 
         .quick-friends-grid {
@@ -880,6 +882,15 @@
             return player || null;
         }
 
+        function formatAvatarHTML(avatar, fallback = '👤') {
+            if (!avatar) return fallback;
+            const str = String(avatar).trim();
+            if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:image')) {
+                return `<img src="${str}" alt="avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.outerHTML='${fallback}'">`;
+            }
+            return str;
+        }
+
         function checkRecipientSearch() {
             const inputVal = document.getElementById('recipient-id-input').value.trim();
             const statusBadge = document.getElementById('recipient-status-badge');
@@ -893,10 +904,11 @@
             statusBadge.style.display = 'flex';
 
             if (player) {
+                const avatarHTML = formatAvatarHTML(player.avatar, '👤');
                 statusBadge.className = 'recipient-status-card valid';
                 statusBadge.innerHTML = `
                     <div class="player-match-left">
-                        <div class="player-match-avatar">${player.avatar}</div>
+                        <div class="player-match-avatar">${avatarHTML}</div>
                         <span>✓ RECIPIENT FOUND: <strong>${player.name}</strong> (#${player.id})</span>
                     </div>
                     <span style="font-size: 9.5px; opacity: 0.85; font-family: 'JetBrains Mono', monospace;">● ${player.status}</span>

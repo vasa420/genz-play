@@ -1236,6 +1236,16 @@
             const name = localStorage.getItem('playerName');
             if (name) document.getElementById('user-display-name').innerText = name.toUpperCase();
             
+            const avatar = localStorage.getItem('playerAvatar');
+            const avatarCircle = document.querySelector('.user-avatar-circle');
+            if (avatarCircle && avatar) {
+                if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:image')) {
+                    avatarCircle.innerHTML = `<img src="${avatar}" alt="avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                } else {
+                    avatarCircle.innerText = avatar;
+                }
+            }
+
             let uid = localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID');
             if (!uid || uid.length !== 6 || isNaN(uid)) {
                 uid = Math.floor(100000 + Math.random() * 900000).toString();
