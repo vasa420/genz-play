@@ -440,6 +440,71 @@
             100% { transform: translateY(-2px) scale(1.15) rotate(8deg); }
         }
 
+        /* FLOATING DIWALI FIRECRACKER LAUNCHER BUTTON */
+        .btn-floating-cracker {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9990;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #ef4444);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 30px;
+            padding: 10px 20px;
+            color: #060a14;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12.5px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 30px rgba(251, 191, 36, 0.5), 0 0 20px rgba(239, 68, 68, 0.4);
+            animation: floatingCrackerPulse 2s infinite ease-in-out;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-floating-cracker:hover {
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 12px 35px rgba(251, 191, 36, 0.75), 0 0 30px rgba(249, 115, 22, 0.6);
+        }
+
+        .btn-floating-cracker:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes floatingCrackerPulse {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Top Header Firecracker FX Pill Button */
+        .btn-top-cracker-fx {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(239, 68, 68, 0.15));
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            color: var(--gold-text);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-top-cracker-fx:hover {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(239, 68, 68, 0.3));
+            border-color: var(--gold-text);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-top-cracker-fx:active {
+            transform: scale(0.96);
+        }
+
         /* FIRECRACKER CELEBRATION BUTTON BURST STATE */
         .btn-send-gift-main.bursting {
             animation: btnFirecrackerPulse 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1264,11 +1329,20 @@
 </head>
 <body>
 
+    <!-- Floating Firecracker Burst Launcher Button -->
+    <button class="btn-floating-cracker" onclick="triggerFloatingCrackerShow(event)" title="Click to launch Firecracker Burst!">
+        <span class="cracker-icon">🎆</span>
+        <span class="cracker-text">FIRECRACKER BURST</span>
+    </button>
+
     <!-- Top Navigation Header -->
     <header class="top-header">
         <a href="chess.html" class="btn-back-hub">← Back to Chess</a>
         <div class="header-title">🎁 ARENA GIFT TERMINAL</div>
         <div class="header-right">
+            <button class="btn-top-cracker-fx" onclick="triggerFloatingCrackerShow(event)" title="Launch Cracker FX">
+                <span>🎆</span> Firecracker FX
+            </button>
             <div class="user-id-badge" id="header-user-id">ID: #527948</div>
             <div class="wallet-pill">
                 <span>💼</span>
@@ -1319,6 +1393,13 @@
                         <div class="gift-pack-price">$50.00</div>
                     </div>
 
+                    <div class="gift-pack-card" onclick="selectGift(this, 'Diwali Cracker Pack', 150)">
+                        <div class="check-circle-badge">✓</div>
+                        <div class="gift-pack-icon">🎆</div>
+                        <div class="gift-pack-name">Diwali Cracker Pack</div>
+                        <div class="gift-pack-price">$150.00</div>
+                    </div>
+
                     <div class="gift-pack-card" onclick="selectGift(this, '250 Gold Chest', 250)">
                         <div class="check-circle-badge">✓</div>
                         <div class="gift-pack-icon">📦</div>
@@ -1331,13 +1412,6 @@
                         <div class="gift-pack-icon">👑</div>
                         <div class="gift-pack-name">Crown King Skin</div>
                         <div class="gift-pack-price">$300.00</div>
-                    </div>
-
-                    <div class="gift-pack-card" onclick="selectGift(this, 'Cyber Queen Skin', 450)">
-                        <div class="check-circle-badge">✓</div>
-                        <div class="gift-pack-icon">⚔️</div>
-                        <div class="gift-pack-name">Cyber Queen Skin</div>
-                        <div class="gift-pack-price">$450.00</div>
                     </div>
 
                     <div class="gift-pack-card" onclick="selectGift(this, 'VIP Battle Pass', 500)">
