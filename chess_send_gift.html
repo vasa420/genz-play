@@ -473,6 +473,57 @@
             background: var(--primary-blue-hover);
         }
 
+        /* Refresh Buttons & Animations */
+        .btn-refresh-inbox {
+            background: rgba(37, 99, 235, 0.12);
+            border: 1px solid rgba(37, 99, 235, 0.35);
+            color: var(--primary-blue-hover);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-refresh-inbox:hover {
+            background: rgba(37, 99, 235, 0.25);
+            border-color: var(--primary-blue-hover);
+            color: #ffffff;
+        }
+
+        .refresh-icon-btn {
+            font-size: 13px;
+            margin-left: 6px;
+            opacity: 0.85;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.3s ease, opacity 0.2s ease;
+        }
+
+        .refresh-icon-btn:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        .spin-icon {
+            display: inline-block;
+            transition: transform 0.4s ease;
+        }
+
+        .spinning {
+            animation: spinRotate 0.6s ease-in-out;
+        }
+
+        @keyframes spinRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Modal Overlay */
         .modal-overlay {
             position: fixed;
@@ -542,6 +593,7 @@
         </button>
         <button class="nav-tab-btn" id="tab-inbox-btn" onclick="switchTab('inbox')">
             <span>📦</span> Inbox Gifts (<span id="inbox-count-display">0</span>)
+            <span class="refresh-icon-btn" id="tab-refresh-icon" onclick="refreshInboxWithAnimation(event)" title="Refresh Inbox Gifts">🔄</span>
         </button>
     </div>
 
@@ -630,8 +682,13 @@
 
         <!-- TAB 2: INBOX GIFTS PANEL -->
         <div class="gifting-card-container" id="panel-inbox" style="display: none;">
-            <div class="section-heading" style="margin-bottom: 12px;">
-                <span class="section-icon">📫</span> PENDING RECEIVED GIFTS
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div class="section-heading">
+                    <span class="section-icon">📫</span> PENDING RECEIVED GIFTS
+                </div>
+                <button class="btn-refresh-inbox" onclick="refreshInboxWithAnimation(event)" title="Refresh Inbox Gifts">
+                    <span class="spin-icon" id="refresh-spin-icon">🔄</span> REFRESH INBOX
+                </button>
             </div>
             
             <div class="inbox-list-wrap" id="inbox-list-container">
@@ -845,9 +902,34 @@
             document.getElementById('recipient-status-badge').style.display = 'none';
         }
 
+        function refreshInboxWithAnimation(event) {
+            if (event) event.stopPropagation();
+            
+            const iconTab = document.getElementById('tab-refresh-icon');
+            const iconHeader = document.getElementById('refresh-spin-icon');
+            
+            if (iconTab) iconTab.classList.add('spinning');
+            if (iconHeader) iconHeader.classList.add('spinning');
+
+            loadInboxGifts();
+
+            setTimeout(() => {
+                if (iconTab) iconTab.classList.remove('spinning');
+                if (iconHeader) iconHeader.classList.remove('spinning');
+            }, 600);
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'arena_shared_gifts' || e.key === 'arena_user_6digit_id') {
+                loadInboxGifts();
+            }
+        });
+
         function loadInboxGifts() {
             const container = document.getElementById('inbox-list-container');
             let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const myId = getOrGenerateUserId();
+            const myName = (localStorage.getItem('playerName') || '').toLowerCase();
             
             // Add default gifts if empty
             if (sharedGifts.length === 0) {
@@ -855,6 +937,7 @@
                     {
                         id: 'gift_default_1',
                         senderName: 'Girish (#582910)',
+                        recipientId: myId,
                         giftName: '100 Bonus Coins',
                         giftPrice: 100,
                         giftIcon: '🪙',
@@ -864,6 +947,7 @@
                     {
                         id: 'gift_default_2',
                         senderName: 'Nithish (#893012)',
+                        recipientId: myId,
                         giftName: 'Crown King Skin',
                         giftPrice: 300,
                         giftIcon: '👑',
@@ -873,7 +957,15 @@
                 ];
             }
 
-            const unclaimedGifts = sharedGifts.filter(g => !g.claimed);
+            // Filter unclaimed gifts targeted at this user or sample gifts
+            const unclaimedGifts = sharedGifts.filter(g => {
+                if (g.claimed) return false;
+                if (!g.recipientId || g.recipientId === myId) return true;
+                if (g.recipientName && g.recipientName.toLowerCase() === myName) return true;
+                if (g.id && g.id.startsWith('gift_default_')) return true;
+                return false;
+            });
+
             document.getElementById('inbox-count-display').innerText = unclaimedGifts.length;
 
             if (unclaimedGifts.length === 0) {
