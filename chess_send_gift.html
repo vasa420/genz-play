@@ -6,6 +6,7 @@
     <title>Chess Master - Arena Gift Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
     <style>
+        /* Modern Dark Navy + Blue Neon Gaming Palette */
         :root {
             --bg-main: #060a14;
             --card-bg: #0d1527;
@@ -13,11 +14,16 @@
             --input-bg: #080d19;
             --primary-blue: #2563eb;
             --primary-blue-hover: #3b82f6;
+            --primary-glow: rgba(37, 99, 235, 0.4);
+            --accent-cyan: #38bdf8;
             --text-white: #ffffff;
             --text-muted: #94a3b8;
             --gold-text: #fbbf24;
             --badge-blue-bg: rgba(37, 99, 235, 0.15);
             --badge-blue-border: rgba(37, 99, 235, 0.35);
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --warning-amber: #f59e0b;
         }
 
         * {
@@ -42,7 +48,7 @@
             justify-content: flex-start;
         }
 
-        /* Top Header Navigation */
+        /* Top Navigation Header */
         .top-header {
             width: 100%;
             height: 54px;
@@ -60,7 +66,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #38bdf8;
+            color: var(--accent-cyan);
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
@@ -96,7 +102,7 @@
             border-radius: 6px;
             background: var(--badge-blue-bg);
             border: 1px solid var(--badge-blue-border);
-            color: #38bdf8;
+            color: var(--accent-cyan);
         }
 
         .wallet-pill {
@@ -113,7 +119,7 @@
             gap: 6px;
         }
 
-        /* Tabs Row Bar */
+        /* Top Tabs Bar */
         .tabs-row-bar {
             width: 100%;
             height: 48px;
@@ -175,7 +181,7 @@
         /* Main Shell Container */
         .gifting-main-shell {
             width: 100%;
-            max-width: 1060px;
+            max-width: 1100px;
             flex: 1;
             padding: 18px 20px;
             display: flex;
@@ -185,21 +191,22 @@
             overflow: hidden;
         }
 
-        /* TAB 1: SEND GIFT CONTAINER CARD */
+        /* SEND GIFT PANEL */
         .gifting-card-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 920px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 24px 28px;
             display: flex;
             flex-direction: column;
             gap: 20px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            max-height: 100%;
+            overflow-y: auto;
         }
 
-        /* Section Block */
         .section-block {
             display: flex;
             flex-direction: column;
@@ -220,7 +227,6 @@
             font-size: 15px;
         }
 
-        /* Search Input Box */
         .search-input-wrap {
             position: relative;
             display: flex;
@@ -248,16 +254,12 @@
             transition: border-color 0.2s ease;
         }
 
-        .search-input-field::placeholder {
-            color: #64748b;
-        }
-
+        .search-input-field::placeholder { color: #64748b; }
         .search-input-field:focus {
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
         }
 
-        /* Recipient Verification Status Badge */
         .recipient-status-card {
             display: flex;
             align-items: center;
@@ -300,7 +302,6 @@
             overflow: hidden;
         }
 
-        /* Gift Packs Grid */
         .gift-packs-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -333,9 +334,7 @@
             border: 2px solid var(--primary-blue);
         }
 
-        .gift-pack-card.selected .check-circle-badge {
-            display: flex;
-        }
+        .gift-pack-card.selected .check-circle-badge { display: flex; }
 
         .check-circle-badge {
             display: none;
@@ -353,26 +352,10 @@
             justify-content: center;
         }
 
-        .gift-pack-icon {
-            font-size: 32px;
-            margin-bottom: 2px;
-        }
+        .gift-pack-icon { font-size: 32px; margin-bottom: 2px; }
+        .gift-pack-name { font-size: 12.5px; font-weight: 700; color: #ffffff; line-height: 1.2; }
+        .gift-pack-price { font-size: 12.5px; font-weight: 700; color: var(--primary-blue-hover); margin-top: 2px; }
 
-        .gift-pack-name {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: #ffffff;
-            line-height: 1.2;
-        }
-
-        .gift-pack-price {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--primary-blue-hover);
-            margin-top: 2px;
-        }
-
-        /* Message Box Textarea */
         .note-textarea-field {
             width: 100%;
             height: 72px;
@@ -388,16 +371,12 @@
             transition: border-color 0.2s ease;
         }
 
-        .note-textarea-field::placeholder {
-            color: #64748b;
-        }
-
+        .note-textarea-field::placeholder { color: #64748b; }
         .note-textarea-field:focus {
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
         }
 
-        /* Main Action Button */
         .btn-send-gift-main {
             width: 100%;
             padding: 14px;
@@ -423,7 +402,7 @@
         }
 
         /* ============================================================ */
-        /* TAB 2: TWO-COLUMN INBOX LAYOUT (EXACT SCREENSHOT DESIGN)     */
+        /* TWO-COLUMN TERMINAL LAYOUT WITH SIDEBAR                      */
         /* ============================================================ */
 
         .inbox-two-col-layout {
@@ -431,7 +410,7 @@
             gap: 20px;
             width: 100%;
             height: 100%;
-            max-height: 480px;
+            max-height: 520px;
             align-items: stretch;
         }
 
@@ -478,7 +457,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
 
-        /* Promo Card in Sidebar */
         .sidebar-promo-card {
             background: linear-gradient(145deg, #0d152a, #131d3b);
             border: 1px solid var(--card-border);
@@ -496,17 +474,8 @@
             filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5));
         }
 
-        .promo-title {
-            font-size: 13px;
-            font-weight: 800;
-            color: #ffffff;
-        }
-
-        .promo-desc {
-            font-size: 10.5px;
-            color: var(--text-muted);
-            line-height: 1.35;
-        }
+        .promo-title { font-size: 13px; font-weight: 800; color: #ffffff; }
+        .promo-desc { font-size: 10.5px; color: var(--text-muted); line-height: 1.35; }
 
         .btn-sidebar-send {
             width: 100%;
@@ -523,11 +492,9 @@
             margin-top: 4px;
         }
 
-        .btn-sidebar-send:hover {
-            background: var(--primary-blue-hover);
-        }
+        .btn-sidebar-send:hover { background: var(--primary-blue-hover); }
 
-        /* Right Main Inbox Card */
+        /* Right Main Terminal Card */
         .inbox-main-card {
             flex: 1;
             background: var(--card-bg);
@@ -542,12 +509,12 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
-        /* Header Row inside Main Inbox Card */
         .inbox-header-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             width: 100%;
+            margin-bottom: 12px;
         }
 
         .inbox-title-badge {
@@ -576,7 +543,7 @@
         .btn-refresh-inbox-outlined {
             background: rgba(37, 99, 235, 0.08);
             border: 1px solid rgba(37, 99, 235, 0.3);
-            color: #38bdf8;
+            color: var(--accent-cyan);
             padding: 7px 14px;
             border-radius: 8px;
             font-family: 'Outfit', sans-serif;
@@ -591,18 +558,12 @@
 
         .btn-refresh-inbox-outlined:hover {
             background: rgba(37, 99, 235, 0.2);
-            border-color: #38bdf8;
+            border-color: var(--accent-cyan);
             color: #ffffff;
         }
 
-        .spin-icon {
-            display: inline-block;
-            transition: transform 0.4s ease;
-        }
-
-        .spinning {
-            animation: spinRotate 0.6s ease-in-out;
-        }
+        .spin-icon { display: inline-block; transition: transform 0.4s ease; }
+        .spinning { animation: spinRotate 0.6s ease-in-out; }
 
         @keyframes spinRotate {
             0% { transform: rotate(0deg); }
@@ -617,14 +578,14 @@
             justify-content: center;
             text-align: center;
             gap: 8px;
-            padding: 15px 0;
+            padding: 25px 0;
             flex: 1;
         }
 
         .empty-gift-glow-container {
             position: relative;
-            width: 120px;
-            height: 100px;
+            width: 100px;
+            height: 85px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -633,8 +594,8 @@
         .empty-gift-glow-container::before {
             content: '';
             position: absolute;
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, transparent 70%);
             animation: pulseGlow 3s infinite ease-in-out;
@@ -646,38 +607,23 @@
         }
 
         .empty-gift-icon-big {
-            font-size: 60px;
+            font-size: 50px;
             filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.6));
             z-index: 2;
         }
 
-        .empty-title {
-            font-size: 19px;
-            font-weight: 800;
-            color: #ffffff;
-            margin-top: 4px;
-        }
-
-        .empty-subtitle {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .sparkle-divider {
-            color: #38bdf8;
-            font-size: 10px;
-            margin: 2px 0;
-            opacity: 0.7;
-        }
+        .empty-title { font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 4px; }
+        .empty-subtitle { font-size: 12px; color: var(--text-muted); }
+        .sparkle-divider { color: var(--accent-cyan); font-size: 10px; margin: 2px 0; opacity: 0.7; }
 
         .btn-send-gift-outlined {
             background: rgba(37, 99, 235, 0.1);
             border: 1px solid var(--primary-blue);
-            color: #38bdf8;
-            padding: 9px 22px;
+            color: var(--accent-cyan);
+            padding: 8px 20px;
             border-radius: 8px;
             font-family: 'Outfit', sans-serif;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
@@ -693,62 +639,37 @@
             box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
         }
 
-        /* Trust Banner at Bottom */
+        /* Bottom Trust Banner */
         .inbox-trust-banner {
             background: rgba(8, 13, 25, 0.5);
             border: 1px solid var(--card-border);
             border-radius: 12px;
-            padding: 12px 18px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-around;
+            margin-top: auto;
         }
 
-        .trust-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .trust-item { display: flex; align-items: center; gap: 10px; }
+        .trust-icon-box { font-size: 15px; color: var(--accent-cyan); }
+        .trust-text-group { display: flex; flex-direction: column; }
+        .trust-title { font-size: 11.5px; font-weight: 700; color: #ffffff; }
+        .trust-sub { font-size: 9.5px; color: #64748b; margin-top: 1px; }
+        .trust-divider { width: 1px; height: 22px; background: var(--card-border); }
 
-        .trust-icon-box {
-            font-size: 16px;
-            color: #38bdf8;
-        }
-
-        .trust-text-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .trust-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        .trust-sub {
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 1px;
-        }
-
-        .trust-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--card-border);
-        }
-
-        /* Inbox List Items (When Gifts Present) */
-        .inbox-list-wrap {
+        /* General List Wrap for Content Panels */
+        .panel-scroll-content {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 280px;
-            overflow-y: auto;
             flex: 1;
+            overflow-y: auto;
             padding-right: 4px;
+            margin-bottom: 12px;
         }
 
+        /* INBOX CARDS */
         .inbox-item-card {
             background: var(--input-bg);
             border: 1px solid var(--card-border);
@@ -757,33 +678,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-
-        .inbox-left-group {
-            display: flex;
-            align-items: center;
             gap: 12px;
+            transition: border-color 0.2s ease;
         }
 
-        .inbox-item-icon {
-            font-size: 26px;
-        }
+        .inbox-item-card:hover { border-color: #334155; }
 
-        .inbox-item-sender {
-            font-size: 13px;
-            font-weight: 700;
-            color: #ffffff;
-        }
+        .inbox-left-group { display: flex; align-items: center; gap: 12px; }
+        .inbox-item-icon { font-size: 26px; flex-shrink: 0; }
+        .inbox-item-sender { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .inbox-item-msg { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+        .inbox-time-tag { font-size: 10px; color: #64748b; margin-top: 2px; }
 
-        .inbox-item-msg {
-            font-size: 11.5px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
+        .card-actions-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
         .btn-claim-item {
-            padding: 8px 16px;
-            background: var(--primary-blue);
+            padding: 7px 14px;
+            background: var(--success-green);
             border: none;
             border-radius: 6px;
             color: #ffffff;
@@ -791,20 +702,315 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: opacity 0.2s ease;
         }
 
-        .btn-claim-item:hover {
-            background: var(--primary-blue-hover);
+        .btn-claim-item:hover { opacity: 0.9; }
+
+        .btn-decline-item {
+            padding: 7px 12px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            color: #f87171;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        /* Modal Overlay */
+        .btn-decline-item:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
+
+        .btn-details-item {
+            padding: 7px 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-details-item:hover { color: #ffffff; border-color: #475569; }
+
+        /* STATUS BADGES */
+        .status-badge {
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-delivered, .status-claimed {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            color: #4ade80;
+        }
+
+        .status-pending {
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.35);
+            color: #facc15;
+        }
+
+        .status-declined {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+        }
+
+        .status-failed {
+            background: rgba(100, 116, 139, 0.15);
+            border: 1px solid rgba(100, 116, 139, 0.35);
+            color: #94a3b8;
+        }
+
+        /* GIFT HISTORY FILTERS & SEARCH BAR */
+        .history-controls-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .filter-pills-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--input-bg);
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+        }
+
+        .filter-pill-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-pill-btn.active {
+            background: var(--primary-blue);
+            color: #ffffff;
+        }
+
+        .history-search-input {
+            padding: 6px 12px 6px 32px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 12px;
+            outline: none;
+            width: 200px;
+        }
+
+        .history-search-input:focus { border-color: var(--primary-blue); }
+
+        /* TOP GIFTERS LEADERBOARD CARDS */
+        .leaderboard-player-card {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .leaderboard-player-card:hover {
+            transform: translateY(-2px);
+            border-color: #334155;
+        }
+
+        .leaderboard-player-card.rank-1 {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), #0d1527);
+            border: 1.5px solid rgba(251, 191, 36, 0.5);
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);
+        }
+
+        .leaderboard-player-card.rank-2 {
+            background: linear-gradient(135deg, rgba(203, 213, 225, 0.08), #0d1527);
+            border: 1.5px solid rgba(203, 213, 225, 0.4);
+        }
+
+        .leaderboard-player-card.rank-3 {
+            background: linear-gradient(135deg, rgba(217, 119, 6, 0.08), #0d1527);
+            border: 1.5px solid rgba(217, 119, 6, 0.4);
+        }
+
+        .leaderboard-player-card.is-current-user {
+            border: 2px solid var(--accent-cyan);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), #0d1527);
+        }
+
+        .rank-badge-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .rank-1 .rank-badge-icon { background: rgba(251, 191, 36, 0.2); color: var(--gold-text); }
+        .rank-2 .rank-badge-icon { background: rgba(203, 213, 225, 0.2); color: #e2e8f0; }
+        .rank-3 .rank-badge-icon { background: rgba(217, 119, 6, 0.2); color: #f97316; }
+        .rank-other { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); font-size: 12px; }
+
+        .leaderboard-left-info { display: flex; align-items: center; gap: 12px; }
+        .player-avatar-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .player-name-title { font-size: 13.5px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px; }
+        .you-tag-pill { background: var(--primary-blue); color: #ffffff; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
+        .gifts-count-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+        .total-value-gold { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 800; color: var(--gold-text); }
+
+        /* SETTINGS FORM STYLES */
+        .settings-group-card {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .settings-group-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 8px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .settings-label-wrap { display: flex; flex-direction: column; }
+        .settings-label-title { font-size: 12.5px; font-weight: 700; color: #ffffff; }
+        .settings-label-desc { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+
+        /* Custom Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1e293b;
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider { background-color: var(--primary-blue); border-color: var(--primary-blue-hover); }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        .settings-select-field {
+            background: #0d1527;
+            border: 1px solid var(--card-border);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-settings-action {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-save-settings {
+            background: var(--primary-blue);
+            border: none;
+            color: #ffffff;
+        }
+
+        .btn-save-settings:hover { background: var(--primary-blue-hover); }
+
+        .btn-reset-settings {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .btn-reset-settings:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
+
+        /* Modal Details Styling */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85);
             display: none;
             align-items: center;
@@ -817,15 +1023,40 @@
             background: #0f172a;
             border: 1px solid var(--card-border);
             border-radius: 16px;
-            padding: 32px 28px;
-            width: 380px;
+            padding: 28px;
+            width: 420px;
+            max-width: 90%;
             text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            position: relative;
         }
 
-        .modal-icon { font-size: 40px; margin-bottom: 12px; }
-        .modal-title { font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 8px; text-transform: uppercase; }
-        .modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+        .modal-icon { font-size: 44px; margin-bottom: 8px; }
+        .modal-title { font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 6px; text-transform: uppercase; }
+        .modal-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+        .modal-details-box {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-detail-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-detail-key { color: var(--text-muted); }
+        .modal-detail-val { font-weight: 700; color: #ffffff; }
+
         .modal-close-btn {
             width: 100%;
             padding: 12px;
@@ -836,12 +1067,17 @@
             font-weight: 700;
             font-size: 13px;
             cursor: pointer;
+            transition: background 0.2s ease;
         }
 
+        .modal-close-btn:hover { background: var(--primary-blue-hover); }
+
         @media (max-width: 860px) {
-            .inbox-two-col-layout { flex-direction: column; }
-            .inbox-sidebar-col { width: 100%; flex-direction: row; }
+            .inbox-two-col-layout { flex-direction: column; max-height: none; }
+            .inbox-sidebar-col { width: 100%; flex-direction: row; flex-wrap: wrap; }
+            .sidebar-menu-list { flex-direction: row; flex-wrap: wrap; }
             .sidebar-promo-card { display: none; }
+            .gift-packs-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
@@ -862,18 +1098,18 @@
 
     <!-- Navigation Tabs Bar -->
     <div class="tabs-row-bar">
-        <button class="nav-tab-btn active" id="tab-send-btn" onclick="switchTab('send')">
+        <button class="nav-tab-btn active" id="tab-send-btn" onclick="switchToMainTab('send')">
             <span>🎁</span> Send a Gift
         </button>
-        <button class="nav-tab-btn" id="tab-inbox-btn" onclick="switchTab('inbox')">
-            <span>📦</span> Inbox Gifts ( <span id="inbox-count-display">0</span> ) <span class="tab-badge-pill" id="tab-badge-pill">0</span>
+        <button class="nav-tab-btn" id="tab-inbox-btn" onclick="switchToMainTab('inbox')">
+            <span>📦</span> Gift Terminal ( <span id="inbox-count-display">0</span> ) <span class="tab-badge-pill" id="tab-badge-pill">0</span>
         </button>
     </div>
 
     <!-- Main Content Container -->
     <main class="gifting-main-shell">
 
-        <!-- TAB 1: SEND A GIFT PANEL -->
+        <!-- PANEL 1: SEND A GIFT -->
         <div class="gifting-card-container" id="panel-send">
             
             <!-- Section 1: Select Recipient Friend -->
@@ -895,7 +1131,6 @@
                 </div>
                 <div class="gift-packs-grid">
                     
-                    <!-- Card 1 -->
                     <div class="gift-pack-card selected" onclick="selectGift(this, '50 Coins', 50)">
                         <div class="check-circle-badge">✓</div>
                         <div class="gift-pack-icon">🪙</div>
@@ -903,7 +1138,6 @@
                         <div class="gift-pack-price">$50.00</div>
                     </div>
 
-                    <!-- Card 2 -->
                     <div class="gift-pack-card" onclick="selectGift(this, '250 Gold Chest', 250)">
                         <div class="check-circle-badge">✓</div>
                         <div class="gift-pack-icon">📦</div>
@@ -911,7 +1145,6 @@
                         <div class="gift-pack-price">$250.00</div>
                     </div>
 
-                    <!-- Card 3 -->
                     <div class="gift-pack-card" onclick="selectGift(this, 'Crown King Skin', 300)">
                         <div class="check-circle-badge">✓</div>
                         <div class="gift-pack-icon">👑</div>
@@ -919,7 +1152,6 @@
                         <div class="gift-pack-price">$300.00</div>
                     </div>
 
-                    <!-- Card 4 -->
                     <div class="gift-pack-card" onclick="selectGift(this, 'Cyber Queen Skin', 450)">
                         <div class="check-circle-badge">✓</div>
                         <div class="gift-pack-icon">⚔️</div>
@@ -927,7 +1159,6 @@
                         <div class="gift-pack-price">$450.00</div>
                     </div>
 
-                    <!-- Card 5 -->
                     <div class="gift-pack-card" onclick="selectGift(this, 'VIP Battle Pass', 500)">
                         <div class="check-circle-badge">✓</div>
                         <div class="gift-pack-icon">💎</div>
@@ -953,25 +1184,25 @@
 
         </div>
 
-        <!-- TAB 2: INBOX GIFTS PANEL (MATCHES SCREENSHOT EXACLY) -->
+        <!-- PANEL 2: TWO-COLUMN TERMINAL (INBOX, SENT, HISTORY, LEADERBOARD, SETTINGS) -->
         <div class="inbox-two-col-layout" id="panel-inbox" style="display: none;">
             
-            <!-- Left Sidebar -->
+            <!-- Left Sidebar Menu -->
             <aside class="inbox-sidebar-col">
                 <div class="sidebar-menu-list">
-                    <div class="sidebar-menu-item active">
+                    <div class="sidebar-menu-item active" id="sb-nav-inbox" onclick="switchSidebarTab('inbox')">
                         <span>📥</span> Inbox
                     </div>
-                    <div class="sidebar-menu-item" onclick="switchTab('send')">
+                    <div class="sidebar-menu-item" id="sb-nav-sent" onclick="switchSidebarTab('sent')">
                         <span>🚀</span> Sent Gifts
                     </div>
-                    <div class="sidebar-menu-item" onclick="alert('Gift History is recorded automatically in your account ledger.')">
+                    <div class="sidebar-menu-item" id="sb-nav-history" onclick="switchSidebarTab('history')">
                         <span>🕒</span> Gift History
                     </div>
-                    <div class="sidebar-menu-item" onclick="alert('Top Gifters Leaderboard is updated weekly!')">
+                    <div class="sidebar-menu-item" id="sb-nav-top_gifters" onclick="switchSidebarTab('top_gifters')">
                         <span>🏆</span> Top Gifters
                     </div>
-                    <div class="sidebar-menu-item" onclick="alert('Gift Notification Settings are enabled.')">
+                    <div class="sidebar-menu-item" id="sb-nav-settings" onclick="switchSidebarTab('settings')">
                         <span>⚙️</span> Settings
                     </div>
                 </div>
@@ -981,27 +1212,29 @@
                     <div class="promo-gift-icon">🎁</div>
                     <div class="promo-title">Send Happiness</div>
                     <div class="promo-desc">Surprise your opponents with exclusive gifts!</div>
-                    <button class="btn-sidebar-send" onclick="switchTab('send')">Send a Gift</button>
+                    <button class="btn-sidebar-send" onclick="switchToMainTab('send')">Send a Gift</button>
                 </div>
             </aside>
 
-            <!-- Right Main Inbox Card -->
+            <!-- Right Main Card -->
             <main class="inbox-main-card">
                 
-                <!-- Inbox Card Header -->
+                <!-- Card Header Dynamic Title & Actions -->
                 <div class="inbox-header-row">
-                    <div class="inbox-title-badge">
-                        <div class="inbox-title-icon-box">📥</div>
-                        <span>PENDING RECEIVED GIFTS</span>
+                    <div class="inbox-title-badge" id="terminal-header-title">
+                        <div class="inbox-title-icon-box" id="terminal-header-icon">📥</div>
+                        <span id="terminal-header-text">PENDING RECEIVED GIFTS</span>
                     </div>
-                    <button class="btn-refresh-inbox-outlined" onclick="refreshInboxWithAnimation(event)" title="Refresh Inbox Gifts">
-                        <span class="spin-icon" id="refresh-spin-icon">🔄</span> Refresh Inbox
-                    </button>
+                    <div id="terminal-header-actions">
+                        <button class="btn-refresh-inbox-outlined" onclick="refreshTerminalWithAnimation(event)" title="Refresh Data">
+                            <span class="spin-icon" id="refresh-spin-icon">🔄</span> Refresh
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Dynamic Inbox Content (Loaded by JS) -->
-                <div id="inbox-content-area" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                    <!-- Rendered by JS: Either Empty State or Inbox Items -->
+                <!-- Dynamic Content Container -->
+                <div id="terminal-content-area" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <!-- Rendered by JS based on sidebar active tab -->
                 </div>
 
                 <!-- Bottom Trust Banner -->
@@ -1010,7 +1243,7 @@
                         <span class="trust-icon-box">🛡️</span>
                         <div class="trust-text-group">
                             <span class="trust-title">100% Secure</span>
-                            <span class="trust-sub">All gifts are safe and secure</span>
+                            <span class="trust-sub">All gifts are safe and verified</span>
                         </div>
                     </div>
 
@@ -1041,13 +1274,17 @@
 
     </main>
 
-    <!-- Status Modal Overlay -->
+    <!-- Modal Dialog Overlay (Notice / Action / View Details) -->
     <div class="modal-overlay" id="status-modal">
         <div class="modal-card">
             <div class="modal-icon" id="modal-icon">✨</div>
             <div class="modal-title" id="modal-title">GIFT DELIVERED!</div>
-            <div class="modal-desc" id="modal-desc">Your gift has been sent successfully to recipient friend.</div>
-            <button class="modal-close-btn" onclick="closeModal()">GREAT!</button>
+            <div class="modal-desc" id="modal-desc">Your gift has been sent successfully.</div>
+            
+            <!-- Optional Details Box inside Modal -->
+            <div id="modal-extra-details" style="display: none;"></div>
+
+            <button class="modal-close-btn" id="modal-action-btn" onclick="closeModal()">GREAT!</button>
         </div>
     </div>
 
@@ -1056,6 +1293,8 @@
         let selectedGiftName = "50 Coins";
         let selectedGiftPrice = 50;
         let selectedGiftIcon = "🪙";
+        let currentSidebarTab = 'inbox';
+        let historyFilter = 'all';
 
         function getOrGenerateUserId() {
             let uid = localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID');
@@ -1068,13 +1307,13 @@
         }
 
         const REGISTERED_PLAYERS = [
-            { id: '582910', name: 'Girish', avatar: '👑', status: 'Online' },
-            { id: '893012', name: 'Nithish', avatar: '⚡', status: 'Online' },
-            { id: '749102', name: 'Dhanish', avatar: '⚔️', status: 'In Match' },
-            { id: '381049', name: 'Vaisal', avatar: '🛡️', status: 'Online' },
-            { id: '629410', name: 'Logith', avatar: '🎯', status: 'Online' },
-            { id: '492015', name: 'Surya', avatar: '🔥', status: 'Away' },
-            { id: '102934', name: 'Thaya', avatar: '🚀', status: 'Online' }
+            { id: '582910', name: 'Girish', avatar: '👑', status: 'Online', totalGiftsSent: 12, totalValueSent: 2850 },
+            { id: '893012', name: 'Nithish', avatar: '⚡', status: 'Online', totalGiftsSent: 9, totalValueSent: 1900 },
+            { id: '749102', name: 'Dhanish', avatar: '⚔️', status: 'In Match', totalGiftsSent: 7, totalValueSent: 1450 },
+            { id: '381049', name: 'Vaisal', avatar: '🛡️', status: 'Online', totalGiftsSent: 5, totalValueSent: 1100 },
+            { id: '629410', name: 'Logith', avatar: '🎯', status: 'Online', totalGiftsSent: 4, totalValueSent: 850 },
+            { id: '492015', name: 'Surya', avatar: '🔥', status: 'Away', totalGiftsSent: 3, totalValueSent: 500 },
+            { id: '102934', name: 'Thaya', avatar: '🚀', status: 'Online', totalGiftsSent: 2, totalValueSent: 300 }
         ];
 
         function findRegisteredPlayer(query) {
@@ -1154,18 +1393,93 @@
             }
         }
 
+        // Initialize default sample gifts if none exist
+        function initSampleGiftsIfEmpty() {
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const myId = getOrGenerateUserId();
+
+            if (sharedGifts.length === 0) {
+                sharedGifts = [
+                    {
+                        id: 'gift_sample_1',
+                        senderName: 'Girish (#582910)',
+                        senderId: '582910',
+                        recipientId: myId,
+                        recipientName: `Player #${myId}`,
+                        giftName: '100 Bonus Coins',
+                        giftPrice: 100,
+                        giftIcon: '🪙',
+                        message: 'Sent you 100 Bonus Arena Coins! Great match earlier.',
+                        timestamp: 'Today, 10:30 AM',
+                        status: 'Pending',
+                        claimed: false
+                    },
+                    {
+                        id: 'gift_sample_2',
+                        senderName: 'Nithish (#893012)',
+                        senderId: '893012',
+                        recipientId: myId,
+                        recipientName: `Player #${myId}`,
+                        giftName: 'Crown King Skin',
+                        giftPrice: 300,
+                        giftIcon: '👑',
+                        message: 'Golden Crown King Piece Skin Unlocked for you!',
+                        timestamp: 'Yesterday, 04:15 PM',
+                        status: 'Pending',
+                        claimed: false
+                    },
+                    {
+                        id: 'gift_sample_3',
+                        senderName: `Player #${myId}`,
+                        senderId: myId,
+                        recipientId: '749102',
+                        recipientName: 'Dhanish (#749102)',
+                        giftName: 'VIP Battle Pass',
+                        giftPrice: 500,
+                        giftIcon: '💎',
+                        message: 'Congrats on making it to top division!',
+                        timestamp: 'Aug 29, 02:20 PM',
+                        status: 'Delivered',
+                        claimed: true
+                    },
+                    {
+                        id: 'gift_sample_4',
+                        senderName: `Player #${myId}`,
+                        senderId: myId,
+                        recipientId: '381049',
+                        recipientName: 'Vaisal (#381049)',
+                        giftName: 'Cyber Queen Skin',
+                        giftPrice: 450,
+                        giftIcon: '⚔️',
+                        message: 'Good game! Take this Cyber Queen Skin.',
+                        timestamp: 'Aug 28, 08:10 PM',
+                        status: 'Delivered',
+                        claimed: true
+                    }
+                ];
+                localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const userId = getOrGenerateUserId();
             document.getElementById('header-user-id').innerText = `ID: #${userId}`;
-            loadInboxGifts();
-
+            initSampleGiftsIfEmpty();
+            
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('tab') === 'received' || urlParams.get('tab') === 'inbox') {
-                switchTab('inbox');
+            const tabParam = urlParams.get('tab');
+            if (tabParam && ['inbox', 'sent', 'history', 'top_gifters', 'settings'].includes(tabParam)) {
+                switchToMainTab('inbox');
+                switchSidebarTab(tabParam);
+            } else if (tabParam === 'send') {
+                switchToMainTab('send');
+            } else {
+                renderCurrentTerminalTab();
+                updateInboxBadgeCounts();
             }
         });
 
-        function switchTab(tab) {
+        function switchToMainTab(tab) {
             const sendPanel = document.getElementById('panel-send');
             const inboxPanel = document.getElementById('panel-inbox');
             const sendBtn = document.getElementById('tab-send-btn');
@@ -1181,8 +1495,17 @@
                 inboxPanel.style.display = 'flex';
                 inboxBtn.classList.add('active');
                 sendBtn.classList.remove('active');
-                loadInboxGifts();
+                renderCurrentTerminalTab();
             }
+        }
+
+        function switchSidebarTab(tabName) {
+            currentSidebarTab = tabName;
+            document.querySelectorAll('.sidebar-menu-item').forEach(item => item.classList.remove('active'));
+            const activeElem = document.getElementById(`sb-nav-${tabName}`);
+            if (activeElem) activeElem.classList.add('active');
+
+            renderCurrentTerminalTab();
         }
 
         function selectGift(element, name, price) {
@@ -1192,6 +1515,17 @@
             selectedGiftPrice = price;
             const iconElem = element.querySelector('.gift-pack-icon');
             selectedGiftIcon = iconElem ? iconElem.innerText : '🎁';
+        }
+
+        function getSettings() {
+            const defaults = {
+                notifications: true,
+                privacy: 'everyone',
+                soundEffects: true,
+                confirmExpensive: true,
+                expensiveThreshold: 250
+            };
+            return JSON.parse(localStorage.getItem('arena_gift_settings') || JSON.stringify(defaults));
         }
 
         function processSendGift() {
@@ -1206,6 +1540,13 @@
             if (!recipientPlayer) {
                 showModal('❌', 'ENTERED ID WAS INVALID', `Entered ID "${recipientInput}" was invalid! No registered player was found with this ID.`);
                 return;
+            }
+
+            const settings = getSettings();
+            if (settings.confirmExpensive && selectedGiftPrice >= settings.expensiveThreshold) {
+                if (!confirm(`Confirmation required: You are sending an expensive gift "${selectedGiftName}" ($${selectedGiftPrice}.00) to ${recipientPlayer.name}. Proceed?`)) {
+                    return;
+                }
             }
 
             if (walletBalance < selectedGiftPrice) {
@@ -1224,12 +1565,13 @@
                 senderName: `Player #${myId}`,
                 senderId: myId,
                 recipientId: recipientPlayer.id,
-                recipientName: recipientPlayer.name,
+                recipientName: `${recipientPlayer.name} (#${recipientPlayer.id})`,
                 giftName: selectedGiftName,
                 giftPrice: selectedGiftPrice,
                 giftIcon: selectedGiftIcon,
                 message: giftMsg,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'Delivered',
                 claimed: false
             };
 
@@ -1237,50 +1579,86 @@
             sharedGifts.push(newGift);
             localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
 
-            showModal('🎁', 'GIFT SENT SUCCESSFULLY!', `Your gift "${selectedGiftName}" ($${selectedGiftPrice}.00) was sent to ${recipientPlayer.name} (#${recipientPlayer.id}).`);
+            showModal('🎁', 'GIFT SENT SUCCESSFULLY!', `Your gift "${selectedGiftName}" ($${selectedGiftPrice}.00) was delivered to ${recipientPlayer.name} (#${recipientPlayer.id}).`);
             
             document.getElementById('recipient-id-input').value = '';
             document.getElementById('gift-message-input').value = '';
             document.getElementById('recipient-status-badge').style.display = 'none';
+
+            updateInboxBadgeCounts();
         }
 
-        function refreshInboxWithAnimation(event) {
+        function refreshTerminalWithAnimation(event) {
             if (event) event.stopPropagation();
             const iconHeader = document.getElementById('refresh-spin-icon');
             if (iconHeader) iconHeader.classList.add('spinning');
 
-            loadInboxGifts();
+            renderCurrentTerminalTab();
 
             setTimeout(() => {
                 if (iconHeader) iconHeader.classList.remove('spinning');
             }, 600);
         }
 
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'arena_shared_gifts' || e.key === 'arena_user_6digit_id') {
-                loadInboxGifts();
-            }
-        });
-
-        function loadInboxGifts() {
-            const container = document.getElementById('inbox-content-area');
+        function updateInboxBadgeCounts() {
             let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
             const myId = getOrGenerateUserId();
             const myName = (localStorage.getItem('playerName') || '').toLowerCase();
             
-            // Filter unclaimed gifts targeted at this user
             const unclaimedGifts = sharedGifts.filter(g => {
-                if (g.claimed) return false;
+                if (g.claimed || g.status === 'Declined') return false;
                 if (!g.recipientId || g.recipientId === myId) return true;
-                if (g.recipientName && g.recipientName.toLowerCase() === myName) return true;
+                if (g.recipientName && g.recipientName.toLowerCase().includes(myName)) return true;
                 return false;
             });
 
             document.getElementById('inbox-count-display').innerText = unclaimedGifts.length;
             document.getElementById('tab-badge-pill').innerText = unclaimedGifts.length;
+        }
 
-            if (unclaimedGifts.length === 0) {
-                // Render Exact Screenshot Empty State
+        function renderCurrentTerminalTab() {
+            updateInboxBadgeCounts();
+            const headerTitleText = document.getElementById('terminal-header-text');
+            const headerIcon = document.getElementById('terminal-header-icon');
+            const container = document.getElementById('terminal-content-area');
+
+            if (currentSidebarTab === 'inbox') {
+                headerIcon.innerText = '📥';
+                headerTitleText.innerText = 'PENDING RECEIVED GIFTS';
+                renderInboxView(container);
+            } else if (currentSidebarTab === 'sent') {
+                headerIcon.innerText = '🚀';
+                headerTitleText.innerText = 'SENT GIFTS';
+                renderSentGiftsView(container);
+            } else if (currentSidebarTab === 'history') {
+                headerIcon.innerText = '🕒';
+                headerTitleText.innerText = 'GIFT TRANSACTION HISTORY';
+                renderGiftHistoryView(container);
+            } else if (currentSidebarTab === 'top_gifters') {
+                headerIcon.innerText = '🏆';
+                headerTitleText.innerText = 'TOP GIFTERS LEADERBOARD';
+                renderTopGiftersView(container);
+            } else if (currentSidebarTab === 'settings') {
+                headerIcon.innerText = '⚙️';
+                headerTitleText.innerText = 'GIFT TERMINAL SETTINGS';
+                renderSettingsView(container);
+            }
+        }
+
+        /* 1. INBOX MODULE */
+        function renderInboxView(container) {
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const myId = getOrGenerateUserId();
+            const myName = (localStorage.getItem('playerName') || '').toLowerCase();
+
+            const pendingGifts = sharedGifts.filter(g => {
+                if (g.claimed || g.status === 'Declined') return false;
+                if (!g.recipientId || g.recipientId === myId) return true;
+                if (g.recipientName && g.recipientName.toLowerCase().includes(myName)) return true;
+                return false;
+            });
+
+            if (pendingGifts.length === 0) {
                 container.innerHTML = `
                     <div class="inbox-empty-state">
                         <div class="empty-gift-glow-container">
@@ -1289,7 +1667,7 @@
                         <div class="empty-title">Your Inbox is Empty</div>
                         <div class="empty-subtitle">No pending gifts in your inbox right now.</div>
                         <div class="sparkle-divider">✦</div>
-                        <button class="btn-send-gift-outlined" onclick="switchTab('send')">
+                        <button class="btn-send-gift-outlined" onclick="switchToMainTab('send')">
                             <span>🎁</span> Send a Gift Now
                         </button>
                     </div>
@@ -1297,19 +1675,23 @@
                 return;
             }
 
-            // Render Inbox Gift Cards
             container.innerHTML = `
-                <div class="inbox-list-wrap">
-                    ${unclaimedGifts.map(gift => `
+                <div class="panel-scroll-content">
+                    ${pendingGifts.map(gift => `
                         <div class="inbox-item-card" id="${gift.id}">
                             <div class="inbox-left-group">
                                 <div class="inbox-item-icon">${gift.giftIcon || '🎁'}</div>
                                 <div>
                                     <div class="inbox-item-sender">FROM: ${gift.senderName}</div>
                                     <div class="inbox-item-msg">"${gift.message}"</div>
+                                    <div class="inbox-time-tag">Received ${gift.timestamp || 'recently'}</div>
                                 </div>
                             </div>
-                            <button class="btn-claim-item" onclick="claimGiftItem('${gift.id}', ${gift.giftPrice})">CLAIM $${gift.giftPrice}</button>
+                            <div class="card-actions-group">
+                                <button class="btn-claim-item" onclick="claimGiftItem('${gift.id}', ${gift.giftPrice})">CLAIM $${gift.giftPrice}</button>
+                                <button class="btn-decline-item" onclick="declineGiftItem('${gift.id}')">DECLINE</button>
+                                <button class="btn-details-item" onclick="viewGiftDetails('${gift.id}')">DETAILS</button>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -1321,23 +1703,421 @@
             document.getElementById('wallet-balance-display').innerText = `$${walletBalance.toFixed(2)}`;
             
             let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
-            sharedGifts = sharedGifts.map(g => g.id === giftId ? { ...g, claimed: true } : g);
+            sharedGifts = sharedGifts.map(g => g.id === giftId ? { ...g, claimed: true, status: 'Claimed' } : g);
             localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
 
             showModal('✨', 'GIFT CLAIMED!', `You successfully claimed $${price}.00 into your wallet!`);
-            loadInboxGifts();
+            renderCurrentTerminalTab();
+        }
+
+        function declineGiftItem(giftId) {
+            if (!confirm('Are you sure you want to decline this gift?')) return;
+            
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            sharedGifts = sharedGifts.map(g => g.id === giftId ? { ...g, claimed: false, status: 'Declined' } : g);
+            localStorage.setItem('arena_shared_gifts', JSON.stringify(sharedGifts));
+
+            showModal('🚫', 'GIFT DECLINED', 'The gift was declined and removed from your inbox.');
+            renderCurrentTerminalTab();
+        }
+
+        /* 2. SENT GIFTS MODULE */
+        function renderSentGiftsView(container) {
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const myId = getOrGenerateUserId();
+
+            const sentGifts = sharedGifts.filter(g => g.senderId === myId || (g.senderName && g.senderName.includes(myId)));
+
+            if (sentGifts.length === 0) {
+                container.innerHTML = `
+                    <div class="inbox-empty-state">
+                        <div class="empty-gift-glow-container">
+                            <div class="empty-gift-icon-big">🚀</div>
+                        </div>
+                        <div class="empty-title">No Sent Gifts Yet</div>
+                        <div class="empty-subtitle">Surprise your opponents or friends by sending them exclusive arena gifts!</div>
+                        <div class="sparkle-divider">✦</div>
+                        <button class="btn-send-gift-outlined" onclick="switchToMainTab('send')">
+                            <span>🎁</span> Send Your First Gift
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="panel-scroll-content">
+                    ${sentGifts.map(gift => {
+                        const statusClass = `status-${(gift.status || 'delivered').toLowerCase()}`;
+                        return `
+                            <div class="inbox-item-card">
+                                <div class="inbox-left-group">
+                                    <div class="inbox-item-icon">${gift.giftIcon || '🎁'}</div>
+                                    <div>
+                                        <div class="inbox-item-sender">TO: ${gift.recipientName || 'Player'}</div>
+                                        <div class="inbox-item-msg">${gift.giftName} • Value: $${gift.giftPrice}.00</div>
+                                        <div class="inbox-time-tag">Sent ${gift.timestamp || 'recently'}</div>
+                                    </div>
+                                </div>
+                                <div class="card-actions-group">
+                                    <span class="status-badge ${statusClass}">${gift.status || 'Delivered'}</span>
+                                    <button class="btn-details-item" onclick="viewGiftDetails('${gift.id}')">DETAILS</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        /* 3. GIFT HISTORY MODULE */
+        function renderGiftHistoryView(container) {
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const myId = getOrGenerateUserId();
+
+            const searchVal = (document.getElementById('history-search-input')?.value || '').toLowerCase().trim();
+
+            let historyList = sharedGifts.filter(g => {
+                const isSent = g.senderId === myId || (g.senderName && g.senderName.includes(myId));
+                const isReceived = g.recipientId === myId || (g.recipientName && g.recipientName.includes(myId));
+                
+                if (historyFilter === 'sent' && !isSent) return false;
+                if (historyFilter === 'received' && !isReceived) return false;
+                if (historyFilter === 'all' && !isSent && !isReceived) return false;
+
+                if (searchVal) {
+                    const matchSender = (g.senderName || '').toLowerCase().includes(searchVal);
+                    const matchRecip = (g.recipientName || '').toLowerCase().includes(searchVal);
+                    const matchGift = (g.giftName || '').toLowerCase().includes(searchVal);
+                    if (!matchSender && !matchRecip && !matchGift) return false;
+                }
+                return true;
+            });
+
+            container.innerHTML = `
+                <div class="history-controls-bar">
+                    <div class="filter-pills-group">
+                        <button class="filter-pill-btn ${historyFilter === 'all' ? 'active' : ''}" onclick="setHistoryFilter('all')">ALL HISTORY</button>
+                        <button class="filter-pill-btn ${historyFilter === 'sent' ? 'active' : ''}" onclick="setHistoryFilter('sent')">SENT</button>
+                        <button class="filter-pill-btn ${historyFilter === 'received' ? 'active' : ''}" onclick="setHistoryFilter('received')">RECEIVED</button>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="text" class="history-search-input" id="history-search-input" placeholder="🔍 Search history..." value="${searchVal}" oninput="renderCurrentTerminalTab()">
+                    </div>
+                </div>
+
+                ${historyList.length === 0 ? `
+                    <div class="inbox-empty-state">
+                        <div class="empty-title" style="font-size: 15px;">No Transaction Logs Found</div>
+                        <div class="empty-subtitle">No matching gift transactions found for current filter.</div>
+                    </div>
+                ` : `
+                    <div class="panel-scroll-content">
+                        ${historyList.map(gift => {
+                            const isSent = gift.senderId === myId || (gift.senderName && gift.senderName.includes(myId));
+                            const dirIcon = isSent ? '📤 Sent' : '📥 Received';
+                            const playerText = isSent ? `To: ${gift.recipientName}` : `From: ${gift.senderName}`;
+                            const statusClass = `status-${(gift.status || 'delivered').toLowerCase()}`;
+                            return `
+                                <div class="inbox-item-card">
+                                    <div class="inbox-left-group">
+                                        <div class="inbox-item-icon">${gift.giftIcon || '🎁'}</div>
+                                        <div>
+                                            <div class="inbox-item-sender">${dirIcon} - ${playerText}</div>
+                                            <div class="inbox-item-msg">${gift.giftName} • $${gift.giftPrice}.00</div>
+                                            <div class="inbox-time-tag">${gift.timestamp || 'Recent transaction'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-actions-group">
+                                        <span class="status-badge ${statusClass}">${gift.status || (isSent ? 'Delivered' : 'Pending')}</span>
+                                        <button class="btn-details-item" onclick="viewGiftDetails('${gift.id}')">VIEW</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `}
+            `;
+        }
+
+        function setHistoryFilter(filter) {
+            historyFilter = filter;
+            renderCurrentTerminalTab();
+        }
+
+        /* 4. TOP GIFTERS LEADERBOARD MODULE */
+        function renderTopGiftersView(container) {
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const myId = getOrGenerateUserId();
+
+            // Calculate user sent stats
+            let mySentGifts = sharedGifts.filter(g => g.senderId === myId || (g.senderName && g.senderName.includes(myId)));
+            let myCount = mySentGifts.length;
+            let myTotalVal = mySentGifts.reduce((acc, curr) => acc + (curr.giftPrice || 0), 0);
+
+            // Combine registered players with current user stats
+            let leaderboard = REGISTERED_PLAYERS.map(p => ({ ...p }));
+            
+            let currentUserInList = leaderboard.find(p => p.id === myId);
+            if (currentUserInList) {
+                currentUserInList.totalGiftsSent += myCount;
+                currentUserInList.totalValueSent += myTotalVal;
+            } else {
+                leaderboard.push({
+                    id: myId,
+                    name: `Player #${myId}`,
+                    avatar: '👑',
+                    status: 'Online',
+                    totalGiftsSent: myCount > 0 ? myCount : 2,
+                    totalValueSent: myTotalVal > 0 ? myTotalVal : 400
+                });
+            }
+
+            // Sort by totalValueSent descending
+            leaderboard.sort((a, b) => b.totalValueSent - a.totalValueSent);
+
+            const myRankIndex = leaderboard.findIndex(p => p.id === myId);
+            const myRank = myRankIndex !== -1 ? myRankIndex + 1 : leaderboard.length;
+
+            container.innerHTML = `
+                <div style="background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 10px; padding: 10px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700;">
+                        <span>🏆</span> YOUR LEADERBOARD RANK: <strong style="color: var(--accent-cyan); font-family: 'JetBrains Mono'; font-size: 14px;">#${myRank}</strong>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--gold-text); font-weight: 800; font-family: 'JetBrains Mono';">
+                        ${leaderboard[myRankIndex]?.totalGiftsSent || myCount} Gifts Sent • $${leaderboard[myRankIndex]?.totalValueSent || myTotalVal}.00
+                    </div>
+                </div>
+
+                <div class="panel-scroll-content">
+                    ${leaderboard.map((p, index) => {
+                        const rank = index + 1;
+                        const isMe = p.id === myId;
+                        let rankClass = `rank-${rank}`;
+                        let rankIconHTML = rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+                        
+                        return `
+                            <div class="leaderboard-player-card ${rank <= 3 ? rankClass : ''} ${isMe ? 'is-current-user' : ''}">
+                                <div class="leaderboard-left-info">
+                                    <div class="rank-badge-icon ${rank > 3 ? 'rank-other' : ''}">${rankIconHTML}</div>
+                                    <div class="player-avatar-circle">${formatAvatarHTML(p.avatar, '👤')}</div>
+                                    <div>
+                                        <div class="player-name-title">
+                                            ${p.name}
+                                            ${isMe ? '<span class="you-tag-pill">YOU</span>' : ''}
+                                        </div>
+                                        <div class="gifts-count-sub">${p.totalGiftsSent} gifts gifted to arena players</div>
+                                    </div>
+                                </div>
+                                <div class="total-value-gold">
+                                    $${p.totalValueSent.toLocaleString()}.00
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        /* 5. SETTINGS MODULE */
+        function renderSettingsView(container) {
+            const settings = getSettings();
+
+            container.innerHTML = `
+                <div class="panel-scroll-content" style="gap: 14px;">
+                    
+                    <!-- Group 1: Notifications -->
+                    <div class="settings-group-card">
+                        <div class="settings-group-title">🔔 GIFT NOTIFICATIONS</div>
+                        <div class="settings-row">
+                            <div class="settings-label-wrap">
+                                <div class="settings-label-title">In-Game Gift Alerts</div>
+                                <div class="settings-label-desc">Receive pop-up notifications when players send you gifts</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-notify" ${settings.notifications ? 'checked' : ''} onchange="saveCurrentSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Group 2: Privacy -->
+                    <div class="settings-group-card">
+                        <div class="settings-group-title">🛡️ PRIVACY & LEADERBOARD</div>
+                        <div class="settings-row">
+                            <div class="settings-label-wrap">
+                                <div class="settings-label-title">Who Can Send You Gifts</div>
+                                <div class="settings-label-desc">Control incoming gifts permission</div>
+                            </div>
+                            <select class="settings-select-field" id="setting-privacy" onchange="saveCurrentSettings()">
+                                <option value="everyone" ${settings.privacy === 'everyone' ? 'selected' : ''}>Everyone (Public)</option>
+                                <option value="friends" ${settings.privacy === 'friends' ? 'selected' : ''}>Friends Only</option>
+                                <option value="none" ${settings.privacy === 'none' ? 'selected' : ''}>No One (Disable Gifts)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Group 3: Audio & FX -->
+                    <div class="settings-group-card">
+                        <div class="settings-group-title">🔊 AUDIO & ANIMATIONS</div>
+                        <div class="settings-row">
+                            <div class="settings-label-wrap">
+                                <div class="settings-label-title">Sound Effects & FX</div>
+                                <div class="settings-label-desc">Play celebratory audio & animations when claiming gifts</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-sound" ${settings.soundEffects ? 'checked' : ''} onchange="saveCurrentSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Group 4: Safety Confirmation -->
+                    <div class="settings-group-card">
+                        <div class="settings-group-title">🔐 SPENDING CONFIRMATION</div>
+                        <div class="settings-row">
+                            <div class="settings-label-wrap">
+                                <div class="settings-label-title">Confirm Expensive Gifts</div>
+                                <div class="settings-label-desc">Prompt confirmation before sending high-value items</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-confirm" ${settings.confirmExpensive ? 'checked' : ''} onchange="saveCurrentSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label-wrap">
+                                <div class="settings-label-title">Confirmation Threshold</div>
+                                <div class="settings-label-desc">Require confirmation for gifts above this value</div>
+                            </div>
+                            <select class="settings-select-field" id="setting-threshold" onchange="saveCurrentSettings()">
+                                <option value="100" ${settings.expensiveThreshold == 100 ? 'selected' : ''}>$100.00+</option>
+                                <option value="250" ${settings.expensiveThreshold == 250 ? 'selected' : ''}>$250.00+</option>
+                                <option value="500" ${settings.expensiveThreshold == 500 ? 'selected' : ''}>$500.00+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
+                        <button class="btn-settings-action btn-save-settings" onclick="saveCurrentSettings(true)">
+                            <span>💾</span> Save Settings
+                        </button>
+                        <button class="btn-settings-action btn-reset-settings" onclick="resetDefaultSettings()">
+                            <span>🔄</span> Reset to Defaults
+                        </button>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        function saveCurrentSettings(showToast = false) {
+            const settings = {
+                notifications: document.getElementById('setting-notify')?.checked ?? true,
+                privacy: document.getElementById('setting-privacy')?.value ?? 'everyone',
+                soundEffects: document.getElementById('setting-sound')?.checked ?? true,
+                confirmExpensive: document.getElementById('setting-confirm')?.checked ?? true,
+                expensiveThreshold: parseInt(document.getElementById('setting-threshold')?.value || '250', 10)
+            };
+
+            localStorage.setItem('arena_gift_settings', JSON.stringify(settings));
+
+            if (showToast) {
+                showModal('⚙️', 'SETTINGS SAVED', 'Your gift terminal preferences have been updated successfully.');
+            }
+        }
+
+        function resetDefaultSettings() {
+            if (!confirm('Reset all gift settings back to defaults?')) return;
+            localStorage.removeItem('arena_gift_settings');
+            showModal('🔄', 'SETTINGS RESET', 'Gift terminal settings restored to factory defaults.');
+            renderCurrentTerminalTab();
+        }
+
+        /* VIEW GIFT DETAILS MODAL */
+        function viewGiftDetails(giftId) {
+            let sharedGifts = JSON.parse(localStorage.getItem('arena_shared_gifts') || '[]');
+            const gift = sharedGifts.find(g => g.id === giftId);
+
+            if (!gift) {
+                showModal('❓', 'GIFT NOT FOUND', 'The requested gift item could not be found.');
+                return;
+            }
+
+            const myId = getOrGenerateUserId();
+            const isInboxPending = (gift.recipientId === myId || !gift.recipientId) && !gift.claimed && gift.status !== 'Declined';
+
+            document.getElementById('modal-icon').innerText = gift.giftIcon || '🎁';
+            document.getElementById('modal-title').innerText = gift.giftName;
+            document.getElementById('modal-desc').innerText = `Value: $${gift.giftPrice}.00 • Status: ${gift.status || 'Delivered'}`;
+
+            const detailsHTML = `
+                <div class="modal-details-box">
+                    <div class="modal-detail-row">
+                        <span class="modal-detail-key">Transaction ID:</span>
+                        <span class="modal-detail-val" style="font-family: monospace;">${gift.id}</span>
+                    </div>
+                    <div class="modal-detail-row">
+                        <span class="modal-detail-key">Sender:</span>
+                        <span class="modal-detail-val">${gift.senderName || 'Anonymous'}</span>
+                    </div>
+                    <div class="modal-detail-row">
+                        <span class="modal-detail-key">Recipient:</span>
+                        <span class="modal-detail-val">${gift.recipientName || 'You'}</span>
+                    </div>
+                    <div class="modal-detail-row">
+                        <span class="modal-detail-key">Message Note:</span>
+                        <span class="modal-detail-val" style="color: var(--accent-cyan);">"${gift.message || 'No note'}"</span>
+                    </div>
+                    <div class="modal-detail-row">
+                        <span class="modal-detail-key">Timestamp:</span>
+                        <span class="modal-detail-val">${gift.timestamp || 'Recent'}</span>
+                    </div>
+                </div>
+            `;
+
+            const extraDetailsDiv = document.getElementById('modal-extra-details');
+            extraDetailsDiv.innerHTML = detailsHTML;
+            extraDetailsDiv.style.display = 'block';
+
+            const actionBtn = document.getElementById('modal-action-btn');
+            if (isInboxPending) {
+                actionBtn.innerText = `CLAIM $${gift.giftPrice}.00 NOW`;
+                actionBtn.onclick = () => {
+                    closeModal();
+                    claimGiftItem(gift.id, gift.giftPrice);
+                };
+            } else {
+                actionBtn.innerText = 'CLOSE DETAILS';
+                actionBtn.onclick = closeModal;
+            }
+
+            document.getElementById('status-modal').style.display = 'flex';
         }
 
         function showModal(icon, title, desc) {
             document.getElementById('modal-icon').innerText = icon;
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-extra-details').style.display = 'none';
+            
+            const actionBtn = document.getElementById('modal-action-btn');
+            actionBtn.innerText = 'GREAT!';
+            actionBtn.onclick = closeModal;
+
             document.getElementById('status-modal').style.display = 'flex';
         }
 
         function closeModal() {
             document.getElementById('status-modal').style.display = 'none';
         }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'arena_shared_gifts' || e.key === 'arena_user_6digit_id' || e.key === 'arena_gift_settings') {
+                renderCurrentTerminalTab();
+            }
+        });
     </script>
 </body>
 </html>
