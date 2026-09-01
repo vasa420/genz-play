@@ -2246,8 +2246,48 @@
         <!-- 3D Canvas -->
         <canvas id="game-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
 
+        <!-- Screen Dark Vignette Filter -->
+        <div id="hud-vignette" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8002; background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.85) 90%);"></div>
+
         <!-- FPS Crosshair (subtle center dot) -->
-        <div class="fps-crosshair"></div>
+        <div class="fps-crosshair" style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255, 255, 255, 0.7); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 8005; box-shadow: 0 0 3px rgba(0,0,0,0.9);"></div>
+
+        <!-- Reference Image HUD: Top Left Objective -->
+        <div id="hud-ref-objective" style="position: absolute; top: 25px; left: 30px; z-index: 8015; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 3px; text-transform: uppercase; pointer-events: none; text-shadow: 0 2px 5px rgba(0,0,0,0.9);">
+            FIND AND PLACE IMAGES
+        </div>
+
+        <!-- Reference Image HUD: Top Right Clock & Pause Button -->
+        <div id="hud-ref-topright" style="position: absolute; top: 25px; right: 30px; z-index: 8015; display: flex; align-items: center; gap: 15px;">
+            <div id="hud-ref-clock" style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.45); letter-spacing: 2px; text-shadow: 0 2px 5px rgba(0,0,0,0.9);">
+                12 : 00 AM
+            </div>
+            <button id="hud-pause-btn" onclick="togglePauseGameMenu()" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); box-shadow: 0 4px 10px rgba(0,0,0,0.6); outline: none; transition: transform 0.2s ease;">
+                <span style="display: flex; gap: 4px;"><span style="width: 3px; height: 14px; background: #fff; border-radius: 1px;"></span><span style="width: 3px; height: 14px; background: #fff; border-radius: 1px;"></span></span>
+            </button>
+        </div>
+
+        <!-- Reference Image HUD: Bottom Right Mobile Touch Buttons -->
+        <div id="hud-touch-controls" style="position: absolute; bottom: 35px; right: 30px; z-index: 8020; display: flex; flex-direction: column; align-items: flex-end; gap: 16px;">
+            <!-- Interact / Hand Button -->
+            <button id="btn-touch-interact" class="touch-btn" onclick="triggerInteractAction()" style="width: 68px; height: 68px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.28); color: #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 6px 15px rgba(0,0,0,0.6); outline: none; touch-action: manipulation; transition: transform 0.15s ease;">
+                <svg viewBox="0 0 24 24" width="34" height="34" style="fill: rgba(255,255,255,0.85); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));">
+                    <path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74 0-2.48-2.02-4.5-4.5-4.5S7 4.52 7 7c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.27c-.36-.18-.76-.27-1.16-.27H12v-5.83c0-.41-.34-.75-.75-.75s-.75.34-.75.75V15.5l-3.09-.65c-.09-.02-.19-.03-.28-.03-.41 0-.79.17-1.06.44l-.77.77 4.88 4.88c.45.45 1.06.7 1.7.7h5.92c1.17 0 2.17-.82 2.38-1.97l.75-4.2c.09-.54-.07-1.09-.43-1.5-.36-.4-.88-.63-1.42-.63z"/>
+                </svg>
+            </button>
+            <!-- Sprint Runner Button -->
+            <button id="btn-touch-sprint" class="touch-btn" style="width: 58px; height: 58px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.28); color: #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 6px 15px rgba(0,0,0,0.6); outline: none; touch-action: manipulation; transition: transform 0.15s ease;">
+                <svg viewBox="0 0 24 24" width="28" height="28" style="fill: rgba(255,255,255,0.85); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));">
+                    <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 6.1 1.2z"/>
+                </svg>
+            </button>
+            <!-- Crouch Button -->
+            <button id="btn-touch-crouch" class="touch-btn" style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.28); color: #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 6px 15px rgba(0,0,0,0.6); outline: none; touch-action: manipulation; transition: transform 0.15s ease;">
+                <svg viewBox="0 0 24 24" width="24" height="24" style="fill: rgba(255,255,255,0.85); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));">
+                    <path d="M12 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-1 5v4h2V9h-2zm-3 8.5c0 1.38 1.12 2.5 2.5 2.5h3c1.38 0 2.5-1.12 2.5-2.5V15h-8v2.5z"/>
+                </svg>
+            </button>
+        </div>
 
         <!-- Staircase Interaction HUD Prompt -->
         <div id="staircase-prompt">[E] USE STAIRS</div>
@@ -2279,7 +2319,7 @@
         </div>
 
         <!-- Horror HUD -->
-        <div class="game-hud">
+        <div class="game-hud" style="opacity: 0.85;">
             <!-- Left panel: Mic Indicator, Walking Time, Flashlight status -->
             <div class="hud-left">
                 <div class="hud-item"><span class="hud-label">VOICE NOISE:</span> <span id="hud-noise-level" style="color: #0f0;">SAFE</span></div>
@@ -3418,9 +3458,9 @@
         let scene, camera, renderer;
         let isGameRunning = false;
         let keysPressed = { w: false, a: false, s: false, d: false };
-        let mousePitch = 0, mouseYaw = 0;
+        let mousePitch = -0.10, mouseYaw = 0;
         let playerPos = { x: 1.5, z: 1.5 }; // Spawn in grid units
-        let playerHeight = 1.6; // camera height
+        let playerHeight = 1.65; // 1.65m human eye-level FPS camera height
         let walkTimer = 0; // seconds walked
         let lastWalkTimeUpdate = 0;
         let isFlashlightOn = true;
@@ -3698,6 +3738,129 @@
             group.add(mesh);
         }
 
+        let viewmodelGroup = null;
+        let flashlightMesh = null;
+        let playerHandGroup = null;
+
+        function createPlayerViewmodel() {
+            if (!camera || !scene) return;
+
+            if (viewmodelGroup) {
+                camera.remove(viewmodelGroup);
+            }
+
+            viewmodelGroup = new THREE.Group();
+
+            // 1. Sleek Black Cylindrical Flashlight Body
+            const bodyGeo = new THREE.CylinderGeometry(0.024, 0.022, 0.22, 16);
+            bodyGeo.rotateX(Math.PI / 2);
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0x111113,
+                roughness: 0.3,
+                metalness: 0.85
+            });
+            const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+
+            // Ribbed Grip Rings along barrel
+            for (let z = -0.06; z <= 0.05; z += 0.014) {
+                const ringGeo = new THREE.TorusGeometry(0.0242, 0.0014, 8, 16);
+                ringGeo.rotateX(Math.PI / 2);
+                const ringMat = new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.5, metalness: 0.6 });
+                const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+                ringMesh.position.z = z;
+                bodyMesh.add(ringMesh);
+            }
+
+            // Bezel Cap Rim (metallic front cap)
+            const bezelGeo = new THREE.CylinderGeometry(0.034, 0.025, 0.05, 16);
+            bezelGeo.rotateX(Math.PI / 2);
+            const bezelMat = new THREE.MeshStandardMaterial({
+                color: 0x3d3d42,
+                roughness: 0.25,
+                metalness: 0.9
+            });
+            const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
+            bezelMesh.position.z = -0.125;
+            bodyMesh.add(bezelMesh);
+
+            // Glowing White Glass Lens Emission at front nozzle
+            const lensGeo = new THREE.CircleGeometry(0.032, 16);
+            const lensMat = new THREE.MeshBasicMaterial({ color: 0xffffee, side: THREE.DoubleSide });
+            const lensMesh = new THREE.Mesh(lensGeo, lensMat);
+            lensMesh.position.z = -0.151;
+            bodyMesh.add(lensMesh);
+
+            // 2. Realistic 3D Human Right Hand gripping flashlight barrel
+            playerHandGroup = new THREE.Group();
+            const skinMat = new THREE.MeshStandardMaterial({
+                color: 0xc48761,
+                roughness: 0.65,
+                metalness: 0.05
+            });
+
+            // Palm / Hand Back
+            const palmGeo = new THREE.BoxGeometry(0.07, 0.05, 0.09);
+            const palmMesh = new THREE.Mesh(palmGeo, skinMat);
+            palmMesh.position.set(0.022, -0.015, 0.01);
+            playerHandGroup.add(palmMesh);
+
+            // Wrist and Forearm extending down to bottom-right out of view
+            const wristGeo = new THREE.CylinderGeometry(0.036, 0.046, 0.28, 12);
+            const wristMesh = new THREE.Mesh(wristGeo, skinMat);
+            wristMesh.rotation.x = Math.PI / 3.8;
+            wristMesh.rotation.z = -Math.PI / 7;
+            wristMesh.position.set(0.035, -0.13, 0.10);
+            playerHandGroup.add(wristMesh);
+
+            // 4 Wrapped Fingers around flashlight barrel
+            for (let f = 0; f < 4; f++) {
+                const fingerGroup = new THREE.Group();
+                const fLen = 0.044 - f * 0.003;
+                const proximalGeo = new THREE.CylinderGeometry(0.0085, 0.0075, fLen, 8);
+                const proximalMesh = new THREE.Mesh(proximalGeo, skinMat);
+                fingerGroup.add(proximalMesh);
+                
+                fingerGroup.position.set(-0.02, 0.012 - f * 0.014, -0.04 + f * 0.024);
+                fingerGroup.rotation.z = Math.PI / 2.2;
+                fingerGroup.rotation.y = -Math.PI / 5.5;
+                playerHandGroup.add(fingerGroup);
+            }
+
+            // Thumb pressing top/side of flashlight barrel
+            const thumbGroup = new THREE.Group();
+            const thumbGeo = new THREE.CylinderGeometry(0.0095, 0.0085, 0.052, 8);
+            const thumbMesh = new THREE.Mesh(thumbGeo, skinMat);
+            thumbGroup.add(thumbMesh);
+            thumbGroup.position.set(0.012, 0.028, -0.02);
+            thumbGroup.rotation.x = -Math.PI / 5.5;
+            thumbGroup.rotation.z = -Math.PI / 3.8;
+            playerHandGroup.add(thumbGroup);
+
+            bodyMesh.add(playerHandGroup);
+            flashlightMesh = bodyMesh;
+
+            // Position viewmodel group on right side of lower camera view (matching reference image!)
+            viewmodelGroup.position.set(0.24, -0.22, -0.38);
+            viewmodelGroup.rotation.set(-0.05, -0.15, -0.05);
+            viewmodelGroup.add(bodyMesh);
+
+            // 3. Player's Left Sleeve Contour (bottom-left foreground matching reference image)
+            const sleeveGeo = new THREE.SphereGeometry(0.22, 12, 12, 0, Math.PI * 2, 0, Math.PI / 1.7);
+            const sleeveMat = new THREE.MeshStandardMaterial({
+                color: 0x5a1a0d,
+                roughness: 0.95,
+                metalness: 0.05,
+                side: THREE.DoubleSide
+            });
+            const leftSleeveMesh = new THREE.Mesh(sleeveGeo, sleeveMat);
+            leftSleeveMesh.position.set(-0.38, -0.34, -0.36);
+            leftSleeveMesh.rotation.set(0.4, 0.5, -0.3);
+            viewmodelGroup.add(leftSleeveMesh);
+
+            camera.add(viewmodelGroup);
+            scene.add(camera);
+        }
+
         function initHorror3D() {
             const canvas = document.getElementById('game-canvas');
             if (!canvas) return;
@@ -3726,16 +3889,18 @@
 
             // 1. Create Scene, Camera, Renderer
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000000, 0.15); // fog creates that spooky depth fade
+            scene.fog = new THREE.FogExp2(0x030303, 0.10); // Spooky dense atmospheric fog
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.1, 100);
             
-            // Set initial rotation
+            // Set initial rotation with downward tilt (-0.10 rad)
             mouseYaw = Math.PI / 4;
-            mousePitch = 0;
+            mousePitch = -0.10; // ~ -5.7° initial downward camera angle
             camera.rotation.order = "YXZ";
             camera.rotation.y = mouseYaw;
             camera.rotation.x = mousePitch;
+
+            createPlayerViewmodel();
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -3920,12 +4085,124 @@
             document.addEventListener('mousedown', onDocumentMouseDown);
             
             const overlay = document.getElementById('click-to-play-overlay');
-            overlay.addEventListener('click', lockPointer);
+            if (overlay) overlay.addEventListener('click', lockPointer);
             document.addEventListener('pointerlockchange', onPointerLockChange);
+
+            setupMobileTouchControls();
 
             isGameRunning = true;
             lastWalkTimeUpdate = performance.now();
             animateHorrorGame();
+        }
+
+        let isGamePaused = false;
+        let isCrouched = false;
+        let isSprinting = false;
+
+        function togglePauseGameMenu() {
+            isGamePaused = !isGamePaused;
+            const pauseMenu = document.getElementById('lobby-settings-modal');
+            if (pauseMenu) {
+                pauseMenu.style.display = isGamePaused ? 'flex' : 'none';
+                pauseMenu.style.opacity = isGamePaused ? '1' : '0';
+            }
+            if (document.pointerLockElement) {
+                document.exitPointerLock();
+            }
+        }
+
+        function triggerInteractAction() {
+            if (isNearStairs) {
+                useStaircase();
+            } else if (currentInteractiveDoor) {
+                toggleDoor(currentInteractiveDoor);
+            } else {
+                const promptEl = document.getElementById('staircase-prompt');
+                if (promptEl) {
+                    promptEl.textContent = "SEARCHING AREA...";
+                    promptEl.style.display = 'block';
+                    setTimeout(() => {
+                        promptEl.style.display = 'none';
+                        promptEl.textContent = "[E] USE STAIRS";
+                    }, 1200);
+                }
+            }
+        }
+
+        function setupMobileTouchControls() {
+            let touchStartX = 0, touchStartY = 0;
+            let isTouchingMove = false;
+
+            const btnSprint = document.getElementById('btn-touch-sprint');
+            if (btnSprint) {
+                btnSprint.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    isSprinting = true;
+                    btnSprint.style.background = 'rgba(255, 59, 48, 0.4)';
+                });
+                btnSprint.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    isSprinting = false;
+                    btnSprint.style.background = 'rgba(255, 255, 255, 0.12)';
+                });
+            }
+
+            const btnCrouch = document.getElementById('btn-touch-crouch');
+            if (btnCrouch) {
+                btnCrouch.addEventListener('click', (e) => {
+                    isCrouched = !isCrouched;
+                    playerHeight = isCrouched ? 1.05 : 1.65;
+                    btnCrouch.style.background = isCrouched ? 'rgba(255, 204, 0, 0.4)' : 'rgba(255, 255, 255, 0.12)';
+                });
+            }
+
+            window.addEventListener('touchstart', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.clientX < window.innerWidth / 2) {
+                        touchStartX = touch.clientX;
+                        touchStartY = touch.clientY;
+                        isTouchingMove = true;
+                    }
+                }
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.clientX >= window.innerWidth / 2) {
+                        const sensitivity = 0.0035;
+                        mouseYaw -= (touch.clientX - (touch.lastX || touch.clientX)) * sensitivity;
+                        mousePitch -= (touch.clientY - (touch.lastY || touch.clientY)) * sensitivity;
+                        mousePitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, mousePitch));
+                        
+                        if (camera) {
+                            camera.rotation.y = mouseYaw;
+                            camera.rotation.x = mousePitch;
+                        }
+                    } else if (isTouchingMove) {
+                        const dx = touch.clientX - touchStartX;
+                        const dy = touch.clientY - touchStartY;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist > 10) {
+                            keysPressed.w = dy < -15;
+                            keysPressed.s = dy > 15;
+                            keysPressed.a = dx < -15;
+                            keysPressed.d = dx > 15;
+                        }
+                    }
+                    touch.lastX = touch.clientX;
+                    touch.lastY = touch.clientY;
+                }
+            });
+
+            window.addEventListener('touchend', (e) => {
+                keysPressed.w = false;
+                keysPressed.s = false;
+                keysPressed.a = false;
+                keysPressed.d = false;
+                isTouchingMove = false;
+            });
         }
 
         function createProceduralWallTexture() {
@@ -3934,12 +4211,39 @@
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
-            // 1. Base plaster background
-            ctx.fillStyle = '#2d2722';
+            // 1. Brick grid pattern underlay
+            ctx.fillStyle = '#3c2419';
             ctx.fillRect(0, 0, 512, 512);
 
-            // 2. Wallpaper vertical stripes
-            ctx.fillStyle = '#221d19';
+            ctx.strokeStyle = '#1e100a';
+            ctx.lineWidth = 2.5;
+            const brickH = 24;
+            const brickW = 48;
+            for (let y = 0; y < 512; y += brickH) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(512, y);
+                ctx.stroke();
+                
+                const offset = Math.floor(y / brickH) % 2 === 0 ? 0 : brickW / 2;
+                for (let x = offset; x <= 512; x += brickW) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x, y + brickH);
+                    ctx.stroke();
+                }
+            }
+
+            // 2. Base plaster background overlay with peeling holes
+            for (let i = 0; i < 14; i++) {
+                ctx.fillStyle = `rgba(45, 39, 34, ${0.4 + Math.random() * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(Math.random() * 512, Math.random() * 512, Math.random() * 90 + 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. Wallpaper vertical stripes (faded)
+            ctx.fillStyle = 'rgba(34, 29, 25, 0.6)';
             for (let x = 16; x < 512; x += 32) {
                 ctx.fillRect(x, 25, 6, 325);
             }
@@ -7769,11 +8073,40 @@
                 // Smooth camera height lerping for stutter-free 60fps movement
                 smoothPlayerBaseY += (targetPlayerBaseY - smoothPlayerBaseY) * 0.35;
 
-                camera.position.set(
-                    playerPos.x * CELL_SIZE - MAP_OFFSET,
-                    playerHeight + smoothPlayerBaseY,
-                    playerPos.z * CELL_SIZE - MAP_OFFSET
-                );
+                let camX = playerPos.x * CELL_SIZE - MAP_OFFSET;
+                let camY = playerHeight + smoothPlayerBaseY;
+                let camZ = playerPos.z * CELL_SIZE - MAP_OFFSET;
+
+                // Subtle Camera Sway & Head Bobbing
+                const isMoving = keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d || (window.touchMoveVector && (window.touchMoveVector.x !== 0 || window.touchMoveVector.y !== 0));
+                const dt = 0.016;
+                
+                if (isMoving && isGameRunning && !isKillingActive) {
+                    headBobTime += dt * 9.0;
+                    const bobY = Math.sin(headBobTime * 2.0) * 0.028;
+                    const bobX = Math.cos(headBobTime) * 0.016;
+                    camY += bobY;
+                    camX += bobX;
+
+                    if (viewmodelGroup) {
+                        viewmodelGroup.position.x = 0.24 + bobX * 0.5;
+                        viewmodelGroup.position.y = -0.22 + bobY * 0.6;
+                        viewmodelGroup.rotation.z = -0.05 + bobX * 0.3;
+                    }
+                } else {
+                    const time = performance.now() * 0.0015;
+                    const idleY = Math.sin(time) * 0.005;
+                    const idleX = Math.cos(time * 0.8) * 0.003;
+                    camY += idleY;
+
+                    if (viewmodelGroup) {
+                        viewmodelGroup.position.x = 0.24 + idleX;
+                        viewmodelGroup.position.y = -0.22 + idleY;
+                        viewmodelGroup.rotation.z = -0.05 + Math.sin(time * 0.6) * 0.015;
+                    }
+                }
+
+                camera.position.set(camX, camY, camZ);
             }
         }
 
@@ -8259,9 +8592,16 @@
         function updateFlashlight() {
             if (!spotLight || !camera) return;
 
-            spotLight.position.copy(camera.position);
-            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-            spotLight.target.position.copy(camera.position).add(dir);
+            if (isFlashlightOn) {
+                spotLight.intensity = 8.5;
+                const lensOffset = new THREE.Vector3(0.20, -0.16, -0.15).applyQuaternion(camera.quaternion);
+                spotLight.position.copy(camera.position).add(lensOffset);
+                
+                const dir = new THREE.Vector3(0, -0.04, -1).applyQuaternion(camera.quaternion);
+                spotLight.target.position.copy(camera.position).add(dir.multiplyScalar(15));
+            } else {
+                spotLight.intensity = 0.0;
+            }
         }
 
         function toggleFlashlight() {
@@ -8269,7 +8609,7 @@
             const statusEl = document.getElementById('hud-flashlight-status');
 
             if (isFlashlightOn) {
-                spotLight.intensity = 6.5;
+                spotLight.intensity = 8.5;
                 statusEl.textContent = "ON";
                 statusEl.style.color = "#ffcc00";
             } else {
