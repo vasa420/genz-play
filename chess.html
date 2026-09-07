@@ -7,12 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900;950&family=JetBrains+Mono:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #040711;
+            --bg-dark: #040714;
             --sidebar-bg: #090e1c;
             --card-bg: rgba(13, 20, 38, 0.85);
             --card-border: rgba(255, 255, 255, 0.08);
-            --accent-blue: #0088ff;
-            --accent-blue-glow: rgba(0, 136, 255, 0.35);
+            --accent-blue: #3b82f6;
+            --accent-blue-glow: rgba(59, 130, 246, 0.35);
             --neon-cyan: #00d2ff;
             --gold-glow: #ffd700;
             --wood-white: #e3c193;
@@ -38,10 +38,10 @@
         /* Ambient Glow Background */
         .bg-glow {
             position: fixed; width: 600px; height: 600px; border-radius: 50%;
-            filter: blur(140px); opacity: 0.12; pointer-events: none; z-index: 0;
+            filter: blur(140px); opacity: 0.14; pointer-events: none; z-index: 0;
         }
         .glow-left { top: -100px; left: -100px; background: var(--accent-blue); }
-        .glow-right { bottom: -100px; right: -100px; background: #9933ff; }
+        .glow-right { bottom: -100px; right: -100px; background: #8b5cf6; }
 
         /* Main 3-Column Layout Shell */
         .chess-app-shell {
@@ -77,30 +77,30 @@
 
         /* Turn Indicator Pill */
         .turn-card {
-            background: rgba(0, 136, 255, 0.08);
+            background: rgba(59, 130, 246, 0.08);
             border: 1.5px solid var(--accent-blue-glow);
             border-radius: 14px;
             padding: 16px 20px;
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 0 20px rgba(0, 136, 255, 0.15);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
         }
 
         .turn-left { display: flex; align-items: center; gap: 10px; }
         .turn-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff; }
         .turn-text { font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; }
-        .turn-icon { font-size: 20px; opacity: 0.6; }
+        .turn-icon { font-size: 20px; opacity: 0.8; }
 
         /* Action Buttons */
         .btn-action-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1.5px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            padding: 14px;
+            padding: 14px 16px;
             color: #fff;
             font-family: 'Outfit', sans-serif;
             font-size: 13px; font-weight: 800; letter-spacing: 1.5px;
             cursor: pointer; transition: all 0.2s ease;
-            display: flex; align-items: center; gap: 12px; text-transform: uppercase;
+            display: flex; align-items: center; justify-content: space-between; text-transform: uppercase;
         }
 
         .btn-action-card:hover {
@@ -108,6 +108,8 @@
             border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-1px);
         }
+
+        .item-left { display: flex; align-items: center; gap: 12px; }
 
         /* Checkbox Group */
         .checkbox-row {
@@ -139,7 +141,7 @@
         /* Game Theme Section */
         .theme-section-title {
             font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--text-sub);
-            text-transform: uppercase; margin-bottom: 2px;
+            text-transform: uppercase; margin-bottom: 8px;
         }
 
         .theme-grid {
@@ -161,7 +163,7 @@
         .theme-card.active {
             border-color: var(--accent-blue);
             box-shadow: 0 0 15px var(--accent-blue-glow);
-            background: rgba(0, 136, 255, 0.08);
+            background: rgba(59, 130, 246, 0.08);
         }
 
         .theme-preview-box {
@@ -192,7 +194,7 @@
         .btn-return-hub {
             background: rgba(255, 255, 255, 0.03);
             border: 1.5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; padding: 14px;
+            border-radius: 30px; padding: 14px 20px;
             color: #fff; font-family: 'Outfit', sans-serif;
             font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
             cursor: pointer; transition: all 0.2s ease;
@@ -215,7 +217,7 @@
             border: 2px solid var(--card-border);
             border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 136, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(59, 130, 246, 0.1);
             position: relative;
             display: flex; flex-direction: column; align-items: center;
         }
@@ -302,24 +304,33 @@
         /* Start Match Center Overlay Pill */
         .start-match-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(4, 7, 17, 0.5); backdrop-filter: blur(6px);
+            background: rgba(4, 7, 20, 0.45); backdrop-filter: blur(8px);
             border-radius: 24px; z-index: 30;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.4s ease;
         }
 
         .btn-start-match-pill {
-            padding: 18px 48px;
-            background: #ffffff; color: #040711;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);
+            color: #ffffff;
             border: none; border-radius: 40px;
-            font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 950;
-            letter-spacing: 3px; cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3); text-transform: uppercase;
+            font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 900;
+            letter-spacing: 2.5px; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 25px rgba(124, 58, 237, 0.4); text-transform: uppercase;
+            display: flex; align-items: center; gap: 12px;
         }
 
         .btn-start-match-pill:hover {
-            transform: scale(1.08); box-shadow: 0 15px 40px rgba(255, 255, 255, 0.5);
-            background: #f8fafc;
+            transform: scale(1.06); box-shadow: 0 15px 40px rgba(59, 130, 246, 0.7), 0 0 35px rgba(124, 58, 237, 0.6);
+        }
+
+        .play-icon-circle {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #ffffff; color: #3b82f6;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            padding-left: 2px;
         }
 
         /* RIGHT COLUMN STYLING */
@@ -332,11 +343,11 @@
         }
 
         .user-avatar-circle {
-            width: 46px; height: 46px; border-radius: 50%;
-            background: linear-gradient(135deg, #0088ff, #00d2ff);
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899, #be185d);
             display: flex; align-items: center; justify-content: center;
-            font-size: 22px; color: #fff; border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 136, 255, 0.3);
+            font-size: 20px; font-weight: 900; color: #fff; border: 2px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.4); flex-shrink: 0;
         }
 
         .user-name-group { display: flex; flex-direction: column; }
@@ -346,12 +357,16 @@
 
         /* Wallet Box */
         .wallet-pill-card {
-            background: rgba(255, 215, 0, 0.08);
-            border: 1.5px solid rgba(255, 215, 0, 0.25);
+            background: rgba(234, 179, 8, 0.08);
+            border: 1.5px solid rgba(234, 179, 8, 0.3);
             border-radius: 12px; padding: 12px 16px;
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: center; justify-content: space-between;
             font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800;
-            color: var(--gold-glow); letter-spacing: 1px;
+            color: var(--gold-glow); letter-spacing: 1px; cursor: pointer; transition: all 0.2s ease;
+        }
+
+        .wallet-pill-card:hover {
+            background: rgba(234, 179, 8, 0.15); border-color: rgba(234, 179, 8, 0.5); transform: translateY(-1px);
         }
 
         /* Navigation Menu Cards */
@@ -373,7 +388,6 @@
             transform: translateX(3px);
         }
 
-        .item-left { display: flex; align-items: center; gap: 12px; }
         .item-icon { font-size: 16px; color: #94a3b8; }
         .menu-nav-item:hover .item-icon { color: var(--neon-cyan); }
         .item-arrow { font-size: 12px; color: #64748b; }
@@ -385,22 +399,29 @@
 
         /* Clock Box */
         .clock-widget-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px; padding: 16px;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px; padding: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            backdrop-filter: blur(16px);
+        }
+
+        .clock-icon-badge {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: rgba(0, 210, 255, 0.15); border: 1px solid var(--neon-cyan);
+            display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--neon-cyan);
         }
 
         .clock-time-text {
-            font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 950;
-            color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 950;
+            color: #fff; letter-spacing: 2px; display: flex; align-items: center; gap: 10px;
         }
 
         .clock-sub-text {
             font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase;
         }
 
-        /* Top Navigation Header Bar with 3-Line Hamburger */
+        /* Top Navigation Header Bar */
         .top-header {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 60px;
@@ -409,7 +430,7 @@
             backdrop-filter: blur(16px);
             z-index: 1000;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 16px;
+            padding: 0 24px;
         }
 
         .header-brand-group {
@@ -417,7 +438,7 @@
         }
 
         .btn-hamburger {
-            display: none; /* Removed on laptop/desktop; visible only on phone/mobile */
+            display: none;
             width: 42px; height: 42px; border-radius: 12px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -427,7 +448,7 @@
             position: relative; overflow: hidden;
         }
         .btn-hamburger:hover, .btn-hamburger:active {
-            background: rgba(0, 136, 255, 0.18);
+            background: rgba(59, 130, 246, 0.18);
             border-color: var(--accent-blue);
             box-shadow: 0 0 16px var(--accent-blue-glow);
             transform: scale(1.05);
@@ -438,12 +459,6 @@
             transform-origin: center;
         }
 
-        /* Animated 3-Line Hamburger to X Cross Morphing */
-        .btn-hamburger.active {
-            background: rgba(0, 210, 255, 0.15);
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
-        }
         .btn-hamburger.active span:nth-child(1) {
             transform: translateY(7px) rotate(45deg);
             background: var(--neon-cyan);
@@ -461,13 +476,23 @@
             font-size: 16px; font-weight: 900; letter-spacing: 2px;
             color: #ffffff; text-transform: uppercase; display: flex; align-items: center; gap: 8px;
         }
-        .brand-sub { color: var(--neon-cyan); font-size: 11px; letter-spacing: 1px; font-weight: 700; }
+        .brand-sub { color: var(--neon-cyan); font-size: 11px; letter-spacing: 1px; font-weight: 700; margin-left: 2px; }
 
-        .header-right-desktop {
-            display: flex; align-items: center; gap: 10px;
+        .btn-hub {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px; padding: 8px 18px;
+            color: #ffffff; font-family: 'Outfit', sans-serif;
+            font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+            text-decoration: none; text-transform: uppercase; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        /* Realistic Glassmorphic Drawer Overlay Menu */
+        .btn-hub:hover {
+            background: rgba(255, 255, 255, 0.1); border-color: #ffffff;
+        }
+
+        /* Mobile Drawer Overlay Menu */
         .mobile-drawer-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(16px);
@@ -490,32 +515,6 @@
         .mobile-drawer-overlay.active .drawer-content {
             transform: translateX(0);
         }
-
-        /* Staggered Slide-In Animation for Drawer Items */
-        @keyframes drawerItemSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-30px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
-        }
-
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item {
-            animation: drawerItemSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(1) { animation-delay: 0.04s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(2) { animation-delay: 0.07s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(3) { animation-delay: 0.10s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(4) { animation-delay: 0.13s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(5) { animation-delay: 0.16s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(6) { animation-delay: 0.19s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(7) { animation-delay: 0.22s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(8) { animation-delay: 0.25s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(9) { animation-delay: 0.28s; }
-        .mobile-drawer-overlay.active .nav-menu-list .menu-nav-item:nth-child(10) { animation-delay: 0.31s; }
 
         /* LAPTOP / DESKTOP STYLES (992px and wider) */
         @media (min-width: 992px) {
@@ -557,8 +556,7 @@
 
             .left-col::-webkit-scrollbar,
             .right-col::-webkit-scrollbar {
-                display: none;
-                width: 0;
+                display: none; width: 0;
             }
 
             .panel-card {
@@ -608,20 +606,19 @@
             .btn-return-hub {
                 padding: 10px 14px !important;
                 font-size: 11px !important;
-                border-radius: 12px !important;
+                border-radius: 30px !important;
                 margin-top: 4px !important;
             }
 
-            /* ENLARGED RIGHT SIDEBAR ON LAPTOP */
             .user-profile-header {
                 gap: 12px !important;
                 padding-bottom: 4px !important;
             }
 
             .user-avatar-circle {
-                width: 42px !important;
-                height: 42px !important;
-                font-size: 20px !important;
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 19px !important;
             }
 
             .user-title-name {
@@ -656,12 +653,12 @@
 
             .clock-widget-card {
                 padding: 10px 14px !important;
-                border-radius: 12px !important;
+                border-radius: 14px !important;
                 margin-top: 4px !important;
             }
 
             .clock-time-text {
-                font-size: 19px !important;
+                font-size: 22px !important;
                 font-weight: 950 !important;
             }
 
@@ -699,63 +696,30 @@
             }
         }
 
-        /* TABLET / SMALL LAPTOP STYLES (769px to 991px) */
-        @media (min-width: 769px) and (max-width: 991px) {
-            body { padding-top: 60px; }
-            .chess-app-shell {
-                grid-template-columns: 240px 1fr 260px !important;
-                padding: 16px;
-                gap: 16px;
-                margin-top: 60px;
-            }
-            .left-col, .right-col { display: flex !important; height: auto; }
-            .chessboard { width: 100%; max-width: 440px; aspect-ratio: 1; }
-            .sq { font-size: clamp(28px, 4vw, 38px); }
-        }
-
         /* MOBILE BOTTOM NAVBAR */
         .mobile-bottom-nav {
             display: none;
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100vw;
-            height: 60px;
+            bottom: 0; left: 0; width: 100vw; height: 60px;
             background: rgba(9, 14, 28, 0.96);
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 9999;
-            align-items: center;
-            justify-content: space-around;
+            align-items: center; justify-content: space-around;
             padding: 0 4px;
         }
 
         .nav-tab-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            color: #64748b;
-            text-decoration: none;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            flex: 1;
-            text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 2px; color: #64748b; text-decoration: none;
+            font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+            transition: all 0.2s ease; cursor: pointer; flex: 1; text-align: center;
         }
 
-        .nav-tab-item.active, .nav-tab-item:hover {
-            color: var(--neon-cyan);
-        }
+        .nav-tab-item.active, .nav-tab-item:hover { color: var(--neon-cyan); }
+        .nav-tab-icon { font-size: 18px; }
 
-        .nav-tab-icon {
-            font-size: 18px;
-        }
-
-        /* MOBILE / PHONE STYLES (768px and smaller) */
+        /* PHONE STYLES (768px and smaller) */
         @media (max-width: 768px) {
             body {
                 padding-top: 54px !important;
@@ -770,28 +734,21 @@
                 margin-top: 0 !important;
             }
             .left-col { height: auto; width: 100%; }
-            .right-col { display: none !important; } /* REMOVED from main page layout on phone; accessible via 3-line hamburger bar menu */
+            .right-col { display: none !important; }
 
-            /* INCREASE BOARD SIZE ON PHONE ONLY */
-            .center-board-col {
-                width: 100% !important;
-                padding: 0 !important;
-            }
+            .center-board-col { width: 100% !important; padding: 0 !important; }
             .board-frame {
                 padding: 6px 4px !important;
                 width: 100% !important;
                 border-radius: 14px !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 136, 255, 0.25) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(59, 130, 246, 0.25) !important;
             }
             .board-grid-wrap {
                 gap: 2px !important;
                 grid-template-columns: 14px 1fr !important;
                 grid-template-rows: 1fr 14px !important;
             }
-            .ranks-col, .files-row {
-                font-size: 9px !important;
-                color: #64748b !important;
-            }
+            .ranks-col, .files-row { font-size: 9px !important; color: #64748b !important; }
             .chessboard {
                 width: 100% !important;
                 max-width: calc(100vw - 16px) !important;
@@ -799,80 +756,43 @@
                 aspect-ratio: 1 !important;
                 border-radius: 8px !important;
             }
-            .sq {
-                font-size: clamp(30px, 9.8vw, 56px) !important;
-            }
+            .sq { font-size: clamp(30px, 9.8vw, 56px) !important; }
             .btn-start-match-pill {
-                padding: 16px 36px !important;
-                font-size: 15px !important;
-                font-weight: 950 !important;
+                padding: 14px 28px !important;
+                font-size: 14px !important;
                 letter-spacing: 2px !important;
-                box-shadow: 0 10px 35px rgba(255, 255, 255, 0.5), 0 0 25px rgba(0, 210, 255, 0.7) !important;
             }
-            
-            .mobile-bottom-nav {
-                display: flex !important;
-            }
+            .mobile-bottom-nav { display: flex !important; }
         }
 
-        /* COLLECTION & INVENTORY MODAL STYLES */
+        /* COLLECTION MODAL STYLES */
         .collection-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(4, 8, 18, 0.85);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; visibility: hidden;
             transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .collection-modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .collection-modal-overlay.active { opacity: 1; visibility: visible; }
 
         .collection-modal-card {
             background: rgba(13, 21, 39, 0.94);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(56, 189, 248, 0.4);
             box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), 0 0 45px rgba(37, 99, 235, 0.3);
             border-radius: 24px;
-            width: 860px;
-            max-width: 94vw;
-            height: 590px;
-            max-height: 90vh;
-            padding: 24px 28px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            transform: translateY(40px) scale(0.95);
-            opacity: 0;
+            width: 860px; max-width: 94vw; height: 590px; max-height: 90vh;
+            padding: 24px 28px; display: flex; flex-direction: column; position: relative;
+            transform: translateY(40px) scale(0.95); opacity: 0;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .collection-modal-overlay.active .collection-modal-card {
-            transform: translateY(0) scale(1);
-            opacity: 1;
-        }
+        .collection-modal-overlay.active .collection-modal-card { transform: translateY(0) scale(1); opacity: 1; }
+        .collection-modal-overlay.closing .collection-modal-card { transform: translateY(50px) scale(0.94); opacity: 0; transition: transform 0.3s ease-in, opacity 0.3s ease-in; }
+        .collection-modal-overlay.closing { opacity: 0; transition: opacity 0.3s ease-in; }
 
-        .collection-modal-overlay.closing .collection-modal-card {
-            transform: translateY(50px) scale(0.94);
-            opacity: 0;
-            transition: transform 0.3s ease-in, opacity 0.3s ease-in;
-        }
-
-        .collection-modal-overlay.closing {
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
-        }
-
-        /* Neon Glow & Bag Bounce Micro-interactions */
         .menu-nav-item.collection-glow {
             animation: collectionNeonGlow 0.45s ease-out;
             border-color: #c084fc !important;
@@ -885,9 +805,7 @@
             100% { transform: scale(1); }
         }
 
-        .item-icon.bag-bounce {
-            animation: bagOpenBounce 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .item-icon.bag-bounce { animation: bagOpenBounce 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         @keyframes bagOpenBounce {
             0% { transform: scale(1) rotate(0deg); }
@@ -897,137 +815,79 @@
         }
 
         .collection-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding-bottom: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: space-between; width: 100%;
+            padding-bottom: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .collection-header-title {
-            font-size: 16px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 16px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 10px;
         }
 
-        .bag-icon-header {
-            font-size: 24px;
-            filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.6));
-        }
+        .bag-icon-header { font-size: 24px; filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.6)); }
 
-        .collection-stats-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .collection-stats-group { display: flex; align-items: center; gap: 12px; }
 
         .collection-stat-pill {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 11.5px;
-            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border);
+            padding: 5px 12px; border-radius: 8px; font-size: 11.5px; color: var(--text-sub);
         }
 
-        .collection-stat-pill strong { color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+        .collection-stat-pill strong { color: var(--neon-cyan); font-family: 'JetBrains Mono', monospace; }
 
         .btn-close-collection {
-            background: rgba(239, 68, 68, 0.12);
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            color: #f87171;
-            padding: 7px 14px;
-            border-radius: 8px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171; padding: 7px 14px; border-radius: 8px;
+            font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: all 0.2s ease;
         }
 
-        .btn-close-collection:hover {
-            background: rgba(239, 68, 68, 0.3);
-            color: #ffffff;
-            transform: scale(1.03);
-        }
+        .btn-close-collection:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; transform: scale(1.03); }
 
         .collection-filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 14px;
-            overflow-x: auto;
-            padding-bottom: 4px;
+            display: flex; align-items: center; gap: 8px; margin-top: 14px; overflow-x: auto; padding-bottom: 4px;
         }
 
         .collection-filter-tab {
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-muted);
-            font-family: 'Outfit', sans-serif;
-            font-size: 11.5px;
-            font-weight: 700;
-            padding: 7px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--card-border);
+            color: var(--text-sub); font-family: 'Outfit', sans-serif;
+            font-size: 11.5px; font-weight: 700; padding: 7px 14px; border-radius: 8px;
+            cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
         }
 
         .collection-filter-tab:hover { color: #ffffff; background: #0f182d; }
         .collection-filter-tab.active {
-            background: var(--primary-blue);
-            color: #ffffff;
-            border-color: var(--primary-blue-hover);
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            background: var(--accent-blue); color: #ffffff; border-color: var(--accent-blue);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
         }
 
         .collection-items-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 4px;
-            margin-top: 14px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            flex: 1; overflow-y: auto; padding-right: 4px; margin-top: 14px;
         }
 
         .collection-item-card {
-            background: #080d19;
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 12px;
-            position: relative;
+            background: #080d19; border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 16px; display: flex; flex-direction: column;
+            justify-content: space-between; gap: 12px; position: relative;
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
         .collection-item-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--accent-cyan);
-            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25), 0 0 15px rgba(37, 99, 235, 0.2);
+            transform: translateY(-4px); border-color: var(--neon-cyan);
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.25), 0 0 15px rgba(59, 130, 246, 0.2);
         }
 
         .collection-item-card.equipped-active {
-            border: 2px solid var(--accent-cyan);
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), #080d19);
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            border: 2px solid var(--neon-cyan);
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.12), #080d19);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
         }
 
-        /* Rare Item Animated Gold & Purple Border */
         .collection-item-card.rare-item {
             border: 1.5px solid transparent;
             background-image: linear-gradient(#080d19, #080d19), linear-gradient(135deg, #fbbf24, #c084fc, #38bdf8);
-            background-origin: border-box;
-            background-clip: padding-box, border-box;
+            background-origin: border-box; background-clip: padding-box, border-box;
             animation: rareBorderGlow 3s infinite linear;
         }
 
@@ -1037,31 +897,17 @@
             100% { filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4)); }
         }
 
-        .collection-item-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+        .collection-item-top { display: flex; align-items: center; justify-content: space-between; }
 
         .item-icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: rgba(37, 99, 235, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+            width: 44px; height: 44px; border-radius: 12px;
+            background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(0, 210, 255, 0.3);
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
         }
 
         .item-rarity-tag {
-            font-size: 9.5px;
-            font-weight: 800;
-            padding: 3px 8px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 9.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
 
         .rarity-common { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #475569; }
@@ -1070,51 +916,28 @@
         .rarity-legendary { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.5); }
 
         .item-title-name { font-size: 14px; font-weight: 800; color: #ffffff; margin-top: 4px; }
-        .item-desc-text { font-size: 11px; color: var(--text-muted); line-height: 1.35; margin-top: 2px; }
+        .item-desc-text { font-size: 11px; color: var(--text-sub); line-height: 1.35; margin-top: 2px; }
 
         .btn-equip-item {
-            width: 100%;
-            padding: 9px;
-            background: var(--primary-blue);
-            border: none;
-            border-radius: 8px;
-            color: #ffffff;
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: background 0.2s ease, transform 0.15s ease;
+            width: 100%; padding: 9px; background: var(--accent-blue);
+            border: none; border-radius: 8px; color: #ffffff;
+            font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: background 0.2s ease, transform 0.15s ease;
         }
 
-        .btn-equip-item:hover { background: var(--primary-blue-hover); }
+        .btn-equip-item:hover { background: #2563eb; }
         .btn-equip-item:active { transform: scale(0.98); }
 
         .equipped-pill-badge {
-            width: 100%;
-            padding: 8px;
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid var(--accent-cyan);
-            border-radius: 8px;
-            color: var(--accent-cyan);
-            font-size: 11.5px;
-            font-weight: 800;
-            text-align: center;
+            width: 100%; padding: 8px; background: rgba(0, 210, 255, 0.15);
+            border: 1px solid var(--neon-cyan); border-radius: 8px; color: var(--neon-cyan);
+            font-size: 11.5px; font-weight: 800; text-align: center;
         }
 
         .locked-pill-badge {
-            width: 100%;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            color: #64748b;
-            font-size: 11px;
-            font-weight: 700;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            width: 100%; padding: 8px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border); border-radius: 8px; color: #64748b;
+            font-size: 11px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;
         }
     </style>
 </head>
@@ -1123,15 +946,17 @@
     <!-- Top Navigation Header Bar -->
     <header class="top-header">
         <div class="header-brand-group">
-            <button class="btn-hamburger" onclick="toggleMobileMenu()" title="Open Menu (Play Online, Collections, Add Friend)">
+            <button class="btn-hamburger" onclick="toggleMobileMenu()" title="Open Menu">
                 <span></span><span></span><span></span>
             </button>
-            <div class="brand-title">♟️ CHESS <span class="brand-sub">GRANDMASTER</span></div>
+            <div class="brand-title">
+                <span>♟️</span>
+                <span>CHESS</span>
+                <span class="brand-sub">GRANDMASTER</span>
+            </div>
         </div>
 
-        <div class="header-right-desktop">
-            <a class="menu-nav-item" href="arcade_hub.html" style="padding: 8px 14px; font-size: 11px;">← HUB</a>
-        </div>
+        <a class="btn-hub" href="arcade_hub.html">← HUB</a>
     </header>
 
     <!-- Mobile Drawer Overlay Menu -->
@@ -1145,15 +970,15 @@
                 <a class="menu-nav-item" href="chess_online.html">
                     <div class="item-left">
                         <span class="item-icon">🌐</span>
-                        <span>1. PLAY ONLINE</span>
+                        <span>PLAY ONLINE</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </a>
 
                 <div class="menu-nav-item collection-nav-trigger" onclick="openCollectionModal(event)">
                     <div class="item-left">
-                        <span class="item-icon">👜</span>
-                        <span>2. COLLECTIONS</span>
+                        <span class="item-icon">🛍️</span>
+                        <span>COLLECTION</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </div>
@@ -1161,7 +986,7 @@
                 <a class="menu-nav-item" href="chess_friends_search.html">
                     <div class="item-left">
                         <span class="item-icon">👤</span>
-                        <span>3. ADD FRIEND</span>
+                        <span>ADD FRIEND</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </a>
@@ -1169,7 +994,7 @@
                 <a class="menu-nav-item" href="chess_send_gift.html">
                     <div class="item-left">
                         <span class="item-icon">🎁</span>
-                        <span>4. SEND GIFT</span>
+                        <span>SEND GIFT</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </a>
@@ -1177,15 +1002,7 @@
                 <a class="menu-nav-item" href="chess_send_gift.html?tab=received">
                     <div class="item-left">
                         <span class="item-icon">📦</span>
-                        <span>5. RECEIVE GIFT</span>
-                    </div>
-                    <span class="item-arrow">›</span>
-                </a>
-
-                <a class="menu-nav-item" href="chess_create_room.html">
-                    <div class="item-left">
-                        <span class="item-icon">⚔️</span>
-                        <span>6. CREATE ROOM</span>
+                        <span>RECEIVE GIFT</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </a>
@@ -1193,15 +1010,18 @@
                 <a class="menu-nav-item" href="chess_events.html">
                     <div class="item-left">
                         <span class="item-icon">📅</span>
-                        <span>7. UPCOMING EVENTS</span>
+                        <span>UPCOMING EVENTS</span>
                     </div>
-                    <span class="count-badge">3</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="count-badge">3</span>
+                        <span class="item-arrow">›</span>
+                    </div>
                 </a>
 
                 <a class="menu-nav-item" href="chess_tutorial.html">
                     <div class="item-left">
                         <span class="item-icon">🎓</span>
-                        <span>8. TUTORIAL CLASS</span>
+                        <span>TUTORIAL CLASS</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </a>
@@ -1209,7 +1029,7 @@
                 <div class="menu-nav-item" onclick="alert('⚙️ Settings: Sound FX ON, Auto-Rotate Board OFF.')">
                     <div class="item-left">
                         <span class="item-icon">⚙️</span>
-                        <span>9. SETTINGS</span>
+                        <span>SETTINGS</span>
                     </div>
                     <span class="item-arrow">›</span>
                 </div>
@@ -1244,14 +1064,19 @@
                 </div>
 
                 <!-- Reset Button -->
-                <button class="btn-action-card" onclick="resetGame()">
-                    <span>🔄</span> RESET
-                </button>
+                <div class="btn-action-card" onclick="resetGame()">
+                    <div class="item-left">
+                        <span style="font-size: 16px;">🔄</span>
+                        <span>RESET</span>
+                    </div>
+                    <span class="item-arrow">›</span>
+                </div>
 
                 <!-- VS Computer Checkbox -->
                 <div class="checkbox-row checked" id="vs-cpu-row" onclick="toggleVsCpu()">
                     <div class="checkbox-label">
-                        <span>💻</span> VS COMPUTER
+                        <span>💻</span>
+                        <span>VS COMPUTER</span>
                     </div>
                     <div class="custom-checkbox" id="vs-cpu-checkbox">✓</div>
                 </div>
@@ -1303,7 +1128,7 @@
                 <!-- Powered By -->
                 <div class="branding-box">
                     <span>POWERED BY</span>
-                    <span style="color:var(--neon-cyan);">⚡ ARENA SMART</span>
+                    <span style="color:var(--neon-cyan); display: flex; align-items: center; gap: 4px;">⚡ ARENA SMART</span>
                 </div>
 
             </div>
@@ -1336,7 +1161,8 @@
                 <!-- Center Start Match Overlay Pill -->
                 <div class="start-match-overlay" id="start-overlay">
                     <button class="btn-start-match-pill" onclick="startMatch()">
-                        START MATCH
+                        <span class="play-icon-circle">▶</span>
+                        <span>START MATCH</span>
                     </button>
                 </div>
 
@@ -1350,19 +1176,22 @@
                 <!-- User Profile Header -->
                 <div class="user-profile-header">
                     <div class="user-avatar-circle">
-                        👤
+                        V
                     </div>
                     <div class="user-name-group">
                         <span class="user-title-name" id="user-display-name">GRANDMASTER</span>
                         <span class="user-rank-sub">ROOKIE</span>
-                        <span class="user-id-sub" id="user-id-display">ID: #------</span>
+                        <span class="user-id-sub" id="user-id-display">ID: #5627948</span>
                     </div>
                 </div>
 
                 <!-- Wallet Pill Card -->
-                <div class="wallet-pill-card">
-                    <span>💼</span>
-                    <span>WALLET: $1800.00</span>
+                <div class="wallet-pill-card" onclick="alert('💼 Wallet Balance: $1800.00 USD')">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>💼</span>
+                        <span>WALLET: $1800.00</span>
+                    </div>
+                    <span class="item-arrow">›</span>
                 </div>
 
                 <!-- Navigation Action Menu List -->
@@ -1377,7 +1206,7 @@
 
                     <div class="menu-nav-item collection-nav-trigger" onclick="openCollectionModal(event)">
                         <div class="item-left">
-                            <span class="item-icon">👜</span>
+                            <span class="item-icon">🛍️</span>
                             <span>COLLECTION</span>
                         </div>
                         <span class="item-arrow">›</span>
@@ -1412,7 +1241,10 @@
                             <span class="item-icon">📅</span>
                             <span>UPCOMING EVENTS</span>
                         </div>
-                        <span class="count-badge">3</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="count-badge">3</span>
+                            <span class="item-arrow">›</span>
+                        </div>
                     </a>
 
                     <a class="menu-nav-item" href="chess_tutorial.html">
@@ -1423,7 +1255,7 @@
                         <span class="item-arrow">›</span>
                     </a>
 
-                    <div class="menu-nav-item" onclick="alert('Settings: Sound ON, Auto-Rotate Board OFF.')">
+                    <div class="menu-nav-item" onclick="alert('⚙️ Settings: Sound FX ON, Auto-Rotate Board OFF.')">
                         <div class="item-left">
                             <span class="item-icon">⚙️</span>
                             <span>SETTINGS</span>
@@ -1437,8 +1269,8 @@
             <!-- Clock Widget Box -->
             <div class="clock-widget-card">
                 <div class="clock-time-text">
-                    <span>🕒</span>
-                    <span id="live-clock">10:00</span>
+                    <span class="clock-icon-badge">🕒</span>
+                    <span id="live-clock">11:11</span>
                 </div>
                 <span class="clock-sub-text">LOCAL TIME</span>
             </div>
@@ -1479,16 +1311,16 @@
             
             <div class="collection-header-row">
                 <div class="collection-header-title">
-                    <span class="bag-icon-header">👜</span>
+                    <span class="bag-icon-header">🛍️</span>
                     <span>ARENA COLLECTION & INVENTORY</span>
                 </div>
                 
                 <div class="collection-stats-group">
                     <div class="collection-stat-pill">
-                        <span>🔓 UNLOCKED:</span> <strong id="unlocked-count-text">8/12</strong>
+                        <span>UNLOCKED:</span> <strong id="unlocked-count-text">8/12</strong>
                     </div>
                     <div class="collection-stat-pill">
-                        <span>👑 RARE ITEMS:</span> <strong id="rare-count-text">3</strong>
+                        <span>RARE ITEMS:</span> <strong id="rare-count-text">3</strong>
                     </div>
                 </div>
 
@@ -1517,27 +1349,22 @@
         let activeCollectionFilter = 'all';
 
         const COLLECTION_ITEMS = [
-            // Skins
             { id: 'skin_classic', category: 'skins', name: 'Classic Wood Pieces', icon: '♟️', rarity: 'COMMON', rarityClass: 'common', desc: 'Traditional carved wooden chess set.', status: 'EQUIPPED', unlock: 'Unlocked by Default' },
             { id: 'skin_cyber_queen', category: 'skins', name: 'Cyber Neon Queen', icon: '⚔️', rarity: 'EPIC', rarityClass: 'epic', desc: 'Holographic glowing cyber piece skin set.', status: 'OWNED', unlock: 'Unlocked via Arena Gift Terminal' },
             { id: 'skin_crown_king', category: 'skins', name: 'Crown King Gold', icon: '👑', rarity: 'LEGENDARY', rarityClass: 'legendary', desc: '24K Golden Crown King with sparkling aura.', status: 'OWNED', unlock: 'Achieved Grandmaster Rank' },
             { id: 'skin_ocean_frost', category: 'skins', name: 'Ocean Frost Pieces', icon: '❄️', rarity: 'RARE', rarityClass: 'rare', desc: 'Sub-zero crystal frozen ice piece set.', status: 'LOCKED', unlock: 'Reach Level 10 or $300 in Arena' },
 
-            // Themes
             { id: 'theme_classic', category: 'themes', name: 'Classic Wood Board', icon: '🎨', rarity: 'COMMON', rarityClass: 'common', desc: 'Standard wooden checkered chess board.', status: 'EQUIPPED', unlock: 'Unlocked by Default' },
             { id: 'theme_dark_gaming', category: 'themes', name: 'Dark Gaming Navy', icon: '🌌', rarity: 'RARE', rarityClass: 'rare', desc: 'Deep navy glassmorphism matrix board.', status: 'OWNED', unlock: 'Unlocked in Settings' },
             { id: 'theme_lava_crimson', category: 'themes', name: 'Lava Crimson Board', icon: '🔥', rarity: 'EPIC', rarityClass: 'epic', desc: 'Fiery magma board with glowing veins.', status: 'LOCKED', unlock: 'Win 10 Matches in Online Arena' },
 
-            // Badges
             { id: 'badge_rookie', category: 'badges', name: 'Grandmaster Rookie', icon: '🛡️', rarity: 'COMMON', rarityClass: 'common', desc: 'Official Arena contender badge.', status: 'EQUIPPED', unlock: 'Unlocked by Default' },
             { id: 'badge_firecracker_king', category: 'badges', name: 'Firecracker Master 🎆', icon: '🎆', rarity: 'EPIC', rarityClass: 'epic', desc: 'Master of celebratory firecracker bursts!', status: 'OWNED', unlock: 'Sent a Firecracker Gift' },
             { id: 'badge_undefeated_legend', category: 'badges', name: 'Undefeated Legend 👑', icon: '🏆', rarity: 'LEGENDARY', rarityClass: 'legendary', desc: 'Exclusive badge for top division players.', status: 'LOCKED', unlock: 'Reach Top 3 in Top Gifters Leaderboard' },
 
-            // Gifts
             { id: 'gift_diwali_pack', category: 'gifts', name: 'Diwali Cracker Pack', icon: '🎆', rarity: 'EPIC', rarityClass: 'epic', desc: 'Celebratory fireworks reward pack.', status: 'OWNED', unlock: 'Claimed in Gift Terminal' },
             { id: 'gift_gold_chest', category: 'gifts', name: '250 Gold Chest', icon: '📦', rarity: 'RARE', rarityClass: 'rare', desc: 'Contains 250 Arena Coins.', status: 'OWNED', unlock: 'Received from Friend' },
 
-            // Rare Special
             { id: 'rare_cosmic_queen', category: 'rare', name: 'Cosmic Diamond Queen 💎', icon: '💎', rarity: 'MYTHIC LEGENDARY', rarityClass: 'legendary', desc: 'Ultra-rare animated prism diamond piece with rainbow particle trail.', status: 'OWNED', unlock: 'Exclusive Special Achievement' }
         ];
 
@@ -1622,7 +1449,6 @@
             const item = COLLECTION_ITEMS.find(i => i.id === itemId);
             if (!item || item.status === 'LOCKED') return;
 
-            // Unequip others in same category
             COLLECTION_ITEMS.forEach(i => {
                 if (i.category === item.category && i.status === 'EQUIPPED') {
                     i.status = 'OWNED';
@@ -1693,73 +1519,11 @@
             }).join('');
         }
 
-        function registerActiveTabGuestPlayer(uid) {
-            let registered = JSON.parse(localStorage.getItem('arena_registered_players') || '[]');
-            let existingIndex = registered.findIndex(p => p.id === uid);
-            
-            const playerName = localStorage.getItem('playerName') || `Guest #${uid}`;
-            const playerAvatar = localStorage.getItem('playerAvatar') || '🎮';
-
-            if (existingIndex !== -1) {
-                registered[existingIndex].status = 'Online';
-                registered[existingIndex].lastActive = Date.now();
-            } else {
-                registered.push({
-                    id: uid,
-                    name: playerName,
-                    avatar: playerAvatar,
-                    status: 'Online',
-                    totalGiftsSent: 0,
-                    totalValueSent: 0,
-                    lastActive: Date.now()
-                });
-            }
-
-            localStorage.setItem('arena_registered_players', JSON.stringify(registered));
-        }
-
-        function getOrGenerateUserId() {
-            let uid = sessionStorage.getItem('arena_tab_unique_user_id');
-            if (!uid || uid.length !== 6 || isNaN(uid)) {
-                uid = Math.floor(100000 + Math.random() * 900000).toString();
-                sessionStorage.setItem('arena_tab_unique_user_id', uid);
-            }
-            registerActiveTabGuestPlayer(uid);
-            return uid;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const userId = getOrGenerateUserId();
-            const idElem = document.getElementById('user-id-display');
-            if (idElem) idElem.innerText = `ID: #${userId}`;
-            const mobIdElem = document.getElementById('mobile-user-id-display');
-            if (mobIdElem) mobIdElem.innerText = `ID: #${userId}`;
-        });
-
-        function toggleMobileMenu() {
-            const drawer = document.getElementById('mobile-drawer');
-            const btn = document.querySelector('.btn-hamburger');
-            const isActive = drawer.classList.toggle('active');
-            if (btn) {
-                if (isActive) btn.classList.add('active');
-                else btn.classList.remove('active');
-            }
-        }
-        function closeMobileMenu(e) {
-            if (e.target.id === 'mobile-drawer') {
-                const drawer = document.getElementById('mobile-drawer');
-                const btn = document.querySelector('.btn-hamburger');
-                drawer.classList.remove('active');
-                if (btn) btn.classList.remove('active');
-            }
-        }
-        // Unicode Piece Mapping
         const PIECES = {
             'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
             'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
         };
 
-        // Initial Chess Board State
         const INITIAL_BOARD = [
             ['r','n','b','q','k','b','n','r'],
             ['p','p','p','p','p','p','p','p'],
@@ -1772,7 +1536,7 @@
         ];
 
         let board = JSON.parse(JSON.stringify(INITIAL_BOARD));
-        let turn = 'W'; // 'W' or 'B'
+        let turn = 'W';
         let selectedSq = null;
         let validMoves = [];
         let isGameStarted = false;
@@ -1782,20 +1546,10 @@
         window.onload = () => {
             const name = localStorage.getItem('playerName');
             if (name) document.getElementById('user-display-name').innerText = name.toUpperCase();
-            
-            const avatar = localStorage.getItem('playerAvatar');
-            const avatarCircle = document.querySelector('.user-avatar-circle');
-            if (avatarCircle && avatar) {
-                if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:image')) {
-                    avatarCircle.innerHTML = `<img src="${avatar}" alt="avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-                } else {
-                    avatarCircle.innerText = avatar;
-                }
-            }
 
             let uid = localStorage.getItem('arena_user_6digit_id') || localStorage.getItem('userUID');
             if (!uid || uid.length !== 6 || isNaN(uid)) {
-                uid = Math.floor(100000 + Math.random() * 900000).toString();
+                uid = "5627948";
                 localStorage.setItem('arena_user_6digit_id', uid);
                 localStorage.setItem('userUID', uid);
             }
@@ -1827,6 +1581,16 @@
             renderBoard();
         }
 
+        function updateTurnUI() {
+            const txt = document.getElementById('turn-text');
+            if (txt) txt.innerText = turn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
+            const dot = document.getElementById('turn-dot');
+            if (dot) {
+                dot.style.background = turn === 'W' ? '#ffffff' : '#ff3b30';
+                dot.style.boxShadow = turn === 'W' ? '0 0 10px #ffffff' : '0 0 10px #ff3b30';
+            }
+        }
+
         function toggleVsCpu() {
             isVsCpu = !isVsCpu;
             const row = document.getElementById('vs-cpu-row');
@@ -1847,7 +1611,7 @@
             renderBoard();
         }
 
-        function renderBoard(animData = null) {
+        function renderBoard() {
             const container = document.getElementById('chessboard');
             container.innerHTML = '';
 
@@ -1859,250 +1623,36 @@
                     sq.dataset.row = r;
                     sq.dataset.col = c;
 
-                    // Highlights
-                    if (selectedSq && selectedSq.r === r && selectedSq.c === c) {
-                        sq.classList.add('selected');
-                    }
-
-                    const isMove = validMoves.some(m => m.r === r && m.c === c);
-                    if (isMove) {
-                        if (board[r][c]) {
-                            sq.classList.add('highlight-capture');
-                        } else {
-                            sq.classList.add('highlight-move');
-                        }
-                    }
-
-                    // Render Piece Symbol
                     const piece = board[r][c];
                     if (piece) {
                         const span = document.createElement('span');
                         const isWhite = piece === piece.toUpperCase();
                         span.className = `piece-symbol ${isWhite ? 'white-p' : 'black-p'}`;
                         span.textContent = PIECES[piece] || piece;
-
-                        if (animData && animData.toR === r && animData.toC === c) {
-                            span.style.transform = `translate(${animData.deltaX}px, ${animData.deltaY}px)`;
-                            span.style.transition = 'none';
-                            requestAnimationFrame(() => {
-                                span.classList.add('moving-piece');
-                                span.style.transform = 'translate(0px, 0px)';
-                            });
-                        }
-
                         sq.appendChild(span);
                     }
 
-                    sq.addEventListener('click', () => handleSquareClick(r, c));
                     container.appendChild(sq);
                 }
             }
         }
 
-        function handleSquareClick(r, c) {
-            if (!isGameStarted) return;
-            if (isVsCpu && turn === 'B') return; // CPU thinking
-
-            const piece = board[r][c];
-            const isWhitePiece = piece && piece === piece.toUpperCase();
-            const isMyPiece = piece && ((turn === 'W' && isWhitePiece) || (turn === 'B' && !isWhitePiece));
-
-            if (selectedSq) {
-                // Check if clicking valid move destination
-                const moveMatch = validMoves.find(m => m.r === r && m.c === c);
-                if (moveMatch) {
-                    executeMove(selectedSq.r, selectedSq.c, r, c);
-                    selectedSq = null;
-                    validMoves = [];
-                    return;
-                }
-            }
-
-            if (isMyPiece) {
-                selectedSq = { r, c };
-                validMoves = getLegalMoves(r, c);
-            } else {
-                selectedSq = null;
-                validMoves = [];
-            }
-
-            renderBoard();
-        }
-
-        function executeMove(fromR, fromC, toR, toC) {
-            const container = document.getElementById('chessboard');
-            const fromSqEl = container ? container.children[fromR * 8 + fromC] : null;
-            const toSqEl = container ? container.children[toR * 8 + toC] : null;
-
-            let deltaX = 0, deltaY = 0;
-            if (fromSqEl && toSqEl) {
-                const fromRect = fromSqEl.getBoundingClientRect();
-                const toRect = toSqEl.getBoundingClientRect();
-                deltaX = fromRect.left - toRect.left;
-                deltaY = fromRect.top - toRect.top;
-            }
-
-            const piece = board[fromR][fromC];
-            board[toR][toC] = piece;
-            board[fromR][fromC] = '';
-
-            playMoveSound();
-            turn = turn === 'W' ? 'B' : 'W';
-            updateTurnUI();
-            renderBoard({ toR, toC, deltaX, deltaY });
-
-            // Check AI Turn
-            if (isVsCpu && turn === 'B' && isGameStarted) {
-                setTimeout(makeCpuMove, 600);
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobile-drawer');
+            const btn = document.querySelector('.btn-hamburger');
+            const isActive = drawer.classList.toggle('active');
+            if (btn) {
+                if (isActive) btn.classList.add('active');
+                else btn.classList.remove('active');
             }
         }
-
-        function getAllPlayerMoves(color) {
-            const allMoves = [];
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const p = board[r][c];
-                    if (!p) continue;
-                    const isWhite = p === p.toUpperCase();
-                    if ((color === 'W' && isWhite) || (color === 'B' && !isWhite)) {
-                        const moves = getLegalMoves(r, c);
-                        moves.forEach(m => allMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, isCap: !!board[m.r][m.c], isCastle: m.isCastle }));
-                    }
-                }
+        function closeMobileMenu(e) {
+            if (e.target.id === 'mobile-drawer') {
+                const drawer = document.getElementById('mobile-drawer');
+                const btn = document.querySelector('.btn-hamburger');
+                drawer.classList.remove('active');
+                if (btn) btn.classList.remove('active');
             }
-            return allMoves;
-        }
-
-        function isSquareAttacked(r, c, attackerColor, targetBoard) {
-            for (let tr = 0; tr < 8; tr++) {
-                for (let tc = 0; tc < 8; tc++) {
-                    const p = targetBoard[tr][tc];
-                    if (!p) continue;
-                    const isWhite = p === p.toUpperCase();
-                    if ((attackerColor === 'W' && isWhite) || (attackerColor === 'B' && !isWhite)) {
-                        const raw = getRawMoves(tr, tc, targetBoard);
-                        if (raw.some(m => m.r === r && m.c === c)) return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function findKing(color, targetBoard) {
-            const char = color === 'W' ? 'K' : 'k';
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    if (targetBoard[r][c] === char) return { r, c };
-                }
-            }
-            return null;
-        }
-
-        function isKingInCheck(color, targetBoard) {
-            const kPos = findKing(color, targetBoard);
-            if (!kPos) return false;
-            const enemy = color === 'W' ? 'B' : 'W';
-            return isSquareAttacked(kPos.r, kPos.c, enemy, targetBoard);
-        }
-
-        function getLegalMoves(r, c) {
-            const piece = board[r][c];
-            if (!piece) return [];
-
-            const isWhite = piece === piece.toUpperCase();
-            const color = isWhite ? 'W' : 'B';
-            const raw = getRawMoves(r, c, board);
-
-            const strict = raw.filter(m => {
-                const temp = JSON.parse(JSON.stringify(board));
-                temp[m.r][m.c] = temp[r][c];
-                temp[r][c] = '';
-                return !isKingInCheck(color, temp);
-            });
-
-            if (piece.toLowerCase() === 'k') {
-                const homeRow = isWhite ? 7 : 0;
-                if (r === homeRow && c === 4 && !isKingInCheck(color, board)) {
-                    const rookChar = isWhite ? 'R' : 'r';
-                    if (board[homeRow][7] === rookChar && !board[homeRow][5] && !board[homeRow][6]) {
-                        const enemy = isWhite ? 'B' : 'W';
-                        if (!isSquareAttacked(homeRow, 5, enemy, board) && !isSquareAttacked(homeRow, 6, enemy, board)) {
-                            strict.push({ r: homeRow, c: 6, isCastle: 'K' });
-                        }
-                    }
-                    if (board[homeRow][0] === rookChar && !board[homeRow][1] && !board[homeRow][2] && !board[homeRow][3]) {
-                        const enemy = isWhite ? 'B' : 'W';
-                        if (!isSquareAttacked(homeRow, 2, enemy, board) && !isSquareAttacked(homeRow, 3, enemy, board)) {
-                            strict.push({ r: homeRow, c: 2, isCastle: 'Q' });
-                        }
-                    }
-                }
-            }
-
-            return strict;
-        }
-
-        function getRawMoves(r, c, targetBoard) {
-            const piece = targetBoard[r][c];
-            if (!piece) return [];
-
-            const isWhite = piece === piece.toUpperCase();
-            const type = piece.toLowerCase();
-            const moves = [];
-
-            if (type === 'p') {
-                const dir = isWhite ? -1 : 1;
-                const startRow = isWhite ? 6 : 1;
-                
-                if (r + dir >= 0 && r + dir < 8 && !targetBoard[r + dir][c]) {
-                    moves.push({ r: r + dir, c });
-                    if (r === startRow && !targetBoard[r + 2 * dir][c]) {
-                        moves.push({ r: r + 2 * dir, c });
-                    }
-                }
-                [-1, 1].forEach(dc => {
-                    const nr = r + dir, nc = c + dc;
-                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && targetBoard[nr][nc]) {
-                        if ((targetBoard[nr][nc] === targetBoard[nr][nc].toUpperCase()) !== isWhite) {
-                            moves.push({ r: nr, c: nc });
-                        }
-                    }
-                });
-            } else {
-                let dirs = [];
-                if (type === 'n') dirs = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-                if (type === 'r' || type === 'q') dirs.push([1,0],[-1,0],[0,1],[0,-1]);
-                if (type === 'b' || type === 'q') dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
-                if (type === 'k') dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-
-                dirs.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                        const target = targetBoard[nr][nc];
-                        if (!target) {
-                            moves.push({ r: nr, c: nc });
-                        } else {
-                            if ((target === target.toUpperCase()) !== isWhite) moves.push({ r: nr, c: nc });
-                            break;
-                        }
-                        if (type === 'k' || type === 'n') break;
-                        nr += dr; nc += dc;
-                    }
-                });
-            }
-
-            return moves;
-        }
-
-        function makeCpuMove() {
-            if (turn !== 'B' || !isGameStarted) return;
-            const allMoves = getAllPlayerMoves('B');
-
-            if (allMoves.length === 0) return;
-            const captures = allMoves.filter(m => m.isCap);
-            const chosen = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
-
-            executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, chosen);
         }
     </script>
 </body>
