@@ -4932,29 +4932,7 @@
         ];
 
         function createCorridorTV(group) {
-            const tvGroup = new THREE.Group();
-
-            // Outer Black Bezel Chassis
-            const frameGeo = new THREE.BoxGeometry(2.5, 1.45, 0.12);
-            const frameMat = new THREE.MeshStandardMaterial({
-                color: 0x111111,
-                roughness: 0.25,
-                metalness: 0.85
-            });
-            const frameMesh = new THREE.Mesh(frameGeo, frameMat);
-            tvGroup.add(frameMesh);
-
-            // Wall Mount Bracket (Backing)
-            const mountGeo = new THREE.BoxGeometry(0.8, 0.6, 0.1);
-            const mountMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.6 });
-            const mountMesh = new THREE.Mesh(mountGeo, mountMat);
-            mountMesh.position.set(0, 0, -0.08);
-            tvGroup.add(mountMesh);
-
-            // Video Screen Mesh
             const videoEl = document.getElementById('corridor-tv-video');
-            let screenMat;
-
             if (videoEl) {
                 videoEl.muted = true;
                 videoEl.loop = true;
@@ -4964,37 +4942,67 @@
                 corridorTvTexture.minFilter = THREE.LinearFilter;
                 corridorTvTexture.magFilter = THREE.LinearFilter;
                 corridorTvTexture.format = THREE.RGBAFormat;
-
-                screenMat = new THREE.MeshBasicMaterial({
-                    map: corridorTvTexture
-                });
-            } else {
-                screenMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
             }
 
-            const screenGeo = new THREE.PlaneGeometry(2.38, 1.33);
-            const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-            screenMesh.position.set(0, 0, 0.065);
-            tvGroup.add(screenMesh);
+            function buildSingleTV() {
+                const tvGroup = new THREE.Group();
 
-            // Power LED Indicator
-            const ledGeo = new THREE.SphereGeometry(0.025, 8, 8);
-            const ledMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 });
-            const ledMesh = new THREE.Mesh(ledGeo, ledMat);
-            ledMesh.position.set(1.15, -0.65, 0.07);
-            tvGroup.add(ledMesh);
+                // Outer Black Bezel Chassis Frame
+                const frameGeo = new THREE.BoxGeometry(2.5, 1.45, 0.12);
+                const frameMat = new THREE.MeshStandardMaterial({
+                    color: 0x111111,
+                    roughness: 0.25,
+                    metalness: 0.85
+                });
+                const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+                tvGroup.add(frameMesh);
 
-            // Dynamic TV Ambient Glow Light
-            const tvLight = new THREE.PointLight(0x66aaff, 3.5, 9.0);
-            tvLight.position.set(0, 0, 0.6);
-            tvGroup.add(tvLight);
+                // Wall Mount Bracket
+                const mountGeo = new THREE.BoxGeometry(0.8, 0.6, 0.1);
+                const mountMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.6 });
+                const mountMesh = new THREE.Mesh(mountGeo, mountMat);
+                mountMesh.position.set(0, 0, -0.08);
+                tvGroup.add(mountMesh);
 
-            // Mount TV on North Corridor Wall at x = -2.0, y = 2.1, z = -13.95 (facing South into main corridor)
-            tvGroup.position.set(-2.0, 2.1, -13.95);
-            tvGroup.rotation.y = 0;
+                // Video Screen Mesh (emissive basic material so screen glows clearly in dark)
+                const screenMat = corridorTvTexture ? new THREE.MeshBasicMaterial({
+                    map: corridorTvTexture,
+                    side: THREE.DoubleSide
+                }) : new THREE.MeshBasicMaterial({ color: 0x050505 });
 
-            corridorTvMesh = tvGroup;
-            group.add(tvGroup);
+                const screenGeo = new THREE.PlaneGeometry(2.38, 1.33);
+                const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+                screenMesh.position.set(0, 0, 0.068);
+                tvGroup.add(screenMesh);
+
+                // Power LED Indicator
+                const ledGeo = new THREE.SphereGeometry(0.03, 8, 8);
+                const ledMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 });
+                const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+                ledMesh.position.set(1.15, -0.65, 0.07);
+                tvGroup.add(ledMesh);
+
+                // Dynamic TV Ambient Glow Light
+                const tvLight = new THREE.PointLight(0x66aaff, 4.0, 10.0);
+                tvLight.position.set(0, 0, 0.8);
+                tvGroup.add(tvLight);
+
+                return tvGroup;
+            }
+
+            // TV 1: Mounted in Spawn Area (Cell r=1, c=1 right in front of spawn point!)
+            const spawnTv = buildSingleTV();
+            spawnTv.position.set(-26.0, 2.2, -27.88); // Mounted on South face of North wall at z = -28.0
+            spawnTv.rotation.y = 0;
+            group.add(spawnTv);
+
+            // TV 2: Mounted in Main Corridor (Cell r=4, c=7 in main corridor)
+            const mainTv = buildSingleTV();
+            mainTv.position.set(-2.0, 2.2, -11.88); // Mounted on South face of North wall at z = -12.0
+            mainTv.rotation.y = 0;
+            group.add(mainTv);
+
+            corridorTvMesh = mainTv;
         }
 
         function cycleCorridorTvVideo() {
@@ -5014,22 +5022,28 @@
                 isNearCorridorTv = false;
                 return;
             }
-            const dx = playerPos.x - 7.5;
-            const dz = playerPos.z - 4.8;
-            const dist = Math.sqrt(dx * dx + dz * dz);
+            const dx1 = playerPos.x - 7.5; // Main corridor TV (grid c=7.5, r=5.0)
+            const dz1 = playerPos.z - 5.0;
+            const dist1 = Math.sqrt(dx1 * dx1 + dz1 * dz1);
 
-            if (dist < 2.5) {
+            const dx2 = playerPos.x - 1.5; // Spawn TV (grid c=1.5, r=1.5)
+            const dz2 = playerPos.z - 1.5;
+            const dist2 = Math.sqrt(dx2 * dx2 + dz2 * dz2);
+
+            const dist = Math.min(dist1, dist2);
+
+            if (dist < 3.2) {
                 isNearCorridorTv = true;
                 const promptEl = document.getElementById('staircase-prompt');
                 if (promptEl) {
                     promptEl.style.display = 'block';
-                    promptEl.innerHTML = `📺 PRESS <span style="color:#00ff44;">[E]</span> TO CHANGE CORRIDOR TV VIDEO<br><span style="font-size:11px; color:#aaa;">(${corridorTvVideos[currentCorridorTvIndex].name})</span>`;
+                    promptEl.innerHTML = `📺 PRESS <span style="color:#00ff44;">[E]</span> TO CHANGE TV VIDEO<br><span style="font-size:11px; color:#aaa;">(${corridorTvVideos[currentCorridorTvIndex].name})</span>`;
                 }
             } else {
                 if (isNearCorridorTv) {
                     isNearCorridorTv = false;
                     const promptEl = document.getElementById('staircase-prompt');
-                    if (promptEl && promptEl.innerHTML.includes('CORRIDOR TV VIDEO')) {
+                    if (promptEl && promptEl.innerHTML.includes('TV VIDEO')) {
                         promptEl.style.display = 'none';
                     }
                 }
