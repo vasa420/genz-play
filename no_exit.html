@@ -6667,10 +6667,123 @@
             }, 450);
         }
 
+        function triggerInstantCameraLungeScreamer() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+            playInstantSound('creepy-kill-laugh', 1.0);
+
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.backgroundImage = "radial-gradient(circle at center, rgba(255, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.98) 90%), url('terror_jumpscare.png')";
+            overlay.style.backgroundSize = 'cover';
+            overlay.style.backgroundPosition = 'center';
+            overlay.style.filter = 'contrast(2.2) saturate(3.0) brightness(1.2)';
+            overlay.style.zIndex = '99999';
+            overlay.style.pointerEvents = 'none';
+
+            document.body.appendChild(overlay);
+
+            triggerRealisticCameraJolt(1.8);
+
+            setTimeout(() => {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 300);
+        }
+
+        function triggerSuddenCeilingPlungeAttack() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            playInstantSound('impact-sound', 1.0);
+            playInstantSound('woman-scream', 1.0);
+
+            const dropGeo = new THREE.PlaneGeometry(2.4, 3.2);
+            const dropTex = new THREE.TextureLoader().load('terror_jumpscare.png');
+            const dropMat = new THREE.MeshBasicMaterial({
+                map: dropTex,
+                transparent: true,
+                opacity: 0.98,
+                side: THREE.DoubleSide
+            });
+            const dropMesh = new THREE.Mesh(dropGeo, dropMat);
+
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            const dropPos = camera.position.clone().add(forward.clone().multiplyScalar(0.8));
+            dropMesh.position.copy(dropPos);
+            dropMesh.position.y = camera.position.y + 2.2;
+            dropMesh.lookAt(camera.position);
+
+            const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
+            if (activeGroup) activeGroup.add(dropMesh);
+
+            triggerRealisticCameraJolt(1.6);
+
+            let ticks = 0;
+            const plungeInterval = setInterval(() => {
+                ticks++;
+                dropMesh.position.y -= 0.45;
+                dropMesh.scale.addScalar(0.12);
+
+                if (ticks >= 5) {
+                    clearInterval(plungeInterval);
+                    if (activeGroup && dropMesh.parent) {
+                        activeGroup.remove(dropMesh);
+                    }
+                }
+            }, 16);
+        }
+
+        function triggerUltraFastGhostAmbush() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            const sprintGeo = new THREE.PlaneGeometry(2.2, 3.0);
+            const sprintTex = new THREE.TextureLoader().load('ghostface_mask.png');
+            const sprintMat = new THREE.MeshBasicMaterial({
+                map: sprintTex,
+                transparent: true,
+                opacity: 0.98,
+                side: THREE.DoubleSide
+            });
+            const sprintMesh = new THREE.Mesh(sprintGeo, sprintMat);
+
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            const startPos = camera.position.clone().add(forward.clone().multiplyScalar(4.5));
+            sprintMesh.position.copy(startPos);
+            sprintMesh.position.y = camera.position.y;
+            sprintMesh.lookAt(camera.position);
+
+            const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
+            if (activeGroup) activeGroup.add(sprintMesh);
+
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+
+            let dist = 0;
+            const blitzInterval = setInterval(() => {
+                dist += 1.1;
+                sprintMesh.position.add(forward.clone().multiplyScalar(-1.1));
+                sprintMesh.lookAt(camera.position);
+
+                if (dist >= 4.0) {
+                    clearInterval(blitzInterval);
+                    if (activeGroup && sprintMesh.parent) {
+                        activeGroup.remove(sprintMesh);
+                    }
+                    triggerRealisticCameraJolt(1.8);
+                    playInstantSound('impact-sound', 1.0);
+                }
+            }, 18);
+        }
+
         function triggerRandomGameplayJumpscare() {
             if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
 
-            const choice = Math.floor(Math.random() * 10);
+            const choice = Math.floor(Math.random() * 13);
             switch (choice) {
                 case 0:
                     triggerSuddenGhostFaceFlash();
@@ -6702,14 +6815,23 @@
                 case 9:
                     triggerRealisticGlitchScreamer();
                     break;
+                case 10:
+                    triggerInstantCameraLungeScreamer();
+                    break;
+                case 11:
+                    triggerSuddenCeilingPlungeAttack();
+                    break;
+                case 12:
+                    triggerUltraFastGhostAmbush();
+                    break;
             }
         }
 
         function scheduleRandomGameplayJumpscares() {
             if (randomJumpscareTimeout) clearTimeout(randomJumpscareTimeout);
 
-            // Run a jumpscare every 8 to 18 seconds of gameplay
-            const nextTime = Math.random() * 10000 + 8000;
+            // Run a sudden jumpscare attack every 4 to 9 seconds of gameplay
+            const nextTime = Math.random() * 5000 + 4000;
             randomJumpscareTimeout = setTimeout(() => {
                 const gameplayScreen = document.getElementById('gameplay-screen');
                 if (isGameRunning && gameplayScreen && gameplayScreen.style.display === 'block' && !isKillingActive) {
