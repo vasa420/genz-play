@@ -533,17 +533,8 @@
             display: inline-block;
         }
 
-        .blood-drip {
-            position: absolute;
-            top: 82%;
-            width: 5px;
-            height: 0;
-            background: linear-gradient(to right, #4d0000 0%, #cc0000 30%, #ff6666 50%, #800000 80%, #300000 100%);
-            border-radius: 0 0 3px 3px;
-            z-index: 1;
-            transform-origin: top;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-            animation: bloodDripAnim 5s infinite ease-in-out;
+        .blood-drip, .blood-drip::after {
+            display: none !important;
         }
 
         .blood-drip::after {
@@ -875,15 +866,7 @@
 
         /* Interactive Blood Drip Styles */
         .interactive-droplet {
-            position: fixed;
-            width: 8px;
-            height: 16px;
-            background: radial-gradient(circle at 35% 35%, #ff4d4d 0%, #990000 65%, #4d0000 100%);
-            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-            box-shadow: 0 0 10px rgba(255, 59, 48, 0.8), inset 1px 1px 2px rgba(255, 255, 255, 0.8);
-            z-index: 9005;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
+            display: none !important;
         }
 
         .lobby-btn.blood-splatted {
@@ -1146,13 +1129,8 @@
         }
 
         /* Screen Blood Droplet & Dripping Animation Overlay */
-        #screen-blood-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none;
-            z-index: 18000;
-            overflow: hidden;
-            display: none;
+        #screen-blood-overlay, .screen-blood-drop, .screen-blood-splatter-spot {
+            display: none !important;
         }
 
         .screen-blood-drop {
@@ -2413,6 +2391,7 @@
     <audio id="woman-scream" src="dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3" preload="auto"></audio>
     <audio id="blood-drip" src="freesound_community-water-drop-85731.mp3" preload="auto"></audio>
     <audio id="crow-call" src="mightuser-1-an_ominous-crow-call-255173.mp3" preload="auto"></audio>
+    <audio id="player-running-sound" src="freesound_community-running-sounds-6003.mp3" loop preload="auto"></audio>
 
     <script>
         // Enforce minimum volume of 60%
@@ -3065,9 +3044,34 @@
         const ambientAudio = document.getElementById('ambient-music');
         const lobbyAudio = document.getElementById('lobby-music');
         const chaseAudio = document.getElementById('chase-music');
+        const playerRunningAudio = document.getElementById('player-running-sound');
 
         let isChaseMusicPlaying = false;
         let chaseFadeInterval = null;
+        let isPlayerRunningSoundPlaying = false;
+
+        function startPlayerRunningSound() {
+            if (!isGameRunning || isGamePaused) {
+                stopPlayerRunningSound();
+                return;
+            }
+            const rEl = document.getElementById('player-running-sound');
+            if (rEl) {
+                rEl.volume = Math.max(0.6, masterVolume / 100);
+                if (rEl.paused) {
+                    rEl.play().catch(e => {});
+                }
+                isPlayerRunningSoundPlaying = true;
+            }
+        }
+
+        function stopPlayerRunningSound() {
+            const rEl = document.getElementById('player-running-sound');
+            if (rEl && !rEl.paused) {
+                rEl.pause();
+            }
+            isPlayerRunningSoundPlaying = false;
+        }
 
         function startChaseMusic() {
             if (isChaseMusicPlaying) return;
@@ -3138,7 +3142,8 @@
             'creepy-kill-laugh': 'u_c98kb8pdp9-creepy-laugh-sound-203187.mp3',
             'woman-scream': 'dragon-studio-woman-screaming-sfx-screaming-sound-effect-320169.mp3',
             'blood-drip': 'freesound_community-water-drop-85731.mp3',
-            'crow-call': 'mightuser-1-an_ominous-crow-call-255173.mp3'
+            'crow-call': 'mightuser-1-an_ominous-crow-call-255173.mp3',
+            'player-running-sound': 'freesound_community-running-sounds-6003.mp3'
         };
 
         function preloadWebAudio() {
@@ -3183,6 +3188,7 @@
         }
 
         function playInstantSound(soundName, volumeMultiplier = 1.0) {
+            if (soundName === 'blood-drip') return;
             try {
                 const ctx = getAudioContext();
                 if (ctx.state === 'suspended') {
@@ -4782,79 +4788,7 @@
         }
 
         function createSignBloodLeak(group, pos, rot) {
-            const emitterPos = new THREE.Vector3().copy(pos);
-            const ry = rot[1];
-            
-            // Offset slightly forward based on rotation so the drops don't clip through the wall
-            const offsetDist = 0.08;
-            emitterPos.x += Math.sin(ry) * offsetDist;
-            emitterPos.z += Math.cos(ry) * offsetDist;
-            emitterPos.y = 1.95; // start slightly below the 2.2 sign center
-
-            const pCount = 20; // 10 drops, 10 splashes
-            const positions = new Float32Array(pCount * 3);
-            const velocities = [];
-            const lifetimes = new Float32Array(pCount);
-
-            // Initialize droplets with random heights
-            for (let i = 0; i < 10; i++) {
-                const widthOffset = (Math.random() - 0.5) * 0.45;
-                positions[i * 3] = emitterPos.x + Math.cos(ry) * widthOffset;
-                positions[i * 3 + 1] = Math.random() * 1.95;
-                positions[i * 3 + 2] = emitterPos.z - Math.sin(ry) * widthOffset;
-
-                velocities.push(new THREE.Vector3(0, -0.2 - Math.random() * 0.4, 0));
-                lifetimes[i] = 1.0;
-            }
-
-            // Initialize splashes under the floor
-            for (let i = 10; i < 20; i++) {
-                positions[i * 3] = emitterPos.x;
-                positions[i * 3 + 1] = -1.0;
-                positions[i * 3 + 2] = emitterPos.z;
-
-                velocities.push(new THREE.Vector3(0, 0, 0));
-                lifetimes[i] = 0;
-            }
-
-            const pGeo = new THREE.BufferGeometry();
-            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-            const pMat = new THREE.PointsMaterial({
-                color: 0xb30000,
-                size: 0.065,
-                map: createCircularDripTexture(true),
-                transparent: true,
-                opacity: 0.95,
-                depthWrite: false
-            });
-
-            const pointsMesh = new THREE.Points(pGeo, pMat);
-            group.add(pointsMesh);
-
-            // Reflective congealed blood puddle on the floor below the sign
-            const puddleGeo = new THREE.BoxGeometry(0.8, 0.005, 0.3);
-            puddleGeo.rotateY(ry);
-            const puddleMat = new THREE.MeshStandardMaterial({
-                color: 0x3d0000,
-                roughness: 0.08,
-                metalness: 0.1,
-                transparent: true,
-                opacity: 0.85
-            });
-            const puddle = new THREE.Mesh(puddleGeo, puddleMat);
-            puddle.position.set(emitterPos.x, 0.005, emitterPos.z);
-            group.add(puddle);
-
-            waterLeaks.push({
-                points: pointsMesh,
-                velocities: velocities,
-                lifetimes: lifetimes,
-                emitter: emitterPos,
-                splashIndex: 10,
-                isSignLeak: true,
-                angleY: ry
-            });
+            return;
         }
 
         function addFloorWallSigns() {
@@ -5332,76 +5266,7 @@
         }
 
         function createWaterLeak(group, cellC, cellR, isBlood = false) {
-            const x = cellC * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-            const z = cellR * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
-            const emitterPos = new THREE.Vector3(x, 3.85, z);
-            
-            const pCount = 30; // 15 drops, 15 splashes
-            const positions = new Float32Array(pCount * 3);
-            const velocities = [];
-            const lifetimes = new Float32Array(pCount);
-            
-            // Initialize droplets with random heights
-            for (let i = 0; i < 15; i++) {
-                positions[i * 3] = x + (Math.random() - 0.5) * 0.05;
-                positions[i * 3 + 1] = Math.random() * 3.85;
-                positions[i * 3 + 2] = z + (Math.random() - 0.5) * 0.05;
-                
-                velocities.push(new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.05,
-                    -0.2 - Math.random() * 0.8,
-                    (Math.random() - 0.5) * 0.05
-                ));
-                lifetimes[i] = 1.0;
-            }
-            
-            // Initialize splashes under the floor
-            for (let i = 15; i < 30; i++) {
-                positions[i * 3] = x;
-                positions[i * 3 + 1] = -1.0;
-                positions[i * 3 + 2] = z;
-                
-                velocities.push(new THREE.Vector3(0, 0, 0));
-                lifetimes[i] = 0;
-            }
-            
-            const pGeo = new THREE.BufferGeometry();
-            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            const pMat = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: isBlood ? 0.12 : 0.09, // larger scale so circle textures are visible
-                map: createCircularDripTexture(isBlood),
-                transparent: true,
-                opacity: 0.95,
-                depthWrite: false
-            });
-            
-            const pointsMesh = new THREE.Points(pGeo, pMat);
-            group.add(pointsMesh);
-            
-            // Reflective puddle on floor
-            const puddleGeo = new THREE.RingGeometry(0, isBlood ? 0.4 : 0.28, 16);
-            const puddleMat = new THREE.MeshStandardMaterial({
-                color: isBlood ? 0x330000 : 0x111c22,
-                roughness: isBlood ? 0.08 : 0.03,
-                metalness: 0.1,
-                transparent: true,
-                opacity: isBlood ? 0.85 : 0.65,
-                side: THREE.DoubleSide
-            });
-            const puddle = new THREE.Mesh(puddleGeo, puddleMat);
-            puddle.rotation.x = -Math.PI / 2;
-            puddle.position.set(x, 0.005, z);
-            group.add(puddle);
-            
-            waterLeaks.push({
-                points: pointsMesh,
-                velocities: velocities,
-                lifetimes: lifetimes,
-                emitter: emitterPos,
-                splashIndex: 15
-            });
+            return;
         }
 
         function spawnCeilingPipesAndWires(group, floorIndex) {
@@ -8420,7 +8285,7 @@
                 playerPos.z = Math.max(0.6, Math.min(MAP_SIZE - 0.6, playerPos.z));
 
                 updateCameraPosition();
-                handleWalkFootsteps();
+                startPlayerRunningSound();
 
                 const now = performance.now();
                 const deltaSeconds = (now - lastWalkTimeUpdate) / 1000;
@@ -8436,6 +8301,8 @@
                 if (minutesWalked >= 20) {
                     triggerVictory();
                 }
+            } else {
+                stopPlayerRunningSound();
             }
             
             // Check if player stands on stairs cell
@@ -8500,37 +8367,11 @@
         }
 
         function handleWalkFootsteps() {
-            stepsTimer += 0.035;
-            if (stepsTimer >= 0.6) {
-                stepsTimer = 0;
-                playFootstepSound();
-            }
+            startPlayerRunningSound();
         }
 
         function playFootstepSound() {
-            try {
-                const ctx = getAudioContext();
-                const buffer = getSharedNoiseBuffer(ctx);
-
-                const noise = ctx.createBufferSource();
-                noise.buffer = buffer;
-
-                const filter = ctx.createBiquadFilter();
-                filter.type = 'bandpass';
-                filter.frequency.value = 150;
-                filter.Q.value = 3.0;
-
-                const gain = ctx.createGain();
-                gain.gain.setValueAtTime(0.12 * (masterVolume / 100), ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-
-                noise.connect(filter);
-                filter.connect(gain);
-                gain.connect(ctx.destination);
-
-                noise.start();
-                noise.stop(ctx.currentTime + 0.15);
-            } catch(e) {}
+            startPlayerRunningSound();
         }
 
         function playGhostFootstep(dist) {
@@ -9057,99 +8898,7 @@
         }
 
         function updateWaterLeaks() {
-            const dt = 0.016; // approx delta time
-            const g = 9.8;
-            
-            waterLeaks.forEach(leak => {
-                const posAttr = leak.points.geometry.attributes.position;
-                const positions = posAttr.array;
-                
-                // Determine limits dynamically based on sign leaks vs standard ceiling leaks
-                const numDrops = leak.isSignLeak ? 10 : 15;
-                const totalPoints = leak.isSignLeak ? 20 : 30;
-                
-                // 1. Update falling droplets
-                for (let i = 0; i < numDrops; i++) {
-                    leak.velocities[i].y -= g * dt;
-                    
-                    positions[i * 3] += leak.velocities[i].x * dt;
-                    positions[i * 3 + 1] += leak.velocities[i].y * dt;
-                    positions[i * 3 + 2] += leak.velocities[i].z * dt;
-                    
-                    if (positions[i * 3 + 1] <= 0.015) {
-                        const dropX = positions[i * 3];
-                        const dropZ = positions[i * 3 + 2];
-                        
-                        // Play water droplet splash audio SFX with realistic distance-based volume
-                        const now = performance.now();
-                        if (!leak.lastSoundTime || (now - leak.lastSoundTime > 180)) {
-                            const pdx = playerPos.x - dropX;
-                            const pdz = playerPos.z - dropZ;
-                            const distToPlayer = Math.sqrt(pdx * pdx + pdz * pdz);
-                            if (distToPlayer < 15.0) {
-                                const vol = Math.max(0.2, (1.0 - distToPlayer / 15.0) * 0.75);
-                                playInstantSound('blood-drip', vol);
-                                leak.lastSoundTime = now;
-                            }
-                        }
-                        
-                        // Reset to sign bottom or ceiling
-                        if (leak.isSignLeak) {
-                            const widthOffset = (Math.random() - 0.5) * 0.45;
-                            positions[i * 3] = leak.emitter.x + Math.cos(leak.angleY) * widthOffset;
-                            positions[i * 3 + 1] = leak.emitter.y;
-                            positions[i * 3 + 2] = leak.emitter.z - Math.sin(leak.angleY) * widthOffset;
-                        } else {
-                            positions[i * 3] = leak.emitter.x + (Math.random() - 0.5) * 0.05;
-                            positions[i * 3 + 1] = leak.emitter.y;
-                            positions[i * 3 + 2] = leak.emitter.z + (Math.random() - 0.5) * 0.05;
-                        }
-                        
-                        leak.velocities[i].set(
-                            0,
-                            -0.2 - Math.random() * 0.4,
-                            0
-                        );
-                        
-                        // Trigger splash
-                        const sIdx = leak.splashIndex;
-                        positions[sIdx * 3] = dropX;
-                        positions[sIdx * 3 + 1] = 0.02;
-                        positions[sIdx * 3 + 2] = dropZ;
-                        
-                        leak.velocities[sIdx].set(
-                            (Math.random() - 0.5) * 0.3,
-                            0.4 + Math.random() * 0.5,
-                            (Math.random() - 0.5) * 0.3
-                        );
-                        leak.lifetimes[sIdx] = 0.15 + Math.random() * 0.15;
-                        
-                        leak.splashIndex++;
-                        if (leak.splashIndex >= totalPoints) {
-                            leak.splashIndex = numDrops;
-                        }
-                    }
-                }
-                
-                // 2. Update splash particles
-                for (let i = numDrops; i < totalPoints; i++) {
-                    if (leak.lifetimes[i] > 0) {
-                        leak.lifetimes[i] -= dt;
-                        leak.velocities[i].y -= g * dt;
-                        
-                        positions[i * 3] += leak.velocities[i].x * dt;
-                        positions[i * 3 + 1] += leak.velocities[i].y * dt;
-                        positions[i * 3 + 2] += leak.velocities[i].z * dt;
-                        
-                        if (leak.lifetimes[i] <= 0 || positions[i * 3 + 1] < 0) {
-                            leak.lifetimes[i] = 0;
-                            positions[i * 3 + 1] = -1.0; // hide under floor
-                        }
-                    }
-                }
-                
-                posAttr.needsUpdate = true;
-            });
+            return;
         }
 
          function updateKillingSequence() {
@@ -9501,61 +9250,8 @@
 
         // Visceral Screen Blood Droplets & Dripping Animation Manager
         function spawnScreenBloodDroplets(count = 25) {
-            let container = document.getElementById('screen-blood-overlay');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'screen-blood-overlay';
-                document.body.appendChild(container);
-            }
-            container.style.display = 'block';
-
-            // Play visceral blood drop audio SFX
-            playInstantSound('blood-drip', 1.0);
-
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    // Spawn dripping blood droplet
-                    const drop = document.createElement('div');
-                    drop.className = 'screen-blood-drop';
-                    
-                    const startX = Math.random() * 98; // 0vw to 98vw
-                    const startY = Math.random() * 35;  // 0vh to 35vh (top area of viewport)
-                    const dropSize = Math.floor(Math.random() * 12 + 6); // 6px to 18px
-                    const trailWidth = Math.max(2, Math.floor(dropSize * 0.35));
-                    const trailLen = Math.floor(Math.random() * 140 + 70); // 70px to 210px
-                    const dripDist = Math.floor(Math.random() * 550 + 250); // drip down 250px to 800px
-                    const dripSpeed = (Math.random() * 2.2 + 1.2).toFixed(2); // 1.2s to 3.4s
-
-                    drop.style.left = startX + 'vw';
-                    drop.style.top = startY + 'vh';
-                    drop.style.setProperty('--drop-size', dropSize + 'px');
-                    drop.style.setProperty('--trail-width', trailWidth + 'px');
-                    drop.style.setProperty('--trail-len', trailLen + 'px');
-                    drop.style.setProperty('--drip-dist', dripDist + 'px');
-                    drop.style.setProperty('--drip-speed', dripSpeed + 's');
-
-                    container.appendChild(drop);
-
-                    // Spawn dynamic lens splatter spots
-                    if (Math.random() > 0.3) {
-                        const spot = document.createElement('div');
-                        spot.className = 'screen-blood-splatter-spot';
-                        const spotSize = Math.floor(Math.random() * 50 + 16);
-                        spot.style.left = (Math.random() * 90 + 5) + 'vw';
-                        spot.style.top = (Math.random() * 85 + 5) + 'vh';
-                        spot.style.width = spotSize + 'px';
-                        spot.style.height = (spotSize * (0.8 + Math.random() * 0.5)) + 'px';
-                        spot.style.setProperty('--rot', (Math.random() * 360) + 'deg');
-                        container.appendChild(spot);
-                    }
-
-                    // Cleanup droplet element after animation finishes
-                    setTimeout(() => {
-                        try { if (drop.parentNode) drop.parentNode.removeChild(drop); } catch(e){}
-                    }, parseFloat(dripSpeed) * 1000 + 500);
-
-                }, i * 35);
-            }
+            clearScreenBlood();
+            return;
         }
 
         function clearScreenBlood() {
@@ -9797,6 +9493,7 @@
             ambientAudio.pause();
             breathingAudio.pause();
             doorOpenAudio.pause();
+            stopPlayerRunningSound();
 
             window.removeEventListener('resize', onWindowResize);
             document.removeEventListener('keydown', onKeyDown);
@@ -9825,9 +9522,7 @@
 
         function startInteractiveDripLoop() {
             if (interactiveDripInterval) clearInterval(interactiveDripInterval);
-            // Run a droplet immediately, and then every 6 seconds
-            setTimeout(spawnInteractiveDroplet, 1000);
-            interactiveDripInterval = setInterval(spawnInteractiveDroplet, 6000);
+            interactiveDripInterval = null;
         }
 
         function stopInteractiveDripLoop() {
@@ -9838,63 +9533,7 @@
         }
 
         function spawnInteractiveDroplet() {
-            if (!isLobbyScreenActive) return;
-
-            const title = document.querySelector('.engine-lobby-logo');
-            const buttons = document.querySelectorAll('.engine-menu-option');
-            if (!title || buttons.length === 0) return;
-
-            const titleRect = title.getBoundingClientRect();
-            const btnRects = Array.from(buttons).map(btn => ({
-                element: btn,
-                rect: btn.getBoundingClientRect(),
-                triggered: false
-            }));
-
-            // Align droplet with the left portion of the buttons where the text begins (e.g. left + 50px)
-            const startX = btnRects[0].rect.left + 50;
-            const startY = titleRect.bottom - 10;
-            const endY = window.innerHeight + 50;
-
-            const droplet = document.createElement('div');
-            droplet.className = 'interactive-droplet';
-            droplet.style.left = `${startX}px`;
-            droplet.style.top = `${startY}px`;
-            document.body.appendChild(droplet);
-
-            let currentY = startY;
-            let velocity = 1;
-            const gravity = 0.38; // Gravitational acceleration
-
-            function animate() {
-                if (!isLobbyScreenActive) {
-                    droplet.remove();
-                    return;
-                }
-
-                velocity += gravity;
-                currentY += velocity;
-                droplet.style.top = `${currentY}px`;
-
-                // Check collision/touch with buttons
-                btnRects.forEach((btnData) => {
-                    if (!btnData.triggered && currentY >= btnData.rect.top && currentY <= btnData.rect.bottom) {
-                        btnData.triggered = true;
-                        triggerButtonRedEffect(btnData.element, startX);
-                    }
-                });
-
-                if (currentY < endY) {
-                    requestAnimationFrame(animate);
-                } else {
-                    // Droplet reached bottom floor
-                    createFloorSplash(startX, window.innerHeight - 10);
-                    playInstantSound('blood-drip', 0.8);
-                    droplet.remove();
-                }
-            }
-
-            requestAnimationFrame(animate);
+            return;
         }
 
         function triggerButtonRedEffect(btn, hitX) {
@@ -9996,33 +9635,7 @@
 
         function startTitleDripSounds() {
             stopTitleDripSounds();
-
-            const drips = document.querySelectorAll('.blood-drip');
-            drips.forEach(drip => {
-                let delay = 0;
-                const delayStyle = drip.style.animationDelay;
-                if (delayStyle) {
-                    delay = parseFloat(delayStyle);
-                }
-
-                // Landing happens at around 3.5 seconds in the 5s animation loop
-                const initialDelayMs = (delay + 3.5) * 1000;
-
-                const timeoutId = setTimeout(() => {
-                    if (isLobbyScreenActive) {
-                        playInstantSound('blood-drip', 0.6);
-                    }
-
-                    const intervalId = setInterval(() => {
-                        if (isLobbyScreenActive) {
-                            playInstantSound('blood-drip', 0.6);
-                        }
-                    }, 5000);
-                    titleDripIntervals.push(intervalId);
-                }, initialDelayMs);
-
-                titleDripTimeouts.push(timeoutId);
-            });
+            return;
         }
 
         function stopTitleDripSounds() {
@@ -10033,6 +9646,7 @@
         }
 
         function showLobbyScreen() {
+            stopPlayerRunningSound();
             // Pause normal ambient music while in the lobby
             ambientAudio.pause();
 
