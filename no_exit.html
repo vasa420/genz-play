@@ -6517,10 +6517,160 @@
             }, 70);
         }
 
+        function triggerRealisticCameraJolt(intensity = 1.0) {
+            if (!camera) return;
+            const origFov = camera.fov;
+            camera.fov = Math.max(38, origFov - 28 * intensity);
+            camera.updateProjectionMatrix();
+
+            let ticks = 0;
+            function doJolt() {
+                if (ticks < 12 && isGameRunning) {
+                    camera.rotation.z = (Math.random() - 0.5) * 0.3 * intensity;
+                    camera.position.x += (Math.random() - 0.5) * 0.2 * intensity;
+                    camera.position.y += (Math.random() - 0.5) * 0.2 * intensity;
+                    ticks++;
+                    requestAnimationFrame(doJolt);
+                } else {
+                    camera.fov = origFov;
+                    camera.rotation.z = 0;
+                    camera.updateProjectionMatrix();
+                }
+            }
+            requestAnimationFrame(doJolt);
+        }
+
+        function triggerRealisticGhostSprintJumpscare() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            const sprintGeo = new THREE.PlaneGeometry(1.9, 2.7);
+            const sprintTex = new THREE.TextureLoader().load('terror_jumpscare.png');
+            const sprintMat = new THREE.MeshBasicMaterial({
+                map: sprintTex,
+                transparent: true,
+                opacity: 0.95,
+                side: THREE.DoubleSide
+            });
+            const sprintMesh = new THREE.Mesh(sprintGeo, sprintMat);
+
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            const startPos = camera.position.clone().add(forward.clone().multiplyScalar(7.0));
+            sprintMesh.position.copy(startPos);
+            sprintMesh.position.y = camera.position.y;
+            sprintMesh.lookAt(camera.position);
+
+            const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
+            if (activeGroup) activeGroup.add(sprintMesh);
+
+            if (flashlight) flashlight.visible = false;
+            setTimeout(() => { if (flashlight) flashlight.visible = isFlashlightOn; }, 100);
+
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+
+            let distCovered = 0;
+            const sprintInterval = setInterval(() => {
+                distCovered += 0.7;
+                sprintMesh.position.add(forward.clone().multiplyScalar(-0.7));
+                sprintMesh.lookAt(camera.position);
+
+                if (distCovered >= 6.2) {
+                    clearInterval(sprintInterval);
+                    if (activeGroup && sprintMesh.parent) {
+                        activeGroup.remove(sprintMesh);
+                    }
+                    triggerRealisticCameraJolt(1.3);
+                    playInstantSound('impact-sound', 1.0);
+                }
+            }, 25);
+        }
+
+        function triggerBehindPlayerStalkerJumpscare() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            try {
+                const breathingEl = document.getElementById('breathing-sound');
+                if (breathingEl) {
+                    breathingEl.currentTime = 0;
+                    breathingEl.volume = Math.max(0.7, masterVolume / 100);
+                    breathingEl.play().catch(e => {});
+                }
+            } catch(e) {}
+
+            const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion);
+            const stalkerGeo = new THREE.PlaneGeometry(1.8, 2.6);
+            const stalkerTex = new THREE.TextureLoader().load('stalker_hero_selfie_1776590484686.png');
+            const stalkerMat = new THREE.MeshBasicMaterial({
+                map: stalkerTex,
+                transparent: true,
+                opacity: 0.95,
+                side: THREE.DoubleSide
+            });
+            const stalkerMesh = new THREE.Mesh(stalkerGeo, stalkerMat);
+            stalkerMesh.position.copy(camera.position.clone().add(backward.multiplyScalar(1.2)));
+            stalkerMesh.position.y = camera.position.y;
+            stalkerMesh.lookAt(camera.position);
+
+            const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
+            if (activeGroup) activeGroup.add(stalkerMesh);
+
+            setTimeout(() => {
+                playInstantSound('woman-scream', 1.0);
+                playInstantSound('impact-sound', 1.0);
+                triggerRealisticCameraJolt(1.4);
+
+                let lungeTicks = 0;
+                const lungeInterval = setInterval(() => {
+                    lungeTicks++;
+                    stalkerMesh.position.add(backward.clone().multiplyScalar(-0.25));
+                    if (lungeTicks >= 5) {
+                        clearInterval(lungeInterval);
+                        if (activeGroup && stalkerMesh.parent) {
+                            activeGroup.remove(stalkerMesh);
+                        }
+                    }
+                }, 20);
+            }, 900);
+        }
+
+        function triggerRealisticGlitchScreamer() {
+            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+
+            playInstantSound('creepy-kill-laugh', 1.0);
+            playInstantSound('woman-scream', 1.0);
+
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.backgroundImage = "radial-gradient(circle, rgba(255, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.98) 95%), url('terror_jumpscare.png')";
+            overlay.style.backgroundSize = 'cover';
+            overlay.style.backgroundPosition = 'center';
+            overlay.style.filter = 'contrast(2.0) saturate(2.5)';
+            overlay.style.zIndex = '99999';
+            overlay.style.pointerEvents = 'none';
+
+            const staticLine = document.createElement('div');
+            staticLine.style.width = '100%';
+            staticLine.style.height = '100%';
+            staticLine.style.background = 'repeating-linear-gradient(0deg, rgba(255,255,255,0.15), rgba(255,255,255,0.15) 2px, transparent 2px, transparent 4px)';
+            overlay.appendChild(staticLine);
+
+            document.body.appendChild(overlay);
+
+            triggerRealisticCameraJolt(1.5);
+
+            setTimeout(() => {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 450);
+        }
+
         function triggerRandomGameplayJumpscare() {
             if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
 
-            const choice = Math.floor(Math.random() * 7);
+            const choice = Math.floor(Math.random() * 10);
             switch (choice) {
                 case 0:
                     triggerSuddenGhostFaceFlash();
@@ -6543,14 +6693,23 @@
                 case 6:
                     triggerTvGlitchJumpscare();
                     break;
+                case 7:
+                    triggerRealisticGhostSprintJumpscare();
+                    break;
+                case 8:
+                    triggerBehindPlayerStalkerJumpscare();
+                    break;
+                case 9:
+                    triggerRealisticGlitchScreamer();
+                    break;
             }
         }
 
         function scheduleRandomGameplayJumpscares() {
             if (randomJumpscareTimeout) clearTimeout(randomJumpscareTimeout);
 
-            // Run a jumpscare every 10 to 22 seconds of gameplay
-            const nextTime = Math.random() * 12000 + 10000;
+            // Run a jumpscare every 8 to 18 seconds of gameplay
+            const nextTime = Math.random() * 10000 + 8000;
             randomJumpscareTimeout = setTimeout(() => {
                 const gameplayScreen = document.getElementById('gameplay-screen');
                 if (isGameRunning && gameplayScreen && gameplayScreen.style.display === 'block' && !isKillingActive) {
