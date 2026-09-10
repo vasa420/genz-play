@@ -3516,8 +3516,9 @@
         let micAnalyser = null;
         let micDataArray = null;
         let micVolume = 0;
-        let micVolumeThreshold = 18; // alert ghost / noise out if level > threshold
+        let micVolumeThreshold = 35; // alert ghost / noise out if level > threshold (scaled 0-100)
         let micSensitivity = parseFloat(localStorage.getItem('micSensitivity')) || 1.0;
+        let loudNoiseFrameCount = 0;
         let ghostStalking = false;
         let ghostAlertTimer = 0;
 
@@ -8465,22 +8466,23 @@
 
             playInstantSound('woman-scream', 1.0);
             playInstantSound('impact-sound', 1.0);
-            playInstantSound('creepy-kill-laugh', 1.0);
 
             const screamerOverlay = document.getElementById('gameplay-jumpscare-overlay');
             if (screamerOverlay) {
                 screamerOverlay.style.display = 'flex';
             }
 
-            triggerRealisticCameraJolt(2.0);
+            shakeCamera();
 
             setTimeout(() => {
                 if (screamerOverlay) screamerOverlay.style.display = 'none';
                 isMicOutEliminating = false;
+                loudNoiseFrameCount = 0;
 
+                restoreGameLighting();
                 abandonHorrorGame();
                 showLobbyScreen();
-            }, 1600);
+            }, 1200);
         }
 
         let cachedNoiseEl = null;
@@ -8499,6 +8501,7 @@
 
             if (!micAnalyser || !micDataArray) {
                 micVolume = 0;
+                loudNoiseFrameCount = 0;
                 if (barFill) barFill.style.width = '0%';
                 if (cachedNoiseEl && lastNoiseStatus !== 'NO MIC') {
                     cachedNoiseEl.textContent = "NO MIC";
@@ -8515,23 +8518,42 @@
             }
             const average = sum / micDataArray.length;
             
-            micVolume = average * micSensitivity;
+            // Subtract room background noise floor (~14.0) so ambient silence evaluates to 0
+            const netAverage = Math.max(0, average - 14.0);
+            micVolume = netAverage * micSensitivity * 2.5;
 
             const fillPercent = Math.min(100, (micVolume / 50) * 100);
             if (barFill) {
                 barFill.style.width = fillPercent + '%';
+                if (micVolume > micVolumeThreshold) {
+                    barFill.style.backgroundColor = '#ff3b30';
+                } else if (micVolume > micVolumeThreshold * 0.7) {
+                    barFill.style.backgroundColor = '#ffcc00';
+                } else {
+                    barFill.style.backgroundColor = '#34c759';
+                }
             }
             
             const isOverThreshold = micVolume > micVolumeThreshold;
 
             if (isOverThreshold && isGameRunning && !isMicOutEliminating && !isKillingActive) {
+                loudNoiseFrameCount++;
                 if (cachedNoiseEl) {
-                    lastNoiseStatus = 'ELIMINATED';
-                    cachedNoiseEl.textContent = "OUT! TOO LOUD!";
-                    cachedNoiseEl.style.color = "#ff3b30";
+                    lastNoiseStatus = 'WARNING';
+                    cachedNoiseEl.textContent = "WARNING: TOO LOUD!";
+                    cachedNoiseEl.style.color = "#ffcc00";
                 }
-                triggerMicNoiseOut();
-            } else if (!isOverThreshold) {
+                // Require 18 consecutive frames (~300ms) of sustained loud noise before elimination
+                if (loudNoiseFrameCount >= 18) {
+                    if (cachedNoiseEl) {
+                        lastNoiseStatus = 'ELIMINATED';
+                        cachedNoiseEl.textContent = "OUT! TOO LOUD!";
+                        cachedNoiseEl.style.color = "#ff3b30";
+                    }
+                    triggerMicNoiseOut();
+                }
+            } else {
+                loudNoiseFrameCount = Math.max(0, loudNoiseFrameCount - 2);
                 if (cachedNoiseEl && lastNoiseStatus !== 'SAFE') {
                     lastNoiseStatus = 'SAFE';
                     cachedNoiseEl.textContent = "SAFE";
@@ -10133,6 +10155,12 @@
             document.getElementById('game-over-overlay').style.display = 'none';
             document.getElementById('victory-overlay').style.display = 'none';
             document.getElementById('map-overlay').style.display = 'none';
+
+            const gOverlay = document.getElementById('gameplay-jumpscare-overlay');
+            if (gOverlay) gOverlay.style.display = 'none';
+            const cOverlay = document.getElementById('crow-jumpscare-overlay');
+            if (cOverlay) cOverlay.style.display = 'none';
+            document.querySelectorAll('.temp-jumpscare-overlay').forEach(el => el.remove());
 
             engineSetState('lobby');
         }
