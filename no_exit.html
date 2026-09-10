@@ -4106,7 +4106,7 @@
 
             // 1. Create Scene, Camera, Renderer
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x030303, 0.10); // Spooky dense atmospheric fog
+            scene.fog = new THREE.FogExp2(0x0a0a12, 0.04); // Spooky atmospheric fog
 
             camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.1, 100);
             
@@ -4262,10 +4262,10 @@
             createGhost();
 
             // 5. High-Power Tactical Flashlight
-            ambientLight = new THREE.AmbientLight(0xff3b30, 0.006); // subtle low red ambient glow
+            ambientLight = new THREE.AmbientLight(0x555566, 0.25); // clear horror ambient lighting
             scene.add(ambientLight);
 
-            spotLight = new THREE.SpotLight(0xffffff, 6.5, 60, Math.PI / 5, 0.45, 1);
+            spotLight = new THREE.SpotLight(0xffffff, 8.5, 60, Math.PI / 5, 0.45, 1);
             spotLight.castShadow = true;
             spotLight.shadow.mapSize.width = 1024;
             spotLight.shadow.mapSize.height = 1024;
@@ -6592,11 +6592,11 @@
             
             function runFlicker() {
                 if (flickerCount < maxFlickers && isGameRunning) {
-                    flashlight.visible = Math.random() < 0.25;
+                    if (spotLight) spotLight.intensity = (Math.random() < 0.25) ? 8.5 : 0.0;
                     flickerCount++;
                     setTimeout(runFlicker, Math.random() * 80 + 30);
-                } else if (flashlight) {
-                    flashlight.visible = isFlashlightOn;
+                } else if (spotLight) {
+                    spotLight.intensity = isFlashlightOn ? 8.5 : 0.0;
                 }
             }
             runFlicker();
@@ -6678,7 +6678,7 @@
         function triggerLightsOutShadowJumpscare() {
             if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
 
-            if (flashlight) flashlight.visible = false;
+            if (spotLight) spotLight.intensity = 0.0;
 
             playInstantSound('ghost-laugh', 1.0);
 
@@ -6706,7 +6706,7 @@
 
             setTimeout(() => {
                 if (darkOverlay.parentNode) darkOverlay.parentNode.removeChild(darkOverlay);
-                if (flashlight) flashlight.visible = isFlashlightOn;
+                if (spotLight) spotLight.intensity = isFlashlightOn ? 8.5 : 0.0;
                 playInstantSound('impact-sound', 1.0);
                 shakeCamera();
             }, 1200);
@@ -6777,8 +6777,8 @@
             const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
             if (activeGroup) activeGroup.add(sprintMesh);
 
-            if (flashlight) flashlight.visible = false;
-            setTimeout(() => { if (flashlight) flashlight.visible = isFlashlightOn; }, 100);
+            if (spotLight) spotLight.intensity = 0.0;
+            setTimeout(() => { if (spotLight) spotLight.intensity = isFlashlightOn ? 8.5 : 0.0; }, 100);
 
             playInstantSound('woman-scream', 1.0);
             playInstantSound('impact-sound', 1.0);
@@ -10038,14 +10038,14 @@
 
             // Reset fog density and ambient/flashlight lighting
             if (scene && scene.fog) {
-                scene.fog.density = 0.15;
+                scene.fog.density = 0.04;
             }
             if (ambientLight) {
-                ambientLight.intensity = 0.003;
+                ambientLight.intensity = 0.25;
             }
             isFlashlightOn = true;
             if (spotLight) {
-                spotLight.intensity = 6.5;
+                spotLight.intensity = 8.5;
             }
             const statusEl = document.getElementById('hud-flashlight-status');
             if (statusEl) {
