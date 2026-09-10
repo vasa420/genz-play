@@ -6431,59 +6431,72 @@
         let activeGhostPeek = null;
         let randomJumpscareTimeout = null;
 
-        function triggerSuddenGhostFaceFlash() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+        function restoreGameLighting() {
+            if (!isGameRunning) return;
+            isKillingActive = false;
+            isCrowJumpscareActive = false;
 
-            const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
-            if (!jumpscareOverlay) return;
+            // Hide all jumpscare overlays
+            const gOverlay = document.getElementById('gameplay-jumpscare-overlay');
+            if (gOverlay) gOverlay.style.display = 'none';
 
-            // Display overlay
-            jumpscareOverlay.style.display = 'flex';
+            const cOverlay = document.getElementById('crow-jumpscare-overlay');
+            if (cOverlay) cOverlay.style.display = 'none';
 
-            // Play scream & impact sound
-            playInstantSound('woman-scream', 1.0);
-            playInstantSound('impact-sound', 1.0);
+            const cSub = document.getElementById('crow-dialogue-subtitle');
+            if (cSub) cSub.style.display = 'none';
 
-            // Spawn screen blood drips
-            spawnScreenBloodDroplets(15);
+            // Remove any dynamic jumpscare overlay elements added to body
+            document.querySelectorAll('.temp-jumpscare-overlay').forEach(el => el.remove());
 
-            // Shaking effect on camera
+            // Reset lighting & fog cleanly
+            if (scene && scene.fog) {
+                scene.fog.density = 0.04;
+            }
+            if (ambientLight) {
+                ambientLight.intensity = 0.25;
+            }
+            if (spotLight) {
+                spotLight.intensity = isFlashlightOn ? 8.5 : 0.0;
+            }
+
+            // Restore camera orientation & position height cleanly
+            if (camera) {
+                camera.rotation.set(mousePitch, mouseYaw, 0);
+                camera.position.y = (activeFloor === 0 ? 1.6 : (activeFloor === 1 ? 5.6 : 9.6));
+            }
+        }
+
+        function shakeCamera() {
+            if (!camera) return;
             let shakeTicks = 0;
-            const maxShakeTicks = 18;
+            const maxShakeTicks = 14;
             
-            function shakeCamera() {
-                if (shakeTicks < maxShakeTicks && isGameRunning && !isKillingActive) {
-                    camera.rotation.z = (Math.random() - 0.5) * 0.22;
-                    camera.position.x += (Math.random() - 0.5) * 0.15;
-                    camera.position.y += (Math.random() - 0.5) * 0.15;
+            function doShake() {
+                if (shakeTicks < maxShakeTicks && isGameRunning) {
+                    camera.rotation.z = (Math.random() - 0.5) * 0.18;
                     shakeTicks++;
-                    requestAnimationFrame(shakeCamera);
+                    requestAnimationFrame(doShake);
                 } else if (camera) {
                     camera.rotation.z = 0;
                 }
             }
-            requestAnimationFrame(shakeCamera);
+            requestAnimationFrame(doShake);
+        }
 
-            // Show a terrifying dialogue subtitle overlay
-            const subtitleEl = document.getElementById('crow-dialogue-subtitle');
-            const subtitleTextEl = subtitleEl ? subtitleEl.querySelector('.crow-subtitle-text') : null;
-            
-            let originalSubtitleHTML = "";
-            if (subtitleEl && subtitleTextEl) {
-                originalSubtitleHTML = subtitleTextEl.innerHTML;
-                const scaryPhrases = ["BEHIND YOU!", "GET OUT!", "I SEE YOU...", "RUN!"];
-                const phrase = scaryPhrases[Math.floor(Math.random() * scaryPhrases.length)];
-                subtitleTextEl.innerHTML = phrase;
-                subtitleEl.style.display = 'block';
-            }
+        function triggerSuddenGhostFaceFlash() {
+            if (!isGameRunning) return;
 
-            // Hide after 350ms
+            const jumpscareOverlay = document.getElementById('gameplay-jumpscare-overlay');
+            if (jumpscareOverlay) jumpscareOverlay.style.display = 'flex';
+
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+
+            shakeCamera();
+
             setTimeout(() => {
-                jumpscareOverlay.style.display = 'none';
-                if (subtitleEl && subtitleTextEl) {
-                    subtitleEl.style.display = 'none';
-                    subtitleTextEl.innerHTML = originalSubtitleHTML;
-                }
+                restoreGameLighting();
             }, 350);
         }
 
@@ -6581,34 +6594,33 @@
         }
 
         function triggerFlickerWhisperJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
-            // Play scary ghost laugh
             playInstantSound('ghost-laugh', 1.0);
 
-            // Flicker flashlight rapidly
             let flickerCount = 0;
-            const maxFlickers = 25;
+            const maxFlickers = 18;
             
             function runFlicker() {
                 if (flickerCount < maxFlickers && isGameRunning) {
-                    if (spotLight) spotLight.intensity = (Math.random() < 0.25) ? 8.5 : 0.0;
+                    if (spotLight) spotLight.intensity = (Math.random() < 0.2) ? 8.5 : 0.0;
                     flickerCount++;
-                    setTimeout(runFlicker, Math.random() * 80 + 30);
-                } else if (spotLight) {
-                    spotLight.intensity = isFlashlightOn ? 8.5 : 0.0;
+                    setTimeout(runFlicker, Math.random() * 60 + 20);
+                } else {
+                    restoreGameLighting();
                 }
             }
             runFlicker();
         }
 
         function triggerMirrorGlitchJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             playInstantSound('woman-scream', 1.0);
             playInstantSound('impact-sound', 1.0);
 
             const glitchOverlay = document.createElement('div');
+            glitchOverlay.className = 'temp-jumpscare-overlay';
             glitchOverlay.style.position = 'fixed';
             glitchOverlay.style.top = '0';
             glitchOverlay.style.left = '0';
@@ -6625,14 +6637,12 @@
             shakeCamera();
 
             setTimeout(() => {
-                if (glitchOverlay.parentNode) {
-                    glitchOverlay.parentNode.removeChild(glitchOverlay);
-                }
+                restoreGameLighting();
             }, 350);
         }
 
         function triggerCeilingDropJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             playInstantSound('impact-sound', 1.0);
             playInstantSound('crow-call', 1.0);
@@ -6660,15 +6670,15 @@
 
             let dropProgress = 0;
             const dropInterval = setInterval(() => {
-                dropProgress += 0.15;
-                dropMesh.position.y -= 0.28;
-                dropMesh.scale.addScalar(0.08);
+                dropProgress += 0.2;
+                dropMesh.position.y -= 0.35;
 
                 if (dropProgress >= 1.0) {
                     clearInterval(dropInterval);
                     if (currentFloorGroup && dropMesh.parent) {
                         currentFloorGroup.remove(dropMesh);
                     }
+                    restoreGameLighting();
                 }
             }, 20);
 
@@ -6676,13 +6686,14 @@
         }
 
         function triggerLightsOutShadowJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             if (spotLight) spotLight.intensity = 0.0;
 
             playInstantSound('ghost-laugh', 1.0);
 
             const darkOverlay = document.createElement('div');
+            darkOverlay.className = 'temp-jumpscare-overlay';
             darkOverlay.style.position = 'fixed';
             darkOverlay.style.top = '0';
             darkOverlay.style.left = '0';
@@ -6705,15 +6716,14 @@
             document.body.appendChild(darkOverlay);
 
             setTimeout(() => {
-                if (darkOverlay.parentNode) darkOverlay.parentNode.removeChild(darkOverlay);
-                if (spotLight) spotLight.intensity = isFlashlightOn ? 8.5 : 0.0;
                 playInstantSound('impact-sound', 1.0);
                 shakeCamera();
-            }, 1200);
+                restoreGameLighting();
+            }, 700);
         }
 
         function triggerTvGlitchJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             const vEl = document.getElementById('corridor-tv-video');
             if (vEl) vEl.playbackRate = 2.5;
@@ -6721,32 +6731,26 @@
             playInstantSound('woman-scream', 0.9);
             playInstantSound('impact-sound', 0.9);
 
-            let flashes = 0;
-            const flashInterval = setInterval(() => {
-                flashes++;
-                if (flashes % 2 === 0) shakeCamera();
-                if (flashes >= 8) {
-                    clearInterval(flashInterval);
-                    if (vEl) vEl.playbackRate = 1.0;
-                }
-            }, 70);
+            shakeCamera();
+            setTimeout(() => {
+                if (vEl) vEl.playbackRate = 1.0;
+                restoreGameLighting();
+            }, 500);
         }
 
         function triggerRealisticCameraJolt(intensity = 1.0) {
             if (!camera) return;
             const origFov = camera.fov;
-            camera.fov = Math.max(38, origFov - 28 * intensity);
+            camera.fov = Math.max(45, origFov - 20 * intensity);
             camera.updateProjectionMatrix();
 
             let ticks = 0;
             function doJolt() {
-                if (ticks < 12 && isGameRunning) {
-                    camera.rotation.z = (Math.random() - 0.5) * 0.3 * intensity;
-                    camera.position.x += (Math.random() - 0.5) * 0.2 * intensity;
-                    camera.position.y += (Math.random() - 0.5) * 0.2 * intensity;
+                if (ticks < 10 && isGameRunning) {
+                    camera.rotation.z = (Math.random() - 0.5) * 0.2 * intensity;
                     ticks++;
                     requestAnimationFrame(doJolt);
-                } else {
+                } else if (camera) {
                     camera.fov = origFov;
                     camera.rotation.z = 0;
                     camera.updateProjectionMatrix();
@@ -6756,7 +6760,7 @@
         }
 
         function triggerRealisticGhostSprintJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             const sprintGeo = new THREE.PlaneGeometry(1.9, 2.7);
             const sprintTex = new THREE.TextureLoader().load('terror_jumpscare.png');
@@ -6769,7 +6773,7 @@
             const sprintMesh = new THREE.Mesh(sprintGeo, sprintMat);
 
             const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-            const startPos = camera.position.clone().add(forward.clone().multiplyScalar(7.0));
+            const startPos = camera.position.clone().add(forward.clone().multiplyScalar(6.0));
             sprintMesh.position.copy(startPos);
             sprintMesh.position.y = camera.position.y;
             sprintMesh.lookAt(camera.position);
@@ -6777,40 +6781,28 @@
             const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
             if (activeGroup) activeGroup.add(sprintMesh);
 
-            if (spotLight) spotLight.intensity = 0.0;
-            setTimeout(() => { if (spotLight) spotLight.intensity = isFlashlightOn ? 8.5 : 0.0; }, 100);
-
             playInstantSound('woman-scream', 1.0);
             playInstantSound('impact-sound', 1.0);
 
             let distCovered = 0;
             const sprintInterval = setInterval(() => {
-                distCovered += 0.7;
-                sprintMesh.position.add(forward.clone().multiplyScalar(-0.7));
+                distCovered += 0.85;
+                sprintMesh.position.add(forward.clone().multiplyScalar(-0.85));
                 sprintMesh.lookAt(camera.position);
 
-                if (distCovered >= 6.2) {
+                if (distCovered >= 5.5) {
                     clearInterval(sprintInterval);
                     if (activeGroup && sprintMesh.parent) {
                         activeGroup.remove(sprintMesh);
                     }
-                    triggerRealisticCameraJolt(1.3);
-                    playInstantSound('impact-sound', 1.0);
+                    triggerRealisticCameraJolt(1.2);
+                    restoreGameLighting();
                 }
-            }, 25);
+            }, 20);
         }
 
         function triggerBehindPlayerStalkerJumpscare() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
-
-            try {
-                const breathingEl = document.getElementById('breathing-sound');
-                if (breathingEl) {
-                    breathingEl.currentTime = 0;
-                    breathingEl.volume = Math.max(0.7, masterVolume / 100);
-                    breathingEl.play().catch(e => {});
-                }
-            } catch(e) {}
+            if (!isGameRunning) return;
 
             const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion);
             const stalkerGeo = new THREE.PlaneGeometry(1.8, 2.6);
@@ -6829,32 +6821,32 @@
             const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
             if (activeGroup) activeGroup.add(stalkerMesh);
 
-            setTimeout(() => {
-                playInstantSound('woman-scream', 1.0);
-                playInstantSound('impact-sound', 1.0);
-                triggerRealisticCameraJolt(1.4);
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+            triggerRealisticCameraJolt(1.3);
 
-                let lungeTicks = 0;
-                const lungeInterval = setInterval(() => {
-                    lungeTicks++;
-                    stalkerMesh.position.add(backward.clone().multiplyScalar(-0.25));
-                    if (lungeTicks >= 5) {
-                        clearInterval(lungeInterval);
-                        if (activeGroup && stalkerMesh.parent) {
-                            activeGroup.remove(stalkerMesh);
-                        }
+            let lungeTicks = 0;
+            const lungeInterval = setInterval(() => {
+                lungeTicks++;
+                stalkerMesh.position.add(backward.clone().multiplyScalar(-0.3));
+                if (lungeTicks >= 5) {
+                    clearInterval(lungeInterval);
+                    if (activeGroup && stalkerMesh.parent) {
+                        activeGroup.remove(stalkerMesh);
                     }
-                }, 20);
-            }, 900);
+                    restoreGameLighting();
+                }
+            }, 20);
         }
 
         function triggerRealisticGlitchScreamer() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             playInstantSound('creepy-kill-laugh', 1.0);
             playInstantSound('woman-scream', 1.0);
 
             const overlay = document.createElement('div');
+            overlay.className = 'temp-jumpscare-overlay';
             overlay.style.position = 'fixed';
             overlay.style.top = '0';
             overlay.style.left = '0';
@@ -6875,21 +6867,21 @@
 
             document.body.appendChild(overlay);
 
-            triggerRealisticCameraJolt(1.5);
+            triggerRealisticCameraJolt(1.4);
 
             setTimeout(() => {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            }, 450);
+                restoreGameLighting();
+            }, 350);
         }
 
         function triggerInstantCameraLungeScreamer() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             playInstantSound('woman-scream', 1.0);
             playInstantSound('impact-sound', 1.0);
-            playInstantSound('creepy-kill-laugh', 1.0);
 
             const overlay = document.createElement('div');
+            overlay.className = 'temp-jumpscare-overlay';
             overlay.style.position = 'fixed';
             overlay.style.top = '0';
             overlay.style.left = '0';
@@ -6904,15 +6896,15 @@
 
             document.body.appendChild(overlay);
 
-            triggerRealisticCameraJolt(1.8);
+            triggerRealisticCameraJolt(1.5);
 
             setTimeout(() => {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                restoreGameLighting();
             }, 300);
         }
 
         function triggerSuddenCeilingPlungeAttack() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             playInstantSound('impact-sound', 1.0);
             playInstantSound('woman-scream', 1.0);
@@ -6936,7 +6928,7 @@
             const activeGroup = activeFloor === 0 ? groundFloorGroup : (activeFloor === 1 ? secondFloorGroup : mortuaryFloorGroup);
             if (activeGroup) activeGroup.add(dropMesh);
 
-            triggerRealisticCameraJolt(1.6);
+            triggerRealisticCameraJolt(1.4);
 
             let ticks = 0;
             const plungeInterval = setInterval(() => {
@@ -6949,12 +6941,13 @@
                     if (activeGroup && dropMesh.parent) {
                         activeGroup.remove(dropMesh);
                     }
+                    restoreGameLighting();
                 }
             }, 16);
         }
 
         function triggerUltraFastGhostAmbush() {
-            if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
+            if (!isGameRunning) return;
 
             const sprintGeo = new THREE.PlaneGeometry(2.2, 3.0);
             const sprintTex = new THREE.TextureLoader().load('ghostface_mask.png');
@@ -6989,8 +6982,8 @@
                     if (activeGroup && sprintMesh.parent) {
                         activeGroup.remove(sprintMesh);
                     }
-                    triggerRealisticCameraJolt(1.8);
-                    playInstantSound('impact-sound', 1.0);
+                    triggerRealisticCameraJolt(1.5);
+                    restoreGameLighting();
                 }
             }, 18);
         }
@@ -9908,23 +9901,7 @@
         let slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
 
         function triggerJumpscare() {
-            if (isKillingActive) return; // avoid duplicate calls
-            
-            // Start the 3D cinematic killing sequence
-            isKillingActive = true;
-            killSequenceTimer = 0;
-            slashSoundPlayed = false;
-            
-            // Play creepy laugh kill music instantly on ghost kill with 0ms delay!
-            playInstantSound('creepy-kill-laugh', 1.0);
-
-            // Spawn dynamic dripping blood droplets on screen kill
-            spawnScreenBloodDroplets(35);
-
-            // Reset multiple slash sound states
-            slashSoundsPlayed = { slash1: false, slash2: false, slash3: false, thud: false };
-            
-            document.exitPointerLock();
+            triggerSuddenGhostFaceFlash();
         }
 
         function triggerFinalJumpscare() {
