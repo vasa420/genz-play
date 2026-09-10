@@ -1947,21 +1947,14 @@
             <h2 class="instruction-title">👻 Game Instructions</h2>
             <div class="instructions-scrollbox">
                 <ul class="instructions-list">
-                    <li><span>🚶</span><span>Walk to increase your survival time.</span></li>
-                    <li><span>⏱️</span><span>You must complete 20 minutes of walking time to win.</span></li>
-                    <li><span>🧍</span><span>If you stop moving, the timer pauses.</span></li>
-                    <li><span>👻</span><span>The ghost can still move and hunt you even when the timer is paused.</span></li>
-                    <li><span>🎤</span><span>The game uses your microphone to detect sounds.</span></li>
-                    <li><span>🤫</span><span>Stay quiet to avoid attracting the ghost.</span></li>
-                    <li><span>🗣️</span><span>Talking, laughing, shouting, or loud noises will alert the ghost.</span></li>
-                    <li><span>😱</span><span>Loud sounds increase the chance of jump scares.</span></li>
-                    <li><span>🔦</span><span>Explore the area carefully and stay aware of your surroundings.</span></li>
-                    <li><span>🚪</span><span>Watch for sudden paranormal events such as doors closing, lights flickering, and strange sounds.</span></li>
-                    <li><span>👣</span><span>The longer you walk, the more dangerous the game becomes.</span></li>
-                    <li><span>⚠️</span><span>Jump scares become more frequent as your walking time increases.</span></li>
-                    <li><span>🏃</span><span>Avoid the ghost whenever it appears.</span></li>
-                    <li><span>💀</span><span>Getting caught by the ghost results in Game Over.</span></li>
-                    <li><span>🏆</span><span>Survive and complete 20 minutes of walking time to escape and win.</span></li>
+                    <li><span>📄</span><span>Find all 10 hidden papers scattered in the corridors and rooms.</span></li>
+                    <li><span>🏃</span><span>Explore the shifting hallways and press [E] to collect papers.</span></li>
+                    <li><span>🎤</span><span>The game uses your microphone to monitor real-life sound level.</span></li>
+                    <li><span>⚠️</span><span>Keep your sound level strictly BELOW THE RED THRESHOLD LINE on the HUD mic bar.</span></li>
+                    <li><span>💀</span><span>If your noise crosses the RED LINE, you will be eliminated immediately and returned to the lobby.</span></li>
+                    <li><span>😱</span><span>Stay calm and quiet! Paranormal jump scares happen unexpectedly.</span></li>
+                    <li><span>🔦</span><span>Use your flashlight [F] and blueprint map [M] to navigate the house.</span></li>
+                    <li><span>🏆</span><span>Find and collect all 10 papers to escape the loop!</span></li>
                 </ul>
             </div>
             <button class="btn-enter-loop" onclick="enterGameLoop()">PRESS ANY KEY TO GO</button>
@@ -2230,9 +2223,9 @@
         <!-- FPS Crosshair (subtle center dot) -->
         <div class="fps-crosshair" style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255, 255, 255, 0.7); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 8005; box-shadow: 0 0 3px rgba(0,0,0,0.9);"></div>
 
-        <!-- Reference Image HUD: Top Left Objective -->
-        <div id="hud-ref-objective" style="position: absolute; top: 25px; left: 30px; z-index: 8015; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 3px; text-transform: uppercase; pointer-events: none; text-shadow: 0 2px 5px rgba(0,0,0,0.9);">
-            FIND AND PLACE IMAGES
+        <!-- Objective HUD: Top Left Objective -->
+        <div id="hud-ref-objective" style="position: absolute; top: 25px; left: 30px; z-index: 8015; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.75); letter-spacing: 3px; text-transform: uppercase; pointer-events: none; text-shadow: 0 2px 5px rgba(0,0,0,0.9);">
+            📄 FIND ALL 10 PAPERS IN THE CORRIDOR
         </div>
 
         <!-- Reference Image HUD: Top Right Clock & Pause Button -->
@@ -2293,15 +2286,22 @@
 
         <!-- DANGER ZONE CHASE OVERLAY -->
         <div id="danger-zone-banner" style="display: none; position: absolute; top: 35px; left: 50%; transform: translateX(-50%); z-index: 8000; background: rgba(160, 0, 0, 0.88); border: 2px solid #ff3b30; padding: 10px 25px; border-radius: 8px; box-shadow: 0 0 30px rgba(255, 59, 48, 0.85); text-align: center; pointer-events: none; animation: pulseDanger 0.6s infinite alternate ease-in-out;">
-            <div style="font-family: 'Creepster', cursive; font-size: 26px; color: #ffffff; letter-spacing: 2px; text-shadow: 0 0 12px #000;">⚠️ DANGER ZONE! GHOST IS CHASING YOU - RUN AWAY! ⚠️</div>
+            <div style="font-family: 'Creepster', cursive; font-size: 26px; color: #ffffff; letter-spacing: 2px; text-shadow: 0 0 12px #000;">⚠️ NOISE OVER THRESHOLD! ELIMINATED! ⚠️</div>
         </div>
 
         <!-- Horror HUD -->
-        <div class="game-hud" style="opacity: 0.85;">
-            <!-- Left panel: Mic Indicator, Walking Time, Flashlight status -->
+        <div class="game-hud" style="opacity: 0.9;">
+            <!-- Left panel: Mic Indicator Bar with Red Threshold Marker & Papers Count -->
             <div class="hud-left">
-                <div class="hud-item"><span class="hud-label">VOICE NOISE:</span> <span id="hud-noise-level" style="color: #0f0;">SAFE</span></div>
-                <div class="hud-item"><span class="hud-label">WALK SURVIVAL:</span> <span id="hud-survival-time" style="color: #ff3b30; font-weight: bold;">0.00 / 20.00 MIN</span></div>
+                <div class="hud-item" style="display:flex; align-items:center; gap:8px;">
+                    <span class="hud-label">VOICE MIC:</span>
+                    <div id="hud-mic-bar-container" style="width: 140px; height: 12px; background: rgba(0,0,0,0.8); border: 1px solid rgba(255, 59, 48, 0.4); border-radius: 4px; position: relative; overflow: hidden; display: flex; align-items: center;" title="Keep volume below RED line!">
+                        <div id="hud-mic-bar-fill" style="width: 0%; height: 100%; background: linear-gradient(to right, #00ff00 0%, #ffff00 65%, #ff3b30 100%); transition: width 0.05s ease-out;"></div>
+                        <div id="hud-mic-threshold-line" style="position: absolute; left: 36%; top: 0; width: 3px; height: 100%; background: #ff0000; box-shadow: 0 0 8px #ff0000; z-index: 5;" title="RED THRESHOLD LINE"></div>
+                    </div>
+                    <span id="hud-noise-level" style="color: #0f0; font-size: 11px; font-weight: bold;">SAFE</span>
+                </div>
+                <div class="hud-item"><span class="hud-label">PAPERS FOUND:</span> <span id="hud-papers-count" style="color: #ff3b30; font-weight: bold; font-size: 14px;">0 / 10</span></div>
                 <div class="hud-item"><span class="hud-label">FLASHLIGHT (F):</span> <span id="hud-flashlight-status" style="color: #ffcc00;">ON</span></div>
                 <div class="hud-item"><span class="hud-label">LOCATION:</span> <span id="hud-location-text" style="color: #fff; font-weight: bold;">ENTRANCE</span></div>
             </div>
@@ -2310,8 +2310,9 @@
             <div class="hud-right">
                 <div class="hud-item">[W,A,S,D] Move</div>
                 <div class="hud-item">[Mouse] Look Around</div>
+                <div class="hud-item">[E] Pick Up Paper / Interact</div>
                 <div class="hud-item">[F] Flashlight Toggle</div>
-                <div class="hud-item">[M] Map Blueprint</div>
+                <div class="hud-item">[M] Blueprint Map</div>
             </div>
         </div>
 
@@ -2321,9 +2322,9 @@
                 <div class="glitch-text-spooky">CLICK SCREEN TO WAKE UP</div>
                 <div class="controls-hint">
                     Use <span class="highlight">WASD</span> to walk. Move mouse to look.<br>
-                    Press <span class="highlight">F</span> to toggle your flashlight.<br>
-                    Press <span class="highlight">M</span> to view the house blueprint map.<br>
-                    Make too much noise in real life, and the ghost will find you.
+                    Find and collect all <span class="highlight">10 PAPERS</span> hidden in the corridors.<br>
+                    Press <span class="highlight">E</span> to pick up papers when near.<br>
+                    Keep voice sound below the <span class="highlight" style="color:#ff3b30;">RED THRESHOLD LINE</span> or you will be out!
                 </div>
             </div>
         </div>
@@ -2340,8 +2341,8 @@
 
         <!-- Game Over / Death Screen -->
         <div id="game-over-overlay" style="display: none;">
-            <div class="death-title">YOU DIED IN THE CORRIDOR</div>
-            <div class="death-reason" id="death-reason-text">The ghost dragged you into the darkness.</div>
+            <div class="death-title" id="death-screen-title">YOU WERE ELIMINATED</div>
+            <div class="death-reason" id="death-reason-text">Your voice volume crossed the red threshold line.</div>
             <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
                 <button class="btn-horror-action" onclick="retryHorrorGame()">RETRY SESSION</button>
                 <button class="btn-horror-action secondary" onclick="abandonHorrorGame()">ABANDON</button>
@@ -2350,8 +2351,8 @@
 
         <!-- Victory Screen -->
         <div id="victory-overlay" style="display: none;">
-            <div class="victory-title">YOU SURVIVED</div>
-            <div class="victory-subtitle">Connection corridor collapsed. You escaped the shifting loop.</div>
+            <div class="victory-title">ALL 10 PAPERS COLLECTED!</div>
+            <div class="victory-subtitle">You uncovered all paranormal logs and escaped the loop safely!</div>
             <button class="btn-horror-action" onclick="abandonHorrorGame()" style="margin-top: 30px;">RETURN TO LOBBY</button>
         </div>
     </div>
@@ -3515,10 +3516,219 @@
         let micAnalyser = null;
         let micDataArray = null;
         let micVolume = 0;
-        let micVolumeThreshold = 18; // alert ghost if level > threshold
+        let micVolumeThreshold = 18; // alert ghost / noise out if level > threshold
         let micSensitivity = parseFloat(localStorage.getItem('micSensitivity')) || 1.0;
         let ghostStalking = false;
         let ghostAlertTimer = 0;
+
+        let papersCollected = 0;
+        let paperMeshes = [];
+        let isMicOutEliminating = false;
+        let currentInteractivePaper = null;
+
+        // 10 Fixed Spawning Locations for Papers (5 Ground Floor, 5 Second Floor)
+        const PAPER_LOCATIONS = [
+            // Ground Floor
+            { floor: 0, cellX: 1, cellZ: 3, room: "Living Room", label: "Page #1" },
+            { floor: 0, cellX: 5, cellZ: 1, room: "Kitchen Area", label: "Page #2" },
+            { floor: 0, cellX: 1, cellZ: 6, room: "Storage Closet", label: "Page #3" },
+            { floor: 0, cellX: 8, cellZ: 7, room: "Food Pantry", label: "Page #4" },
+            { floor: 0, cellX: 5, cellZ: 8, room: "Central Hall", label: "Page #5" },
+            // Second Floor
+            { floor: 1, cellX: 1, cellZ: 1, room: "Master Bedroom", label: "Page #6" },
+            { floor: 1, cellX: 3, cellZ: 3, room: "Guest Bedroom", label: "Page #7" },
+            { floor: 1, cellX: 5, cellZ: 2, room: "Study Room", label: "Page #8" },
+            { floor: 1, cellX: 7, cellZ: 2, room: "Library Room", label: "Page #9" },
+            { floor: 1, cellX: 8, cellZ: 7, room: "Security Room", label: "Page #10" }
+        ];
+
+        function createPaperTexture(pageText) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 320;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#f4ecd8';
+            ctx.fillRect(0, 0, 256, 320);
+
+            ctx.fillStyle = 'rgba(120, 90, 40, 0.15)';
+            for (let i = 0; i < 12; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random()*256, Math.random()*320, Math.random()*30+10, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            ctx.strokeStyle = 'rgba(100, 40, 40, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(10, 10, 236, 300);
+
+            ctx.fillStyle = '#800000';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("NO EXIT - PARANORMAL NOTE", 128, 40);
+
+            ctx.fillStyle = '#222';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillText(pageText, 128, 70);
+
+            ctx.fillStyle = '#111';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            const lines = [
+                "DO NOT MAKE ANY SOUND.",
+                "THE CORRIDOR REACTS TO NOISE.",
+                "KEEP YOUR VOICE BELOW RED LINE.",
+                "FIND ALL 10 PAPERS TO ESCAPE.",
+                "THERE IS NO GHOST HUNTING YOU,",
+                "BUT THE WALLS ARE LISTENING...",
+                "STAY QUIET OR BE ELIMINATED!"
+            ];
+            lines.forEach((line, idx) => {
+                ctx.fillText(line, 16, 110 + idx * 24);
+            });
+
+            ctx.fillStyle = 'rgba(180, 0, 0, 0.6)';
+            ctx.beginPath();
+            ctx.arc(190, 260, 22, 0, Math.PI*2);
+            ctx.fill();
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function spawnPaperCollectibles() {
+            paperMeshes.forEach(p => {
+                if (p.mesh && p.mesh.parent) p.mesh.parent.remove(p.mesh);
+            });
+            paperMeshes = [];
+            papersCollected = 0;
+
+            const countEl = document.getElementById('hud-papers-count');
+            if (countEl) countEl.textContent = "0 / 10";
+
+            PAPER_LOCATIONS.forEach((loc, idx) => {
+                const group = loc.floor === 0 ? groundFloorGroup : secondFloorGroup;
+                if (!group) return;
+
+                const paperGroup = new THREE.Group();
+                const tex = createPaperTexture(loc.label);
+                const geo = new THREE.PlaneGeometry(0.7, 0.9);
+                const mat = new THREE.MeshStandardMaterial({
+                    map: tex,
+                    roughness: 0.7,
+                    side: THREE.DoubleSide
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.rotation.x = -Math.PI / 2;
+                paperGroup.add(mesh);
+
+                const paperLight = new THREE.PointLight(0xffeedd, 0.8, 4.0, 2);
+                paperLight.position.set(0, 0.4, 0);
+                paperGroup.add(paperLight);
+
+                const worldX = loc.cellX * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                const worldZ = loc.cellZ * CELL_SIZE - MAP_OFFSET + CELL_SIZE / 2;
+                paperGroup.position.set(worldX, 0.08, worldZ);
+
+                group.add(paperGroup);
+
+                paperMeshes.push({
+                    id: idx,
+                    floor: loc.floor,
+                    cellX: loc.cellX,
+                    cellZ: loc.cellZ,
+                    worldX: worldX,
+                    worldZ: worldZ,
+                    room: loc.room,
+                    label: loc.label,
+                    mesh: paperGroup,
+                    light: paperLight,
+                    collected: false
+                });
+            });
+        }
+
+        function checkPaperCollection() {
+            if (!isGameRunning || isKillingActive) return;
+
+            let nearestPaper = null;
+            let minDist = 2.2;
+
+            paperMeshes.forEach(paper => {
+                if (!paper.collected && paper.floor === activeFloor) {
+                    const dx = (playerPos.x * CELL_SIZE - MAP_OFFSET) - paper.worldX;
+                    const dz = (playerPos.z * CELL_SIZE - MAP_OFFSET) - paper.worldZ;
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestPaper = paper;
+                    }
+                }
+            });
+
+            const promptEl = document.getElementById('staircase-prompt');
+            if (nearestPaper) {
+                currentInteractivePaper = nearestPaper;
+                if (promptEl && !currentInteractiveDoor && !isNearStairs && !isNearCorridorTv) {
+                    promptEl.style.display = 'block';
+                    promptEl.innerHTML = `📄 PRESS <span style="color:#00ff44;">[E]</span> TO PICK UP ${nearestPaper.label} (${nearestPaper.room})`;
+                }
+            } else {
+                currentInteractivePaper = null;
+                if (promptEl && promptEl.innerHTML.includes('PICK UP')) {
+                    promptEl.style.display = 'none';
+                }
+            }
+        }
+
+        function collectPaper(paper) {
+            if (!paper || paper.collected) return;
+            paper.collected = true;
+            if (paper.mesh && paper.mesh.parent) {
+                paper.mesh.parent.remove(paper.mesh);
+            }
+            papersCollected++;
+
+            playPaperPickupSound();
+
+            const countEl = document.getElementById('hud-papers-count');
+            if (countEl) countEl.textContent = `${papersCollected} / 10`;
+
+            const promptEl = document.getElementById('staircase-prompt');
+            if (promptEl) {
+                promptEl.style.display = 'block';
+                promptEl.innerHTML = `✅ COLLECTED ${paper.label}! (${papersCollected}/10)`;
+                setTimeout(() => {
+                    if (promptEl && promptEl.innerHTML.includes('COLLECTED')) {
+                        promptEl.style.display = 'none';
+                    }
+                }, 1500);
+            }
+
+            if (papersCollected >= 10) {
+                triggerVictory();
+            }
+        }
+
+        function playPaperPickupSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+                
+                gain.gain.setValueAtTime(0.3 * (masterVolume / 100), ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch(e) {}
+        }
         
         // Define floor maps: 16x16 grids (1 = wall, 0 = walkable, 5 = stairs)
         const GROUND_FLOOR_MAP = [
@@ -4081,6 +4291,9 @@
             
             updateCameraPosition();
 
+            // Spawn 10 collectible papers in corridors
+            spawnPaperCollectibles();
+
             // 7. Request Mic
             setupMicrophone();
 
@@ -4119,7 +4332,9 @@
         }
 
         function triggerInteractAction() {
-            if (isNearStairs) {
+            if (currentInteractivePaper) {
+                collectPaper(currentInteractivePaper);
+            } else if (isNearStairs) {
                 useStaircase();
             } else if (currentInteractiveDoor) {
                 toggleDoor(currentInteractiveDoor);
@@ -8211,201 +8426,10 @@
         }
 
         function updateGhostAI() {
-            if (!ghostMesh || !isGameRunning) return;
-
-            const playerWorldX = playerPos.x;
-            const playerWorldZ = playerPos.z;
-
-            // Calculate distance based on 2D coordinates (but sound scales if on different floors)
-            const dx = playerWorldX - ghostPos.x;
-            const dz = playerWorldZ - ghostPos.z;
-            const dist = Math.sqrt(dx * dx + dz * dz);
-
-            if (micVolume > micVolumeThreshold) {
-                ghostStalking = true;
-                ghostAlertTimer = 300;
+            if (ghostMesh) {
+                ghostMesh.visible = false; // Chasing ghost disabled per user request
             }
-
-            if (ghostAlertTimer > 0) {
-                ghostAlertTimer--;
-                if (ghostAlertTimer === 0) {
-                    ghostStalking = false;
-                }
-            }
-
-            let targetX = ghostPos.x;
-            let targetZ = ghostPos.z;
-            let isMoving = false;
-            let stepX = 0;
-            let stepZ = 0;
-
-            const isSameFloor = (ghostFloor === activeFloor);
-
-            if (ghostStalking) {
-                let targetCellX = Math.floor(playerWorldX);
-                let targetCellZ = Math.floor(playerWorldZ);
-                
-                if (!isSameFloor) {
-                    // Go to the stairs to change floors!
-                    targetCellX = 7;
-                    targetCellZ = 7;
-                }
-                
-                const startCellX = Math.min(MAP_SIZE - 1, Math.max(0, Math.floor(ghostPos.x)));
-                const startCellZ = Math.min(MAP_SIZE - 1, Math.max(0, Math.floor(ghostPos.z)));
-                let currentMap;
-                if (ghostFloor === 0) {
-                    currentMap = GROUND_FLOOR_MAP;
-                } else if (ghostFloor === 1) {
-                    currentMap = SECOND_FLOOR_MAP;
-                } else {
-                    currentMap = MORTUARY_FLOOR_MAP;
-                }
-                
-                if (window.ghostPathCooldown === undefined) {
-                    window.ghostPathCooldown = 0;
-                    window.ghostPathCache = null;
-                }
-
-                if (window.ghostPathCooldown <= 0 || !window.ghostPathCache) {
-                    window.ghostPathCache = findGhostPath({ x: startCellX, z: startCellZ }, { x: targetCellX, z: targetCellZ }, currentMap);
-                    window.ghostPathCooldown = 3;
-                } else {
-                    window.ghostPathCooldown--;
-                }
-                
-                const path = window.ghostPathCache;
-                
-                if (path && path.length > 1) {
-                    // Head to the center of the next cell in the path
-                    targetX = path[1].x + 0.5;
-                    targetZ = path[1].z + 0.5;
-                } else {
-                    // Fallback to direct target
-                    if (isSameFloor) {
-                        targetX = playerWorldX;
-                        targetZ = playerWorldZ;
-                    } else {
-                        targetX = 7.5;
-                        targetZ = 7.5;
-                    }
-                }
-                
-                const activeSpeed = micVolume > micVolumeThreshold ? ghostSpeed * 2.0 : ghostSpeed * 1.4;
-                
-                const angle = Math.atan2(targetZ - ghostPos.z, targetX - ghostPos.x);
-                stepX = Math.cos(angle) * activeSpeed;
-                stepZ = Math.sin(angle) * activeSpeed;
-                
-                ghostPos.x += stepX;
-                ghostPos.z += stepZ;
-                isMoving = true;
-
-                // Transition floor when reaching stairs (7, 7)
-                if (!isSameFloor && Math.floor(ghostPos.x) === 7 && Math.floor(ghostPos.z) === 7) {
-                    ghostFloor = activeFloor; // climb stairs to player's floor
-                    ghostPos.x = 7.5;
-                    ghostPos.z = 7.5;
-                }
-            } else {
-                // Patrol roaming
-                if (Math.random() > 0.985) {
-                    const neighbors = [
-                        {x: 0, z: 1}, {x: 0, z: -1}, {x: 1, z: 0}, {x: -1, z: 0}
-                    ];
-                    let currentMap;
-                    if (ghostFloor === 0) {
-                        currentMap = GROUND_FLOOR_MAP;
-                    } else if (ghostFloor === 1) {
-                        currentMap = SECOND_FLOOR_MAP;
-                    } else {
-                        currentMap = MORTUARY_FLOOR_MAP;
-                    }
-                    const validNeighbors = neighbors.map(n => ({
-                        x: Math.floor(ghostPos.x) + n.x,
-                        z: Math.floor(ghostPos.z) + n.z
-                    })).filter(n => {
-                        return n.x >= 0 && n.x < MAP_SIZE && n.z >= 0 && n.z < MAP_SIZE && currentMap[n.z][n.x] !== 1;
-                    });
-
-                    if (validNeighbors.length > 0) {
-                        const choice = validNeighbors[Math.floor(Math.random() * validNeighbors.length)];
-                        ghostMesh.targetGrid = choice;
-                    }
-                }
-
-                if (ghostMesh.targetGrid) {
-                    const gx = ghostMesh.targetGrid.x + 0.5;
-                    const gz = ghostMesh.targetGrid.z + 0.5;
-                    const adx = gx - ghostPos.x;
-                    const adz = gz - ghostPos.z;
-                    const d = Math.sqrt(adx * adx + adz * adz);
-
-                    if (d > 0.05) {
-                        const angle = Math.atan2(adz, adx);
-                        stepX = Math.cos(angle) * ghostSpeed;
-                        stepZ = Math.sin(angle) * ghostSpeed;
-                        ghostPos.x += stepX;
-                        ghostPos.z += stepZ;
-                        isMoving = true;
-                    } else {
-                        ghostMesh.targetGrid = null;
-
-                        // Arrived at staircase (4, 4) -> 50% chance to climb up/down floor
-                        if (Math.floor(ghostPos.x) === 4 && Math.floor(ghostPos.z) === 4) {
-                            if (Math.random() > 0.5) {
-                                ghostFloor = ghostFloor === 0 ? 1 : 0;
-                                ghostPos.x = 4.5;
-                                ghostPos.z = 4.5;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Animate 3D ghost model limbs and rotation based on movement direction
-            if (isMoving) {
-                ghostMesh.rotation.y = Math.atan2(stepX, stepZ);
-                ghostAnimTime += 0.12;
-                if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.x = Math.sin(ghostAnimTime) * 0.5;
-                if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x = -Math.sin(ghostAnimTime) * 0.5;
-                if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x = -Math.sin(ghostAnimTime) * 0.4;
-                if (ghostMesh.rightArm) {
-                    if (ghostStalking) {
-                        ghostMesh.rightArm.rotation.x = -Math.PI * 0.45 + Math.sin(ghostAnimTime * 2) * 0.2;
-                        ghostMesh.rightArm.rotation.z = -0.2;
-                    } else {
-                        ghostMesh.rightArm.rotation.x = Math.sin(ghostAnimTime) * 0.4;
-                        ghostMesh.rightArm.rotation.z = 0;
-                    }
-                }
-
-                // Add realistic body bobbing up and down as she walks
-                ghostMesh.position.y = 0.05 + Math.abs(Math.sin(ghostAnimTime * 2)) * 0.07;
-
-                // Accumulate steps timer based on actual movement speed to trigger thuds
-                ghostStepsTimer += Math.sqrt(stepX * stepX + stepZ * stepZ);
-                if (ghostStepsTimer >= 0.45) {
-                    ghostStepsTimer = 0;
-                    playGhostFootstep(dist);
-                }
-            } else {
-                if (ghostMesh.leftLeg) ghostMesh.leftLeg.rotation.x *= 0.8;
-                if (ghostMesh.rightLeg) ghostMesh.rightLeg.rotation.x *= 0.8;
-                if (ghostMesh.leftArm) ghostMesh.leftArm.rotation.x *= 0.8;
-                if (ghostMesh.rightArm) {
-                    ghostMesh.rightArm.rotation.x *= 0.8;
-                    ghostMesh.rightArm.rotation.z *= 0.8;
-                }
-                ghostMesh.position.y = 0.05; // rest on floor
-                ghostStepsTimer = 0;
-            }
-
-            updateGhostMeshPosition();
-
-            if (dist < 0.6 && ghostStalking && ghostFloor === activeFloor) {
-                triggerJumpscare();
-            }
+            return;
         }
 
         function setupMicrophone() {
@@ -8435,15 +8459,54 @@
                 });
         }
 
+        function triggerMicNoiseOut() {
+            if (isMicOutEliminating || !isGameRunning) return;
+            isMicOutEliminating = true;
+
+            stopChaseMusic();
+            stopPlayerRunningSound();
+            if (document.exitPointerLock) {
+                try { document.exitPointerLock(); } catch(e) {}
+            }
+            document.body.style.cursor = 'default';
+
+            playInstantSound('woman-scream', 1.0);
+            playInstantSound('impact-sound', 1.0);
+            playInstantSound('creepy-kill-laugh', 1.0);
+
+            const screamerOverlay = document.getElementById('gameplay-jumpscare-overlay');
+            if (screamerOverlay) {
+                screamerOverlay.style.display = 'flex';
+            }
+
+            triggerRealisticCameraJolt(2.0);
+
+            setTimeout(() => {
+                if (screamerOverlay) screamerOverlay.style.display = 'none';
+                isMicOutEliminating = false;
+
+                abandonHorrorGame();
+                showLobbyScreen();
+            }, 1600);
+        }
+
         let cachedNoiseEl = null;
         let lastNoiseStatus = '';
 
         function updateMicVolumeLevel() {
             if (!cachedNoiseEl) cachedNoiseEl = document.getElementById('hud-noise-level');
 
+            const barFill = document.getElementById('hud-mic-bar-fill');
+            const threshLine = document.getElementById('hud-mic-threshold-line');
+
+            if (threshLine) {
+                const linePercent = Math.min(95, Math.max(5, (micVolumeThreshold / 50) * 100));
+                threshLine.style.left = linePercent + '%';
+            }
+
             if (!micAnalyser || !micDataArray) {
                 micVolume = 0;
-                stopChaseMusic();
+                if (barFill) barFill.style.width = '0%';
                 if (cachedNoiseEl && lastNoiseStatus !== 'NO MIC') {
                     cachedNoiseEl.textContent = "NO MIC";
                     cachedNoiseEl.style.color = "#888";
@@ -8460,20 +8523,22 @@
             const average = sum / micDataArray.length;
             
             micVolume = average * micSensitivity;
-            
-            const isMicSoundPresent = micVolume > micVolumeThreshold;
 
-            if (isMicSoundPresent) {
-                ghostStalking = true;
-                ghostAlertTimer = 180;
-                startChaseMusic();
-                if (cachedNoiseEl && lastNoiseStatus !== 'DANGER') {
-                    lastNoiseStatus = 'DANGER';
-                    cachedNoiseEl.textContent = "DANGER! VOICE DETECTED";
+            const fillPercent = Math.min(100, (micVolume / 50) * 100);
+            if (barFill) {
+                barFill.style.width = fillPercent + '%';
+            }
+            
+            const isOverThreshold = micVolume > micVolumeThreshold;
+
+            if (isOverThreshold && isGameRunning && !isMicOutEliminating && !isKillingActive) {
+                if (cachedNoiseEl) {
+                    lastNoiseStatus = 'ELIMINATED';
+                    cachedNoiseEl.textContent = "OUT! TOO LOUD!";
                     cachedNoiseEl.style.color = "#ff3b30";
                 }
-            } else {
-                stopChaseMusic();
+                triggerMicNoiseOut();
+            } else if (!isOverThreshold) {
                 if (cachedNoiseEl && lastNoiseStatus !== 'SAFE') {
                     lastNoiseStatus = 'SAFE';
                     cachedNoiseEl.textContent = "SAFE";
@@ -9100,7 +9165,9 @@
                 toggleFlashlight();
             }
             if (key === 'e') {
-                if (isNearCorridorTv) {
+                if (currentInteractivePaper) {
+                    collectPaper(currentInteractivePaper);
+                } else if (isNearCorridorTv) {
                     cycleCorridorTvVideo();
                 } else if (isNearStairs && !isTransitioningFloor) {
                     transitionFloor();
@@ -9253,6 +9320,7 @@
                 updateFlashlight();
                 updateMicVolumeLevel();
                 updateGhostAI();
+                checkPaperCollection();
                 updateDustParticles();
                 updateCreatures();
                 updateGiantSnakes();
@@ -9937,6 +10005,8 @@
             if (mortuaryFloorGroup) {
                 mortuaryFloorGroup.visible = false;
             }
+
+            spawnPaperCollectibles();
 
             keysPressed = { w: false, a: false, s: false, d: false };
             isTransitioningFloor = false;
