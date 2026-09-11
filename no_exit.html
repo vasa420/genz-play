@@ -9676,37 +9676,41 @@
             }
         }
 
+        const _tempForward = new THREE.Vector3();
+        const _tempRight = new THREE.Vector3();
+        const _tempLensOffset = new THREE.Vector3();
+
         function handleMovement(dt) {
             if (!isGameRunning || isTransitioningFloor || isMapOpen) return;
 
-            const deltaSec = (dt && dt > 0) ? dt : 0.016;
-            const moveSpeed = 2.1 * deltaSec;
+            const deltaSec = (dt && dt > 0) ? Math.min(dt, 0.05) : 0.016;
+            const moveSpeed = 3.6 * deltaSec;
             let moveX = 0;
             let moveZ = 0;
 
-            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-            forward.y = 0;
-            forward.normalize();
+            _tempForward.set(0, 0, -1).applyQuaternion(camera.quaternion);
+            _tempForward.y = 0;
+            _tempForward.normalize();
 
-            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-            right.y = 0;
-            right.normalize();
+            _tempRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+            _tempRight.y = 0;
+            _tempRight.normalize();
 
             if (keysPressed.w) {
-                moveX += forward.x;
-                moveZ += forward.z;
+                moveX += _tempForward.x;
+                moveZ += _tempForward.z;
             }
             if (keysPressed.s) {
-                moveX -= forward.x;
-                moveZ -= forward.z;
+                moveX -= _tempForward.x;
+                moveZ -= _tempForward.z;
             }
             if (keysPressed.a) {
-                moveX -= right.x;
-                moveZ -= right.z;
+                moveX -= _tempRight.x;
+                moveZ -= _tempRight.z;
             }
             if (keysPressed.d) {
-                moveX += right.x;
-                moveZ += right.z;
+                moveX += _tempRight.x;
+                moveZ += _tempRight.z;
             }
 
             if (moveX !== 0 || moveZ !== 0) {
@@ -9880,11 +9884,11 @@
 
             if (isFlashlightOn) {
                 spotLight.intensity = 8.5;
-                const lensOffset = new THREE.Vector3(0.20, -0.16, -0.15).applyQuaternion(camera.quaternion);
-                spotLight.position.copy(camera.position).add(lensOffset);
+                _tempLensOffset.set(0.20, -0.16, -0.15).applyQuaternion(camera.quaternion);
+                spotLight.position.copy(camera.position).add(_tempLensOffset);
                 
-                const dir = new THREE.Vector3(0, -0.04, -1).applyQuaternion(camera.quaternion);
-                spotLight.target.position.copy(camera.position).add(dir.multiplyScalar(15));
+                _tempForward.set(0, -0.04, -1).applyQuaternion(camera.quaternion);
+                spotLight.target.position.copy(camera.position).add(_tempForward.multiplyScalar(15));
             } else {
                 spotLight.intensity = 0.0;
             }
@@ -10203,9 +10207,9 @@
             // Increment global frameCount for staggered rendering
             frameCount++;
 
-            // Proximity-throttled CCTV updates (only when player is near TV monitor on Floor 1)
+            // Proximity-throttled CCTV updates (only when player is directly inside Security Room)
             const distToTv = Math.hypot(playerPos.x - 8.5, playerPos.z - 7.5);
-            if (activeFloor === 1 && distToTv < 12.0 && secondFloorGroup.tvMonitor && secondFloorGroup.cctvCameras) {
+            if (activeFloor === 1 && distToTv < 4.0 && secondFloorGroup.tvMonitor && secondFloorGroup.cctvCameras) {
                 if (frameCount % 6 === 0) {
                     const cctvIndex = Math.floor(frameCount / 6) % 4;
                     const cctvCam = secondFloorGroup.cctvCameras[cctvIndex];
