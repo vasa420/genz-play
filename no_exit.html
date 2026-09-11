@@ -3649,16 +3649,16 @@
         }
 
         function checkPaperCollection() {
-            if (!isGameRunning || isKillingActive) return;
+            if (!isGameRunning || isKillingActive || !camera) return;
 
             let nearestPaper = null;
-            let minDist = 2.2;
+            let minDist = 3.5;
 
             paperMeshes.forEach(paper => {
                 if (!paper.collected && paper.floor === activeFloor) {
-                    const dx = (playerPos.x * CELL_SIZE - MAP_OFFSET) - paper.worldX;
-                    const dz = (playerPos.z * CELL_SIZE - MAP_OFFSET) - paper.worldZ;
-                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    const dx = camera.position.x - paper.worldX;
+                    const dz = camera.position.z - paper.worldZ;
+                    const dist = Math.hypot(dx, dz);
                     if (dist < minDist) {
                         minDist = dist;
                         nearestPaper = paper;
