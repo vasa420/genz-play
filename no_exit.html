@@ -1923,6 +1923,40 @@
             70%  { opacity: 1; filter: blur(0); }
             100% { opacity: 0; filter: blur(16px); }
         }
+        .keypad-num-btn {
+            background: linear-gradient(180deg, #2a2e3d 0%, #1c1f2b 100%);
+            border: 1px solid #3d4356;
+            color: #e0e6f0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 14px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.1s ease;
+            user-select: none;
+        }
+        .keypad-num-btn:hover {
+            background: linear-gradient(180deg, #383e52 0%, #25293a 100%);
+            border-color: #555d78;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 255, 68, 0.2);
+        }
+        .keypad-num-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .keypad-num-btn.action-clear {
+            color: #ff3b30;
+            font-size: 14px;
+            font-weight: 900;
+        }
+        .keypad-num-btn.action-enter {
+            color: #00ff44;
+            font-size: 14px;
+            font-weight: 900;
+        }
     </style>
 </head>
 <body>
@@ -2354,6 +2388,45 @@
             <div class="victory-title">ALL 10 PAPERS COLLECTED!</div>
             <div class="victory-subtitle">You uncovered all paranormal logs and escaped the loop safely!</div>
             <button class="btn-horror-action" onclick="abandonHorrorGame()" style="margin-top: 30px;">RETURN TO LOBBY</button>
+        </div>
+    </div>
+
+    <!-- Interactive 4-Digit Security Keypad Modal UI -->
+    <div id="keypad-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 50000; justify-content: center; align-items: center;">
+        <div style="background: radial-gradient(circle at center, #1a1e28 0%, #0b0d12 100%); border: 2px solid #2a3140; box-shadow: 0 0 50px rgba(0,0,0,0.9), 0 0 25px rgba(255, 59, 48, 0.3); border-radius: 18px; padding: 25px 30px; width: 340px; text-align: center; position: relative; font-family: 'JetBrains Mono', monospace;">
+            <button onclick="closeKeypadModal()" style="position: absolute; top: 12px; right: 15px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#ff3b30'" onmouseout="this.style.color='#888'">✕</button>
+            
+            <div style="font-family: 'Creepster', cursive; font-size: 24px; color: #ff3b30; text-shadow: 0 0 10px rgba(255,59,48,0.6); margin-bottom: 4px; letter-spacing: 2px;">SECURITY OVERRIDE KEYPAD</div>
+            <div style="font-size: 10px; color: #778; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">SEC ROOM DOOR ACCESS MODEL K-40</div>
+            
+            <div style="background: #040806; border: 2px solid #16241a; border-radius: 10px; padding: 12px; margin-bottom: 20px; position: relative; box-shadow: inset 0 0 12px rgba(0,0,0,0.9);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 9px; color: #667; text-transform: uppercase;">
+                    <span>LOCK STATUS</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div id="keypad-status-led" style="width: 10px; height: 10px; border-radius: 50%; background: #ff0000; box-shadow: 0 0 10px #ff0000; transition: all 0.3s;"></div>
+                        <span id="keypad-status-text" style="color: #ff3b30; font-weight: bold;">LOCKED</span>
+                    </div>
+                </div>
+                
+                <div id="keypad-display" style="font-size: 32px; font-weight: bold; letter-spacing: 12px; color: #00ff44; text-shadow: 0 0 15px rgba(0,255,68,0.8); height: 40px; display: flex; justify-content: center; align-items: center;">_ _ _ _</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px;">
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('1')">1</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('2')">2</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('3')">3</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('4')">4</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('5')">5</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('6')">6</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('7')">7</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('8')">8</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('9')">9</button>
+                <button class="keypad-num-btn action-clear" onclick="clearKeypadInput()">CLR</button>
+                <button class="keypad-num-btn" onclick="pressKeypadDigit('0')">0</button>
+                <button class="keypad-num-btn action-enter" onclick="submitKeypadPasscode()">ENT</button>
+            </div>
+
+            <div style="font-size: 10px; color: #556; letter-spacing: 1px;">USE MOUSE OR NUMPAD TO ENTER 4-DIGIT CODE</div>
         </div>
     </div>
 
@@ -3575,7 +3648,15 @@
             ctx.fillStyle = '#111';
             ctx.font = '11px monospace';
             ctx.textAlign = 'left';
-            const lines = [
+            const lines = (pageText === "Page #9" || pageText === "Page #10") ? [
+                "SECURITY OVERRIDE LOG:",
+                "-----------------------",
+                "SECURITY ROOM DOOR IS LOCKED.",
+                "KEYPAD ACCESS SYSTEM ACTIVE.",
+                "",
+                "PASSCODE CODE: 8301",
+                "ENTER ON KEYPAD BESIDE DOOR."
+            ] : [
                 "DO NOT MAKE ANY SOUND.",
                 "THE CORRIDOR REACTS TO NOISE.",
                 "KEEP YOUR VOICE BELOW RED LINE.",
@@ -4829,7 +4910,23 @@
         }
 
         function spawnDoors() {
-            const doorLocations = [];
+            const doorLocations = [
+                // Ground Floor Doors
+                { floor: 0, cellX: 1, cellZ: 4, angleY: 0, roomName: "Living Room" },
+                { floor: 0, cellX: 1, cellZ: 5, angleY: Math.PI / 2, roomName: "Storage Closet" },
+                { floor: 0, cellX: 7, cellZ: 5, angleY: Math.PI / 2, roomName: "Food Pantry" },
+                { floor: 0, cellX: 5, cellZ: 4, angleY: 0, roomName: "Kitchen Area" },
+
+                // Second Floor Doors
+                { floor: 1, cellX: 1, cellZ: 4, angleY: 0, roomName: "Master Bedroom" },
+                { floor: 1, cellX: 3, cellZ: 4, angleY: 0, roomName: "Guest Bedroom" },
+                { floor: 1, cellX: 5, cellZ: 4, angleY: 0, roomName: "Study Room" },
+                { floor: 1, cellX: 7, cellZ: 3, angleY: 0, roomName: "Library Room" },
+                { floor: 1, cellX: 7, cellZ: 5, angleY: Math.PI / 2, roomName: "Main Bathroom" },
+                { floor: 1, cellX: 8, cellZ: 7, angleY: -Math.PI / 2, roomName: "Security Room", isLocked: true, passcode: "8301" }
+            ];
+
+            interactiveDoors = [];
 
             doorLocations.forEach(d => {
                 const group = new THREE.Group();
@@ -4874,6 +4971,53 @@
                 hingeGroup.rotation.y = 0.0; // Starts closed
                 group.add(hingeGroup);
 
+                let keypadLedLight = null;
+                let keypadLedMesh = null;
+
+                // Mount 3D Passcode Keypad beside locked doors (e.g. Security Room)
+                if (d.isLocked) {
+                    const keypadGroup = new THREE.Group();
+                    
+                    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1c202a, metalness: 0.8, roughness: 0.3 });
+                    const bodyGeo = new THREE.BoxGeometry(0.24, 0.36, 0.06);
+                    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+                    keypadGroup.add(bodyMesh);
+
+                    const screenMat = new THREE.MeshStandardMaterial({ color: 0x050c05, roughness: 0.2 });
+                    const screenGeo = new THREE.BoxGeometry(0.18, 0.08, 0.015);
+                    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+                    screenMesh.position.set(0, 0.1, 0.035);
+                    keypadGroup.add(screenMesh);
+
+                    const initialColor = d.isLocked ? 0xff0000 : 0x00ff44;
+                    const ledMat = new THREE.MeshStandardMaterial({
+                        color: initialColor,
+                        emissive: initialColor,
+                        emissiveIntensity: 1.2
+                    });
+                    const ledGeo = new THREE.SphereGeometry(0.02, 12, 12);
+                    keypadLedMesh = new THREE.Mesh(ledGeo, ledMat);
+                    keypadLedMesh.position.set(0.065, 0.11, 0.038);
+                    keypadGroup.add(keypadLedMesh);
+
+                    keypadLedLight = new THREE.PointLight(initialColor, 1.2, 2.5);
+                    keypadLedLight.position.set(0.065, 0.11, 0.1);
+                    keypadGroup.add(keypadLedLight);
+
+                    const btnMat = new THREE.MeshStandardMaterial({ color: 0x3d4356, metalness: 0.5, roughness: 0.4 });
+                    for (let r = 0; r < 4; r++) {
+                        for (let c = 0; c < 3; c++) {
+                            const btnGeo = new THREE.BoxGeometry(0.04, 0.035, 0.015);
+                            const btnMesh = new THREE.Mesh(btnGeo, btnMat);
+                            btnMesh.position.set(-0.05 + c * 0.05, -0.01 - r * 0.05, 0.035);
+                            keypadGroup.add(btnMesh);
+                        }
+                    }
+
+                    keypadGroup.position.set(-1.08, 1.5, 0.06);
+                    group.add(keypadGroup);
+                }
+
                 const worldX = d.cellX * CELL_SIZE - MAP_OFFSET;
                 const worldZ = d.cellZ * CELL_SIZE - MAP_OFFSET;
                 group.position.set(worldX, 0, worldZ);
@@ -4896,7 +5040,12 @@
                     worldX: worldX,
                     worldZ: worldZ,
                     hinge: hingeGroup,
-                    isOpen: false
+                    isOpen: false,
+                    isLocked: !!d.isLocked,
+                    passcode: d.passcode || "8301",
+                    roomName: d.roomName || "Room",
+                    keypadLedMesh: keypadLedMesh,
+                    keypadLedLight: keypadLedLight
                 });
             });
         }
@@ -7601,19 +7750,179 @@
             mortuaryFloorGroup.visible = true;
         }
 
+        let currentKeypadDoor = null;
+        let keypadInputBuffer = "";
+
+        function openKeypadModal(door) {
+            if (!door) return;
+            currentKeypadDoor = door;
+            keypadInputBuffer = "";
+            updateKeypadDisplay();
+            
+            const modal = document.getElementById('keypad-modal');
+            const led = document.getElementById('keypad-status-led');
+            const statusText = document.getElementById('keypad-status-text');
+            
+            if (door.isLocked) {
+                if (led) { led.style.background = '#ff0000'; led.style.boxShadow = '0 0 10px #ff0000'; }
+                if (statusText) { statusText.textContent = 'LOCKED'; statusText.style.color = '#ff3b30'; }
+            } else {
+                if (led) { led.style.background = '#00ff44'; led.style.boxShadow = '0 0 10px #00ff44'; }
+                if (statusText) { statusText.textContent = 'UNLOCKED'; statusText.style.color = '#00ff44'; }
+            }
+            
+            if (modal) modal.style.display = 'flex';
+            if (document.pointerLockElement) {
+                document.exitPointerLock();
+            }
+        }
+
+        function closeKeypadModal() {
+            const modal = document.getElementById('keypad-modal');
+            if (modal) modal.style.display = 'none';
+            currentKeypadDoor = null;
+            keypadInputBuffer = "";
+        }
+
+        function pressKeypadDigit(digit) {
+            if (keypadInputBuffer.length < 4) {
+                keypadInputBuffer += digit;
+                playKeypadBeep(650);
+                updateKeypadDisplay();
+            }
+        }
+
+        function clearKeypadInput() {
+            keypadInputBuffer = "";
+            playKeypadBeep(400);
+            updateKeypadDisplay();
+        }
+
+        function updateKeypadDisplay() {
+            const display = document.getElementById('keypad-display');
+            if (!display) return;
+            if (keypadInputBuffer.length === 0) {
+                display.textContent = "_ _ _ _";
+                display.style.color = "#00ff44";
+            } else {
+                let masked = keypadInputBuffer.padEnd(4, '_').split('').join(' ');
+                display.textContent = masked;
+                display.style.color = "#00ff44";
+            }
+        }
+
+        function submitKeypadPasscode() {
+            if (!currentKeypadDoor) return;
+            const display = document.getElementById('keypad-display');
+            const led = document.getElementById('keypad-status-led');
+            const statusText = document.getElementById('keypad-status-text');
+            
+            if (keypadInputBuffer === (currentKeypadDoor.passcode || "8301")) {
+                currentKeypadDoor.isLocked = false;
+                
+                if (currentKeypadDoor.keypadLedLight) {
+                    currentKeypadDoor.keypadLedLight.color.setHex(0x00ff44);
+                }
+                if (currentKeypadDoor.keypadLedMesh && currentKeypadDoor.keypadLedMesh.material) {
+                    currentKeypadDoor.keypadLedMesh.material.color.setHex(0x00ff44);
+                    currentKeypadDoor.keypadLedMesh.material.emissive.setHex(0x00ff44);
+                }
+                
+                if (display) {
+                    display.textContent = "GRANTED";
+                    display.style.color = "#00ff44";
+                }
+                if (led) {
+                    led.style.background = "#00ff44";
+                    led.style.boxShadow = "0 0 12px #00ff44";
+                }
+                if (statusText) {
+                    statusText.textContent = "UNLOCKED";
+                    statusText.style.color = "#00ff44";
+                }
+                
+                playKeypadSuccessSound();
+                
+                setTimeout(() => {
+                    closeKeypadModal();
+                    const promptEl = document.getElementById('staircase-prompt');
+                    if (promptEl) {
+                        promptEl.style.display = 'block';
+                        promptEl.innerHTML = `🔓 SECURITY ROOM UNLOCKED! PRESS <span style="color:#00ff44;">[E]</span> TO OPEN DOOR`;
+                    }
+                }, 800);
+            } else {
+                if (display) {
+                    display.textContent = "DENIED";
+                    display.style.color = "#ff3b30";
+                }
+                playKeypadErrorSound();
+                
+                setTimeout(() => {
+                    keypadInputBuffer = "";
+                    updateKeypadDisplay();
+                }, 1000);
+            }
+        }
+
+        function playKeypadBeep(freq) {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2 * (masterVolume / 100), ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e) {}
+        }
+
+        function playKeypadSuccessSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.25 * (masterVolume / 100), now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.15);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.15);
+                });
+            } catch(e) {}
+        }
+
+        function playKeypadErrorSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, ctx.currentTime);
+                gain.gain.setValueAtTime(0.3 * (masterVolume / 100), ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
         function toggleDoor(door) {
+            if (door.isLocked) {
+                openKeypadModal(door);
+                return;
+            }
             door.isOpen = !door.isOpen;
             playInstantSound('door-open', 0.7);
-
-            if (door.isOpen && Math.random() < 0.35) {
-                setTimeout(() => {
-                    if (Math.random() < 0.5) {
-                        triggerMirrorGlitchJumpscare();
-                    } else {
-                        triggerCeilingDropJumpscare();
-                    }
-                }, 150);
-            }
         }
 
         function updateInteractiveDoors() {
@@ -8905,15 +9214,19 @@
                 currentInteractiveDoor = closeDoor;
                 if (promptEl) {
                     promptEl.style.display = 'block';
-                    if (closeDoor.isOpen) {
-                        promptEl.textContent = "[E] CLOSE DOOR";
+                    if (closeDoor.isLocked) {
+                        promptEl.innerHTML = `🔒 SECURITY ROOM LOCKED — PRESS <span style="color:#ff3b30;">[E]</span> TO ENTER KEYPAD PASSCODE`;
+                    } else if (closeDoor.isOpen) {
+                        promptEl.innerHTML = `🚪 PRESS <span style="color:#00ff44;">[E]</span> TO CLOSE DOOR`;
                     } else {
-                        promptEl.textContent = "[E] OPEN DOOR";
+                        promptEl.innerHTML = `🚪 PRESS <span style="color:#00ff44;">[E]</span> TO OPEN DOOR`;
                     }
                 }
             } else {
                 currentInteractiveDoor = null;
-                if (promptEl) promptEl.style.display = 'none';
+                if (promptEl && (promptEl.innerHTML.includes('DOOR') || promptEl.innerHTML.includes('PASSCODE'))) {
+                    promptEl.style.display = 'none';
+                }
             }
         }
 
@@ -10233,10 +10546,18 @@
                 statusEl.style.color = "#ffcc00";
             }
             
-            // Reset doors to closed
+            // Reset doors to closed and re-lock passcode doors
             interactiveDoors.forEach(door => {
                 door.isOpen = false;
                 door.hinge.rotation.y = 0.0;
+                if (door.passcode) {
+                    door.isLocked = true;
+                    if (door.keypadLedLight) door.keypadLedLight.color.setHex(0xff0000);
+                    if (door.keypadLedMesh && door.keypadLedMesh.material) {
+                        door.keypadLedMesh.material.color.setHex(0xff0000);
+                        door.keypadLedMesh.material.emissive.setHex(0xff0000);
+                    }
+                }
             });
 
             // Reset paranormal walker
