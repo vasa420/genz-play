@@ -6989,10 +6989,188 @@
             }, 18);
         }
 
+        function triggerExtremeAAA180GhostCrowJumpscare() {
+            if (!isGameRunning || !camera || !scene) return;
+
+            const origYaw = mouseYaw;
+            
+            // 1. Sudden 180° Camera Backward Snap
+            mouseYaw += Math.PI;
+            camera.rotation.set(mousePitch, mouseYaw, 0);
+
+            // Play fast turn swoosh + gasp sound
+            playInstantSound('impact-sound', 0.8);
+            playInstantSound('crow-call', 0.9);
+
+            const jumpscareGroup = new THREE.Group();
+
+            // 2. Build 24 3D Black Crows Flying Straight at Lens
+            const crowGroup = new THREE.Group();
+            const crowMat = new THREE.MeshBasicMaterial({ color: 0x050508 });
+            const wingMat = new THREE.MeshBasicMaterial({ color: 0x121218 });
+            const crowEyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
+            const crowMeshes = [];
+            for (let i = 0; i < 24; i++) {
+                const crow = new THREE.Group();
+                const body = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.6, 6), crowMat);
+                body.rotation.x = Math.PI / 2;
+                crow.add(body);
+
+                const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), crowEyeMat);
+                eyeL.position.set(-0.07, 0.06, 0.22);
+                crow.add(eyeL);
+                const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), crowEyeMat);
+                eyeR.position.set(0.07, 0.06, 0.22);
+                crow.add(eyeR);
+
+                const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.28), wingMat);
+                wingL.position.x = -0.3;
+                wingL.name = "wL";
+                crow.add(wingL);
+                const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.28), wingMat);
+                wingR.position.x = 0.3;
+                wingR.name = "wR";
+                crow.add(wingR);
+
+                const sx = (Math.random() - 0.5) * 2.2;
+                const sy = (Math.random() - 0.5) * 1.6;
+                const sz = -8.0 + (i * 0.25);
+                crow.position.set(sx, sy, sz);
+                crowGroup.add(crow);
+                crowMeshes.push(crow);
+            }
+            jumpscareGroup.add(crowGroup);
+
+            // 3. Build Photorealistic Terrifying Female Ghost Face & Grab Hand
+            const ghostFaceGroup = new THREE.Group();
+            
+            // Face Plane with terrifying ghost mask texture
+            const ghostGeo = new THREE.PlaneGeometry(2.4, 3.2);
+            const ghostTex = new THREE.TextureLoader().load('terror_jumpscare.png');
+            const ghostMat = new THREE.MeshBasicMaterial({
+                map: ghostTex,
+                transparent: true,
+                opacity: 0.98,
+                side: THREE.DoubleSide
+            });
+            const ghostMesh = new THREE.Mesh(ghostGeo, ghostMat);
+            ghostMesh.position.set(0, 0, -4.5);
+            ghostFaceGroup.add(ghostMesh);
+
+            // 3D Ghost Hand Grabbing the Lens
+            const handGroup = new THREE.Group();
+            const skinMat = new THREE.MeshBasicMaterial({ color: 0x1a1a22 });
+            const clawMat = new THREE.MeshBasicMaterial({ color: 0x880000 }); // blood red claws
+
+            // Palm mesh
+            const palm = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.55, 0.1), skinMat);
+            palm.position.set(0.35, -0.3, -0.4);
+            palm.rotation.set(-0.2, -0.4, 0.3);
+            handGroup.add(palm);
+
+            // 5 Long Creepy Fingers wrapping around lens
+            for (let f = 0; f < 5; f++) {
+                const fingerGroup = new THREE.Group();
+                const fLength = 0.38 + Math.random() * 0.12;
+                const fMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.025, fLength, 6), skinMat);
+                fMesh.position.y = fLength / 2;
+                fingerGroup.add(fMesh);
+
+                const claw = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.12, 5), clawMat);
+                claw.position.y = fLength + 0.05;
+                fingerGroup.add(claw);
+
+                const angleOffset = (f - 2) * 0.28;
+                fingerGroup.position.set(0.25 + (f * 0.08), -0.15, -0.35);
+                fingerGroup.rotation.set(0.6 + Math.random() * 0.2, angleOffset, -0.4);
+                handGroup.add(fingerGroup);
+            }
+            ghostFaceGroup.add(handGroup);
+            ghostFaceGroup.visible = false; // Trigger after crows dive
+            jumpscareGroup.add(ghostFaceGroup);
+
+            camera.add(jumpscareGroup);
+
+            // 4. Animation Timing Sequence
+            let startTime = performance.now();
+            const crowDuration = 450; // 0.45s crow flock dive
+            let ghostTriggered = false;
+
+            function animateAAASequence() {
+                const elapsed = performance.now() - startTime;
+
+                if (elapsed < crowDuration) {
+                    // Crows rush straight into lens
+                    crowMeshes.forEach((crow, idx) => {
+                        crow.position.x *= 0.93;
+                        crow.position.y *= 0.93;
+                        crow.position.z += 0.38 + (idx * 0.005);
+                        
+                        const wL = crow.getObjectByName("wL");
+                        const wR = crow.getObjectByName("wR");
+                        if (wL) wL.rotation.z = Math.sin(elapsed * 0.09 + idx) * 1.2;
+                        if (wR) wR.rotation.z = -Math.sin(elapsed * 0.09 + idx) * 1.2;
+                    });
+                    
+                    camera.rotation.z = (Math.random() - 0.5) * 0.15;
+                    requestAnimationFrame(animateAAASequence);
+                } else if (!ghostTriggered) {
+                    ghostTriggered = true;
+                    jumpscareGroup.remove(crowGroup);
+                    ghostFaceGroup.visible = true;
+
+                    playInstantSound('woman-scream', 1.0);
+                    playInstantSound('impact-sound', 1.0);
+
+                    // Screamer radial overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'temp-jumpscare-overlay';
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100vw';
+                    overlay.style.height = '100vh';
+                    overlay.style.backgroundImage = "radial-gradient(circle at center, rgba(255, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.98) 85%), url('terror_jumpscare.png')";
+                    overlay.style.backgroundSize = 'cover';
+                    overlay.style.backgroundPosition = 'center';
+                    overlay.style.filter = 'contrast(2.4) saturate(3.0) brightness(1.3)';
+                    overlay.style.zIndex = '99999';
+                    overlay.style.pointerEvents = 'none';
+                    document.body.appendChild(overlay);
+
+                    // Rapid Lunge & Lens Grab
+                    let ghostTicks = 0;
+                    const lungeInterval = setInterval(() => {
+                        ghostTicks++;
+                        ghostMesh.position.z += 0.55; // Rush right up to lens
+                        ghostMesh.scale.addScalar(0.15);
+                        handGroup.position.z += 0.04;
+                        handGroup.rotation.z += 0.05;
+
+                        camera.rotation.z = (Math.random() - 0.5) * 0.28;
+
+                        if (ghostTicks >= 7) {
+                            clearInterval(lungeInterval);
+                            triggerRealisticCameraJolt(1.8);
+
+                            setTimeout(() => {
+                                camera.remove(jumpscareGroup);
+                                mouseYaw = origYaw; // restore initial look direction
+                                restoreGameLighting();
+                            }, 400);
+                        }
+                    }, 20);
+                }
+            }
+
+            requestAnimationFrame(animateAAASequence);
+        }
+
         function triggerRandomGameplayJumpscare() {
             if (!isGameRunning || isKillingActive || isCrowJumpscareActive) return;
 
-            const choice = Math.floor(Math.random() * 13);
+            const choice = Math.floor(Math.random() * 14);
             switch (choice) {
                 case 0:
                     triggerSuddenGhostFaceFlash();
@@ -7032,6 +7210,9 @@
                     break;
                 case 12:
                     triggerUltraFastGhostAmbush();
+                    break;
+                case 13:
+                    triggerExtremeAAA180GhostCrowJumpscare();
                     break;
             }
         }
