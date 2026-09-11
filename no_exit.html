@@ -3839,7 +3839,7 @@
             [1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1],
             [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
             [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 1], // Staircase at (7, 7)
             [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -5416,22 +5416,91 @@
         }
 
         function spawnSecondFloorProps() {
-            // Security Room Table & Chair & TV Monitor at (c=8, r=7)
+            // Security Room Table, Chair & TV Monitor directly inside Security Room at (x=2.4, z=-4.0)
             const desk = createTableMesh();
             desk.scale.set(1.1, 0.9, 0.9);
-            desk.position.set(14, 0, 10);
+            desk.position.set(2.4, 0, -4.0);
+            desk.rotation.y = -Math.PI / 2;
             secondFloorGroup.add(desk);
 
             const chair = createChairMesh();
-            chair.position.set(14, 0, 11.2);
-            chair.rotation.y = 0; // facing desk
+            chair.position.set(1.2, 0, -4.0);
+            chair.rotation.y = Math.PI / 2; // facing desk
             secondFloorGroup.add(chair);
 
             const tv = createTVMonitorMesh();
-            tv.position.set(14, 0.9, 9.8); // on top of the desk top (at y=0.9)
-            tv.rotation.y = Math.PI; // facing chair
+            tv.position.set(2.4, 0.9, -4.0); // on top of desk
+            tv.rotation.y = -Math.PI / 2; // facing chair & entrance doorway
             secondFloorGroup.add(tv);
             secondFloorGroup.tvMonitor = tv; // Store handle for animating static
+
+            buildSecurityRoomWalls(secondFloorGroup);
+        }
+
+        function buildSecurityRoomWalls(group) {
+            const wallTexture = createProceduralWallTexture();
+            const floorTexture = createProceduralFloorTexture();
+            const ceilingTexture = createProceduralCeilingTexture();
+
+            const wallMat = new THREE.MeshStandardMaterial({
+                map: wallTexture,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+
+            // Security Room 4 Solid Enclosing Walls connected directly to doorway at (x=0, z=-4):
+            
+            // West entrance wall (x = 0.0, doorway at z = -4.0):
+            // 1. Left wall segment (z from -6.0 to -4.9)
+            const westLeft = new THREE.Mesh(new THREE.BoxGeometry(0.15, 4.0, 1.1), wallMat);
+            westLeft.position.set(0.0, 2.0, -5.45);
+            group.add(westLeft);
+
+            // 2. Right wall segment (z from -3.1 to -2.0)
+            const westRight = new THREE.Mesh(new THREE.BoxGeometry(0.15, 4.0, 1.1), wallMat);
+            westRight.position.set(0.0, 2.0, -2.55);
+            group.add(westRight);
+
+            // 3. Lintel above doorway (y from 3.0 to 4.0, z from -4.9 to -3.1)
+            const westLintel = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.0, 1.8), wallMat);
+            westLintel.position.set(0.0, 3.5, -4.0);
+            group.add(westLintel);
+
+            // North Wall (z = -6.0, x from 0.0 to 4.0)
+            const northWall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 4.0, 0.15), wallMat);
+            northWall.position.set(2.0, 2.0, -6.0);
+            group.add(northWall);
+
+            // South Wall (z = -2.0, x from 0.0 to 4.0)
+            const southWall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 4.0, 0.15), wallMat);
+            southWall.position.set(2.0, 2.0, -2.0);
+            group.add(southWall);
+
+            // East Back Wall (x = 4.0, z from -6.0 to -2.0)
+            const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.15, 4.0, 4.0), wallMat);
+            eastWall.position.set(4.0, 2.0, -4.0);
+            group.add(eastWall);
+
+            // Ceiling Plane (y = 4.0)
+            const ceilingGeo = new THREE.PlaneGeometry(4.0, 4.0);
+            const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 0.9, side: THREE.DoubleSide });
+            const ceilingMesh = new THREE.Mesh(ceilingGeo, ceilingMat);
+            ceilingMesh.rotation.x = Math.PI / 2;
+            ceilingMesh.position.set(2.0, 4.0, -4.0);
+            group.add(ceilingMesh);
+
+            // Floor Plane (y = 0.01)
+            const floorGeo = new THREE.PlaneGeometry(4.0, 4.0);
+            const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.8, side: THREE.DoubleSide });
+            const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+            floorMesh.rotation.x = -Math.PI / 2;
+            floorMesh.position.set(2.0, 0.01, -4.0);
+            group.add(floorMesh);
+
+            // Atmospheric Interior Room PointLight
+            const secRoomLight = new THREE.PointLight(0xffddaa, 1.8, 8.0);
+            secRoomLight.position.set(2.0, 3.2, -4.0);
+            group.add(secRoomLight);
         }
 
         function createTVMonitorMesh() {
